@@ -1,30 +1,96 @@
 {% extends 'base.html' %}
 
-{% block title %}Social Media Accounts - BlogAutomationAgent{% endblock %}
+{% block title %}Social Media Accounts{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    <h1 class="h3 mb-0">Social Media Accounts</h1>
+    <div>
+        <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Account
+        </a>
+    </div>
+</div>
+
+<!-- Platform cards -->
 <div class="row mb-4">
-    <div class="col d-flex justify-content-between align-items-center">
-        <h1 class="mb-0">Social Media Accounts</h1>
-        <div>
-            <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-secondary me-2">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Account
-            </a>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 bg-primary-subtle">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary p-3 me-3">
+                        <i class="fab fa-facebook-f text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title">Facebook</h5>
+                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 bg-info-subtle">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-info p-3 me-3">
+                        <i class="fab fa-twitter text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title">Twitter</h5>
+                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 bg-success-subtle">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success p-3 me-3">
+                        <i class="fab fa-linkedin-in text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title">LinkedIn</h5>
+                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 bg-danger-subtle">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-danger p-3 me-3">
+                        <i class="fab fa-instagram text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title">Instagram</h5>
+                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Accounts table -->
 <div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">Connected Social Media Accounts</h5>
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Manage Social Media Accounts</h5>
     </div>
     <div class="card-body p-0">
+        {% if accounts %}
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-light">
                     <tr>
                         <th>Platform</th>
                         <th>Account Name</th>
@@ -37,163 +103,118 @@
                     {% for account in accounts %}
                     <tr>
                         <td>
-                            {% if account.platform.lower() == 'facebook' %}
-                            <i class="fab fa-facebook text-primary me-2"></i>
-                            {% elif account.platform.lower() == 'twitter' %}
-                            <i class="fab fa-twitter text-info me-2"></i>
-                            {% elif account.platform.lower() == 'linkedin' %}
-                            <i class="fab fa-linkedin text-primary me-2"></i>
-                            {% elif account.platform.lower() == 'instagram' %}
-                            <i class="fab fa-instagram text-danger me-2"></i>
-                            {% else %}
-                            <i class="fas fa-share-alt me-2"></i>
-                            {% endif %}
-                            {{ account.platform }}
+                            <div class="d-flex align-items-center">
+                                {% if account.platform == 'facebook' %}
+                                <div class="rounded-circle bg-primary p-2 me-2">
+                                    <i class="fab fa-facebook-f text-white"></i>
+                                </div>
+                                <span>Facebook</span>
+                                {% elif account.platform == 'twitter' %}
+                                <div class="rounded-circle bg-info p-2 me-2">
+                                    <i class="fab fa-twitter text-white"></i>
+                                </div>
+                                <span>Twitter</span>
+                                {% elif account.platform == 'linkedin' %}
+                                <div class="rounded-circle bg-success p-2 me-2">
+                                    <i class="fab fa-linkedin-in text-white"></i>
+                                </div>
+                                <span>LinkedIn</span>
+                                {% elif account.platform == 'instagram' %}
+                                <div class="rounded-circle bg-danger p-2 me-2">
+                                    <i class="fab fa-instagram text-white"></i>
+                                </div>
+                                <span>Instagram</span>
+                                {% else %}
+                                <div class="rounded-circle bg-secondary p-2 me-2">
+                                    <i class="fas fa-share-alt text-white"></i>
+                                </div>
+                                <span>{{ account.platform|title }}</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td>{{ account.name }}</td>
-                        <td>{{ account.blog.name }}</td>
+                        <td>
+                            {% if account.blog %}
+                            {{ account.blog.name }}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if account.active %}
                             <span class="badge bg-success">Active</span>
                             {% else %}
-                            <span class="badge bg-danger">Inactive</span>
+                            <span class="badge bg-secondary">Inactive</span>
                             {% endif %}
                         </td>
                         <td>
-                            <div class="btn-group" role="group">
+                            <div class="btn-group">
                                 <a href="{{ url_for('social.edit_social_account', account_id=account.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edit
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSocialModal{{ account.id }}">
-                                    <i class="fas fa-trash"></i> Delete
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-account-id="{{ account.id }}" data-account-name="{{ account.name }}">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
-                            
-                            <!-- Delete Modal -->
-                            <div class="modal fade" id="deleteSocialModal{{ account.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Delete Social Account</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>Are you sure you want to delete the <strong>{{ account.platform }}</strong> account <strong>{{ account.name }}</strong>?</p>
-                                            <p class="text-danger">This action cannot be undone.</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <form action="{{ url_for('social.delete_social_account', account_id=account.id) }}" method="post">
-                                                <button type="submit" class="btn btn-danger">Delete Account</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-4">
-                            <p class="mb-0">No social media accounts configured yet.</p>
-                            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus"></i> Add Your First Account
-                            </a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="text-center p-5">
+            <div class="mb-3">
+                <i class="fas fa-share-alt fa-4x text-muted"></i>
+            </div>
+            <h5>No Social Media Accounts Found</h5>
+            <p class="text-muted">Get started by adding your first social media account.</p>
+            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Add Account
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Social Media Setup Guide</h5>
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Social Media Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <p>To automatically share your blog content on social media, you'll need to set up API access for each platform:</p>
-                
-                <div class="row mt-3">
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <i class="fab fa-facebook text-primary me-2"></i> Facebook
-                            </div>
-                            <div class="card-body">
-                                <ol>
-                                    <li>Create a <a href="https://developers.facebook.com/" target="_blank">Facebook Developer</a> account</li>
-                                    <li>Create a new app (Business type)</li>
-                                    <li>Add the "Facebook Login" product</li>
-                                    <li>Generate a Page Access Token for your Facebook page</li>
-                                    <li>Use your Page ID as the Account ID and the token as API Token when adding the account</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <i class="fab fa-twitter text-info me-2"></i> Twitter
-                            </div>
-                            <div class="card-body">
-                                <ol>
-                                    <li>Create a <a href="https://developer.twitter.com/" target="_blank">Twitter Developer</a> account</li>
-                                    <li>Create a new project and app</li>
-                                    <li>Apply for Elevated access to use write capabilities</li>
-                                    <li>Generate API Key and API Secret</li>
-                                    <li>Set API Key as API Token and API Secret as API Secret when adding the account</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <i class="fab fa-linkedin text-primary me-2"></i> LinkedIn
-                            </div>
-                            <div class="card-body">
-                                <ol>
-                                    <li>Create a <a href="https://www.linkedin.com/developers/" target="_blank">LinkedIn Developer</a> account</li>
-                                    <li>Create a new app</li>
-                                    <li>Request the "Share on LinkedIn" and "Sign In with LinkedIn" permissions</li>
-                                    <li>Generate a Client ID and Client Secret</li>
-                                    <li>Use Client ID as API Token, Client Secret as API Secret, and your LinkedIn user ID as Account ID</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <i class="fab fa-instagram text-danger me-2"></i> Instagram
-                            </div>
-                            <div class="card-body">
-                                <ol>
-                                    <li>Create a <a href="https://developers.facebook.com/" target="_blank">Facebook Developer</a> account</li>
-                                    <li>Create a new app (Business type)</li>
-                                    <li>Add the "Instagram Graph API" product</li>
-                                    <li>Connect to your Instagram Business Account</li>
-                                    <li>Generate an access token for your Instagram account</li>
-                                    <li>Use your Instagram Business ID as Account ID and the token as API Token</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Each social media platform requires different API access setup. Refer to each platform's developer documentation for the most up-to-date instructions.
-                </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the account "<span id="accountName"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" action="" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle delete modal
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const accountId = button.getAttribute('data-account-id');
+                const accountName = button.getAttribute('data-account-name');
+                
+                document.getElementById('accountName').textContent = accountName;
+                document.getElementById('deleteForm').action = `/social/accounts/${accountId}/delete`;
+            });
+        }
+    });
+</script>
 {% endblock %}

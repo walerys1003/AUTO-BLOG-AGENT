@@ -1,532 +1,397 @@
 {% extends 'base.html' %}
 
-{% block title %}Preview Social Media Posts - BlogAutomationAgent{% endblock %}
+{% block title %}Social Media Post Preview{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('social.social_dashboard') }}">Social Media</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Preview Posts</li>
-            </ol>
-        </nav>
-        <h1 class="mb-4">Preview Social Media Posts</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    <h1 class="h3 mb-0">Social Media Preview</h1>
+    <div class="d-flex">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#publishModal">
+            <i class="fas fa-paper-plane me-1"></i> Publish
+        </button>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-lg-9">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Article Details</h5>
-            </div>
-            <div class="card-body">
-                <h3 class="mb-3">{{ content.title }}</h3>
-                <p class="mb-2"><strong>Blog:</strong> {{ blog.name }}</p>
-                <p class="mb-2"><strong>URL:</strong> <a href="{{ content.url }}" target="_blank">{{ content.url }}</a></p>
-                <p class="mb-4"><strong>Excerpt:</strong> {{ content.excerpt }}</p>
-                
-                {% if content.get_featured_image() %}
-                <div class="mb-4">
-                    <p><strong>Featured Image:</strong></p>
-                    <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-thumbnail" style="max-height: 200px;">
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Article Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h4>{{ content.title }}</h4>
+                <p class="text-muted mb-3">
+                    <strong>Blog:</strong> {{ blog.name if blog else 'N/A' }}
+                    {% if content.url %}
+                    <span class="ms-3">
+                        <a href="{{ content.url }}" target="_blank" class="text-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>View Article
+                        </a>
+                    </span>
+                    {% endif %}
+                </p>
+                <div class="mb-3">
+                    <strong>Excerpt:</strong>
+                    <p>{{ content.excerpt | truncate(200) }}</p>
                 </div>
-                {% endif %}
-                
-                {% if content.get_tags() %}
+                {% if content.tags %}
                 <div>
-                    <p><strong>Tags:</strong></p>
-                    <div>
+                    <strong>Tags:</strong>
+                    <div class="mt-1">
                         {% for tag in content.get_tags() %}
-                        <span class="badge bg-secondary me-1 mb-1">{{ tag }}</span>
+                        <span class="badge bg-secondary me-1">{{ tag }}</span>
                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Actions</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('social.publish_posts', content_id=content.id) }}" method="post">
-                    <div class="mb-3">
-                        <label class="form-label">Select Platforms:</label>
-                        
-                        {% if 'facebook' in social_posts %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="platforms" value="facebook" id="facebook" checked>
-                            <label class="form-check-label" for="facebook">
-                                <i class="fab fa-facebook text-primary me-2"></i>Facebook
-                            </label>
-                        </div>
-                        {% endif %}
-                        
-                        {% if 'twitter' in social_posts %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="platforms" value="twitter" id="twitter" checked>
-                            <label class="form-check-label" for="twitter">
-                                <i class="fab fa-twitter text-info me-2"></i>Twitter
-                            </label>
-                        </div>
-                        {% endif %}
-                        
-                        {% if 'linkedin' in social_posts %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="platforms" value="linkedin" id="linkedin" checked>
-                            <label class="form-check-label" for="linkedin">
-                                <i class="fab fa-linkedin text-primary me-2"></i>LinkedIn
-                            </label>
-                        </div>
-                        {% endif %}
-                        
-                        {% if 'instagram' in social_posts %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="platforms" value="instagram" id="instagram" checked>
-                            <label class="form-check-label" for="instagram">
-                                <i class="fab fa-instagram text-danger me-2"></i>Instagram
-                            </label>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="scheduleSwitch" onchange="toggleSchedule(this)">
-                            <label class="form-check-label" for="scheduleSwitch">Schedule for later</label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3" id="scheduleTimeDiv" style="display: none;">
-                        <label for="scheduled_time" class="form-label">Schedule time</label>
-                        <input type="datetime-local" class="form-control" id="scheduled_time" name="scheduled_time">
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success" id="publishBtn">
-                            <i class="fas fa-share-alt me-1"></i> <span id="publishBtnText">Publish Now</span>
-                        </button>
-                    </div>
-                </form>
-                
-                <hr>
-                
-                <div class="d-grid">
-                    <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-                    </a>
+            <div class="col-md-4">
+                {% if content.featured_image_data %}
+                <div class="text-center">
+                    <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
+                    <p class="text-muted small mt-1">Featured Image</p>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Social Media Post Previews -->
-<div class="row">
-    {% if 'facebook' in social_posts %}
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fab fa-facebook text-primary me-2"></i> Facebook
-                </h5>
-                <div>
-                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='facebook') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit me-1"></i> Edit
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="facebook-preview mb-3">
-                    <div class="fb-header mb-2">
-                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="fb-profile-img" alt="Profile">
-                        <div>
-                            <div class="fb-page-name">{{ blog.name }}</div>
-                            <div class="fb-post-time">Just now</div>
-                        </div>
+                {% else %}
+                <div class="text-center">
+                    <div class="rounded bg-light p-4 d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">No featured image</span>
                     </div>
-                    <div class="fb-content">
-                        <p>{{ social_posts.facebook.content }}</p>
-                        
-                        {% if social_posts.facebook.hashtags %}
-                        <p class="text-primary">
-                            {% for tag in social_posts.facebook.hashtags %}
-                            #{{ tag }} 
-                            {% endfor %}
-                        </p>
-                        {% endif %}
-                    </div>
-                    
-                    {% if content.get_featured_image() %}
-                    <div class="fb-image">
-                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
-                    </div>
-                    {% endif %}
-                    
-                    <div class="fb-link-preview">
-                        <a href="{{ content.url }}" target="_blank" class="fb-link">
-                            <div class="fb-link-title">{{ content.title }}</div>
-                            <div class="fb-link-desc">{{ content.excerpt|truncate(100) }}</div>
-                            <div class="fb-link-domain">{{ content.url|replace('https://', '')|replace('http://', '')|split('/')|first }}</div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    {% if 'twitter' in social_posts %}
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fab fa-twitter text-info me-2"></i> Twitter
-                </h5>
-                <div>
-                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='twitter') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit me-1"></i> Edit
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="twitter-preview mb-3">
-                    <div class="tweet-header mb-2">
-                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="tweet-profile-img" alt="Profile">
-                        <div>
-                            <div class="tweet-name">{{ blog.name }}</div>
-                            <div class="tweet-handle">@{{ blog.name|lower|replace(' ', '') }}</div>
-                        </div>
-                    </div>
-                    <div class="tweet-content">
-                        <p>{{ social_posts.twitter.content }}</p>
-                        
-                        {% if social_posts.twitter.hashtags %}
-                        <p class="text-info">
-                            {% for tag in social_posts.twitter.hashtags %}
-                            #{{ tag }} 
-                            {% endfor %}
-                        </p>
-                        {% endif %}
-                        
-                        <a href="{{ content.url }}" class="tweet-link" target="_blank">{{ content.url }}</a>
-                    </div>
-                    
-                    {% if content.get_featured_image() %}
-                    <div class="tweet-image mt-2">
-                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid rounded">
-                    </div>
-                    {% endif %}
-                </div>
-                
-                {% if social_posts.twitter.content|length > 280 %}
-                <div class="alert alert-warning" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Warning:</strong> Tweet exceeds 280 character limit ({{ social_posts.twitter.content|length }} characters). Please edit the content.
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
-    
-    {% if 'linkedin' in social_posts %}
+</div>
+
+<!-- Social Media Previews -->
+<div class="row">
+    {% if 'facebook' in social_posts %}
     <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fab fa-linkedin text-primary me-2"></i> LinkedIn
+                    <i class="fab fa-facebook-f text-primary me-2"></i>Facebook Preview
                 </h5>
                 <div>
-                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='linkedin') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit me-1"></i> Edit
+                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='facebook') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-pencil-alt me-1"></i>Edit
                     </a>
                 </div>
             </div>
             <div class="card-body">
-                <div class="linkedin-preview mb-3">
-                    <div class="li-header mb-2">
-                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="li-profile-img" alt="Profile">
+                <div class="social-preview facebook-preview">
+                    <div class="social-header d-flex align-items-center mb-2">
+                        <div class="profile-img me-2">
+                            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Profile" class="rounded-circle" width="40" height="40">
+                        </div>
                         <div>
-                            <div class="li-name">{{ blog.name }}</div>
-                            <div class="li-company-info">Company • {{ content.created_at.strftime('%d %b') }}</div>
+                            <div class="fw-bold">{{ blog.name }}</div>
+                            <div class="text-muted small">Just now</div>
                         </div>
                     </div>
-                    <div class="li-content">
-                        <p>{{ social_posts.linkedin.content|nl2br }}</p>
-                        
-                        {% if social_posts.linkedin.hashtags %}
-                        <p class="text-primary">
-                            {% for tag in social_posts.linkedin.hashtags %}
-                            #{{ tag }} 
-                            {% endfor %}
-                        </p>
-                        {% endif %}
+                    <div class="social-content mb-2">
+                        {{ social_posts.facebook.content }}
                     </div>
-                    
-                    {% if content.get_featured_image() %}
-                    <div class="li-image mt-2">
-                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
+                    {% if content.featured_image_data %}
+                    <div class="social-image mb-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
                     </div>
                     {% endif %}
-                    
-                    <div class="li-link-preview mt-2">
-                        <a href="{{ content.url }}" target="_blank" class="li-link">
-                            <div>
-                                {% if content.get_featured_image() %}
-                                <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="li-link-img">
-                                {% endif %}
-                                <div class="li-link-content">
-                                    <div class="li-link-title">{{ content.title }}</div>
-                                    <div class="li-link-desc">{{ content.excerpt|truncate(100) }}</div>
-                                    <div class="li-link-domain">{{ content.url|replace('https://', '')|replace('http://', '')|split('/')|first }}</div>
-                                </div>
-                            </div>
+                    <div class="social-hashtags">
+                        {% for tag in social_posts.facebook.hashtags %}
+                        <span class="text-primary">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="social-url bg-light p-2 rounded mt-2">
+                        <a href="{{ content.url or '#' }}" class="text-decoration-none" target="_blank">
+                            <div class="small text-truncate">{{ content.url or 'https://blog.example.com' }}</div>
+                            <div class="fw-bold">{{ content.title }}</div>
                         </a>
                     </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-{{ 'success' if social_posts.facebook.status == 'published' else 'secondary' }}">
+                        {{ social_posts.facebook.status | title }}
+                    </span>
+                    {% if social_posts.facebook.post_url %}
+                    <a href="{{ social_posts.facebook.post_url }}" target="_blank" class="text-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>View Post
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
-    
-    {% if 'instagram' in social_posts %}
+
+    {% if 'twitter' in social_posts %}
     <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fab fa-instagram text-danger me-2"></i> Instagram
+                    <i class="fab fa-twitter text-info me-2"></i>Twitter Preview
                 </h5>
                 <div>
-                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='instagram') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit me-1"></i> Edit
+                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='twitter') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-pencil-alt me-1"></i>Edit
                     </a>
                 </div>
             </div>
             <div class="card-body">
-                <div class="instagram-preview mb-3">
-                    <div class="ig-header mb-2">
-                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="ig-profile-img" alt="Profile">
-                        <div class="ig-username">{{ blog.name|lower|replace(' ', '') }}</div>
-                    </div>
-                    
-                    {% if content.get_featured_image() %}
-                    <div class="ig-image">
-                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
-                    </div>
-                    {% else %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Instagram requires an image. Please add a featured image to the article.
-                    </div>
-                    {% endif %}
-                    
-                    <div class="ig-caption mt-2">
-                        <div class="ig-username-caption">{{ blog.name|lower|replace(' ', '') }}</div>
-                        <p>{{ social_posts.instagram.content }}</p>
-                        
-                        {% if social_posts.instagram.hashtags %}
-                        <p class="text-primary">
-                            {% for tag in social_posts.instagram.hashtags %}
-                            #{{ tag }} 
-                            {% endfor %}
-                        </p>
-                        {% endif %}
-                        
-                        <div class="ig-link">
-                            <span class="text-muted">Link in bio:</span> {{ content.url|replace('https://', '')|replace('http://', '')|truncate(30) }}
+                <div class="social-preview twitter-preview">
+                    <div class="social-header d-flex align-items-center mb-2">
+                        <div class="profile-img me-2">
+                            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Profile" class="rounded-circle" width="40" height="40">
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ blog.name }}</div>
+                            <div class="text-muted small">@{{ blog.name | lower | replace(' ', '') }}</div>
                         </div>
                     </div>
+                    <div class="social-content mb-2">
+                        {{ social_posts.twitter.content }}
+                    </div>
+                    {% if social_posts.twitter.hashtags %}
+                    <div class="social-hashtags mb-2">
+                        {% for tag in social_posts.twitter.hashtags %}
+                        <span class="text-info">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if content.featured_image_data %}
+                    <div class="social-image mb-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-{{ 'success' if social_posts.twitter.status == 'published' else 'secondary' }}">
+                        {{ social_posts.twitter.status | title }}
+                    </span>
+                    {% if social_posts.twitter.post_url %}
+                    <a href="{{ social_posts.twitter.post_url }}" target="_blank" class="text-info">
+                        <i class="fas fa-external-link-alt me-1"></i>View Tweet
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if 'linkedin' in social_posts %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fab fa-linkedin-in text-success me-2"></i>LinkedIn Preview
+                </h5>
+                <div>
+                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='linkedin') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-pencil-alt me-1"></i>Edit
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="social-preview linkedin-preview">
+                    <div class="social-header d-flex align-items-center mb-2">
+                        <div class="profile-img me-2">
+                            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Profile" class="rounded-circle" width="40" height="40">
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ blog.name }}</div>
+                            <div class="text-muted small">Just now</div>
+                        </div>
+                    </div>
+                    <div class="social-content mb-2">
+                        {{ social_posts.linkedin.content }}
+                    </div>
+                    {% if social_posts.linkedin.hashtags %}
+                    <div class="social-hashtags mb-2">
+                        {% for tag in social_posts.linkedin.hashtags %}
+                        <span class="text-success">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if content.featured_image_data %}
+                    <div class="social-image mb-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
+                        <div class="card mt-1">
+                            <div class="card-body p-2">
+                                <div class="small fw-bold">{{ content.title }}</div>
+                                <div class="small text-muted">{{ content.excerpt | truncate(100) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-{{ 'success' if social_posts.linkedin.status == 'published' else 'secondary' }}">
+                        {{ social_posts.linkedin.status | title }}
+                    </span>
+                    {% if social_posts.linkedin.post_url %}
+                    <a href="{{ social_posts.linkedin.post_url }}" target="_blank" class="text-success">
+                        <i class="fas fa-external-link-alt me-1"></i>View Post
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if 'instagram' in social_posts %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fab fa-instagram text-danger me-2"></i>Instagram Preview
+                </h5>
+                <div>
+                    <a href="{{ url_for('social.edit_post', content_id=content.id, platform='instagram') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-pencil-alt me-1"></i>Edit
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="social-preview instagram-preview">
+                    <div class="social-header d-flex align-items-center mb-2">
+                        <div class="profile-img me-2">
+                            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Profile" class="rounded-circle" width="40" height="40">
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ blog.name }}</div>
+                        </div>
+                    </div>
+                    {% if content.featured_image_data %}
+                    <div class="social-image mb-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
+                    </div>
+                    {% else %}
+                    <div class="social-image mb-2">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">No image available</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="social-content mb-2">
+                        <div class="fw-bold">{{ blog.name }}</div>
+                        {{ social_posts.instagram.content }}
+                    </div>
+                    {% if social_posts.instagram.hashtags %}
+                    <div class="social-hashtags">
+                        {% for tag in social_posts.instagram.hashtags %}
+                        <span class="text-danger">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-{{ 'success' if social_posts.instagram.status == 'published' else 'secondary' }}">
+                        {{ social_posts.instagram.status | title }}
+                    </span>
+                    {% if social_posts.instagram.post_url %}
+                    <a href="{{ social_posts.instagram.post_url }}" target="_blank" class="text-danger">
+                        <i class="fas fa-external-link-alt me-1"></i>View Post
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
 </div>
-{% endblock %}
 
-{% block styles %}
-<style>
-/* Social media preview styles */
-.facebook-preview, .twitter-preview, .linkedin-preview, .instagram-preview {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 12px;
-    background-color: #1e1e1e;
-}
-
-/* Facebook preview */
-.fb-header, .tweet-header, .li-header, .ig-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.fb-profile-img, .tweet-profile-img, .li-profile-img, .ig-profile-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-
-.fb-page-name, .tweet-name, .li-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.fb-post-time, .tweet-handle, .li-company-info {
-    font-size: 0.8rem;
-    color: #999;
-}
-
-.fb-content, .tweet-content, .li-content, .ig-caption {
-    margin-bottom: 10px;
-    white-space: pre-line;
-}
-
-.fb-image img, .tweet-image img, .li-image img, .ig-image img {
-    width: 100%;
-    border-radius: 8px;
-    margin-bottom: 10px;
-}
-
-.fb-link-preview {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.fb-link-preview a {
-    text-decoration: none;
-}
-
-.fb-link-title {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #eee;
-    padding: 10px 10px 5px 10px;
-}
-
-.fb-link-desc {
-    font-size: 0.8rem;
-    color: #bbb;
-    padding: 0 10px 5px 10px;
-}
-
-.fb-link-domain {
-    font-size: 0.7rem;
-    color: #999;
-    padding: 0 10px 10px 10px;
-}
-
-/* Twitter preview */
-.tweet-handle {
-    margin-top: -3px;
-}
-
-.tweet-link {
-    color: #1da1f2;
-    font-size: 0.85rem;
-    text-decoration: none;
-}
-
-/* LinkedIn preview */
-.li-link-preview {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.li-link {
-    text-decoration: none;
-}
-
-.li-link-content {
-    padding: 10px;
-}
-
-.li-link-title {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #eee;
-}
-
-.li-link-desc {
-    font-size: 0.8rem;
-    color: #bbb;
-    margin-top: 5px;
-}
-
-.li-link-domain {
-    font-size: 0.7rem;
-    color: #999;
-    margin-top: 5px;
-}
-
-/* Instagram preview */
-.ig-username {
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.ig-username-caption {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.ig-link {
-    font-size: 0.8rem;
-    margin-top: 5px;
-}
-</style>
+<!-- Publish Modal -->
+<div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="publishModalLabel">Publish Social Media Posts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('social.publish_posts', content_id=content.id) }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Platforms to Publish</label>
+                        {% for platform in social_posts.keys() %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ platform }}" name="platforms" id="platform-{{ platform }}" {% if social_posts[platform].status != 'published' %}checked{% endif %}>
+                            <label class="form-check-label" for="platform-{{ platform }}">
+                                <i class="fab fa-{{ platform }} me-1"></i> {{ platform|capitalize }}
+                                {% if social_posts[platform].status == 'published' %}
+                                <span class="badge bg-success ms-1">Already Published</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="scheduleSwitch">
+                            <label class="form-check-label" for="scheduleSwitch">Schedule for later</label>
+                        </div>
+                    </div>
+                    <div class="mb-3 d-none" id="scheduleTimeField">
+                        <label for="scheduled_time" class="form-label">Schedule Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduled_time" name="scheduled_time">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function toggleSchedule(switchElem) {
-    const scheduleTimeDiv = document.getElementById('scheduleTimeDiv');
-    const publishBtnText = document.getElementById('publishBtnText');
-    
-    if (switchElem.checked) {
-        scheduleTimeDiv.style.display = 'block';
-        publishBtnText.textContent = 'Schedule Posts';
-    } else {
-        scheduleTimeDiv.style.display = 'none';
-        publishBtnText.textContent = 'Publish Now';
-    }
-}
-
-// Set minimum datetime for scheduled posts to current time
-document.addEventListener('DOMContentLoaded', function() {
-    const scheduledTimeInput = document.getElementById('scheduled_time');
-    if (scheduledTimeInput) {
-        const now = new Date();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle schedule switch
+        const scheduleSwitch = document.getElementById('scheduleSwitch');
+        const scheduleTimeField = document.getElementById('scheduleTimeField');
         
-        // Format datetime for datetime-local input
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
+        if (scheduleSwitch && scheduleTimeField) {
+            scheduleSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    scheduleTimeField.classList.remove('d-none');
+                } else {
+                    scheduleTimeField.classList.add('d-none');
+                }
+            });
+        }
         
-        const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-        scheduledTimeInput.min = minDateTime;
-        
-        // Set default value to 1 hour from now
-        const defaultTime = new Date(now.getTime() + 60 * 60 * 1000);
-        const defaultHours = String(defaultTime.getHours()).padStart(2, '0');
-        const defaultMinutes = String(defaultTime.getMinutes()).padStart(2, '0');
-        const defaultDateTime = `${year}-${month}-${day}T${defaultHours}:${defaultMinutes}`;
-        
-        scheduledTimeInput.value = defaultDateTime;
-    }
-});
+        // Set default datetime value for scheduling (current time + 1 hour)
+        const scheduledTimeInput = document.getElementById('scheduled_time');
+        if (scheduledTimeInput) {
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            
+            // Format date to YYYY-MM-DDThh:mm
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            scheduledTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
 </script>
 {% endblock %}

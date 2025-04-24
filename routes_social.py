@@ -141,7 +141,7 @@ def add_social_account():
             flash(f'Error adding social account: {str(e)}', 'danger')
             return redirect(url_for('social.add_social_account'))
     
-    return render_template('social_form.html', account=None, blogs=blogs, action='add')
+    return render_template('social/account_form.html', account=None, blogs=blogs, action='add')
 
 @social_bp.route('/social/accounts/<int:account_id>/edit', methods=['GET', 'POST'])
 def edit_social_account(account_id):
@@ -190,7 +190,7 @@ def edit_social_account(account_id):
             flash(f'Error updating social account: {str(e)}', 'danger')
             return redirect(url_for('social.edit_social_account', account_id=account_id))
     
-    return render_template('social_form.html', account=account, blogs=blogs, action='edit')
+    return render_template('social/account_form.html', account=account, blogs=blogs, action='edit')
 
 @social_bp.route('/social/accounts/<int:account_id>/delete', methods=['POST'])
 def delete_social_account(account_id):
@@ -266,11 +266,21 @@ def edit_post(content_id, platform):
             logger.error(f"Error updating post content: {str(e)}")
             flash(f'Error updating post content: {str(e)}', 'danger')
     
+    # Set platform color for styling
+    platform_colors = {
+        'facebook': 'primary',
+        'twitter': 'info',
+        'linkedin': 'success',
+        'instagram': 'danger'
+    }
+    platform_color = platform_colors.get(platform.lower(), 'primary')
+    
     return render_template(
         'social/edit_post.html',
         content=content,
         platform=platform,
-        post_data=post_data
+        post_data=post_data,
+        platform_color=platform_color
     )
 
 @social_bp.route('/social/posts/<int:content_id>/publish', methods=['POST'])
