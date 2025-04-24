@@ -280,6 +280,54 @@ class Newsletter(db.Model):
     def __repr__(self):
         return f"<Newsletter {self.title}>"
 
+class AutomationRule(db.Model):
+    """Content automation rules"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'))
+    name = db.Column(db.String(255))
+    active = db.Column(db.Boolean, default=True)
+    
+    # Content Generation Settings
+    writing_style = db.Column(db.String(50), default='informative')  # informative, conversational, professional, storytelling, persuasive
+    content_length = db.Column(db.String(50), default='medium')  # short, medium, long
+    
+    # Publishing Settings
+    publishing_days = db.Column(db.String(255), default='0,1,2,3,4,5,6')  # Days of week (0=Monday, 6=Sunday)
+    publishing_time = db.Column(db.String(50), default='12:00')  # Time of day for publishing
+    posts_per_day = db.Column(db.Integer, default=1)  # Number of posts to publish per day
+    
+    # Topic Selection Criteria
+    topic_min_score = db.Column(db.Float, default=0.7)  # Minimum topic score to consider
+    categories = db.Column(db.Text, nullable=True)  # JSON list of categories to publish to
+    
+    # Auto-scheduling Settings
+    auto_enable_topics = db.Column(db.Boolean, default=False)  # Auto-approve topics
+    auto_promote_content = db.Column(db.Boolean, default=True)  # Auto-promote to social media
+    
+    # Additional Settings
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    blog = db.relationship('Blog', backref=db.backref('automation_rules', lazy=True))
+    
+    def get_categories(self):
+        """Returns categories as a Python list"""
+        if self.categories:
+            return json.loads(self.categories)
+        return []
+    
+    def set_categories(self, categories_list):
+        """Sets categories from a Python list"""
+        self.categories = json.dumps(categories_list)
+    
+    def get_publishing_days(self):
+        """Returns publishing days as a list of integers"""
+        if self.publishing_days:
+            return [int(day) for day in self.publishing_days.split(',')]
+        return [0, 1, 2, 3, 4, 5, 6]  # Default to all days
+
+
 class NewsletterConfig(db.Model):
     """Model for newsletter configuration settings"""
     id = db.Column(db.Integer, primary_key=True)

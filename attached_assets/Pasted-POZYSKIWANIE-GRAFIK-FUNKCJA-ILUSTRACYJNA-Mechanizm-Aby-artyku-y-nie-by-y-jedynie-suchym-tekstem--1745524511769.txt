@@ -1,0 +1,49 @@
+POZYSKIWANIE GRAFIK – FUNKCJA ILUSTRACYJNA
+Mechanizm:
+Aby artykuły nie były jedynie „suchym tekstem”, agent wzbogaca je o adekwatne ilustracje. W tym celu wykorzystuje dwa źródła:
+•	Unsplash – darmowa baza wysokiej jakości zdjęć.
+•	Google Images – zaawansowane wyszukiwanie bez uwzględnienia rodzaju licencji.
+Proces:
+•	Wyszukiwanie obrazów: agent analizuje tytuł oraz słowa kluczowe, aby znaleźć najbardziej odpowiadający obraz.
+•	Zapis i przypisanie: obraz staje się elementem wizualnym artykułu.
+Rezultat:
+Każdy artykuł zyskuje przyciągającą wzrok grafikę, która zwiększa zaangażowanie użytkowników.
+Wytłumacz, jak przebiega proces automatycznego pozyskiwania grafik przez agenta. Czy jest to proces całkowicie zautomatyzowany, realizowany zdalnie na podstawie wdrożonego kodu i bez ingerencji użytkownika? Czy użytkownik ma jakikolwiek dostęp do tego procesu – może go podejrzeć, zmienić grafikę, zobaczyć, skąd pochodzi ilustracja?
+
+Obecny mechanizm:
+
+Agent automatycznie wyszukuje grafikę na podstawie tytułu artykułu i słów kluczowych, korzystając z Unsplash i Google Images.
+
+Przypisuje obraz do artykułu jako jego wizualne uzupełnienie.
+
+Pytania oceniające:
+
+Czy obecnie użytkownik widzi wybraną grafikę przed publikacją artykułu, czy jest ona przypisywana automatycznie bez jego wiedzy?
+
+Czy nie warto dodać linkowania do dashboardu, które umożliwiałoby:
+
+Podgląd przypisanej grafiki,
+
+Zmianę lub podmianę obrazu na inny (np. z galerii, z własnych zasobów, lub z propozycji Agenta),
+
+Informację o źródle grafiki i może szczegóły licencyjne,
+
+Ewentualne filtrowanie wyników wyszukiwania – np. tylko zdjęcia z Unsplash, tylko z google?
+
+Sugestie funkcjonalne:
+
+Czy funkcja powinna umożliwiać dodanie własnych grafik przez użytkownika?
+
+Czy warto umożliwić edycję grafiki w panelu – np. przycięcie, dodanie filtrów, overlay tekstu?
+
+Czy dashboard powinien zawierać historię użytych grafik – np. do ponownego wykorzystania?
+
+Twoja opinia:
+
+Jak oceniasz korzyści i ryzyka związane z całkowitą automatyzacją doboru grafik?
+
+Czy dodanie przejrzystości i możliwości edycji w dashboardzie zwiększyłoby zadowolenie użytkownika z jakości wizualnej treści?
+
+Czy lepiej zostawić agentowi pełną swobodę w wyborze grafiki, czy dać użytkownikowi kontrolę nad ostatecznym wyglądem?
+
+💡 Do przemyślenia: Grafika to kluczowy element angażujący – czy nie warto dać użytkownikowi opcji, by zobaczyć i wybrać najlepszy obraz przed publikacją? Może hybrydowe podejście: domyślna automatyzacja, ale z możliwością łatwej zmiany w dashboardzie? 🎨👁️
