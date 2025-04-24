@@ -1,1 +1,1 @@
-# Social media package
+# Social media module initialization

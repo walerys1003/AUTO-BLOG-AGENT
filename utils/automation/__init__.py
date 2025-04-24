@@ -1,1 +1,1 @@
-# Package initialization for automation utils
+# Automation module initialization

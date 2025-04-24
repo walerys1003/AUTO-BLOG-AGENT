@@ -1,1 +1,1 @@
-# Initialize writing utilities module
+# Writing module initialization
