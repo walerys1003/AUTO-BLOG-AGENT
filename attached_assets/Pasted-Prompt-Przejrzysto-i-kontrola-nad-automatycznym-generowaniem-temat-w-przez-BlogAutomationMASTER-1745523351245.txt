@@ -1,0 +1,34 @@
+Prompt: Przejrzystość i kontrola nad automatycznym generowaniem tematów przez – BlogAutomationMASTER
+Opis aktualnego działania: Agent ZYGA codziennie automatycznie generuje tematy artykułów, bazując na analizie SEO z narzędzi takich jak Google Trends, SerpApi czy Ahrefs. Tworzy propozycje 3–4 tytułów dla każdego bloga, bazując na najbardziej popularnych frazach i priorytetach ruchu.
+
+Pytania oceniające:
+
+Czy ten proces jest w pełni zdalny i niewidoczny dla użytkownika, tzn. czy użytkownik nie ma bezpośredniego wglądu w codziennie generowane tematy i nie wpływa na wybór?
+
+Czy uważasz, że taka pełna automatyzacja bez opcji podglądu i ingerencji jest korzystna, czy może ogranicza elastyczność i poczucie kontroli nad publikowanymi treściami?
+
+Jak oceniasz potrzebę dodania w panelu dashboard dedykowanej sekcji „Inspiracje SEO”, gdzie użytkownik mógłby:
+
+Przeglądać wygenerowane tematy z datą i źródłem SEO,
+
+Zatwierdzać, odrzucać lub edytować propozycje przed ich dalszym przetwarzaniem,
+
+Sprawdzać statystyki potencjału fraz (np. liczba wyszukiwań, konkurencja),
+
+Przeglądać historię tematów i ich status (np. „oczekuje”, „zatwierdzony”, „odrzucony”, „opublikowany”).
+
+Sugestie funkcjonalne:
+
+Czy warto dodać możliwość manualnego wprowadzania własnych tematów przez użytkownika, które będą traktowane priorytetowo przez agenta?
+
+Czy obecny model „agent jako autonomiczny redaktor” powinien być opcjonalnie modyfikowalny – np. wybór trybu: pełna automatyzacja vs automatyzacja z kontrolą?
+
+Twoja opinia:
+
+Jakie ryzyka i korzyści widzisz w utrzymaniu funkcji jako w pełni automatycznej, bez ingerencji użytkownika?
+
+Czy większa transparentność (widoczność danych SEO, linki do źródeł, podgląd trendów) zwiększyłaby Twoje zaufanie i chęć korzystania z tej funkcji?
+
+Jak powinien wyglądać idealny interfejs użytkownika dla tej funkcji w dashboardzie?
+
+💡 Podsumowanie do przemyślenia: Wolisz pełną automatyzację i brak konieczności nadzoru, czy raczej możliwość sprawdzenia i ewentualnej korekty tego, co agent proponuje? A może hybrydowe podejście, gdzie użytkownik ma wgląd i kontrolę, ale może też ustawić wszystko na „auto-pilot”? 🚀 Czy nie dać linkowania do dashboardu dla tej funkcji? 

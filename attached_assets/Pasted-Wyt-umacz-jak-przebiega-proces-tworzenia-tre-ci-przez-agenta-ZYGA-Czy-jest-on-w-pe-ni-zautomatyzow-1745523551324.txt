@@ -1,0 +1,47 @@
+Wytłumacz, jak przebiega proces tworzenia treści przez agenta ZYGA. Czy jest on w pełni zautomatyzowany i realizowany bez jakiejkolwiek ingerencji użytkownika, czy jednak istnieje możliwość wglądu i kontroli? Zastanów się, czy nie warto dodać linkowania do dashboardu oraz widocznych elementów tej funkcji.
+
+Aktualny mechanizm działania:
+
+Na bazie wcześniej wygenerowanych tematów, agent automatycznie tworzy artykuły długości 1200–1600 słów, w stylu eksperckim i SEO-friendly, wykorzystując modele OPEN ROUTER AI: GPT-4 (OpenAI) lub Claude Sonnet 3.5–3.7 (Anthropic).
+
+Każdy artykuł zawiera nagłówki, podtytuły, frazy kluczowe, metaopis, excerpt oraz zestaw tagów.
+
+Pytania oceniające:
+
+Czy obecnie użytkownik widzi te treści przed publikacją, czy są one generowane i publikowane całkowicie automatycznie?
+
+Czy agent umożliwia wgląd do wersji roboczej artykułu w panelu dashboard, zanim tekst zostanie opublikowany?
+
+Czy uważasz, że funkcja powinna mieć linkowanie w dashboardzie, które prowadziłoby do:
+
+Podglądu wygenerowanego tekstu,
+
+Edycji treści przed publikacją,
+
+Informacji o wykorzystanym modelu AI,
+
+Podglądu metaopisu, tagów i excerptu?
+
+Jak oceniasz potrzebę manualnego zatwierdzania artykułów? Czy lepsze byłoby całkowite zaufanie do automatyzacji?
+
+Sugestie funkcjonalne:
+
+Czy warto umożliwić użytkownikowi zmianę stylu pisania (np. bardziej techniczny, bardziej marketingowy, storytelling)?
+
+Czy dashboard powinien oferować historię wygenerowanych artykułów, z możliwością ich ponownego pobrania, edytowania lub duplikacji?
+
+Czy dodanie opcji „szybkiej edycji” treści przed publikacją zwiększyłoby zadowolenie użytkowników i kontrolę nad jakością?
+
+Twoja opinia:
+
+Jak oceniasz ryzyko związane z publikacją treści bez wcześniejszej weryfikacji?
+
+Czy transparentność procesu i link do funkcji w dashboardzie zwiększyłby Twoje zaufanie do agenta?
+
+Jakie dodatkowe informacje lub opcje powinny być dostępne w panelu użytkownika w kontekście tworzenia treści?
+
+💡 Do przemyślenia: Czy nie warto wdrożyć dwustopniowego trybu działania agenta ZYGA:
+
+Tryb pełnej automatyzacji – dla użytkowników, którzy chcą „zero maintenance”.
+
+Tryb kontrolowanej automatyzacji – z dostępem do dashboardu, edycją i zatwierdzaniem treści.
