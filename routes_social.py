@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from sqlalchemy import desc
 
 from app import db
-from models import Blog, ContentLog, SocialAccount
+from models import Blog, ContentLog, SocialAccount, SocialMediaTemplate, ScheduledSocialPost, SocialMediaScheduleSettings, SocialMediaPostMetrics
 from social.autopost import create_social_media_posts, post_article_to_social_media, update_social_post_content, SocialMediaPostError
 
 # Create Blueprint
@@ -424,3 +424,518 @@ def get_post_status(content_id):
         }
     
     return jsonify(status_data)
+
+
+@social_bp.route('/social/statistics')
+def social_statistics():
+    """Social media statistics dashboard"""
+    # Get date range parameters
+    date_range = request.args.get('date_range', '30')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    # Calculate default dates if not provided
+    today = datetime.now()
+    if date_range != 'custom':
+        # Convert date_range to integer days
+        days = int(date_range)
+        start_date = (today - timedelta(days=days)).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    
+    # Get metrics from database
+    metrics = SocialMediaPostMetrics.query.filter(
+        SocialMediaPostMetrics.post_date >= start_date,
+        SocialMediaPostMetrics.post_date <= end_date
+    ).all()
+    
+    # Calculate statistics
+    stats = {
+        'total_posts': len(metrics),
+        'total_engagements': sum(m.likes + m.comments + m.shares for m in metrics),
+        'total_clicks': sum(m.clicks for m in metrics),
+        'avg_engagement_rate': 0
+    }
+    
+    if stats['total_posts'] > 0:
+        stats['avg_engagement_rate'] = round(
+            (stats['total_engagements'] / stats['total_posts']) * 100 / 
+            (sum(m.impressions for m in metrics) / stats['total_posts']),
+            1
+        ) if sum(m.impressions for m in metrics) > 0 else 0
+    
+    # Platform performance data
+    platform_data = {}
+    for platform in ['facebook', 'twitter', 'linkedin', 'instagram']:
+        platform_metrics = [m for m in metrics if m.platform == platform]
+        if platform_metrics:
+            total_engagements = sum(m.likes + m.comments + m.shares for m in platform_metrics)
+            total_impressions = sum(m.impressions for m in platform_metrics)
+            platform_data[platform] = {
+                'engagement_rate': round((total_engagements / len(platform_metrics)) * 100 / 
+                                       (total_impressions / len(platform_metrics)), 1) 
+                                       if total_impressions > 0 else 0
+            }
+        else:
+            platform_data[platform] = {'engagement_rate': 0}
+    
+    platform_labels = ['Facebook', 'Twitter', 'LinkedIn', 'Instagram']
+    platform_engagement_rates = [
+        platform_data.get('facebook', {}).get('engagement_rate', 0),
+        platform_data.get('twitter', {}).get('engagement_rate', 0),
+        platform_data.get('linkedin', {}).get('engagement_rate', 0),
+        platform_data.get('instagram', {}).get('engagement_rate', 0)
+    ]
+    
+    # Content type performance
+    content_types = {}
+    for metric in metrics:
+        post = ScheduledSocialPost.query.get(metric.scheduled_post_id) if metric.scheduled_post_id else None
+        if post and post.content_id:
+            content = ContentLog.query.get(post.content_id)
+            if content:
+                content_type = content.get_seo_metadata().get('content_type', 'article')
+                if content_type not in content_types:
+                    content_types[content_type] = {
+                        'engagements': 0,
+                        'posts': 0
+                    }
+                content_types[content_type]['engagements'] += metric.likes + metric.comments + metric.shares
+                content_types[content_type]['posts'] += 1
+    
+    content_type_labels = list(content_types.keys()) or ['Article', 'Question', 'Quote', 'Listicle', 'Video']
+    content_type_engagement = [
+        content_types.get(t, {}).get('engagements', 0) for t in content_type_labels
+    ] or [45, 20, 15, 10, 10]  # Default values if no data
+    
+    # Time series data
+    time_labels = []
+    time_engagements = []
+    time_clicks = []
+    
+    # Generate date range
+    date_range = []
+    current_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+    while current_date <= end_date_obj:
+        date_range.append(current_date.strftime('%Y-%m-%d'))
+        current_date += timedelta(days=1)
+    
+    # Populate time series data
+    for date_str in date_range:
+        time_labels.append(date_str[5:])  # Just month-day
+        day_metrics = [m for m in metrics if m.post_date and m.post_date.strftime('%Y-%m-%d') == date_str]
+        time_engagements.append(sum(m.likes + m.comments + m.shares for m in day_metrics))
+        time_clicks.append(sum(m.clicks for m in day_metrics))
+    
+    # Get top performing posts
+    top_posts = []
+    for metric in sorted(metrics, key=lambda m: (m.likes + m.comments + m.shares), reverse=True)[:5]:
+        post_data = {
+            'platform': metric.platform,
+            'post_date': metric.post_date or datetime.now(),
+            'likes': metric.likes,
+            'comments': metric.comments,
+            'shares': metric.shares,
+            'clicks': metric.clicks,
+            'engagement_rate': round(
+                (metric.likes + metric.comments + metric.shares) * 100 / metric.impressions, 1
+            ) if metric.impressions > 0 else 0,
+            'post_url': metric.post_url,
+            'image_url': None,
+            'title': f"Post on {metric.platform.capitalize()}"
+        }
+        
+        # Get post details if available
+        if metric.scheduled_post_id:
+            post = ScheduledSocialPost.query.get(metric.scheduled_post_id)
+            if post:
+                post_data['image_url'] = post.image_url
+                if post.content_id:
+                    content = ContentLog.query.get(post.content_id)
+                    if content:
+                        post_data['title'] = content.title
+        
+        top_posts.append(post_data)
+    
+    return render_template(
+        'social/statistics.html',
+        date_range=date_range,
+        start_date=start_date,
+        end_date=end_date,
+        stats=stats,
+        platform_labels=platform_labels,
+        platform_engagement_rates=platform_engagement_rates,
+        content_type_labels=content_type_labels,
+        content_type_engagement=content_type_engagement,
+        time_labels=time_labels,
+        time_engagements=time_engagements,
+        time_clicks=time_clicks,
+        top_posts=top_posts
+    )
+
+@social_bp.route('/social/templates')
+def social_templates():
+    """Social media content templates"""
+    # Get templates from database
+    templates = SocialMediaTemplate.query.all()
+    
+    return render_template(
+        'social/templates.html',
+        templates=templates
+    )
+
+@social_bp.route('/social/templates/add', methods=['POST'])
+def add_template():
+    """Add a new social media template"""
+    try:
+        # Get form data
+        name = request.form.get('name')
+        platform = request.form.get('platform')
+        template_type = request.form.get('type')
+        content = request.form.get('content')
+        description = request.form.get('description', '')
+        hashtags_str = request.form.get('hashtags', '')
+        
+        # Validate required fields
+        if not all([name, platform, template_type, content]):
+            flash('Please fill in all required fields.', 'danger')
+            return redirect(url_for('social.social_templates'))
+        
+        # Process hashtags
+        hashtags = [tag.strip() for tag in hashtags_str.split(',') if tag.strip()]
+        
+        # Create template
+        template = SocialMediaTemplate(
+            name=name,
+            platform=platform,
+            type=template_type,
+            content=content,
+            description=description
+        )
+        template.set_hashtags(hashtags)
+        
+        db.session.add(template)
+        db.session.commit()
+        
+        flash('Template added successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error adding template: {str(e)}")
+        flash(f'Error adding template: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_templates'))
+
+@social_bp.route('/social/templates/<int:template_id>/edit', methods=['POST'])
+def edit_template(template_id):
+    """Edit a social media template"""
+    try:
+        # Get template
+        template = SocialMediaTemplate.query.get_or_404(template_id)
+        
+        # Get form data
+        name = request.form.get('name')
+        platform = request.form.get('platform')
+        template_type = request.form.get('type')
+        content = request.form.get('content')
+        description = request.form.get('description', '')
+        hashtags_str = request.form.get('hashtags', '')
+        
+        # Validate required fields
+        if not all([name, platform, template_type, content]):
+            flash('Please fill in all required fields.', 'danger')
+            return redirect(url_for('social.social_templates'))
+        
+        # Process hashtags
+        hashtags = [tag.strip() for tag in hashtags_str.split(',') if tag.strip()]
+        
+        # Update template
+        template.name = name
+        template.platform = platform
+        template.type = template_type
+        template.content = content
+        template.description = description
+        template.set_hashtags(hashtags)
+        
+        db.session.commit()
+        
+        flash('Template updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating template: {str(e)}")
+        flash(f'Error updating template: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_templates'))
+
+@social_bp.route('/social/templates/<int:template_id>/delete', methods=['POST'])
+def delete_template(template_id):
+    """Delete a social media template"""
+    try:
+        # Get template
+        template = SocialMediaTemplate.query.get_or_404(template_id)
+        
+        # Delete template
+        db.session.delete(template)
+        db.session.commit()
+        
+        flash('Template deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting template: {str(e)}")
+        flash(f'Error deleting template: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_templates'))
+
+@social_bp.route('/social/schedule')
+def social_schedule():
+    """Social media scheduling calendar"""
+    # Get scheduled posts
+    scheduled_posts = ScheduledSocialPost.query.filter(
+        ScheduledSocialPost.scheduled_date >= datetime.now()
+    ).order_by(ScheduledSocialPost.scheduled_date).all()
+    
+    # Get schedule settings
+    settings = SocialMediaScheduleSettings.query.filter_by(blog_id=None).first()
+    if not settings:
+        settings = SocialMediaScheduleSettings()
+        db.session.add(settings)
+        db.session.commit()
+    
+    # Get articles for dropdown
+    articles = ContentLog.query.filter(
+        ContentLog.status == 'published'
+    ).order_by(ContentLog.created_at.desc()).limit(20).all()
+    
+    # Get templates for dropdown
+    templates = SocialMediaTemplate.query.all()
+    
+    # Convert scheduled posts to JSON for calendar
+    scheduled_posts_json = json.dumps([{
+        'id': post.id,
+        'content': post.content[:50] + '...' if len(post.content) > 50 else post.content,
+        'platform': post.platform,
+        'scheduled_date': post.scheduled_date.isoformat(),
+        'status': post.status
+    } for post in scheduled_posts])
+    
+    return render_template(
+        'social/schedule.html',
+        scheduled_posts=scheduled_posts,
+        schedule_settings=settings,
+        articles=articles,
+        templates=templates,
+        scheduled_posts_json=scheduled_posts_json
+    )
+
+@social_bp.route('/social/schedule/settings', methods=['POST'])
+def update_schedule_settings():
+    """Update social media schedule settings"""
+    try:
+        # Get settings
+        settings = SocialMediaScheduleSettings.query.filter_by(blog_id=None).first()
+        if not settings:
+            settings = SocialMediaScheduleSettings()
+            db.session.add(settings)
+        
+        # Process optimal times
+        optimal_times = []
+        for i in range(4):
+            time_str = request.form.get(f'time{i}')
+            if time_str:
+                optimal_times.append(time_str)
+        
+        # Process platform settings
+        platform_settings = {}
+        for platform in ['facebook', 'twitter', 'linkedin', 'instagram']:
+            frequency = int(request.form.get(f'{platform}_frequency', 0))
+            days = request.form.getlist(f'{platform}_days')
+            platform_settings[platform] = {
+                'frequency': frequency,
+                'days': days
+            }
+        
+        # Process other settings
+        auto_distribute = 'auto_distribute' in request.form
+        platform_rotation = 'platform_rotation' in request.form
+        content_variety = 'content_variety' in request.form
+        
+        # Update settings
+        settings.set_optimal_times(optimal_times)
+        settings.set_platform_settings(platform_settings)
+        settings.auto_distribute = auto_distribute
+        settings.platform_rotation = platform_rotation
+        settings.content_variety = content_variety
+        
+        db.session.commit()
+        
+        flash('Schedule settings updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating schedule settings: {str(e)}")
+        flash(f'Error updating schedule settings: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_schedule'))
+
+@social_bp.route('/social/schedule/post', methods=['POST'])
+def schedule_post():
+    """Schedule a new social media post"""
+    try:
+        # Get form data
+        platform = request.form.get('platform')
+        content_type = request.form.get('content_type')
+        content = request.form.get('content')
+        hashtags_str = request.form.get('hashtags', '')
+        image_url = request.form.get('image_url')
+        
+        # Process content based on content type
+        if content_type == 'article':
+            article_id = request.form.get('article_id', type=int)
+            if article_id:
+                article = ContentLog.query.get_or_404(article_id)
+                # Generate content for article
+                content = f"Check out our latest article: {article.title}\n\n{article.url}"
+                # Get article image if available
+                if not image_url and article.get_featured_image():
+                    image_url = article.get_featured_image().get('url')
+        elif content_type == 'template':
+            template_id = request.form.get('template_id', type=int)
+            if template_id:
+                template = SocialMediaTemplate.query.get_or_404(template_id)
+                content = template.content
+                hashtags_str = ', '.join(template.get_hashtags())
+        
+        # Process scheduling
+        use_optimal_time = 'use_optimal_time' in request.form
+        if use_optimal_time:
+            # Get next optimal time
+            settings = SocialMediaScheduleSettings.query.filter_by(blog_id=None).first()
+            if settings:
+                optimal_times = settings.get_optimal_times()
+                if optimal_times:
+                    now = datetime.now()
+                    today_times = [
+                        datetime.combine(now.date(), datetime.strptime(t, '%H:%M').time())
+                        for t in optimal_times
+                    ]
+                    future_times = [t for t in today_times if t > now]
+                    
+                    if future_times:
+                        scheduled_time = future_times[0]
+                    else:
+                        # Use first time tomorrow
+                        tomorrow = now.date() + timedelta(days=1)
+                        scheduled_time = datetime.combine(tomorrow, datetime.strptime(optimal_times[0], '%H:%M').time())
+        else:
+            scheduled_time_str = request.form.get('scheduled_time')
+            if scheduled_time_str:
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+            else:
+                # Default to one hour from now
+                scheduled_time = datetime.now() + timedelta(hours=1)
+        
+        # Process hashtags
+        hashtags = [tag.strip() for tag in hashtags_str.split(',') if tag.strip()]
+        
+        # Create scheduled post
+        post = ScheduledSocialPost(
+            platform=platform,
+            content=content,
+            image_url=image_url,
+            scheduled_date=scheduled_time,
+            status='scheduled'
+        )
+        post.set_hashtags(hashtags)
+        
+        # Associate with article if applicable
+        if content_type == 'article' and 'article_id' in request.form:
+            post.content_id = request.form.get('article_id', type=int)
+        
+        db.session.add(post)
+        db.session.commit()
+        
+        flash(f'Post scheduled successfully for {scheduled_time.strftime("%Y-%m-%d %H:%M")}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error scheduling post: {str(e)}")
+        flash(f'Error scheduling post: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_schedule'))
+
+@social_bp.route('/social/schedule/<int:post_id>/edit', methods=['GET', 'POST'])
+def edit_scheduled_post(post_id):
+    """Edit a scheduled social media post"""
+    # Get scheduled post
+    post = ScheduledSocialPost.query.get_or_404(post_id)
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            content = request.form.get('content')
+            hashtags_str = request.form.get('hashtags', '')
+            image_url = request.form.get('image_url')
+            scheduled_time_str = request.form.get('scheduled_time')
+            
+            # Process hashtags
+            hashtags = [tag.strip() for tag in hashtags_str.split(',') if tag.strip()]
+            
+            # Update post
+            post.content = content
+            post.image_url = image_url
+            post.set_hashtags(hashtags)
+            
+            # Update scheduled time if provided
+            if scheduled_time_str:
+                post.scheduled_date = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+            
+            db.session.commit()
+            
+            flash('Scheduled post updated successfully.', 'success')
+            return redirect(url_for('social.social_schedule'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating scheduled post: {str(e)}")
+            flash(f'Error updating scheduled post: {str(e)}', 'danger')
+    
+    # Convert hashtags to string for form
+    hashtags_str = ', '.join(post.get_hashtags())
+    
+    return render_template(
+        'social/edit_scheduled_post.html',
+        post=post,
+        hashtags=hashtags_str
+    )
+
+@social_bp.route('/social/schedule/<int:post_id>/delete', methods=['POST'])
+def delete_scheduled_post(post_id):
+    """Delete a scheduled social media post"""
+    try:
+        # Get scheduled post
+        post = ScheduledSocialPost.query.get_or_404(post_id)
+        
+        # Delete post
+        db.session.delete(post)
+        db.session.commit()
+        
+        flash('Scheduled post deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting scheduled post: {str(e)}")
+        flash(f'Error deleting scheduled post: {str(e)}', 'danger')
+    
+    return redirect(url_for('social.social_schedule'))
+
+# API endpoints for AJAX calls
+@social_bp.route('/api/social/templates/<int:template_id>', methods=['GET'])
+def get_template(template_id):
+    """Get template data by ID"""
+    template = SocialMediaTemplate.query.get_or_404(template_id)
+    
+    return jsonify({
+        'id': template.id,
+        'name': template.name,
+        'platform': template.platform,
+        'type': template.type,
+        'content': template.content,
+        'hashtags': template.get_hashtags(),
+        'description': template.description
+    })

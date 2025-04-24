@@ -294,6 +294,7 @@ class ContentMetrics(db.Model):
             return json.loads(self.raw_data)
         return {}
 
+
 class ImageLibrary(db.Model):
     """Model for storing saved images"""
     id = db.Column(db.Integer, primary_key=True)
@@ -336,6 +337,154 @@ class ImageLibrary(db.Model):
     def set_image_metadata(self, metadata_dict):
         """Sets image metadata from a Python dict"""
         self.image_metadata = json.dumps(metadata_dict)
+
+
+
+
+class SocialMediaTemplate(db.Model):
+    """Model for storing social media content templates"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    platform = db.Column(db.String(50), nullable=False)  # facebook, twitter, linkedin, instagram
+    type = db.Column(db.String(50), nullable=False)  # article_promotion, quote, question, etc.
+    content = db.Column(db.Text, nullable=False)
+    hashtags = db.Column(db.Text, nullable=True)  # JSON string of hashtags
+    description = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<SocialMediaTemplate {self.name} - {self.platform}>"
+    
+    def get_hashtags(self):
+        """Returns hashtags as a Python list"""
+        if self.hashtags:
+            return json.loads(self.hashtags)
+        return []
+        
+    def set_hashtags(self, hashtags_list):
+        """Sets hashtags from a Python list"""
+        self.hashtags = json.dumps(hashtags_list)
+
+
+class ScheduledSocialPost(db.Model):
+    """Model for scheduled social media posts"""
+    id = db.Column(db.Integer, primary_key=True)
+    content_id = db.Column(db.Integer, db.ForeignKey('content_log.id'), nullable=True)
+    platform = db.Column(db.String(50), nullable=False)  # facebook, twitter, linkedin, instagram
+    content = db.Column(db.Text, nullable=False)
+    hashtags = db.Column(db.Text, nullable=True)  # JSON string of hashtags
+    image_url = db.Column(db.String(255), nullable=True)
+    scheduled_date = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(50), default="scheduled")  # scheduled, published, error
+    result_data = db.Column(db.Text, nullable=True)  # JSON string of API response data
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Define relationship with ContentLog (optional association)
+    content = db.relationship('ContentLog', backref=db.backref('scheduled_social_posts', lazy=True))
+    
+    def __repr__(self):
+        return f"<ScheduledSocialPost {self.platform} - {self.scheduled_date}>"
+    
+    def get_hashtags(self):
+        """Returns hashtags as a Python list"""
+        if self.hashtags:
+            return json.loads(self.hashtags)
+        return []
+        
+    def set_hashtags(self, hashtags_list):
+        """Sets hashtags from a Python list"""
+        self.hashtags = json.dumps(hashtags_list)
+        
+    def get_result_data(self):
+        """Returns result data as a Python dict"""
+        if self.result_data:
+            return json.loads(self.result_data)
+        return {}
+        
+    def set_result_data(self, result_dict):
+        """Sets result data from a Python dict"""
+        self.result_data = json.dumps(result_dict)
+
+
+class SocialMediaScheduleSettings(db.Model):
+    """Model for storing social media publishing schedule settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)  # NULL means global settings
+    optimal_times = db.Column(db.Text, nullable=True)  # JSON string of optimal posting times
+    platform_settings = db.Column(db.Text, nullable=True)  # JSON string of platform-specific settings
+    auto_distribute = db.Column(db.Boolean, default=True)
+    platform_rotation = db.Column(db.Boolean, default=True)
+    content_variety = db.Column(db.Boolean, default=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Define relationship with Blog (optional)
+    blog = db.relationship('Blog', backref=db.backref('social_schedule_settings', uselist=False))
+    
+    def __repr__(self):
+        blog_name = self.blog.name if self.blog else "Global"
+        return f"<SocialMediaScheduleSettings {blog_name}>"
+    
+    def get_optimal_times(self):
+        """Returns optimal times as a Python list"""
+        if self.optimal_times:
+            return json.loads(self.optimal_times)
+        return ["08:00", "12:00", "16:00", "20:00"]
+        
+    def set_optimal_times(self, times_list):
+        """Sets optimal times from a Python list"""
+        self.optimal_times = json.dumps(times_list)
+        
+    def get_platform_settings(self):
+        """Returns platform settings as a Python dict"""
+        if self.platform_settings:
+            return json.loads(self.platform_settings)
+        return {
+            "facebook": {"frequency": 3, "days": ["mon", "wed", "fri"]},
+            "twitter": {"frequency": 5, "days": ["mon", "tue", "wed", "thu", "fri"]},
+            "linkedin": {"frequency": 2, "days": ["tue", "thu"]},
+            "instagram": {"frequency": 2, "days": ["mon", "fri"]}
+        }
+        
+    def set_platform_settings(self, settings_dict):
+        """Sets platform settings from a Python dict"""
+        self.platform_settings = json.dumps(settings_dict)
+
+
+class SocialMediaPostMetrics(db.Model):
+    """Model for storing social media post performance metrics"""
+    id = db.Column(db.Integer, primary_key=True)
+    content_id = db.Column(db.Integer, db.ForeignKey('content_log.id'), nullable=True)
+    scheduled_post_id = db.Column(db.Integer, db.ForeignKey('scheduled_social_post.id'), nullable=True)
+    platform = db.Column(db.String(50), nullable=False)  # facebook, twitter, linkedin, instagram
+    post_url = db.Column(db.String(255), nullable=True)
+    post_id = db.Column(db.String(100), nullable=True)  # ID from the social media platform
+    likes = db.Column(db.Integer, default=0)
+    comments = db.Column(db.Integer, default=0)
+    shares = db.Column(db.Integer, default=0)
+    clicks = db.Column(db.Integer, default=0)
+    impressions = db.Column(db.Integer, default=0)
+    engagement_rate = db.Column(db.Float, default=0.0)  # Percentage
+    post_date = db.Column(db.DateTime, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    raw_data = db.Column(db.Text, nullable=True)  # JSON string of additional metrics
+    
+    # Define relationships
+    content = db.relationship('ContentLog', backref=db.backref('social_metrics', lazy=True))
+    scheduled_post = db.relationship('ScheduledSocialPost', backref=db.backref('metrics', lazy=True))
+    
+    def __repr__(self):
+        return f"<SocialMediaPostMetrics {self.platform} - likes:{self.likes}, shares:{self.shares}>"
+    
+    def set_raw_data(self, data_dict):
+        """Sets raw data from a Python dict"""
+        self.raw_data = json.dumps(data_dict)
+    
+    def get_raw_data(self):
+        """Returns raw data as a Python dict"""
+        if self.raw_data:
+            return json.loads(self.raw_data)
+        return {}
 
 
 class PerformanceReport(db.Model):
