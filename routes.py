@@ -911,5 +911,8 @@ def register_routes(app: Flask):
     # Register SEO Inspirations blueprint
     app.register_blueprint(seo_inspiration_bp)
     
+    # Register Content Creator blueprint
+    app.register_blueprint(content_creator_bp)
+    
     # Register newsletter blueprint
     app.register_blueprint(newsletter_bp)

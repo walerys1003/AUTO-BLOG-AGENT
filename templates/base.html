@@ -69,6 +69,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if '/content-creator' in request.path %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}">
+                                <i class="fas fa-pen-fancy me-1"></i> Content Creator
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}">
                                 <i class="fas fa-chart-line me-1"></i> Analytics
                             </a>
