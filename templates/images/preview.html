@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Image Preview{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Article Image Preview</h1>
+        <div>
+            <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Change Image
+            </a>
+            <a href="{{ url_for('content.edit', content_id=content.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Article
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{{ content.title }}</h5>
+        </div>
+        <div class="card-body">
+            {% if image %}
+            <div class="row">
+                <div class="col-md-8">
+                    <img src="{{ image.url }}" class="img-fluid rounded" alt="{{ content.title }}">
+                </div>
+                <div class="col-md-4">
+                    <h5 class="border-bottom pb-2">Image Details</h5>
+                    
+                    <div class="mb-3">
+                        <strong>Source:</strong> 
+                        <span class="badge bg-info">{{ image.source|capitalize }}</span>
+                    </div>
+                    
+                    {% if image.width and image.height %}
+                    <div class="mb-3">
+                        <strong>Dimensions:</strong> {{ image.width }} × {{ image.height }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if image.attribution_text %}
+                    <div class="mb-3">
+                        <strong>Attribution:</strong><br>
+                        {% if image.attribution_url %}
+                        <a href="{{ image.attribution_url }}" target="_blank">{{ image.attribution_text }}</a>
+                        {% else %}
+                        {{ image.attribution_text }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary">
+                            <i class="fas fa-exchange-alt"></i> Change Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> No featured image has been set for this article.
+            </div>
+            <div class="text-center my-4">
+                <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle"></i> Add Featured Image
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

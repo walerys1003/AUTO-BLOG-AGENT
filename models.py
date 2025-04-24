@@ -55,6 +55,7 @@ class ContentLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     published_at = db.Column(db.DateTime, nullable=True)
     social_media_posts = db.Column(db.Text, nullable=True)  # JSON string of social media post URLs
+    featured_image_data = db.Column(db.Text, nullable=True)  # JSON string of featured image data
     
     # Define relationship with Blog
     blog = db.relationship('Blog', backref=db.backref('content_logs', lazy=True))
@@ -71,6 +72,16 @@ class ContentLog(db.Model):
         if self.social_media_posts:
             return json.loads(self.social_media_posts)
         return {}
+        
+    def set_featured_image(self, image_data):
+        """Sets featured image data from a Python dict"""
+        self.featured_image_data = json.dumps(image_data)
+    
+    def get_featured_image(self):
+        """Returns featured image data as a Python dict"""
+        if self.featured_image_data:
+            return json.loads(self.featured_image_data)
+        return None
 
 class ArticleTopic(db.Model):
     """Model for storing generated topics"""
@@ -335,6 +346,50 @@ class AutomationRule(db.Model):
             # Convert all values to integers and remove duplicates
             days_list = [str(int(day)) for day in days_list]
             self.publishing_days = ','.join(days_list)
+
+
+class ImageLibrary(db.Model):
+    """Model for storing images for reuse across articles"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=True)
+    url = db.Column(db.String(512), nullable=False)
+    thumbnail_url = db.Column(db.String(512), nullable=True)
+    width = db.Column(db.Integer, nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    source = db.Column(db.String(50), nullable=True)  # unsplash, google, upload
+    source_id = db.Column(db.String(100), nullable=True)  # original ID from source
+    attribution = db.Column(db.String(255), nullable=True)  # attribution text
+    attribution_url = db.Column(db.String(512), nullable=True)  # attribution URL
+    tags = db.Column(db.Text, nullable=True)  # JSON string of tags
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    image_metadata = db.Column(db.Text, nullable=True)  # JSON string of additional metadata
+    
+    # Define relationship with Blog
+    blog = db.relationship('Blog', backref=db.backref('image_library', lazy=True))
+    
+    def __repr__(self):
+        return f"<ImageLibrary {self.title or 'Unnamed'} - {self.source}>"
+    
+    def get_tags(self):
+        """Returns tags as a Python list"""
+        if self.tags:
+            return json.loads(self.tags)
+        return []
+    
+    def set_tags(self, tags_list):
+        """Sets tags from a Python list"""
+        self.tags = json.dumps(tags_list)
+    
+    def get_metadata(self):
+        """Returns metadata as a Python dict"""
+        if self.image_metadata:
+            return json.loads(self.image_metadata)
+        return {}
+    
+    def set_metadata(self, metadata_dict):
+        """Sets metadata from a Python dict"""
+        self.image_metadata = json.dumps(metadata_dict)
 
 
 class NewsletterConfig(db.Model):

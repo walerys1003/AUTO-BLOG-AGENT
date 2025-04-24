@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Images{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Search Images</h1>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('images.search_images') }}" class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="query">Search Query</label>
+                            <input type="text" class="form-control" id="query" name="query" 
+                                   value="{{ query }}" required placeholder="Enter keywords...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="source">Source</label>
+                            <select class="form-control" id="source" name="source">
+                                {% for source_option in sources %}
+                                <option value="{{ source_option }}"
+                                    {% if selected_source == source_option %}selected{% endif %}>
+                                    {{ source_option|capitalize }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="orientation">Orientation</label>
+                            <select class="form-control" id="orientation" name="orientation">
+                                <option value="">Any</option>
+                                <option value="landscape">Landscape</option>
+                                <option value="portrait">Portrait</option>
+                                <option value="squarish">Square</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+    
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if images %}
+    <div class="row">
+        {% for image in images %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ image.thumb_url or image.url }}" class="card-img-top" alt="{{ image.description or 'Image' }}">
+                <div class="card-body">
+                    <h5 class="card-title text-truncate">{{ image.description or 'Unnamed Image' }}</h5>
+                    <p class="card-text small">
+                        Source: {{ image.source|capitalize }}<br>
+                        {% if image.user %}
+                        By: <a href="{{ image.user.profile_url }}" target="_blank">{{ image.user.name }}</a><br>
+                        {% endif %}
+                        {% if image.width and image.height %}
+                        Size: {{ image.width }}x{{ image.height }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ image.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-external-link-alt"></i> View
+                        </a>
+                        <button class="btn btn-sm btn-primary select-image" 
+                                data-image-data="{{ image|tojson }}">
+                            <i class="fas fa-check"></i> Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif query %}
+    <div class="alert alert-info">
+        No images found for "{{ query }}". Try a different search query.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal for image selection -->
+<div class="modal fade" id="selectImageModal" tabindex="-1" aria-labelledby="selectImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectImageModalLabel">Select Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="image-selection-form" method="POST" action="">
+                    <input type="hidden" name="image_type" value="search">
+                    <input type="hidden" name="image_data" id="selected-image-data">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img id="preview-image" src="" class="img-fluid rounded" alt="Preview">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Source</label>
+                                <p id="preview-source" class="form-text"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Attribution</label>
+                                <p id="preview-attribution" class="form-text"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <p id="preview-description" class="form-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="destination-select" class="form-label">What would you like to do with this image?</label>
+                        <select class="form-control" id="destination-select">
+                            <option value="article">Use for article</option>
+                            <option value="library">Add to image library</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                    
+                    <div id="library-options" class="d-none">
+                        <div class="mb-3">
+                            <label for="image-title" class="form-label">Image Title (for library)</label>
+                            <input type="text" class="form-control" id="image-title" name="title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="image-tags" class="form-label">Tags (comma separated)</label>
+                            <input type="text" class="form-control" id="image-tags" name="tags">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-image-selection">Confirm Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle image selection
+    const selectButtons = document.querySelectorAll('.select-image');
+    const selectModal = document.getElementById('selectImageModal');
+    const imageDataInput = document.getElementById('selected-image-data');
+    const previewImage = document.getElementById('preview-image');
+    const previewSource = document.getElementById('preview-source');
+    const previewAttribution = document.getElementById('preview-attribution');
+    const previewDescription = document.getElementById('preview-description');
+    const destinationSelect = document.getElementById('destination-select');
+    const libraryOptions = document.getElementById('library-options');
+    const confirmButton = document.getElementById('confirm-image-selection');
+    const selectionForm = document.getElementById('image-selection-form');
+    
+    // Show/hide library options based on destination selection
+    destinationSelect.addEventListener('change', function() {
+        if (this.value === 'library' || this.value === 'both') {
+            libraryOptions.classList.remove('d-none');
+        } else {
+            libraryOptions.classList.add('d-none');
+        }
+    });
+    
+    // Handle select button clicks
+    selectButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const imageData = JSON.parse(this.getAttribute('data-image-data'));
+            
+            // Set form data
+            imageDataInput.value = JSON.stringify(imageData);
+            
+            // Update preview
+            previewImage.src = imageData.url || imageData.thumb_url;
+            previewSource.textContent = (imageData.source || 'Unknown').toUpperCase();
+            previewAttribution.textContent = imageData.attribution_text || '';
+            previewDescription.textContent = imageData.description || 'No description available';
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(selectModal);
+            modal.show();
+        });
+    });
+    
+    // Handle confirmation
+    confirmButton.addEventListener('click', function() {
+        const destination = destinationSelect.value;
+        
+        if (destination === 'article' || destination === 'both') {
+            // Submit the form for article use
+            selectionForm.action = '{{ request.args.get("return_url", url_for("images.search_images")) }}';
+            selectionForm.submit();
+        } else if (destination === 'library') {
+            // Submit to add to library
+            selectionForm.action = '{{ url_for("images.add_to_library") }}';
+            selectionForm.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

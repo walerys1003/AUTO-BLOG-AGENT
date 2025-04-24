@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Add to Image Library{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Add to Image Library</h1>
+        <div>
+            <a href="{{ url_for('images.image_library') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Library
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Add New Image</h5>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="addImageTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" 
+                            type="button" role="tab" aria-controls="search" aria-selected="true">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" 
+                            type="button" role="tab" aria-controls="upload" aria-selected="false">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="addImageTabsContent">
+                <!-- Search Tab -->
+                <div class="tab-pane fade show active" id="search" role="tabpanel" aria-labelledby="search-tab">
+                    <div class="mb-4">
+                        <form id="image-search-form" method="GET" action="{{ url_for('images.search_images') }}" target="_blank">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="search-query">Search Query</label>
+                                        <input type="text" class="form-control" id="search-query" name="query" 
+                                               required placeholder="Enter keywords...">
+                                        <input type="hidden" name="return_url" 
+                                               value="{{ url_for('images.add_to_library') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group mb-3">
+                                        <label for="search-source">Source</label>
+                                        <select class="form-control" id="search-source" name="source">
+                                            <option value="unsplash">Unsplash</option>
+                                            <option value="google">Google</option>
+                                            <option value="all">All Sources</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group mb-3">
+                                        <label for="search-orientation">Orientation</label>
+                                        <select class="form-control" id="search-orientation" name="orientation">
+                                            <option value="">Any</option>
+                                            <option value="landscape">Landscape</option>
+                                            <option value="portrait">Portrait</option>
+                                            <option value="squarish">Square</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search Images
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Click the Search button to browse images. Once you select an image, you'll be redirected back 
+                        to this page with your selection.
+                    </div>
+                </div>
+                
+                <!-- Upload Tab -->
+                <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                    <form method="POST" action="{{ url_for('images.add_to_library') }}" 
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="source_type" value="upload">
+                        
+                        <div class="mb-3">
+                            <label for="blog-id" class="form-label">Blog</label>
+                            <select class="form-select" id="blog-id" name="blog_id" required>
+                                {% for blog in blogs %}
+                                <option value="{{ blog.id }}">{{ blog.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image-title" class="form-label">Image Title</label>
+                            <input type="text" class="form-control" id="image-title" name="title" 
+                                   placeholder="Give your image a descriptive title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image-file" class="form-label">Select Image File</label>
+                            <input class="form-control" type="file" id="image-file" name="image_file" accept="image/*" required>
+                            <div class="form-text">
+                                Accepted formats: JPG, PNG, GIF, WEBP. Max file size: 5MB.
+                            </div>
+                        </div>
+                        
+                        <div id="image-preview-container" class="mb-3 d-none">
+                            <label class="form-label">Preview</label>
+                            <div class="text-center p-3 bg-light rounded">
+                                <img id="image-preview" src="#" alt="Image Preview" class="img-fluid" style="max-height: 300px;">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image-tags" class="form-label">Tags (comma separated)</label>
+                            <input type="text" class="form-control" id="image-tags" name="tags" 
+                                   placeholder="nature, landscape, mountains">
+                            <div class="form-text">
+                                Tags help you organize and find images later.
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload to Library
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle file upload preview
+    const fileInput = document.getElementById('image-file');
+    const previewContainer = document.getElementById('image-preview-container');
+    const preview = document.getElementById('image-preview');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                previewContainer.classList.remove('d-none');
+            }
+            
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            previewContainer.classList.add('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}
