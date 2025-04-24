@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}Harmonogram Publikacji{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    .calendar-container {
+        height: 650px;
+    }
+    .automation-switch {
+        width: 60px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Harmonogram Publikacji</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <a href="{{ url_for('publishing.publishing_settings') }}" class="btn btn-outline-primary">
+                <i class="bi bi-gear"></i> Ustawienia
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Kalendarz publikacji</h5>
+                    <div class="d-flex gap-2">
+                        <form id="blog-filter-form" class="d-flex gap-2" method="GET">
+                            <select name="blog_id" class="form-select form-select-sm">
+                                <option value="">Wszystkie blogi</option>
+                                {% for blog in blogs %}
+                                <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Filtruj</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="calendar" class="calendar-container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Status automatyzacji</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for blog in blogs %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ blog.name }}</h6>
+                                <small class="text-muted">
+                                    {% if automation_status[blog.id]['active'] %}
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle-fill"></i> Aktywna
+                                    </span>
+                                    {% else %}
+                                    <span class="text-secondary">
+                                        <i class="bi bi-circle"></i> Nieaktywna
+                                    </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="form-check form-switch automation-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" 
+                                       id="automation-{{ blog.id }}" 
+                                       data-blog-id="{{ blog.id }}"
+                                       {% if automation_status[blog.id]['active'] %}checked{% endif %}
+                                       onchange="toggleAutomation({{ blog.id }}, this.checked)">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Legenda</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 15px; height: 15px; background-color: #28a745; border-radius: 3px;"></div>
+                        <div>Opublikowane</div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 15px; height: 15px; background-color: #17a2b8; border-radius: 3px;"></div>
+                        <div>Zaplanowane</div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 15px; height: 15px; background-color: #6c757d; border-radius: 3px;"></div>
+                        <div>Szkic</div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 15px; height: 15px; background-color: #dc3545; border-radius: 3px;"></div>
+                        <div>Błąd</div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="me-2" style="width: 15px; height: 15px; background-color: #ffc107; border-radius: 3px;"></div>
+                        <div>Oczekuje na zatwierdzenie</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Szczegóły publikacji</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="event-title" class="form-label">Tytuł</label>
+                    <input type="text" class="form-control" id="event-title" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="event-date" class="form-label">Data publikacji</label>
+                    <input type="date" class="form-control" id="event-date">
+                </div>
+                <div class="mb-3">
+                    <label for="event-time" class="form-label">Godzina publikacji</label>
+                    <input type="time" class="form-control" id="event-time">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <div id="event-status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="event-id">
+                <input type="hidden" id="content-id">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                <a href="#" id="edit-content-btn" class="btn btn-primary">Edytuj treść</a>
+                <button type="button" class="btn btn-success" id="save-schedule-btn">Zapisz zmiany</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calendar events data
+        const events = {{ calendar_events|safe }};
+        
+        // Initialize FullCalendar
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            locale: 'pl',
+            events: events,
+            eventClick: function(info) {
+                showEventModal(info.event);
+            },
+            businessHours: {
+                daysOfWeek: [1, 2, 3, 4, 5],
+                startTime: '09:00',
+                endTime: '17:00'
+            },
+            nowIndicator: true,
+            navLinks: true,
+            editable: true,
+            dayMaxEvents: true,
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            },
+            eventDrop: function(info) {
+                updateSchedule(
+                    info.event.id, 
+                    info.event.start.toISOString().split('T')[0],
+                    info.event.start.toTimeString().split(' ')[0].substring(0, 5)
+                );
+            }
+        });
+        
+        calendar.render();
+        
+        // Event Modal Handling
+        function showEventModal(event) {
+            const eventId = event.id;
+            const title = event.title;
+            const start = event.start;
+            const contentId = event.extendedProps.content_id;
+            const status = event.extendedProps.status;
+            
+            document.getElementById('event-id').value = eventId;
+            document.getElementById('event-title').value = title;
+            document.getElementById('content-id').value = contentId;
+            
+            // Format date and time
+            const date = start.toISOString().split('T')[0];
+            const time = start.toTimeString().split(' ')[0].substring(0, 5);
+            
+            document.getElementById('event-date').value = date;
+            document.getElementById('event-time').value = time;
+            
+            // Set status badge
+            let statusHtml = '';
+            if (status === 'published') {
+                statusHtml = '<span class="badge bg-success">Opublikowany</span>';
+            } else if (status === 'scheduled') {
+                statusHtml = '<span class="badge bg-info">Zaplanowany</span>';
+            } else if (status === 'draft') {
+                statusHtml = '<span class="badge bg-secondary">Szkic</span>';
+            } else if (status === 'failed') {
+                statusHtml = '<span class="badge bg-danger">Błąd</span>';
+            } else if (status === 'pending_review') {
+                statusHtml = '<span class="badge bg-warning">Oczekuje na zatwierdzenie</span>';
+            } else {
+                statusHtml = `<span class="badge bg-dark">${status}</span>`;
+            }
+            document.getElementById('event-status').innerHTML = statusHtml;
+            
+            // Set edit link
+            document.getElementById('edit-content-btn').href = `/publishing/edit/${contentId}`;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            modal.show();
+        }
+        
+        // Save schedule changes
+        document.getElementById('save-schedule-btn').addEventListener('click', function() {
+            const eventId = document.getElementById('event-id').value;
+            const date = document.getElementById('event-date').value;
+            const time = document.getElementById('event-time').value;
+            
+            updateSchedule(eventId, date, time);
+        });
+        
+        // AJAX function to update schedule
+        function updateSchedule(eventId, date, time) {
+            fetch('{{ url_for("publishing.update_schedule") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: eventId,
+                    date: date,
+                    time: time
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal if open
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Show success notification
+                    showNotification('Harmonogram został zaktualizowany', 'success');
+                    
+                    // Refresh calendar events
+                    const event = calendar.getEventById(eventId);
+                    if (event) {
+                        const newDate = new Date(`${date}T${time}`);
+                        event.setProp('start', newDate);
+                    }
+                } else {
+                    showNotification('Błąd: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Wystąpił błąd podczas aktualizacji harmonogramu', 'danger');
+            });
+        }
+    });
+    
+    // Toggle automation function
+    function toggleAutomation(blogId, status) {
+        fetch('{{ url_for("publishing.toggle_automation") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                blog_id: blogId,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Automatyzacja ${status ? 'włączona' : 'wyłączona'}`, 'success');
+            } else {
+                showNotification('Błąd: ' + data.message, 'danger');
+                // Revert switch if failed
+                document.getElementById(`automation-${blogId}`).checked = !status;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Wystąpił błąd podczas zmiany statusu automatyzacji', 'danger');
+            // Revert switch if failed
+            document.getElementById(`automation-${blogId}`).checked = !status;
+        });
+    }
+    
+    // Helper function to show notification
+    function showNotification(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '5';
+            document.body.appendChild(container);
+        }
+        
+        document.getElementById('toast-container').appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+        bsToast.show();
+    }
+</script>
+{% endblock %}

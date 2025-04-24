@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Edycja Artykułu{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+<style>
+    .preview-image {
+        max-height: 300px;
+        object-fit: contain;
+    }
+    .summernote-container {
+        min-height: 350px;
+    }
+    .tab-content {
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        padding: 20px;
+        border-radius: 0 0 0.25rem 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Edycja Artykułu</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Wróć
+            </a>
+            {% if content.status == 'pending_review' or content.status == 'draft' %}
+            <button type="button" class="btn btn-success" onclick="confirmPublishNow()">
+                <i class="bi bi-cloud-upload"></i> Publikuj teraz
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('publishing.edit_article', content_id=content.id) }}" id="edit-form">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="true">Treść</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="excerpt-tab" data-bs-toggle="tab" data-bs-target="#excerpt" type="button" role="tab" aria-controls="excerpt" aria-selected="false">Wyciąg</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta" type="button" role="tab" aria-controls="meta" aria-selected="false">SEO</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="content" role="tabpanel" aria-labelledby="content-tab">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Tytuł</label>
+                                    <input type="text" class="form-control" id="title" name="title" value="{{ content.title }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="content-editor" class="form-label">Treść</label>
+                                    <div class="summernote-container">
+                                        <textarea id="content-editor" name="content" class="form-control" rows="20">{{ content.content }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="excerpt" role="tabpanel" aria-labelledby="excerpt-tab">
+                                <div class="mb-3">
+                                    <label for="excerpt-editor" class="form-label">Wyciąg (ekspert wyświetlany w listach i wyszukiwarkach)</label>
+                                    <textarea id="excerpt-editor" name="excerpt" class="form-control" rows="8">{{ content.excerpt }}</textarea>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="meta" role="tabpanel" aria-labelledby="meta-tab">
+                                <div class="mb-3">
+                                    <label for="meta_title" class="form-label">Tytuł META</label>
+                                    <input type="text" class="form-control" id="meta_title" name="meta_title" value="{{ metadata.get('title', content.title) }}">
+                                    <div class="form-text">Pozostaw puste, aby użyć domyślnego tytułu.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="meta_description" class="form-label">Opis META</label>
+                                    <textarea class="form-control" id="meta_description" name="meta_description" rows="3">{{ metadata.get('description', '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Publication Settings -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ustawienia publikacji</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="blog" class="form-label">Blog</label>
+                            <input type="text" class="form-control" id="blog" value="{{ blog.name }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <div>
+                                {% if content.status == 'published' %}
+                                <span class="badge bg-success">Opublikowany</span>
+                                {% elif content.status == 'scheduled' %}
+                                <span class="badge bg-info">Zaplanowany</span>
+                                {% elif content.status == 'draft' %}
+                                <span class="badge bg-secondary">Szkic</span>
+                                {% elif content.status == 'failed' %}
+                                <span class="badge bg-danger">Błąd</span>
+                                {% elif content.status == 'pending_review' %}
+                                <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ content.status }}</span>
+                                {% endif %}
+                                
+                                {% if content.error_message %}
+                                <div class="alert alert-danger mt-2 small">
+                                    <strong>Błąd:</strong> {{ content.error_message }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">Kategoria</label>
+                            <select class="form-select" id="category_id" name="category_id">
+                                <option value="">-- Wybierz kategorię --</option>
+                                {% for category in categories %}
+                                <option value="{{ category.wordpress_id }}" {% if content.category_id == category.wordpress_id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tagi</label>
+                            <input type="text" class="form-control" id="tags" name="tags" value="{{ tags }}">
+                            <div class="form-text">Oddziel tagi przecinkami</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data publikacji</label>
+                            <input type="text" class="form-control" value="{% if content.publish_date %}{{ content.publish_date.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Featured Image -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Grafika wyróżniająca</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if content.featured_image_data %}
+                        <div class="text-center mb-3">
+                            <img src="{{ content.get_featured_image().get('url', '') }}" class="preview-image" alt="Featured Image">
+                        </div>
+                        <div class="d-grid">
+                            <a href="{{ url_for('images.search') }}?return_to={{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-outline-primary">
+                                Zmień grafikę
+                            </a>
+                        </div>
+                        <input type="hidden" name="featured_image" value="{{ content.featured_image_data }}">
+                        {% else %}
+                        <div class="text-center mb-3">
+                            <div class="border p-5 mb-3 bg-light text-muted">
+                                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                <p class="mt-2">Brak grafiki wyróżniającej</p>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{{ url_for('images.search') }}?return_to={{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-primary">
+                                Dodaj grafikę
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Zapisz zmiany</button>
+            {% if content.status == 'pending_review' or content.status == 'draft' %}
+            <button type="button" class="btn btn-success btn-lg" onclick="confirmPublishNow()">Publikuj teraz</button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Publish Now Confirmation Modal -->
+<div class="modal fade" id="publishNowModal" tabindex="-1" aria-labelledby="publishNowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="publishNowModalLabel">Publikuj teraz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz opublikować ten artykuł teraz?</p>
+                <p class="text-muted">Zanim opublikujesz, zapisz aktualną wersję artykułu.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <a href="#" id="publish-now-link" class="btn btn-success">Publikuj</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize rich text editor
+        $('#content-editor').summernote({
+            height: 450,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+        
+        // Initialize excerpt editor with minimal toolbar
+        $('#excerpt-editor').summernote({
+            height: 150,
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline']],
+                ['para', ['paragraph']],
+                ['view', ['codeview']]
+            ],
+            placeholder: 'Wprowadź wyciąg z artykułu...'
+        });
+        
+        // Publish now confirmation
+        window.confirmPublishNow = function() {
+            // First submit the form to save changes
+            document.getElementById('edit-form').submit();
+            
+            // Then show the confirmation dialog
+            const modal = new bootstrap.Modal(document.getElementById('publishNowModal'));
+            document.getElementById('publish-now-link').href = "{{ url_for('publishing.publish_now', content_id=content.id) }}";
+            modal.show();
+        };
+    });
+</script>
+{% endblock %}

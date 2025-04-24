@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Zarządzanie Publikacjami{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Zarządzanie Publikacjami</h1>
+        <div>
+            <form id="blog-filter-form" class="d-flex gap-2" method="GET">
+                <select name="blog_id" class="form-select">
+                    <option value="">Wszystkie blogi</option>
+                    {% for blog in blogs %}
+                    <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Filtruj</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Oczekujące</h5>
+                    <p class="display-4">{{ pending_count }}</p>
+                    <a href="{{ url_for('publishing.pending_articles', status='scheduled') }}" class="btn btn-outline-primary">Wyświetl</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Opublikowane</h5>
+                    <p class="display-4">{{ published_count }}</p>
+                    <a href="{{ url_for('publishing.publication_history', status='published') }}" class="btn btn-outline-success">Historia</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Błędy</h5>
+                    <p class="display-4">{{ failed_count }}</p>
+                    <a href="{{ url_for('publishing.pending_articles', status='failed') }}" class="btn btn-outline-danger">Sprawdź błędy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Harmonogram publikacji (najbliższy tydzień)</h5>
+                    <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-sm btn-primary">Pełny harmonogram</a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="scheduleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Ostatnio opublikowane artykuły</h5>
+                    <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-sm btn-primary">Zobacz wszystkie</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tytuł</th>
+                                    <th>Blog</th>
+                                    <th>Status</th>
+                                    <th>Data publikacji</th>
+                                    <th>Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for article in recent_articles %}
+                                <tr>
+                                    <td>{{ article.title }}</td>
+                                    <td>{{ article.blog.name }}</td>
+                                    <td>
+                                        {% if article.status == 'published' %}
+                                        <span class="badge bg-success">Opublikowany</span>
+                                        {% elif article.status == 'scheduled' %}
+                                        <span class="badge bg-info">Zaplanowany</span>
+                                        {% elif article.status == 'draft' %}
+                                        <span class="badge bg-secondary">Szkic</span>
+                                        {% elif article.status == 'failed' %}
+                                        <span class="badge bg-danger">Błąd</span>
+                                        {% elif article.status == 'pending_review' %}
+                                        <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
+                                        {% else %}
+                                        <span class="badge bg-dark">{{ article.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if article.published_at %}
+                                        {{ article.published_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% elif article.publish_date %}
+                                        {{ article.publish_date.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if article.status == 'published' and article.post_id %}
+                                        <a href="{{ article.blog.url }}/p/{{ article.post_id }}" target="_blank" class="btn btn-sm btn-outline-primary">Zobacz</a>
+                                        {% endif %}
+                                        
+                                        {% if article.status == 'scheduled' or article.status == 'draft' or article.status == 'pending_review' %}
+                                        <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}" class="btn btn-sm btn-outline-secondary">Edytuj</a>
+                                        {% endif %}
+                                        
+                                        {% if article.status == 'pending_review' %}
+                                        <a href="#" 
+                                           onclick="publishNow({{ article.id }}); return false;" 
+                                           class="btn btn-sm btn-success">Publikuj</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Brak artykułów</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Publish Now Confirmation Modal -->
+<div class="modal fade" id="publishNowModal" tabindex="-1" aria-labelledby="publishNowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="publishNowModalLabel">Publikuj teraz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz opublikować ten artykuł teraz?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <form id="publish-now-form" method="POST">
+                    <button type="submit" class="btn btn-success">Publikuj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart data
+        const dates = [
+            {% for date, count in schedule_by_date.items() %}
+            "{{ date }}",
+            {% endfor %}
+        ];
+        
+        const counts = [
+            {% for date, count in schedule_by_date.items() %}
+            {{ count }},
+            {% endfor %}
+        ];
+        
+        // Schedule chart
+        const scheduleCtx = document.getElementById('scheduleChart').getContext('2d');
+        new Chart(scheduleCtx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Zaplanowane publikacje',
+                    data: counts,
+                    backgroundColor: '#0dcaf0',
+                    borderColor: '#0aa2c0',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Publish now handling
+        window.publishNow = function(contentId) {
+            const modal = new bootstrap.Modal(document.getElementById('publishNowModal'));
+            const form = document.getElementById('publish-now-form');
+            form.action = "{{ url_for('publishing.publish_now', content_id=0) }}".replace('0', contentId);
+            modal.show();
+        };
+    });
+</script>
+{% endblock %}
