@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="48px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Blog Automation Master - Bodybuilder</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="masterGradient">
+            <stop stop-color="#4F8BFF" offset="0%"></stop>
+            <stop stop-color="#7B68EE" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background Circle -->
+        <circle fill="url(#masterGradient)" cx="24" cy="24" r="24"></circle>
+        
+        <!-- Head -->
+        <circle fill="#FFD3B6" cx="24" cy="13" r="7"></circle>
+        <path d="M21,14 C21,14 20,16 22,16 C23,16 24,16 25,16 C27,16 26,14 26,14" fill="#000000" opacity="0.7"></path>
+        
+        <!-- Hair -->
+        <path d="M24,6 C20,6 18,8 18,10 C18,12 18,13 24,13 C30,13 30,12 30,10 C30,8 28,6 24,6 Z" fill="#000000"></path>
+        
+        <!-- Neck -->
+        <rect fill="#FFD3B6" x="22" y="19" width="4" height="4"></rect>
+        
+        <!-- Muscular Body -->
+        <path d="M14,38 L18,38 L18,32 L22,29 L19,26 L19,25 C19,25 21,24 21,23 C21,22 21,20 24,20 C27,20 27,22 27,23 C27,24 29,25 29,25 L29,26 L26,29 L30,32 L30,38 L34,38 L34,30 L32,28 L32,25 C32,25 38,25 38,22 C38,19 36,18 36,18 L34,18 C34,18 32,17 32,15 C32,14 32,12 24,12 C16,12 16,14 16,15 C16,17 14,18 14,18 L12,18 C12,18 10,19 10,22 C10,25 16,25 16,25 L16,28 L14,30 L14,38 Z" fill="#FFD3B6"></path>
+        
+        <!-- Muscles Definition -->
+        <path d="M24,20 C24,20 18,22 17,27" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M24,20 C24,20 30,22 31,27" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M24,26 C24,26 20,26 18,30" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M24,26 C24,26 28,26 30,30" stroke="#D2A98B" stroke-width="1"></path>
+        
+        <!-- Arms Muscles -->
+        <path d="M14,30 C14,30 10,28 10,25 C10,22 12,20 12,20" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M34,30 C34,30 38,28 38,25 C38,22 36,20 36,20" stroke="#D2A98B" stroke-width="1"></path>
+        
+        <!-- Abs -->
+        <path d="M22,25 L26,25" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M22,28 L26,28" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M22,31 L26,31" stroke="#D2A98B" stroke-width="1"></path>
+        <path d="M24,24 L24,32" stroke="#D2A98B" stroke-width="1"></path>
+        
+        <!-- Tech Elements -->
+        <rect fill="#00BFFF" opacity="0.8" x="22" y="35" width="4" height="1" rx="0.5"></rect>
+        <circle fill="#00BFFF" opacity="0.6" cx="15" cy="19" r="1"></circle>
+        <circle fill="#00BFFF" opacity="0.6" cx="33" cy="19" r="1"></circle>
+    </g>
+</svg>

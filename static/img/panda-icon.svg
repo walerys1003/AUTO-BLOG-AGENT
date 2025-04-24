@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="48px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Blog Automation Master - Panda</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="masterGradient">
+            <stop stop-color="#4F8BFF" offset="0%"></stop>
+            <stop stop-color="#7B68EE" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background Circle -->
+        <circle fill="url(#masterGradient)" cx="24" cy="24" r="24"></circle>
+        
+        <!-- Panda Face - White Base -->
+        <ellipse fill="#FFFFFF" cx="24" cy="26" rx="18" ry="16"></ellipse>
+        
+        <!-- Panda Ears -->
+        <circle fill="#000000" cx="11" cy="14" r="5"></circle>
+        <circle fill="#000000" cx="37" cy="14" r="5"></circle>
+        
+        <!-- Panda Eyes -->
+        <ellipse fill="#000000" cx="17" cy="23" rx="5" ry="6"></ellipse>
+        <ellipse fill="#000000" cx="31" cy="23" rx="5" ry="6"></ellipse>
+        
+        <!-- Eye Highlights -->
+        <circle fill="#FFFFFF" opacity="0.3" cx="16" cy="22" r="1.5"></circle>
+        <circle fill="#FFFFFF" opacity="0.3" cx="30" cy="22" r="1.5"></circle>
+        
+        <!-- Panda Nose -->
+        <ellipse fill="#000000" cx="24" cy="28" rx="3" ry="2"></ellipse>
+        
+        <!-- Panda Mouth -->
+        <path d="M24,30 C24,30 21,33 19,33 C17,33 16,31 16,31" stroke="#000000" stroke-width="1" fill="none"></path>
+        <path d="M24,30 C24,30 27,33 29,33 C31,33 32,31 32,31" stroke="#000000" stroke-width="1" fill="none"></path>
+        
+        <!-- Tech Elements - Small Data Points -->
+        <rect fill="#00BFFF" opacity="0.8" x="14" y="34" width="2" height="2" rx="1"></rect>
+        <rect fill="#00BFFF" opacity="0.8" x="19" y="34" width="10" height="2" rx="1"></rect>
+        <rect fill="#00BFFF" opacity="0.8" x="32" y="34" width="2" height="2" rx="1"></rect>
+        
+        <!-- Small Smart Glasses -->
+        <rect fill="#4F8BFF" opacity="0.6" x="12" y="21" width="24" height="1"></rect>
+    </g>
+</svg>
