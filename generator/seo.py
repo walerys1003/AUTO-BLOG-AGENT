@@ -1,242 +1,184 @@
-import requests
 import logging
 import json
 import random
-from typing import List, Dict, Any, Tuple
-import traceback
-from bs4 import BeautifulSoup
+from typing import List, Dict, Any, Optional
 from config import Config
+import traceback
 from utils.helpers import get_ai_response
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-def get_trending_keywords(category: str, country_code: str = "US") -> List[str]:
+def generate_article_topics(
+    blog_name: str,
+    categories: Optional[List[str]] = None,
+    count: int = 5,
+    custom_prompt: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
-    Fetch trending keywords for a specific category using Google Trends or similar APIs.
-    Falls back to a generic approach if API is unavailable.
+    Generate SEO-optimized article topics based on blog name and categories
     
     Args:
-        category: The category to get trending keywords for
-        country_code: The country code to get trends for (default: US)
-        
-    Returns:
-        List of trending keywords
-    """
-    try:
-        # This is a simplified approach. In a production environment,
-        # you would use a proper Google Trends API or similar service.
-        # For demonstration, we'll make a simplified request to get trending topics.
-        
-        # Basic scraping of Google Trends - note this is not reliable for production
-        # and should be replaced with a proper API
-        url = f"https://trends.google.com/trends/trendingsearches/daily/rss?geo={country_code}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, "xml")
-            items = soup.find_all("item")
-            keywords = []
-            
-            for item in items:
-                title = item.find("title").text
-                # If category filter is provided, apply it (simplified)
-                if not category or category.lower() in title.lower():
-                    keywords.append(title)
-            
-            return keywords[:10]  # Return top 10 trending keywords
-        else:
-            logger.warning(f"Failed to fetch trending keywords: {response.status_code}")
-            # Fall back to AI-generated relevant keywords
-            return generate_keywords_with_ai(category)
-            
-    except Exception as e:
-        logger.error(f"Error fetching trending keywords: {str(e)}")
-        logger.error(traceback.format_exc())
-        # Fall back to AI-generated relevant keywords
-        return generate_keywords_with_ai(category)
-
-def generate_keywords_with_ai(category: str) -> List[str]:
-    """
-    Generate relevant keywords for a category using AI when API calls fail
-    
-    Args:
-        category: The category to generate keywords for
-        
-    Returns:
-        List of generated keywords
-    """
-    prompt = f"""
-    Generate a list of 10 trending and relevant keywords or phrases for the category: {category}.
-    These should be popular search terms that people might use when looking for content in this category.
-    Format the response as a JSON array of strings.
-    """
-    
-    try:
-        response = get_ai_response(
-            prompt=prompt,
-            model=Config.DEFAULT_TOPIC_MODEL,
-            response_format={"type": "json_object"}
-        )
-        
-        if response and isinstance(response, dict) and "keywords" in response:
-            return response["keywords"]
-        elif response and isinstance(response, list):
-            return response
-        else:
-            logger.warning("AI response format unexpected, using fallback keywords")
-            return fallback_keywords_by_category(category)
-    
-    except Exception as e:
-        logger.error(f"Error generating keywords with AI: {str(e)}")
-        return fallback_keywords_by_category(category)
-
-def fallback_keywords_by_category(category: str) -> List[str]:
-    """
-    Provide fallback keywords when all other methods fail
-    
-    Args:
-        category: The category to get fallback keywords for
-        
-    Returns:
-        List of fallback keywords
-    """
-    # Dictionary of fallback keywords by common categories
-    fallbacks = {
-        "technology": ["latest tech trends", "ai development", "smartphone review", 
-                      "future technology", "tech innovation", "coding tutorial",
-                      "software development", "cybersecurity tips", "web development",
-                      "tech gadgets 2023"],
-        "health": ["healthy lifestyle", "fitness tips", "mental health", 
-                  "nutrition guide", "workout routine", "wellness practices",
-                  "diet plans", "medical breakthroughs", "health supplements",
-                  "preventive healthcare"],
-        "finance": ["investment strategies", "personal finance", "stock market tips", 
-                   "cryptocurrency trends", "retirement planning", "budget tips",
-                   "financial freedom", "wealth building", "saving strategies",
-                   "tax optimization"],
-        "travel": ["travel destinations", "vacation tips", "budget travel", 
-                  "adventure tourism", "travel hacks", "hidden gems",
-                  "luxury resorts", "backpacking guide", "family vacation",
-                  "travel photography"],
-        "food": ["easy recipes", "cooking tips", "healthy meals", 
-                "food trends", "baking guide", "restaurant reviews",
-                "international cuisine", "vegetarian recipes", "meal prep",
-                "cooking techniques"]
-    }
-    
-    # Find the closest category or use general keywords
-    for key in fallbacks:
-        if key in category.lower():
-            return fallbacks[key]
-    
-    # General keywords if no category match
-    return [
-        "how to guide", "tips and tricks", "beginners guide",
-        "expert advice", "step by step tutorial", "comprehensive review",
-        "ultimate guide", "essential tips", "best practices",
-        "complete walkthrough"
-    ]
-
-def generate_article_topics(category: str, blog_name: str, count: int = 4) -> List[Dict[str, Any]]:
-    """
-    Generate article topics based on trending keywords and SEO analysis
-    
-    Args:
-        category: The category to generate topics for
-        blog_name: The name of the blog for context
+        blog_name: Name of the blog
+        categories: List of blog categories to focus on
         count: Number of topics to generate
+        custom_prompt: Optional custom prompt to override the default
         
     Returns:
-        List of article topic dictionaries with title, keywords, and score
+        List of topic dictionaries with title, keywords, and category
     """
     try:
-        # Get trending keywords for the category
-        keywords = get_trending_keywords(category)
+        # Use default categories if none provided
+        if not categories or len(categories) == 0:
+            categories = ["General", "News", "Guides"]
         
-        if not keywords:
-            logger.warning(f"No keywords found for category {category}, using fallbacks")
-            keywords = fallback_keywords_by_category(category)
+        # Create system prompt for topic generation
+        system_prompt = f"""You are an SEO expert and content strategist helping to generate article ideas for a blog called '{blog_name}'.
+Your task is to create {count} engaging, highly-searchable article topics that will rank well in search engines and attract readers.
+"""
+
+        # Construct the main user prompt
+        if custom_prompt:
+            user_prompt = custom_prompt
+        else:
+            user_prompt = f"""Generate {count} SEO-optimized article topics for a blog named '{blog_name}'.
+
+The blog covers these categories: {', '.join(categories)}
+
+For each topic, provide:
+1. An engaging title that includes SEO keywords (60-80 characters)
+2. A list of 5-8 target keywords (including long-tail keywords)
+3. The most appropriate category from the list above
+4. An SEO score from 0.1 to 1.0 representing the potential search traffic (higher is better)
+
+Format your response as a valid JSON array with objects containing these fields:
+- title (string): The article title with proper capitalization
+- keywords (array): List of keywords as strings 
+- category (string): One of the categories listed above
+- score (number): SEO potential score between 0.1 and 1.0
+
+Make sure all titles are unique, engaging, specific, and clearly communicate value to the reader.
+Focus on topics that people are actively searching for, including "how to" guides, listicles, and problem-solving content.
+"""
+
+        # Set up JSON response format
+        response_format = {"type": "json_object"}
         
-        # Use AI to generate article topics based on keywords
-        prompt = f"""
-        Generate {count} compelling and SEO-optimized article ideas for a blog named "{blog_name}" 
-        in the category "{category}".
-        
-        Use these trending keywords as inspiration: {', '.join(keywords)}
-        
-        For each article idea, provide:
-        1. An engaging title (60-70 characters, include a primary keyword naturally)
-        2. A list of 5-7 relevant keywords/phrases for the article
-        3. An SEO score (1-100) based on potential search interest
-        
-        Format your response as a JSON array of objects with "title", "keywords", and "score" fields.
-        """
-        
+        # Get response from AI
         response = get_ai_response(
-            prompt=prompt,
+            prompt=user_prompt,
             model=Config.DEFAULT_TOPIC_MODEL,
-            response_format={"type": "json_object"}
+            temperature=0.7,
+            response_format=response_format,
+            system_prompt=system_prompt
         )
         
-        if response and isinstance(response, dict) and "topics" in response:
-            return response["topics"]
-        elif response and isinstance(response, list):
-            return response
+        # Process response
+        if isinstance(response, dict) and 'topics' in response:
+            # If response came as a wrapper object with a 'topics' key
+            topics = response['topics']
+        elif isinstance(response, list):
+            # If response came directly as a list
+            topics = response
         else:
-            logger.warning("Invalid response format from AI, generating basic topics")
-            return generate_basic_topics(category, blog_name, keywords, count)
-            
+            # Try to parse if we got a string but expected JSON
+            if isinstance(response, str):
+                try:
+                    parsed = json.loads(response)
+                    if isinstance(parsed, dict) and 'topics' in parsed:
+                        topics = parsed['topics']
+                    elif isinstance(parsed, list):
+                        topics = parsed
+                    else:
+                        logger.error(f"Unexpected response format: {parsed}")
+                        return []
+                except:
+                    logger.error(f"Failed to parse response as JSON: {response}")
+                    return []
+            else:
+                logger.error(f"Unexpected response type: {type(response)}")
+                return []
+        
+        # Validate and clean up topics
+        valid_topics = []
+        for topic in topics:
+            if isinstance(topic, dict) and 'title' in topic and 'keywords' in topic:
+                # Ensure we have all required fields with proper types
+                valid_topic = {
+                    'title': str(topic.get('title', '')).strip(),
+                    'keywords': [str(k).strip() for k in topic.get('keywords', []) if k],
+                    'category': str(topic.get('category', categories[0])).strip(),
+                    'score': float(topic.get('score', 0.5))
+                }
+                
+                # Add to valid topics if title is not empty
+                if valid_topic['title']:
+                    valid_topics.append(valid_topic)
+        
+        # If we have fewer topics than requested, log warning
+        if len(valid_topics) < count:
+            logger.warning(f"Generated only {len(valid_topics)} valid topics out of {count} requested")
+        
+        # Return topics, limiting to requested count
+        return valid_topics[:count]
+        
     except Exception as e:
         logger.error(f"Error generating article topics: {str(e)}")
         logger.error(traceback.format_exc())
-        # Fall back to basic topic generation
-        return generate_basic_topics(category, blog_name, fallback_keywords_by_category(category), count)
+        return []
 
-def generate_basic_topics(category: str, blog_name: str, keywords: List[str], count: int) -> List[Dict[str, Any]]:
+def analyze_topic_competition(topic: str, keywords: List[str]) -> Dict[str, Any]:
     """
-    Generate basic article topics when AI generation fails
+    Analyze competition level for a topic and its keywords
     
     Args:
-        category: The category for topics
-        blog_name: The blog name
-        keywords: List of keywords to use
-        count: Number of topics to generate
+        topic: The article topic/title
+        keywords: List of keywords for the topic
         
     Returns:
-        List of basic article topics
+        Dictionary with competition analysis
     """
-    topics = []
-    
-    # Template formats for article titles
-    templates = [
-        "The Ultimate Guide to {keyword}",
-        "10 Essential Tips for {keyword} in 2023",
-        "How to Master {keyword}: A Beginner's Guide",
-        "Why {keyword} Matters: Expert Insights",
-        "{keyword}: What You Need to Know",
-        "The Future of {keyword}: Trends and Predictions",
-        "Understanding {keyword}: A Comprehensive Guide",
-        "{keyword} 101: Everything You Need to Know",
-        "The Pros and Cons of {keyword}",
-        "Mastering {keyword}: Advanced Techniques"
-    ]
-    
-    # Generate topics based on templates and keywords
-    for i in range(min(count, len(keywords))):
-        keyword = keywords[i]
-        template = random.choice(templates)
-        title = template.format(keyword=keyword)
+    try:
+        # This would normally call an SEO API or web scraping service
+        # For now, return a simulated analysis
         
-        # Generate some related keywords
-        related_keywords = [k for k in keywords if k != keyword][:5]
-        if len(related_keywords) < 5:
-            related_keywords.extend([f"{keyword} tips", f"{keyword} guide", f"best {keyword}", f"{keyword} techniques"])
+        # Simulate competition levels for keywords
+        keyword_analysis = []
+        for keyword in keywords:
+            # Generate random metrics for demo
+            volume = random.randint(500, 15000)
+            difficulty = random.uniform(0.1, 0.9)
+            competition = "High" if difficulty > 0.7 else "Medium" if difficulty > 0.4 else "Low"
+            
+            keyword_analysis.append({
+                "keyword": keyword,
+                "volume": volume,
+                "difficulty": round(difficulty, 2),
+                "competition": competition
+            })
         
-        topics.append({
-            "title": title,
-            "keywords": [keyword] + related_keywords[:6],
-            "score": random.randint(70, 95)  # Assign a random high score
-        })
-    
-    return topics[:count]
+        # Sort by volume (highest first)
+        keyword_analysis.sort(key=lambda x: x["volume"], reverse=True)
+        
+        # Overall score - average of difficulty scores, inverted (lower difficulty = higher score)
+        avg_difficulty = sum(k["difficulty"] for k in keyword_analysis) / len(keyword_analysis)
+        potential_score = round(1 - avg_difficulty, 2)
+        
+        return {
+            "topic": topic,
+            "overall_score": potential_score,
+            "keyword_analysis": keyword_analysis,
+            "recommendation": "Proceed" if potential_score > 0.4 else "Consider alternatives"
+        }
+            
+    except Exception as e:
+        logger.error(f"Error analyzing topic competition: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Return basic analysis on error
+        return {
+            "topic": topic,
+            "overall_score": 0.5,
+            "keyword_analysis": [{"keyword": k, "volume": 1000, "difficulty": 0.5, "competition": "Medium"} for k in keywords],
+            "recommendation": "Error in analysis, proceed with caution"
+        }

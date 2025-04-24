@@ -1,12 +1,11 @@
-import requests
+import os
 import logging
+import requests
 import json
 import random
-import base64
-from typing import Optional, Dict, Any, List
-import traceback
+from typing import List, Dict, Any, Optional
 from config import Config
-from urllib.parse import quote_plus
+import traceback
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -23,54 +22,59 @@ def search_unsplash_images(query: str, count: int = 1) -> List[Dict[str, Any]]:
         List of image data dictionaries containing url, alt_text, and attribution
     """
     try:
-        # Check if Unsplash API key is available
-        api_key = Config.UNSPLASH_API_KEY
-        if not api_key:
-            logger.warning("No Unsplash API key found, falling back to alternative sources")
-            return search_alternative_images(query, count)
+        # Use Unsplash API if key is available, otherwise return empty list
+        if not Config.UNSPLASH_API_KEY:
+            logger.warning("Unsplash API key not configured")
+            return []
         
-        # Prepare API request
-        url = "https://api.unsplash.com/search/photos"
-        headers = {
-            "Authorization": f"Client-ID {api_key}"
-        }
+        # Build API URL
+        url = f"https://api.unsplash.com/search/photos"
+        
+        # Set up parameters
         params = {
             "query": query,
             "per_page": count,
-            "orientation": "landscape"
+            "orientation": "landscape"  # Prefer landscape orientation for blog images
+        }
+        
+        # Set up headers
+        headers = {
+            "Authorization": f"Client-ID {Config.UNSPLASH_API_KEY}",
+            "Accept-Version": "v1"
         }
         
         # Make API request
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, params=params, headers=headers)
         
         if response.status_code == 200:
             data = response.json()
-            images = []
+            results = data.get("results", [])
             
-            # Process results
-            for result in data.get("results", [])[:count]:
-                image = {
-                    "url": result.get("urls", {}).get("regular"),
-                    "thumb_url": result.get("urls", {}).get("thumb"),
-                    "alt_text": result.get("alt_description") or query,
+            # Format image data
+            images = []
+            for image in results:
+                image_data = {
+                    "url": image.get("urls", {}).get("regular", ""),
+                    "alt_text": image.get("alt_description", query),
                     "attribution": {
-                        "name": result.get("user", {}).get("name"),
-                        "link": result.get("user", {}).get("links", {}).get("html")
+                        "name": image.get("user", {}).get("name", "Unsplash"),
+                        "url": image.get("user", {}).get("links", {}).get("html", "https://unsplash.com")
                     },
-                    "width": result.get("width"),
-                    "height": result.get("height")
+                    "download_url": image.get("urls", {}).get("full", ""),
+                    "width": image.get("width", 1200),
+                    "height": image.get("height", 800)
                 }
-                images.append(image)
+                images.append(image_data)
             
             return images
         else:
-            logger.warning(f"Failed to fetch images from Unsplash: {response.status_code}")
-            return search_alternative_images(query, count)
+            logger.error(f"Unsplash API error: {response.status_code}, {response.text}")
+            return []
             
     except Exception as e:
         logger.error(f"Error searching Unsplash images: {str(e)}")
         logger.error(traceback.format_exc())
-        return search_alternative_images(query, count)
+        return []
 
 def search_alternative_images(query: str, count: int = 1) -> List[Dict[str, Any]]:
     """
@@ -83,48 +87,49 @@ def search_alternative_images(query: str, count: int = 1) -> List[Dict[str, Any]
     Returns:
         List of image data dictionaries with fallback images
     """
-    # Alternative image sources could include Pexels, Pixabay, etc.
-    # For now, we'll use a simplified approach with public domain placeholder images
-    
-    # List of free placeholder image services
-    placeholder_services = [
-        {
-            "url": f"https://placehold.co/600x400/png?text={quote_plus(query)}",
-            "thumb_url": f"https://placehold.co/300x200/png?text={quote_plus(query)}",
-            "alt_text": query,
+    try:
+        # This is a placeholder for integrating with other image APIs
+        # Would be replaced with actual Google Images API or similar
+        # For now, return placeholder images
+        
+        # Create a list of fallback placeholder images
+        images = []
+        for i in range(min(count, 3)):
+            # Use placeholder.com for demo/fallback
+            width = 1200
+            height = 800
+            image_data = {
+                "url": f"https://via.placeholder.com/{width}x{height}?text={query.replace(' ', '+')}",
+                "alt_text": f"{query} image",
+                "attribution": {
+                    "name": "Placeholder",
+                    "url": "https://placeholder.com"
+                },
+                "download_url": f"https://via.placeholder.com/{width}x{height}?text={query.replace(' ', '+')}",
+                "width": width,
+                "height": height
+            }
+            images.append(image_data)
+        
+        logger.warning(f"Using alternative image source for query: {query}")
+        return images
+        
+    except Exception as e:
+        logger.error(f"Error with alternative image search: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Return very basic fallback in case of total failure
+        return [{
+            "url": f"https://via.placeholder.com/1200x800?text=Image+Unavailable",
+            "alt_text": "Image unavailable",
             "attribution": {
-                "name": "Placeholder Service",
-                "link": "https://placehold.co/"
+                "name": "Placeholder",
+                "url": "https://placeholder.com"
             },
-            "width": 600,
-            "height": 400
-        },
-        {
-            "url": f"https://fakeimg.pl/600x400/cccccc/909090/?text={quote_plus(query)}&font_size=24",
-            "thumb_url": f"https://fakeimg.pl/300x200/cccccc/909090/?text={quote_plus(query)}&font_size=18",
-            "alt_text": query,
-            "attribution": {
-                "name": "Fake Image",
-                "link": "https://fakeimg.pl/"
-            },
-            "width": 600,
-            "height": 400
-        },
-        {
-            "url": f"https://dummyimage.com/600x400/000/fff&text={quote_plus(query)}",
-            "thumb_url": f"https://dummyimage.com/300x200/000/fff&text={quote_plus(query)}",
-            "alt_text": query,
-            "attribution": {
-                "name": "Dummy Image",
-                "link": "https://dummyimage.com/"
-            },
-            "width": 600,
-            "height": 400
-        }
-    ]
-    
-    # Return requested number of placeholder images
-    return random.sample(placeholder_services, min(count, len(placeholder_services)))
+            "download_url": f"https://via.placeholder.com/1200x800?text=Image+Unavailable",
+            "width": 1200,
+            "height": 800
+        }]
 
 def get_featured_image_for_article(title: str, keywords: List[str]) -> Dict[str, Any]:
     """
@@ -137,31 +142,63 @@ def get_featured_image_for_article(title: str, keywords: List[str]) -> Dict[str,
     Returns:
         Dictionary with image data
     """
-    # Combine title and primary keywords for better image search results
-    search_query = title
-    if keywords and len(keywords) > 0:
-        # Add the first keyword if it's not already in the title
-        if keywords[0].lower() not in title.lower():
-            search_query = f"{keywords[0]} {title}"
-    
-    # Search for images
-    images = search_unsplash_images(search_query)
-    
-    # Return the first image or a fallback
-    if images and len(images) > 0:
-        return images[0]
-    else:
-        # Create a basic fallback image
+    try:
+        # Combine title and keywords to create a good search query
+        query_terms = [title] + keywords[:3]  # Use title and top 3 keywords
+        query = " ".join(query_terms)
+        
+        # First try Unsplash
+        unsplash_images = search_unsplash_images(query)
+        
+        # If Unsplash found images, use the first one
+        if unsplash_images:
+            return unsplash_images[0]
+        
+        # If no Unsplash images, try with just the title
+        if title:
+            unsplash_title_only = search_unsplash_images(title)
+            if unsplash_title_only:
+                return unsplash_title_only[0]
+        
+        # If keywords exist, try with first keyword
+        if keywords:
+            unsplash_keyword = search_unsplash_images(keywords[0])
+            if unsplash_keyword:
+                return unsplash_keyword[0]
+        
+        # Fall back to alternative sources
+        alternative_images = search_alternative_images(query)
+        if alternative_images:
+            return alternative_images[0]
+            
+        # If everything fails, return a very basic placeholder
         return {
-            "url": f"https://placehold.co/800x450/png?text={quote_plus(title)}",
-            "thumb_url": f"https://placehold.co/400x225/png?text={quote_plus(title)}",
-            "alt_text": title,
+            "url": "https://via.placeholder.com/1200x800?text=Featured+Image",
+            "alt_text": "Featured image",
             "attribution": {
-                "name": "Placeholder Image",
-                "link": "https://placehold.co/"
+                "name": "Placeholder",
+                "url": "https://placeholder.com"
             },
-            "width": 800,
-            "height": 450
+            "download_url": "https://via.placeholder.com/1200x800?text=Featured+Image",
+            "width": 1200,
+            "height": 800
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting featured image: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Return a basic placeholder on error
+        return {
+            "url": "https://via.placeholder.com/1200x800?text=Featured+Image",
+            "alt_text": "Featured image",
+            "attribution": {
+                "name": "Placeholder",
+                "url": "https://placeholder.com"
+            },
+            "download_url": "https://via.placeholder.com/1200x800?text=Featured+Image",
+            "width": 1200,
+            "height": 800
         }
 
 def get_multiple_images_for_article(title: str, keywords: List[str], count: int = 3) -> List[Dict[str, Any]]:
@@ -176,25 +213,62 @@ def get_multiple_images_for_article(title: str, keywords: List[str], count: int 
     Returns:
         List of image data dictionaries
     """
-    images = []
-    
-    # Add main image based on title
-    main_image = get_featured_image_for_article(title, keywords)
-    images.append(main_image)
-    
-    # If we need more images, search based on keywords
-    if count > 1 and keywords and len(keywords) > 0:
-        # Use different keywords for diversity
-        for i in range(min(len(keywords), count - 1)):
-            keyword_images = search_unsplash_images(keywords[i], 1)
-            if keyword_images and len(keyword_images) > 0:
-                images.append(keyword_images[0])
-    
-    # If we still need more images, use alternatives
-    while len(images) < count:
-        search_term = random.choice(keywords) if keywords else title
-        alt_images = search_alternative_images(search_term, 1)
-        if alt_images and len(alt_images) > 0:
-            images.append(alt_images[0])
-    
-    return images[:count]
+    try:
+        # Combine title and keywords to create a good search query
+        query_terms = [title] + keywords[:5]  # Use title and top 5 keywords
+        
+        # Shuffle the terms to get variety (except keep title first)
+        query_terms_shuffled = [query_terms[0]] + random.sample(query_terms[1:], min(len(query_terms[1:]), 4))
+        
+        # Try to get one image with the full query
+        full_query = " ".join(query_terms_shuffled[:3])  # Use first 3 shuffled terms
+        images = search_unsplash_images(full_query, 1)
+        
+        # If we need more images, try individual keywords
+        if len(images) < count and keywords:
+            for keyword in keywords[:count]:
+                # Skip if we already have enough images
+                if len(images) >= count:
+                    break
+                    
+                keyword_images = search_unsplash_images(keyword, 1)
+                
+                # Only add if we got a result and it's not already in our list
+                if keyword_images and all(img["url"] != keyword_images[0]["url"] for img in images):
+                    images.append(keyword_images[0])
+        
+        # If we still need more images, use title
+        if len(images) < count:
+            title_images = search_unsplash_images(title, count - len(images))
+            
+            # Filter out duplicates
+            for img in title_images:
+                if all(existing["url"] != img["url"] for existing in images):
+                    images.append(img)
+        
+        # If we don't have enough images, fill with alternative sources
+        if len(images) < count:
+            alternative_images = search_alternative_images(title, count - len(images))
+            images.extend(alternative_images)
+        
+        return images[:count]  # Return requested number of images
+        
+    except Exception as e:
+        logger.error(f"Error getting multiple images: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Return basic placeholders on error
+        placeholders = []
+        for i in range(count):
+            placeholders.append({
+                "url": f"https://via.placeholder.com/1200x800?text=Image+{i+1}",
+                "alt_text": f"Article image {i+1}",
+                "attribution": {
+                    "name": "Placeholder",
+                    "url": "https://placeholder.com"
+                },
+                "download_url": f"https://via.placeholder.com/1200x800?text=Image+{i+1}",
+                "width": 1200,
+                "height": 800
+            })
+        return placeholders
