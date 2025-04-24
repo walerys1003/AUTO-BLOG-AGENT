@@ -5,6 +5,8 @@ from typing import List, Dict, Any, Optional
 from config import Config
 import traceback
 from utils.helpers import get_ai_response, clean_html
+from utils.openrouter.content import generate_article_content as openrouter_generate_article
+from utils.openrouter.content import optimize_article_readability, generate_content_variations
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -35,6 +37,55 @@ def generate_article_content(
         # Use config defaults if not specified
         min_length = min_length or Config.ARTICLE_MIN_LENGTH
         max_length = max_length or Config.ARTICLE_MAX_LENGTH
+        
+        # First try using the OpenRouter content module
+        logger.info(f"Generating article content for '{title}' in category '{category}' for blog '{blog_name}'")
+        
+        try:
+            # Use the dedicated OpenRouter content generation
+            openrouter_response = openrouter_generate_article(
+                title=title,
+                keywords=keywords,
+                category=category,
+                blog_name=blog_name,
+                tone="professional",
+                min_length=min_length,
+                max_length=max_length
+            )
+            
+            if openrouter_response and 'content' in openrouter_response and openrouter_response['content']:
+                logger.info(f"Successfully generated article content using OpenRouter content module")
+                
+                # Clean HTML content if it exists
+                if 'content' in openrouter_response and openrouter_response['content']:
+                    openrouter_response['content'] = clean_html(openrouter_response['content'])
+                
+                # Ensure all required fields are present
+                required_fields = ['content', 'meta_description', 'excerpt', 'tags']
+                for field in required_fields:
+                    if field not in openrouter_response or not openrouter_response[field]:
+                        logger.warning(f"Missing required field in OpenRouter article: {field}")
+                        if field == 'tags':
+                            # Set default tags from keywords
+                            openrouter_response['tags'] = keywords
+                        elif field == 'meta_description':
+                            # Generate a basic meta description
+                            openrouter_response['meta_description'] = f"Learn about {title} in this comprehensive guide from {blog_name}."
+                        elif field == 'excerpt':
+                            # Generate a basic excerpt from title
+                            openrouter_response['excerpt'] = f"A complete guide to {title}. Read more to learn everything you need to know."
+                
+                # Add title and category to response if not already present
+                openrouter_response['title'] = title
+                openrouter_response['category'] = category
+                
+                return openrouter_response
+            else:
+                logger.warning("OpenRouter content module did not return valid content, falling back to original method")
+        except Exception as or_error:
+            logger.warning(f"Error using OpenRouter content module: {str(or_error)}. Falling back to original method.")
+        
+        # Fallback to original method if OpenRouter fails
         
         # Create system prompt for content generation
         system_prompt = f"""You are an expert content writer for {blog_name}, specializing in creating high-quality, SEO-optimized blog articles.

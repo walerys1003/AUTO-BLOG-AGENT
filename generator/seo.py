@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional
 from config import Config
 import traceback
 from utils.helpers import get_ai_response
+from utils.openrouter.seo import generate_seo_optimized_topics, analyze_trends_for_keywords
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -31,6 +32,27 @@ def generate_article_topics(
         # Use default categories if none provided
         if not categories or len(categories) == 0:
             categories = ["General", "News", "Guides"]
+        
+        # First try to use the OpenRouter SEO module
+        logger.info(f"Generating {count} article topics for blog '{blog_name}' with categories {categories}")
+        
+        try:
+            # Use the dedicated OpenRouter SEO topic generation
+            topics = generate_seo_optimized_topics(
+                niche=blog_name,
+                keywords=[cat for cat in categories if cat],
+                count=count
+            )
+            
+            if topics and len(topics) > 0:
+                logger.info(f"Successfully generated {len(topics)} topics using OpenRouter SEO module")
+                return topics
+            else:
+                logger.warning("OpenRouter SEO module did not return topics, falling back to original method")
+        except Exception as or_error:
+            logger.warning(f"Error using OpenRouter SEO module: {str(or_error)}. Falling back to original method.")
+        
+        # Fallback to original method if OpenRouter fails
         
         # Create system prompt for topic generation
         system_prompt = f"""You are an SEO expert and content strategist helping to generate article ideas for a blog called '{blog_name}'.
@@ -139,8 +161,60 @@ def analyze_topic_competition(topic: str, keywords: List[str]) -> Dict[str, Any]
         Dictionary with competition analysis
     """
     try:
-        # This would normally call an SEO API or web scraping service
-        # For now, return a simulated analysis
+        # First try using the OpenRouter SEO module
+        logger.info(f"Analyzing competition for topic: {topic} with keywords: {keywords}")
+        
+        try:
+            # Use the dedicated OpenRouter SEO trend analysis
+            analysis_result = analyze_trends_for_keywords(
+                keywords=keywords,
+                niche=topic
+            )
+            
+            if analysis_result.get("success", False) and analysis_result.get("data"):
+                logger.info("Successfully analyzed keyword trends using OpenRouter SEO module")
+                
+                # Format the data to match our expected output format
+                keyword_data = analysis_result["data"].get("keywords", [])
+                formatted_analysis = []
+                
+                for kw_data in keyword_data:
+                    kw = kw_data.get("keyword", "")
+                    volume_map = {"high": 10000, "medium": 5000, "low": 1000}
+                    competition_map = {"high": 0.8, "medium": 0.5, "low": 0.2}
+                    
+                    volume = volume_map.get(kw_data.get("search_volume", "medium").lower(), 5000)
+                    difficulty = competition_map.get(kw_data.get("competition", "medium").lower(), 0.5)
+                    competition = kw_data.get("competition", "Medium")
+                    
+                    formatted_analysis.append({
+                        "keyword": kw,
+                        "volume": volume,
+                        "difficulty": difficulty,
+                        "competition": competition.capitalize()
+                    })
+                
+                # Calculate overall score
+                if formatted_analysis:
+                    avg_difficulty = sum(k["difficulty"] for k in formatted_analysis) / len(formatted_analysis)
+                    potential_score = round(1 - avg_difficulty, 2)
+                    
+                    overview = analysis_result["data"].get("overview", "")
+                    recommendation = analysis_result["data"].get("recommendations", "Proceed with caution")
+                    
+                    return {
+                        "topic": topic,
+                        "overall_score": potential_score,
+                        "keyword_analysis": formatted_analysis,
+                        "overview": overview,
+                        "recommendation": "Proceed" if potential_score > 0.4 else "Consider alternatives"
+                    }
+            else:
+                logger.warning("OpenRouter SEO module did not return valid analysis, falling back to original method")
+        except Exception as or_error:
+            logger.warning(f"Error using OpenRouter SEO module: {str(or_error)}. Falling back to original method.")
+        
+        # Fallback to original method if OpenRouter fails
         
         # Simulate competition levels for keywords
         keyword_analysis = []
