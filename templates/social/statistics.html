@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+
+{% block title %}Social Media Statistics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    <h1 class="h3 mb-0">Social Media Statistics</h1>
+    <div>
+        <button type="button" class="btn btn-primary" id="refreshStatsBtn">
+            <i class="fas fa-sync-alt me-1"></i> Refresh Stats
+        </button>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Date Range</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('social.social_statistics') }}" method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="date_range" class="form-label">Select Period</label>
+                <select name="date_range" id="date_range" class="form-select">
+                    <option value="7" {% if date_range == '7' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="30" {% if date_range == '30' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="90" {% if date_range == '90' %}selected{% endif %}>Last 90 Days</option>
+                    <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+            </div>
+            <div class="col-md-3 custom-date {% if date_range != 'custom' %}d-none{% endif %}">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3 custom-date {% if date_range != 'custom' %}d-none{% endif %}">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Posts</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_posts }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-share-alt fa-2x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Engagements</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_engagements }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-heart fa-2x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Clicks</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_clicks }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-mouse-pointer fa-2x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Avg. Engagement Rate</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.avg_engagement_rate }}%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Performance -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Platform Performance</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="platformPerformanceChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Content Type Performance</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="contentTypeChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Engagement Over Time -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Engagement Over Time</h5>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary active" data-timeframe="daily">Daily</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-timeframe="weekly">Weekly</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-timeframe="monthly">Monthly</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <canvas id="engagementTimeChart" height="300"></canvas>
+    </div>
+</div>
+
+<!-- Top Performing Posts -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Top Performing Posts</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Post</th>
+                        <th>Platform</th>
+                        <th>Date</th>
+                        <th>Likes</th>
+                        <th>Comments</th>
+                        <th>Shares</th>
+                        <th>Clicks</th>
+                        <th>Engagement Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in top_posts %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if post.image_url %}
+                                <img src="{{ post.image_url }}" alt="{{ post.title }}" class="rounded me-2" width="40" height="40">
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold text-truncate" style="max-width: 200px;">{{ post.title }}</div>
+                                    {% if post.post_url %}
+                                    <a href="{{ post.post_url }}" target="_blank" class="text-muted small">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Post
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if post.platform == 'facebook' %}
+                            <i class="fab fa-facebook-f text-primary"></i>
+                            {% elif post.platform == 'twitter' %}
+                            <i class="fab fa-twitter text-info"></i>
+                            {% elif post.platform == 'linkedin' %}
+                            <i class="fab fa-linkedin-in text-success"></i>
+                            {% elif post.platform == 'instagram' %}
+                            <i class="fab fa-instagram text-danger"></i>
+                            {% endif %}
+                            {{ post.platform|capitalize }}
+                        </td>
+                        <td>{{ post.post_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ post.likes }}</td>
+                        <td>{{ post.comments }}</td>
+                        <td>{{ post.shares }}</td>
+                        <td>{{ post.clicks }}</td>
+                        <td><span class="badge {% if post.engagement_rate > 2 %}bg-success{% elif post.engagement_rate > 1 %}bg-info{% else %}bg-secondary{% endif %}">{{ post.engagement_rate }}%</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle date range selection
+        const dateRangeSelect = document.getElementById('date_range');
+        const customDateInputs = document.querySelectorAll('.custom-date');
+        
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateInputs.forEach(input => input.classList.remove('d-none'));
+            } else {
+                customDateInputs.forEach(input => input.classList.add('d-none'));
+            }
+        });
+        
+        // Platform Performance Chart
+        const platformCtx = document.getElementById('platformPerformanceChart').getContext('2d');
+        const platformChart = new Chart(platformCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ platform_labels|tojson }},
+                datasets: [
+                    {
+                        label: 'Engagement Rate (%)',
+                        data: {{ platform_engagement_rates|tojson }},
+                        backgroundColor: [
+                            'rgba(59, 89, 152, 0.7)', // Facebook
+                            'rgba(29, 161, 242, 0.7)', // Twitter
+                            'rgba(0, 119, 181, 0.7)', // LinkedIn
+                            'rgba(225, 48, 108, 0.7)', // Instagram
+                        ],
+                        borderColor: [
+                            'rgba(59, 89, 152, 1)',
+                            'rgba(29, 161, 242, 1)',
+                            'rgba(0, 119, 181, 1)',
+                            'rgba(225, 48, 108, 1)',
+                        ],
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Engagement Rate (%)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Content Type Performance Chart
+        const contentTypeCtx = document.getElementById('contentTypeChart').getContext('2d');
+        const contentTypeChart = new Chart(contentTypeCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ content_type_labels|tojson }},
+                datasets: [{
+                    data: {{ content_type_engagement|tojson }},
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+        
+        // Engagement Over Time Chart
+        const timeCtx = document.getElementById('engagementTimeChart').getContext('2d');
+        const timeChart = new Chart(timeCtx, {
+            type: 'line',
+            data: {
+                labels: {{ time_labels|tojson }},
+                datasets: [
+                    {
+                        label: 'Engagements',
+                        data: {{ time_engagements|tojson }},
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                        pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Clicks',
+                        data: {{ time_clicks|tojson }},
+                        borderColor: 'rgba(246, 194, 62, 1)',
+                        backgroundColor: 'rgba(246, 194, 62, 0.1)',
+                        pointBackgroundColor: 'rgba(246, 194, 62, 1)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Handle time frame buttons
+        const timeframeButtons = document.querySelectorAll('[data-timeframe]');
+        timeframeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                timeframeButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const timeframe = this.getAttribute('data-timeframe');
+                // This would normally fetch new data via AJAX
+                // For demo purposes, just log the timeframe
+                console.log('Changing to timeframe:', timeframe);
+                
+                // Simulate data change
+                if (timeframe === 'daily') {
+                    updateTimeChart({{ time_labels|tojson }}, {{ time_engagements|tojson }}, {{ time_clicks|tojson }});
+                } else if (timeframe === 'weekly') {
+                    // Simulate weekly data
+                    const weeklyLabels = {{ time_labels|tojson }}.filter((_, i) => i % 7 === 0);
+                    const weeklyEngagements = {{ time_engagements|tojson }}.filter((_, i) => i % 7 === 0);
+                    const weeklyClicks = {{ time_clicks|tojson }}.filter((_, i) => i % 7 === 0);
+                    updateTimeChart(weeklyLabels, weeklyEngagements, weeklyClicks);
+                } else if (timeframe === 'monthly') {
+                    // Simulate monthly data
+                    const monthlyLabels = {{ time_labels|tojson }}.filter((_, i) => i % 30 === 0);
+                    const monthlyEngagements = {{ time_engagements|tojson }}.filter((_, i) => i % 30 === 0);
+                    const monthlyClicks = {{ time_clicks|tojson }}.filter((_, i) => i % 30 === 0);
+                    updateTimeChart(monthlyLabels, monthlyEngagements, monthlyClicks);
+                }
+            });
+        });
+        
+        function updateTimeChart(labels, engagements, clicks) {
+            timeChart.data.labels = labels;
+            timeChart.data.datasets[0].data = engagements;
+            timeChart.data.datasets[1].data = clicks;
+            timeChart.update();
+        }
+        
+        // Refresh stats button
+        const refreshBtn = document.getElementById('refreshStatsBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> Refreshing...';
+                this.disabled = true;
+                
+                // Simulate refresh with timeout
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Refresh Stats';
+                    this.disabled = false;
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alertDiv.role = 'alert';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-1"></i> Statistics refreshed successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    const topElement = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4');
+                    topElement.insertAdjacentElement('afterend', alertDiv);
+                    
+                    // Auto-dismiss after 3 seconds
+                    setTimeout(() => {
+                        const bsAlert = new bootstrap.Alert(alertDiv);
+                        bsAlert.close();
+                    }, 3000);
+                }, 1500);
+            });
+        }
+    });
+</script>
+{% endblock %}

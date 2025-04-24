@@ -1,0 +1,934 @@
+{% extends 'base.html' %}
+
+{% block title %}Social Media Schedule{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    <h1 class="h3 mb-0">Publishing Schedule</h1>
+    <div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleSettingsModal">
+            <i class="fas fa-cog me-1"></i> Schedule Settings
+        </button>
+    </div>
+</div>
+
+<!-- Calendar View -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Calendar View</h5>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary active" data-view="month">Month</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-view="week">Week</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-view="day">Day</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="prev-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary mx-1" id="today-btn">Today</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="next-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <h5 class="mb-0" id="calendar-title">April 2025</h5>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="scheduleDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-plus me-1"></i> Schedule Post
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="scheduleDropdown">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#schedulePostModal" data-platform="facebook"><i class="fab fa-facebook-f text-primary me-1"></i> Facebook</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#schedulePostModal" data-platform="twitter"><i class="fab fa-twitter text-info me-1"></i> Twitter</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#schedulePostModal" data-platform="linkedin"><i class="fab fa-linkedin-in text-success me-1"></i> LinkedIn</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#schedulePostModal" data-platform="instagram"><i class="fab fa-instagram text-danger me-1"></i> Instagram</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#schedulePostModal" data-platform="all"><i class="fas fa-globe me-1"></i> All Platforms</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Calendar Grid -->
+        <div id="calendar-container">
+            <div id="month-view">
+                <div class="calendar-grid">
+                    <div class="calendar-header">
+                        <div>Sun</div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                    </div>
+                    <div class="calendar-days" id="calendar-days">
+                        <!-- Calendar days will be generated here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="week-view" class="d-none">
+                <div class="week-grid">
+                    <!-- Week view will be generated here by JavaScript -->
+                </div>
+            </div>
+            
+            <div id="day-view" class="d-none">
+                <div class="day-grid">
+                    <!-- Day view will be generated here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Posts -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Upcoming Posts</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Content</th>
+                        <th>Platform</th>
+                        <th>Scheduled Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in scheduled_posts %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if post.image_url %}
+                                <img src="{{ post.image_url }}" alt="{{ post.content }}" class="rounded me-2" width="40" height="40">
+                                {% else %}
+                                <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-file-alt text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="text-truncate" style="max-width: 300px;">{{ post.content }}</div>
+                                    {% if post.article_id %}
+                                    <a href="{{ url_for('content_creator.view_content', content_id=post.article_id) }}" class="text-muted small">
+                                        <i class="fas fa-link me-1"></i>View Article
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if post.platform == 'facebook' %}
+                            <i class="fab fa-facebook-f text-primary"></i> Facebook
+                            {% elif post.platform == 'twitter' %}
+                            <i class="fab fa-twitter text-info"></i> Twitter
+                            {% elif post.platform == 'linkedin' %}
+                            <i class="fab fa-linkedin-in text-success"></i> LinkedIn
+                            {% elif post.platform == 'instagram' %}
+                            <i class="fab fa-instagram text-danger"></i> Instagram
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-nowrap">{{ post.scheduled_date.strftime('%Y-%m-%d') }}</span>
+                            <br>
+                            <small class="text-muted">{{ post.scheduled_date.strftime('%I:%M %p') }}</small>
+                        </td>
+                        <td>
+                            {% if post.status == 'scheduled' %}
+                            <span class="badge bg-warning">Scheduled</span>
+                            {% elif post.status == 'published' %}
+                            <span class="badge bg-success">Published</span>
+                            {% elif post.status == 'error' %}
+                            <span class="badge bg-danger">Error</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('social.edit_scheduled_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteScheduledModal" data-post-id="{{ post.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-2x text-muted mb-2"></i>
+                            <p class="mb-0">No scheduled posts found.</p>
+                            <p class="text-muted">Schedule posts to see them here.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Settings Modal -->
+<div class="modal fade" id="scheduleSettingsModal" tabindex="-1" aria-labelledby="scheduleSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scheduleSettingsModalLabel">Schedule Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('social.update_schedule_settings') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Optimal Posting Times</h6>
+                        <p class="text-muted small">Set up to 4 optimal times per day for automatic scheduling of posts.</p>
+                        
+                        <div class="row">
+                            {% for i in range(4) %}
+                            <div class="col-md-3 mb-2">
+                                <label for="time{{ i }}" class="form-label">Time {{ i + 1 }}</label>
+                                <input type="time" class="form-control" id="time{{ i }}" name="time{{ i }}" value="{{ schedule_settings.optimal_times[i] if schedule_settings.optimal_times|length > i else '' }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Platform Settings</h6>
+                        <p class="text-muted small">Configure the frequency for each social media platform.</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Platform</label>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Posts Per Week</label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Preferred Days</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Facebook Settings -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary p-1 me-2">
+                                        <i class="fab fa-facebook-f text-white"></i>
+                                    </div>
+                                    <span>Facebook</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" name="facebook_frequency" min="0" max="7" value="{{ schedule_settings.facebook.frequency }}">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex gap-1">
+                                    {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="facebook_{{ day|lower }}" name="facebook_days" value="{{ day|lower }}" {% if day|lower in schedule_settings.facebook.days %}checked{% endif %}>
+                                        <label class="form-check-label small" for="facebook_{{ day|lower }}">{{ day }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Twitter Settings -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-info p-1 me-2">
+                                        <i class="fab fa-twitter text-white"></i>
+                                    </div>
+                                    <span>Twitter</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" name="twitter_frequency" min="0" max="7" value="{{ schedule_settings.twitter.frequency }}">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex gap-1">
+                                    {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="twitter_{{ day|lower }}" name="twitter_days" value="{{ day|lower }}" {% if day|lower in schedule_settings.twitter.days %}checked{% endif %}>
+                                        <label class="form-check-label small" for="twitter_{{ day|lower }}">{{ day }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- LinkedIn Settings -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-success p-1 me-2">
+                                        <i class="fab fa-linkedin-in text-white"></i>
+                                    </div>
+                                    <span>LinkedIn</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" name="linkedin_frequency" min="0" max="7" value="{{ schedule_settings.linkedin.frequency }}">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex gap-1">
+                                    {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="linkedin_{{ day|lower }}" name="linkedin_days" value="{{ day|lower }}" {% if day|lower in schedule_settings.linkedin.days %}checked{% endif %}>
+                                        <label class="form-check-label small" for="linkedin_{{ day|lower }}">{{ day }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Instagram Settings -->
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-danger p-1 me-2">
+                                        <i class="fab fa-instagram text-white"></i>
+                                    </div>
+                                    <span>Instagram</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" name="instagram_frequency" min="0" max="7" value="{{ schedule_settings.instagram.frequency }}">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex gap-1">
+                                    {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="instagram_{{ day|lower }}" name="instagram_days" value="{{ day|lower }}" {% if day|lower in schedule_settings.instagram.days %}checked{% endif %}>
+                                        <label class="form-check-label small" for="instagram_{{ day|lower }}">{{ day }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Post Distribution</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auto_distribute" name="auto_distribute" {% if schedule_settings.auto_distribute %}checked{% endif %}>
+                            <label class="form-check-label" for="auto_distribute">Automatically distribute posts across optimal times</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Platform Rotation</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="platform_rotation" name="platform_rotation" {% if schedule_settings.platform_rotation %}checked{% endif %}>
+                            <label class="form-check-label" for="platform_rotation">Rotate platforms to avoid posting on same platforms on consecutive days</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Content Variety</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="content_variety" name="content_variety" {% if schedule_settings.content_variety %}checked{% endif %}>
+                            <label class="form-check-label" for="content_variety">Vary content types (promotions, quotes, questions, etc.)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Post Modal -->
+<div class="modal fade" id="schedulePostModal" tabindex="-1" aria-labelledby="schedulePostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="schedulePostModalLabel">Schedule Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('social.schedule_post') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="schedule_platform" class="form-label">Platform</label>
+                        <select class="form-select" id="schedule_platform" name="platform" required>
+                            <option value="">Select Platform</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="all">All Platforms</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content_type" class="form-label">Content Type</label>
+                        <select class="form-select" id="content_type" name="content_type">
+                            <option value="custom">Custom Content</option>
+                            <option value="article">Article Promotion</option>
+                            <option value="template">Use Template</option>
+                        </select>
+                    </div>
+                    
+                    <div id="article_select" class="mb-3 d-none">
+                        <label for="article_id" class="form-label">Select Article</label>
+                        <select class="form-select" id="article_id" name="article_id">
+                            <option value="">Select Article</option>
+                            {% for article in articles %}
+                            <option value="{{ article.id }}">{{ article.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="template_select" class="mb-3 d-none">
+                        <label for="template_id" class="form-label">Select Template</label>
+                        <select class="form-select" id="template_id" name="template_id">
+                            <option value="">Select Template</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}" data-platform="{{ template.platform }}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="custom_content" class="mb-3">
+                        <label for="post_content" class="form-label">Post Content</label>
+                        <textarea class="form-control" id="post_content" name="content" rows="4" required></textarea>
+                        <div id="twitter_char_count" class="form-text d-none">
+                            <span id="content-char-count">0</span>/280 characters
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hashtags" class="form-label">Hashtags</label>
+                        <input type="text" class="form-control" id="hashtags" name="hashtags">
+                        <div class="form-text">Comma-separated list of hashtags (without # symbol)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">Image URL (optional)</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="scheduled_time" class="form-label">Scheduled Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduled_time" name="scheduled_time" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="use_optimal_time" name="use_optimal_time">
+                        <label class="form-check-label" for="use_optimal_time">Use next optimal time</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Schedule Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Scheduled Post Modal -->
+<div class="modal fade" id="deleteScheduledModal" tabindex="-1" aria-labelledby="deleteScheduledModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteScheduledModalLabel">Delete Scheduled Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this scheduled post?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteScheduledForm" action="" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 2px;
+    }
+    
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        padding: 10px 0;
+    }
+    
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-auto-rows: minmax(100px, auto);
+        gap: 2px;
+    }
+    
+    .calendar-day {
+        border: 1px solid #dee2e6;
+        padding: 5px;
+        min-height: 100px;
+        position: relative;
+    }
+    
+    .calendar-day.other-month {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .calendar-day.today {
+        background-color: #e3f2fd;
+    }
+    
+    .day-number {
+        font-weight: bold;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+    
+    .day-events {
+        margin-top: 25px;
+    }
+    
+    .event {
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-bottom: 3px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: white;
+    }
+    
+    .event.facebook {
+        background-color: #3b5998;
+    }
+    
+    .event.twitter {
+        background-color: #1da1f2;
+    }
+    
+    .event.linkedin {
+        background-color: #0077b5;
+    }
+    
+    .event.instagram {
+        background-color: #e1306c;
+    }
+    
+    .week-grid {
+        display: grid;
+        grid-template-rows: auto;
+        gap: 5px;
+    }
+    
+    .week-header {
+        display: grid;
+        grid-template-columns: 50px repeat(7, 1fr);
+        text-align: center;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        padding: 10px 0;
+    }
+    
+    .week-day {
+        display: grid;
+        grid-template-columns: 50px repeat(7, 1fr);
+        min-height: 40px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .time-label {
+        font-size: 0.8rem;
+        align-self: center;
+        text-align: right;
+        padding-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calendar logic
+        const calendarDays = document.getElementById('calendar-days');
+        const calendarTitle = document.getElementById('calendar-title');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const todayBtn = document.getElementById('today-btn');
+        const viewButtons = document.querySelectorAll('[data-view]');
+        
+        let currentDate = new Date();
+        let currentView = 'month';
+        
+        // Initialize calendar
+        generateCalendar(currentDate);
+        
+        // View buttons
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const view = this.getAttribute('data-view');
+                viewButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                currentView = view;
+                
+                // Update views
+                document.getElementById('month-view').classList.add('d-none');
+                document.getElementById('week-view').classList.add('d-none');
+                document.getElementById('day-view').classList.add('d-none');
+                
+                document.getElementById(`${view}-view`).classList.remove('d-none');
+                
+                // Regenerate the appropriate view
+                if (view === 'month') {
+                    generateCalendar(currentDate);
+                } else if (view === 'week') {
+                    generateWeekView(currentDate);
+                } else if (view === 'day') {
+                    generateDayView(currentDate);
+                }
+            });
+        });
+        
+        // Navigation buttons
+        prevBtn.addEventListener('click', function() {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                generateCalendar(currentDate);
+            } else if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() - 7);
+                generateWeekView(currentDate);
+            } else if (currentView === 'day') {
+                currentDate.setDate(currentDate.getDate() - 1);
+                generateDayView(currentDate);
+            }
+        });
+        
+        nextBtn.addEventListener('click', function() {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                generateCalendar(currentDate);
+            } else if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() + 7);
+                generateWeekView(currentDate);
+            } else if (currentView === 'day') {
+                currentDate.setDate(currentDate.getDate() + 1);
+                generateDayView(currentDate);
+            }
+        });
+        
+        todayBtn.addEventListener('click', function() {
+            currentDate = new Date();
+            if (currentView === 'month') {
+                generateCalendar(currentDate);
+            } else if (currentView === 'week') {
+                generateWeekView(currentDate);
+            } else if (currentView === 'day') {
+                generateDayView(currentDate);
+            }
+        });
+        
+        function generateCalendar(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            
+            // Update title
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            calendarTitle.textContent = `${monthName} ${year}`;
+            
+            // Clear previous calendar
+            calendarDays.innerHTML = '';
+            
+            // Get first day of month and last day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Get day of week of first day (0 = Sunday, 6 = Saturday)
+            const firstDayOfWeek = firstDay.getDay();
+            
+            // Get number of days in month
+            const numDays = lastDay.getDate();
+            
+            // Get number of days in previous month
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            
+            // Add days from previous month
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const day = prevMonthLastDay - firstDayOfWeek + i + 1;
+                const dayElement = createDayElement(day, 'other-month');
+                calendarDays.appendChild(dayElement);
+            }
+            
+            // Add days from current month
+            const today = new Date();
+            for (let i = 1; i <= numDays; i++) {
+                const isToday = today.getDate() === i && 
+                                today.getMonth() === month && 
+                                today.getFullYear() === year;
+                
+                const dayElement = createDayElement(i, isToday ? 'today' : '');
+                
+                // Add scheduled events (this would come from your data)
+                const dayDate = new Date(year, month, i);
+                addEvents(dayElement, dayDate);
+                
+                calendarDays.appendChild(dayElement);
+            }
+            
+            // Add days from next month to fill remainder of grid
+            const daysAdded = firstDayOfWeek + numDays;
+            const remainingDays = 7 - (daysAdded % 7);
+            if (remainingDays < 7) {
+                for (let i = 1; i <= remainingDays; i++) {
+                    const dayElement = createDayElement(i, 'other-month');
+                    calendarDays.appendChild(dayElement);
+                }
+            }
+        }
+        
+        function createDayElement(day, className) {
+            const dayElement = document.createElement('div');
+            dayElement.classList.add('calendar-day');
+            if (className) {
+                dayElement.classList.add(className);
+            }
+            
+            const dayNumber = document.createElement('div');
+            dayNumber.classList.add('day-number');
+            dayNumber.textContent = day;
+            
+            const dayEvents = document.createElement('div');
+            dayEvents.classList.add('day-events');
+            
+            dayElement.appendChild(dayNumber);
+            dayElement.appendChild(dayEvents);
+            
+            return dayElement;
+        }
+        
+        function addEvents(dayElement, date) {
+            const dayEvents = dayElement.querySelector('.day-events');
+            
+            // This would be replaced with your actual scheduled posts data
+            const scheduledPosts = {{ scheduled_posts_json|default('[]')|safe }};
+            
+            // Filter events for this day
+            const events = scheduledPosts.filter(post => {
+                const postDate = new Date(post.scheduled_date);
+                return postDate.getDate() === date.getDate() &&
+                       postDate.getMonth() === date.getMonth() &&
+                       postDate.getFullYear() === date.getFullYear();
+            });
+            
+            // Add events to day
+            events.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.classList.add('event', event.platform);
+                
+                const time = new Date(event.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                eventElement.textContent = `${time} - ${event.platform}`;
+                
+                // Add tooltip with full content
+                eventElement.setAttribute('data-bs-toggle', 'tooltip');
+                eventElement.setAttribute('data-bs-placement', 'top');
+                eventElement.setAttribute('title', event.content);
+                
+                dayEvents.appendChild(eventElement);
+            });
+            
+            // Initialize tooltips
+            new bootstrap.Tooltip(dayElement);
+        }
+        
+        function generateWeekView(date) {
+            // Implementation for week view would go here
+            const weekView = document.getElementById('week-view');
+            weekView.innerHTML = '<div class="alert alert-info">Week view will be implemented soon.</div>';
+            
+            // Update title
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - date.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            const startMonth = startOfWeek.toLocaleString('default', { month: 'short' });
+            const endMonth = endOfWeek.toLocaleString('default', { month: 'short' });
+            const startDay = startOfWeek.getDate();
+            const endDay = endOfWeek.getDate();
+            const year = startOfWeek.getFullYear();
+            
+            calendarTitle.textContent = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+        }
+        
+        function generateDayView(date) {
+            // Implementation for day view would go here
+            const dayView = document.getElementById('day-view');
+            dayView.innerHTML = '<div class="alert alert-info">Day view will be implemented soon.</div>';
+            
+            // Update title
+            const dayName = date.toLocaleString('default', { weekday: 'long' });
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            const day = date.getDate();
+            const year = date.getFullYear();
+            
+            calendarTitle.textContent = `${dayName}, ${monthName} ${day}, ${year}`;
+        }
+        
+        // Schedule Post Modal Logic
+        const schedulePostModal = document.getElementById('schedulePostModal');
+        if (schedulePostModal) {
+            schedulePostModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const platform = button.getAttribute('data-platform');
+                const platformSelect = document.getElementById('schedule_platform');
+                
+                if (platform) {
+                    platformSelect.value = platform;
+                }
+                
+                // Set default scheduled time to next hour
+                const scheduledTimeInput = document.getElementById('scheduled_time');
+                if (scheduledTimeInput) {
+                    const now = new Date();
+                    now.setHours(now.getHours() + 1);
+                    now.setMinutes(0);
+                    
+                    // Format date to YYYY-MM-DDThh:mm
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    
+                    scheduledTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+            });
+        }
+        
+        // Content type selection logic
+        const contentTypeSelect = document.getElementById('content_type');
+        const articleSelect = document.getElementById('article_select');
+        const templateSelect = document.getElementById('template_select');
+        const customContent = document.getElementById('custom_content');
+        
+        if (contentTypeSelect) {
+            contentTypeSelect.addEventListener('change', function() {
+                articleSelect.classList.add('d-none');
+                templateSelect.classList.add('d-none');
+                customContent.classList.add('d-none');
+                
+                if (this.value === 'article') {
+                    articleSelect.classList.remove('d-none');
+                } else if (this.value === 'template') {
+                    templateSelect.classList.remove('d-none');
+                } else {
+                    customContent.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Twitter character count
+        const platformSelect = document.getElementById('schedule_platform');
+        const postContent = document.getElementById('post_content');
+        const twitterCharCount = document.getElementById('twitter_char_count');
+        const charCount = document.getElementById('content-char-count');
+        
+        if (platformSelect && postContent && twitterCharCount) {
+            platformSelect.addEventListener('change', function() {
+                if (this.value === 'twitter') {
+                    twitterCharCount.classList.remove('d-none');
+                    postContent.setAttribute('maxlength', '280');
+                    // Update char count
+                    charCount.textContent = postContent.value.length;
+                } else {
+                    twitterCharCount.classList.add('d-none');
+                    postContent.removeAttribute('maxlength');
+                }
+            });
+            
+            postContent.addEventListener('input', function() {
+                if (platformSelect.value === 'twitter') {
+                    charCount.textContent = this.value.length;
+                    
+                    if (this.value.length > 280) {
+                        charCount.classList.add('text-danger');
+                    } else {
+                        charCount.classList.remove('text-danger');
+                    }
+                }
+            });
+        }
+        
+        // Template filter based on platform
+        const templateIdSelect = document.getElementById('template_id');
+        if (platformSelect && templateIdSelect) {
+            platformSelect.addEventListener('change', function() {
+                const platform = this.value;
+                
+                // Reset template options
+                const options = templateIdSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    if (option.value === '') {
+                        // Keep the empty option
+                        option.style.display = '';
+                    } else {
+                        const templatePlatform = option.getAttribute('data-platform');
+                        if (platform === 'all' || platform === templatePlatform) {
+                            option.style.display = '';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Optimal time checkbox
+        const optimalTimeCheckbox = document.getElementById('use_optimal_time');
+        const scheduledTimeInput = document.getElementById('scheduled_time');
+        
+        if (optimalTimeCheckbox && scheduledTimeInput) {
+            optimalTimeCheckbox.addEventListener('change', function() {
+                scheduledTimeInput.disabled = this.checked;
+            });
+        }
+        
+        // Delete scheduled post modal
+        const deleteScheduledModal = document.getElementById('deleteScheduledModal');
+        if (deleteScheduledModal) {
+            deleteScheduledModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const postId = button.getAttribute('data-post-id');
+                
+                document.getElementById('deleteScheduledForm').action = `/social/schedule/${postId}/delete`;
+            });
+        }
+    });
+</script>
+{% endblock %}

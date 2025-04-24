@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit' if action == 'edit' else 'Add' }} Social Media Account{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('social.social_accounts') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Accounts
+        </a>
+    </div>
+    <h1 class="h3 mb-0">{{ 'Edit' if action == 'edit' else 'Add' }} Social Media Account</h1>
+    <div class="invisible">
+        <!-- For balanced layout -->
+        <button type="button" class="btn btn-primary">Hidden</button>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('social.edit_social_account', account_id=account.id) if action == 'edit' else url_for('social.add_social_account') }}" method="post">
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">Platform</label>
+                        <select name="platform" id="platform" class="form-select" required>
+                            <option value="">Select Platform</option>
+                            <option value="facebook" {% if account and account.platform == 'facebook' %}selected{% endif %}>Facebook</option>
+                            <option value="twitter" {% if account and account.platform == 'twitter' %}selected{% endif %}>Twitter</option>
+                            <option value="linkedin" {% if account and account.platform == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+                            <option value="instagram" {% if account and account.platform == 'instagram' %}selected{% endif %}>Instagram</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ account.name if account else '' }}" required>
+                        <div class="form-text">Display name for this account</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="blog_id" class="form-label">Associated Blog</label>
+                        <select name="blog_id" id="blog_id" class="form-select" required>
+                            <option value="">Select Blog</option>
+                            {% for blog in blogs %}
+                            <option value="{{ blog.id }}" {% if account and account.blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Blog associated with this social account</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="account_id" class="form-label">Platform Account ID</label>
+                        <input type="text" class="form-control" id="account_id" name="account_id" value="{{ account.account_id if account else '' }}">
+                        <div class="form-text">Optional: ID or username on the platform</div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <label for="api_token" class="form-label">API Token/Key</label>
+                        <input type="password" class="form-control" id="api_token" name="api_token" {% if not account %}required{% endif %}>
+                        <div class="form-text">
+                            {% if action == 'edit' %}
+                            Leave empty to keep current API token.
+                            {% else %}
+                            API token/key for authentication.
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_secret" class="form-label">API Secret</label>
+                        <input type="password" class="form-control" id="api_secret" name="api_secret" {% if not account %}required{% endif %}>
+                        <div class="form-text">
+                            {% if action == 'edit' %}
+                            Leave empty to keep current API secret.
+                            {% else %}
+                            API secret for authentication.
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="active" name="active" {% if not account or account.active %}checked{% endif %}>
+                        <label class="form-check-label" for="active">Active</label>
+                        <div class="form-text">Inactive accounts won't be used for posting</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> {{ 'Save Changes' if action == 'edit' else 'Add Account' }}
+                        </button>
+                        {% if action == 'edit' %}
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash me-1"></i> Delete Account
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if action == 'edit' %}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Social Media Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the account "{{ account.name }}"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('social.delete_social_account', account_id=account.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

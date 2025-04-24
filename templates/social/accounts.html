@@ -20,60 +20,92 @@
 <!-- Platform cards -->
 <div class="row mb-4">
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-primary-subtle">
+        <div class="card border-0">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="rounded-circle bg-primary p-3 me-3">
                         <i class="fab fa-facebook-f text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title">Facebook</h5>
-                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-dark">Facebook</h5>
+                        <h6 class="mb-0 text-dark">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'facebook')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'facebook')|list|length > 0 else 0 }}%;" 
+                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="10">
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-info-subtle">
+        <div class="card border-0">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="rounded-circle bg-info p-3 me-3">
                         <i class="fab fa-twitter text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title">Twitter</h5>
-                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-dark">Twitter</h5>
+                        <h6 class="mb-0 text-dark">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'twitter')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'twitter')|list|length > 0 else 0 }}%;" 
+                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="10">
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-success-subtle">
+        <div class="card border-0">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="rounded-circle bg-success p-3 me-3">
                         <i class="fab fa-linkedin-in text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title">LinkedIn</h5>
-                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-dark">LinkedIn</h5>
+                        <h6 class="mb-0 text-dark">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'linkedin')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'linkedin')|list|length > 0 else 0 }}%;" 
+                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="10">
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-danger-subtle">
+        <div class="card border-0">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="rounded-circle bg-danger p-3 me-3">
                         <i class="fab fa-instagram text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title">Instagram</h5>
-                        <h6 class="mb-0">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-dark">Instagram</h5>
+                        <h6 class="mb-0 text-dark">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-danger" role="progressbar" 
+                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'instagram')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'instagram')|list|length > 0 else 0 }}%;" 
+                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="10">
                     </div>
                 </div>
             </div>

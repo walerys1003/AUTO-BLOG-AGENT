@@ -199,11 +199,26 @@
                         <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
                             <div id="status-{{ item.content_id }}">
-                                {% if all(post.get('status') == 'published' for post in item.social_posts.values()) %}
+                                {% set all_published = true %}
+                                {% set has_error = false %}
+                                {% set has_pending = false %}
+                                {% for platform, post in item.social_posts.items() %}
+                                    {% if post.get('status') != 'published' %}
+                                        {% set all_published = false %}
+                                    {% endif %}
+                                    {% if post.get('status') == 'error' %}
+                                        {% set has_error = true %}
+                                    {% endif %}
+                                    {% if post.get('status') == 'pending' %}
+                                        {% set has_pending = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if all_published %}
                                     <span class="badge bg-success">Published</span>
-                                {% elif any(post.get('status') == 'error' for post in item.social_posts.values()) %}
+                                {% elif has_error %}
                                     <span class="badge bg-danger">Error</span>
-                                {% elif any(post.get('status') == 'pending' for post in item.social_posts.values()) %}
+                                {% elif has_pending %}
                                     <span class="badge bg-warning">Scheduled</span>
                                 {% else %}
                                     <span class="badge bg-secondary">Draft</span>
