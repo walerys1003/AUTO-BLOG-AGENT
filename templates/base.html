@@ -250,22 +250,22 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}">
+                            <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-blog me-1"></i> Blogs
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}">
+                            <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-lightbulb me-1"></i> Topics
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-share-alt me-1"></i> Social Media
                             </a>
                             <ul class="dropdown-menu" style="background-color: var(--dark-color) !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">

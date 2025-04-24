@@ -1,10 +1,22 @@
 /* Additional custom styles beyond Bootstrap */
 
+/* Kolory Consist UI */
+:root {
+    --primary-color: #287F71;       /* Zielony - kolor główny */
+    --secondary-color: #EB862A;     /* Pomarańczowy - akcent */
+    --accent-color: #ABBDD3;        /* Jasny niebieski - akcent dodatkowy */
+    --neutral-color: #97A3B6;       /* Szaro-niebieski */
+    --dark-color: #111729;          /* Granatowy - tekst */
+    --bg-color: #f8f9fa;            /* Tło strony */
+    --card-bg: #FFFFFF;             /* Tło kart */
+}
+
 /* Main layout adjustments */
 body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 .footer {
@@ -14,13 +26,50 @@ body {
 /* Dashboard cards */
 .card {
     border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid rgba(151, 163, 182, 0.2);
+    padding: 1rem 1.25rem;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Card variations */
+.card.border-primary {
+    border-top: 3px solid var(--primary-color) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+}
+
+.card.border-success {
+    border-top: 3px solid var(--primary-color) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+}
+
+.card.border-warning {
+    border-top: 3px solid var(--secondary-color) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+}
+
+.card.border-info {
+    border-top: 3px solid var(--accent-color) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
 }
 
 /* Tables */
@@ -30,27 +79,118 @@ body {
 
 .table {
     margin-bottom: 0;
+    color: var(--dark-color);
 }
 
 .table th {
     border-top: none;
+    color: var(--dark-color);
+    font-weight: 600;
+    border-bottom-color: var(--primary-color) !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(40, 127, 113, 0.05);
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    border-color: rgba(151, 163, 182, 0.2);
 }
 
 /* Form improvements */
+.form-control, .form-select {
+    border-color: var(--neutral-color);
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+}
+
 .form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(40, 127, 113, 0.15);
 }
 
 /* Badge styles */
 .badge {
     font-weight: 500;
     padding: 0.35em 0.65em;
+    border-radius: 6px;
+}
+
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--neutral-color) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--primary-color) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--accent-color) !important;
+    color: var(--dark-color) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--secondary-color) !important;
 }
 
 /* Button adjustments */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
 .btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
+    border-radius: 4px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #236b5f;
+    border-color: #236b5f;
+}
+
+.btn-secondary {
+    background-color: var(--neutral-color);
+    border-color: var(--neutral-color);
+}
+
+.btn-success {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-danger {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-info {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--dark-color);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
 }
 
 /* Icon adjustments */
@@ -58,31 +198,53 @@ body {
     vertical-align: middle;
 }
 
-/* Tooltip darker style */
+/* Tooltip style */
 .tooltip .tooltip-inner {
-    background-color: #212529;
+    background-color: var(--dark-color);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
 }
 
 /* Progress bar adjustments */
 .progress {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(151, 163, 182, 0.2);
+    border-radius: 6px;
+    height: 0.6rem;
+}
+
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+.progress-bar.bg-success {
+    background-color: var(--primary-color) !important;
+}
+
+.progress-bar.bg-warning {
+    background-color: var(--secondary-color) !important;
+}
+
+.progress-bar.bg-info {
+    background-color: var(--accent-color) !important;
 }
 
 /* Modal adjustments */
 .modal-content {
-    border-radius: 0.5rem;
+    border-radius: 8px;
     border: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-.modal-header, .modal-footer {
-    border-color: rgba(255, 255, 255, 0.1);
+.modal-header {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid rgba(151, 163, 182, 0.2);
 }
 
-/* Card header with button */
-.card-header {
-    background-color: rgba(0, 0, 0, 0.1);
+.modal-footer {
+    background-color: var(--card-bg);
+    border-top: 1px solid rgba(151, 163, 182, 0.2);
 }
 
 /* Pagination adjustments */
@@ -94,7 +256,7 @@ body {
 .platform-guide {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(151, 163, 182, 0.2);
 }
 
 .platform-guide:last-child {
@@ -130,39 +292,180 @@ code {
 }
 
 /* Alerts with icons */
+.alert {
+    border: none;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
 .alert i {
     margin-right: 0.5rem;
 }
 
+.alert-success {
+    background-color: rgba(40, 127, 113, 0.1);
+    color: var(--primary-color);
+    border-left: 4px solid var(--primary-color);
+}
+
+.alert-info {
+    background-color: rgba(171, 189, 211, 0.1);
+    color: var(--dark-color);
+    border-left: 4px solid var(--accent-color);
+}
+
+.alert-warning {
+    background-color: rgba(235, 134, 42, 0.1);
+    color: var(--secondary-color);
+    border-left: 4px solid var(--secondary-color);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-left: 4px solid #dc3545;
+}
+
 /* Social media platform text */
 .d-flex .rounded-circle + span {
-    color: #ffffff;
+    color: var(--dark-color);
     font-weight: 500;
     font-size: 1rem;
 }
 
 /* Platform specific styles */
-.rounded-circle.bg-primary + span {
-    color: var(--bs-light);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+.rounded-circle.bg-primary {
+    background-color: var(--primary-color) !important;
 }
 
-.rounded-circle.bg-info + span {
-    color: var(--bs-light);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+.rounded-circle.bg-secondary {
+    background-color: var(--neutral-color) !important;
 }
 
-.rounded-circle.bg-success + span {
-    color: var(--bs-light);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+.rounded-circle.bg-success {
+    background-color: var(--primary-color) !important;
 }
 
-.rounded-circle.bg-danger + span {
-    color: var(--bs-light);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+.rounded-circle.bg-info {
+    background-color: var(--accent-color) !important;
 }
 
-.rounded-circle.bg-secondary + span {
-    color: var(--bs-light);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+.rounded-circle.bg-warning {
+    background-color: var(--secondary-color) !important;
+}
+
+/* Statistics and dashboard cards */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.2s;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-title {
+    font-size: 0.9rem;
+    color: var(--neutral-color);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+}
+
+.stat-change {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.stat-change.positive {
+    color: var(--primary-color);
+}
+
+.stat-change.negative {
+    color: var(--secondary-color);
+}
+
+/* Chart styles */
+.chart-container {
+    position: relative;
+    height: 250px;
+    margin: 1rem 0;
+}
+
+/* Primary color chart elements */
+.chart-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: rgba(40, 127, 113, 0.1) !important;
+}
+
+/* Secondary color chart elements */
+.chart-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    background-color: rgba(235, 134, 42, 0.1) !important;
+}
+
+/* Accent color chart elements */
+.chart-accent {
+    color: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    background-color: rgba(171, 189, 211, 0.1) !important;
+}
+
+/* Dashboard module cards */
+.feature-card {
+    border-radius: 10px;
+    height: 100%;
+    transition: all 0.2s;
+    border-top: 4px solid var(--primary-color);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card.primary {
+    border-top-color: var(--primary-color);
+}
+
+.feature-card.secondary {
+    border-top-color: var(--secondary-color);
+}
+
+.feature-card.accent {
+    border-top-color: var(--accent-color);
+}
+
+.feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background-color: rgba(40, 127, 113, 0.1);
+    color: var(--primary-color);
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+.feature-card.secondary .feature-icon {
+    background-color: rgba(235, 134, 42, 0.1);
+    color: var(--secondary-color);
+}
+
+.feature-card.accent .feature-icon {
+    background-color: rgba(171, 189, 211, 0.1);
+    color: var(--accent-color);
 }
