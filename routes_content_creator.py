@@ -9,8 +9,9 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from sqlalchemy import desc, and_, or_, func
 
 from app import db
-from models import Blog, ArticleTopic, ContentLog
+from models import Blog, ArticleTopic, ContentLog, AutomationRule
 from utils.writing import content_generator
+from utils.automation import content_automation
 
 # Create Blueprint
 content_creator_bp = Blueprint('content_creator', __name__)
@@ -410,3 +411,194 @@ def generate_metadata():
     except Exception as e:
         logger.error(f"Error generating metadata: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
+
+# Automation routes
+
+@content_creator_bp.route('/content-creator/automation')
+def automation_dashboard():
+    """Content automation dashboard view"""
+    # Get all blogs
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    # Get all automation rules
+    automation_rules = AutomationRule.query.all()
+    
+    # Get automation logs (would be from AutomationLog table in real implementation)
+    # For now, we'll create some sample logs
+    automation_logs = []
+    
+    # Render the automation dashboard
+    return render_template(
+        'content/automation.html',
+        blogs=blogs,
+        automation_rules=automation_rules,
+        automation_logs=automation_logs,
+        title="Content Automation"
+    )
+
+
+@content_creator_bp.route('/content-creator/automation/create', methods=['POST'])
+def create_automation_rule():
+    """Create a new automation rule"""
+    try:
+        # Get form data
+        name = request.form.get('name', '')
+        blog_id = request.form.get('blog_id')
+        
+        # Content settings
+        writing_style = request.form.get('writing_style', 'informative')
+        content_length = request.form.get('content_length', 'medium')
+        
+        # Schedule settings
+        publishing_days = request.form.getlist('publishing_days')
+        publishing_time = request.form.get('publishing_time', '12:00')
+        posts_per_day = int(request.form.get('posts_per_day', 1))
+        
+        # Topic settings
+        topic_min_score = float(request.form.get('topic_min_score', 0.7))
+        categories = request.form.getlist('categories')
+        
+        # Advanced settings
+        auto_enable_topics = 'auto_enable_topics' in request.form
+        auto_promote_content = 'auto_promote_content' in request.form
+        
+        # Create a new automation rule
+        new_rule = AutomationRule(
+            name=name,
+            blog_id=blog_id,
+            writing_style=writing_style,
+            content_length=content_length,
+            publishing_time=publishing_time,
+            posts_per_day=posts_per_day,
+            topic_min_score=topic_min_score,
+            auto_enable_topics=auto_enable_topics,
+            auto_promote_content=auto_promote_content,
+            active=True
+        )
+        
+        # Set publishing days as JSON
+        new_rule.set_publishing_days(publishing_days)
+        
+        # Set categories as JSON (if any)
+        if categories and categories[0] != '':
+            new_rule.set_categories(categories)
+        
+        db.session.add(new_rule)
+        db.session.commit()
+        
+        flash(f'Automation rule "{name}" created successfully', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error creating automation rule: {str(e)}")
+        flash(f'Error creating automation rule: {str(e)}', 'danger')
+    
+    return redirect(url_for('content_creator.automation_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/automation/edit/<int:rule_id>', methods=['GET', 'POST'])
+def edit_automation_rule(rule_id):
+    """Edit an existing automation rule"""
+    rule = AutomationRule.query.get_or_404(rule_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update rule data
+            rule.name = request.form.get('name', rule.name)
+            rule.writing_style = request.form.get('writing_style', rule.writing_style)
+            rule.content_length = request.form.get('content_length', rule.content_length)
+            rule.publishing_time = request.form.get('publishing_time', rule.publishing_time)
+            rule.posts_per_day = int(request.form.get('posts_per_day', rule.posts_per_day))
+            rule.topic_min_score = float(request.form.get('topic_min_score', rule.topic_min_score))
+            rule.auto_enable_topics = 'auto_enable_topics' in request.form
+            rule.auto_promote_content = 'auto_promote_content' in request.form
+            
+            # Update publishing days
+            publishing_days = request.form.getlist('publishing_days')
+            rule.set_publishing_days(publishing_days)
+            
+            # Update categories
+            categories = request.form.getlist('categories')
+            if categories and categories[0] != '':
+                rule.set_categories(categories)
+            else:
+                rule.set_categories([])
+            
+            db.session.commit()
+            flash(f'Automation rule "{rule.name}" updated successfully', 'success')
+            return redirect(url_for('content_creator.automation_dashboard'))
+            
+        except Exception as e:
+            logger.error(f"Error updating automation rule: {str(e)}")
+            flash(f'Error updating automation rule: {str(e)}', 'danger')
+    
+    # For GET requests, render the edit form
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    return render_template(
+        'content/edit_automation.html',
+        rule=rule,
+        blogs=blogs,
+        title=f"Edit Automation Rule - {rule.name}"
+    )
+
+
+@content_creator_bp.route('/content-creator/automation/toggle/<int:rule_id>', methods=['POST'])
+def toggle_automation_rule(rule_id):
+    """Toggle an automation rule active status"""
+    rule = AutomationRule.query.get_or_404(rule_id)
+    
+    try:
+        active = request.form.get('active', 'false').lower() == 'true'
+        rule.active = active
+        
+        db.session.commit()
+        
+        status = 'activated' if active else 'deactivated'
+        flash(f'Automation rule "{rule.name}" {status} successfully', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error toggling automation rule: {str(e)}")
+        flash(f'Error toggling automation rule: {str(e)}', 'danger')
+    
+    return redirect(url_for('content_creator.automation_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/automation/delete/<int:rule_id>', methods=['POST'])
+def delete_automation_rule(rule_id):
+    """Delete an automation rule"""
+    rule = AutomationRule.query.get_or_404(rule_id)
+    
+    try:
+        rule_name = rule.name
+        db.session.delete(rule)
+        db.session.commit()
+        
+        flash(f'Automation rule "{rule_name}" deleted successfully', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error deleting automation rule: {str(e)}")
+        flash(f'Error deleting automation rule: {str(e)}', 'danger')
+    
+    return redirect(url_for('content_creator.automation_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/automation/run/<int:rule_id>', methods=['POST'])
+def run_automation_rule(rule_id):
+    """Manually run an automation rule"""
+    rule = AutomationRule.query.get_or_404(rule_id)
+    
+    try:
+        # Run the automation rule
+        result = content_automation.run_rule(rule.id)
+        
+        if result.get('success'):
+            flash(f'Automation rule "{rule.name}" executed successfully. {result.get("message", "")}', 'success')
+        else:
+            flash(f'Automation rule execution failed: {result.get("message", "Unknown error")}', 'danger')
+        
+    except Exception as e:
+        logger.error(f"Error running automation rule: {str(e)}")
+        flash(f'Error running automation rule: {str(e)}', 'danger')
+    
+    return redirect(url_for('content_creator.automation_dashboard'))

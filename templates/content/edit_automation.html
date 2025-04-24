@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Automation Rule - BLOG AUTOMATION MASTER{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h2 mb-0">
+            <i class="fas fa-robot text-primary me-2"></i> Edit Automation Rule
+        </h1>
+        <p class="text-muted mt-2">
+            Modify your content automation rule settings.
+        </p>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Automation
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Edit Rule: {{ rule.name }}</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('content_creator.edit_automation_rule', rule_id=rule.id) }}" method="post">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="name" name="name" value="{{ rule.name }}" placeholder="Rule Name" required>
+                        <label for="name">Rule Name</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="blog_id" name="blog_id" disabled>
+                            {% for blog in blogs %}
+                            <option value="{{ blog.id }}" {% if blog.id == rule.blog_id %}selected{% endif %}>{{ blog.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="blog_id">Blog (Cannot be changed)</label>
+                        <input type="hidden" name="blog_id" value="{{ rule.blog_id }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <h6 class="mb-3">Content Generation Settings</h6>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="writing_style" name="writing_style">
+                            <option value="informative" {% if rule.writing_style == 'informative' %}selected{% endif %}>Informative & Educational</option>
+                            <option value="conversational" {% if rule.writing_style == 'conversational' %}selected{% endif %}>Conversational & Friendly</option>
+                            <option value="professional" {% if rule.writing_style == 'professional' %}selected{% endif %}>Professional & Technical</option>
+                            <option value="storytelling" {% if rule.writing_style == 'storytelling' %}selected{% endif %}>Storytelling & Narrative</option>
+                            <option value="persuasive" {% if rule.writing_style == 'persuasive' %}selected{% endif %}>Persuasive & Compelling</option>
+                        </select>
+                        <label for="writing_style">Writing Style</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="content_length" name="content_length">
+                            <option value="short" {% if rule.content_length == 'short' %}selected{% endif %}>Short (~800 words)</option>
+                            <option value="medium" {% if rule.content_length == 'medium' %}selected{% endif %}>Medium (~1200 words)</option>
+                            <option value="long" {% if rule.content_length == 'long' %}selected{% endif %}>Long (~1600 words)</option>
+                        </select>
+                        <label for="content_length">Content Length</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <h6 class="mb-3">Publishing Schedule</h6>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Publishing Days</label>
+                    <div class="mb-3">
+                        <div class="btn-group d-flex flex-wrap" role="group">
+                            {% set days = rule.get_publishing_days() %}
+                            <input type="checkbox" class="btn-check" id="day0" name="publishing_days" value="0" {% if 0 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day0">Mon</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day1" name="publishing_days" value="1" {% if 1 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day1">Tue</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day2" name="publishing_days" value="2" {% if 2 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day2">Wed</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day3" name="publishing_days" value="3" {% if 3 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day3">Thu</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day4" name="publishing_days" value="4" {% if 4 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day4">Fri</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day5" name="publishing_days" value="5" {% if 5 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day5">Sat</label>
+                            
+                            <input type="checkbox" class="btn-check" id="day6" name="publishing_days" value="6" {% if 6 in days %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="day6">Sun</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating mb-3">
+                        <input type="time" class="form-control" id="publishing_time" name="publishing_time" value="{{ rule.publishing_time }}">
+                        <label for="publishing_time">Publishing Time</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="posts_per_day" name="posts_per_day">
+                            <option value="1" {% if rule.posts_per_day == 1 %}selected{% endif %}>1 post</option>
+                            <option value="2" {% if rule.posts_per_day == 2 %}selected{% endif %}>2 posts</option>
+                            <option value="3" {% if rule.posts_per_day == 3 %}selected{% endif %}>3 posts</option>
+                            <option value="4" {% if rule.posts_per_day == 4 %}selected{% endif %}>4 posts</option>
+                        </select>
+                        <label for="posts_per_day">Posts Per Day</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <h6 class="mb-3">Topic Selection Criteria</h6>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="topic_min_score" name="topic_min_score" min="0.1" max="1.0" step="0.05" value="{{ rule.topic_min_score }}">
+                        <label for="topic_min_score">Minimum Topic Score (0.1-1.0)</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="categories" name="categories" multiple>
+                            <option value="">All Categories</option>
+                            {% set categories = rule.get_categories() %}
+                            <!-- These would be dynamically populated from the blog's categories -->
+                            <option value="Health" {% if 'Health' in categories %}selected{% endif %}>Health</option>
+                            <option value="Fitness" {% if 'Fitness' in categories %}selected{% endif %}>Fitness</option>
+                            <option value="Nutrition" {% if 'Nutrition' in categories %}selected{% endif %}>Nutrition</option>
+                            <option value="Wellness" {% if 'Wellness' in categories %}selected{% endif %}>Wellness</option>
+                        </select>
+                        <label for="categories">Categories (Optional)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <h6 class="mb-3">Advanced Settings</h6>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="auto_enable_topics" name="auto_enable_topics" {% if rule.auto_enable_topics %}checked{% endif %}>
+                        <label class="form-check-label" for="auto_enable_topics">
+                            Auto-approve topics that meet criteria
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="auto_promote_content" name="auto_promote_content" {% if rule.auto_promote_content %}checked{% endif %}>
+                        <label class="form-check-label" for="auto_promote_content">
+                            Auto-promote content to social media
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
