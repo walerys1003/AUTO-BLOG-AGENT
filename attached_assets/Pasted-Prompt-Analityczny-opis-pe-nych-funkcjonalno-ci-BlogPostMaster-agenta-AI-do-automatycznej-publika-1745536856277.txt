@@ -1,0 +1,94 @@
+Prompt: Analityczny opis pełnych funkcjonalności BlogPostMaster – agenta AI do automatycznej publikacji artykułów na WordPress
+Proszę, przedstaw szczegółowy, kompleksowy opis wszystkich funkcji i możliwości agenta AI o nazwie BlogPostMaster, który automatyzuje proces tworzenia i publikacji treści na blogach opartych o WordPress. Opisz zarówno funkcje podstawowe, jak i zaawansowane, uwzględniając cały cykl życia treści – od analizy SEO i generowania pomysłów, po publikację i promocję. Podziel odpowiedź na sekcje tematyczne, każdą omów w sposób szczegółowy, analityczny i techniczny.
+
+📌 Zakres szczegółowego opisu:
+🔍 Analiza SEO i Generowanie Tematów:
+
+Jakie narzędzia SEO agent wykorzystuje (np. Google Trends, Ahrefs, SerpApi)?
+
+Czy analiza odbywa się automatycznie i z jaką częstotliwością?
+
+Jak wygląda mechanizm wyboru popularnych tematów i fraz?
+
+Czy użytkownik może ingerować w wybór tematów?
+
+📝 Tworzenie Treści:
+
+Na jakich modelach językowych bazuje (GPT-4, Claude)?
+
+Czy agent rozróżnia style treści (poradnikowy, ekspercki, storytelling)?
+
+Jak wygląda struktura generowanych artykułów (nagłówki, akapity, długość)?
+
+Czy agent automatycznie generuje metaopisy, excerpty, tagi SEO?
+
+Czy treści można edytować przed publikacją?
+
+🎨 Pozyskiwanie i Przypisywanie Grafik:
+
+Jak agent wyszukuje obrazy (Unsplash, Google Images)?
+
+Czy weryfikuje licencje i przypisuje obrazy automatycznie?
+
+Czy użytkownik może zmieniać grafiki przed publikacją?
+
+📅 Harmonogramowanie i Zarządzanie Czasem:
+
+Czy agent działa wg sztywnego harmonogramu?
+
+Możliwość definiowania niestandardowych godzin publikacji?
+
+Automatyczne wznowienia przy błędach?
+
+🌐 Publikacja na WordPressie:
+
+Jakie metody integracji z WordPress wykorzystuje (REST API)?
+
+Czy możliwa jest publikacja automatyczna / manualna?
+
+Jak wygląda przypisywanie kategorii, statusów wpisu (Szkic, Opublikowany)?
+
+📱 Promocja w Mediach Społecznościowych:
+
+Jakie platformy obsługuje (Facebook, Instagram, LinkedIn, Twitter, TikTok)?
+
+Czy generuje posty z grafikami i linkami?
+
+Czy istnieje harmonogram promocji niezależny od artykułów?
+
+Integracja z Buffer/Zapier?
+
+🔔 Powiadomienia i Logi Systemowe:
+
+Czy agent informuje użytkownika o statusach publikacji, błędach?
+
+Jak wygląda system powiadomień (e-mail, push)?
+
+Czy loguje działania i umożliwia ich przegląd?
+
+👥 Uprawnienia i Role Użytkowników:
+
+Czy agent umożliwia zarządzanie uprawnieniami (admin, redaktor)?
+
+Możliwość zatwierdzania treści przez różnych użytkowników?
+
+📊 Statystyki i Analityka:
+
+Czy agent zbiera dane o skuteczności publikacji?
+
+Jakie wskaźniki prezentuje (CTR, liczba wyświetleń, kliknięcia)?
+
+⚙️ Ustawienia i Personalizacja:
+
+Czy użytkownik może dostosować źródła tematów, styl treści, długość?
+
+Opcje automatyzacji i ich konfiguracja.
+
+🧩 Dodatkowe zagadnienia do omówienia:
+Czy agent wspiera integrację z WooCommerce, Mailchimp, Google Analytics?
+
+Jak wygląda bezpieczeństwo danych i API?
+
+Czy możliwe jest działanie na wielu blogach jednocześnie (multi-site support)?
+
+📣 Cel prompta: Dostarcz pełny, szczegółowy opis działania BlogPostMaster, z naciskiem na techniczne aspekty każdej funkcji, ich zależności, możliwości personalizacji i stopień automatyzacji. Zadbaj o precyzję, jak w dokumentacji systemowej.
