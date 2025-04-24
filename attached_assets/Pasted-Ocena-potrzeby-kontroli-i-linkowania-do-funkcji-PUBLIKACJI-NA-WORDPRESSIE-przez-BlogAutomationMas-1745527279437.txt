@@ -1,0 +1,46 @@
+Ocena potrzeby kontroli i linkowania do funkcji PUBLIKACJI NA WORDPRESSIE przez  – BlogAutomationMaster
+Wytłumacz, jak przebiega proces automatycznej publikacji treści przez agenta ZYGA na WordPressie. Czy jest on w pełni zautomatyzowany – treści są publikowane bez ingerencji użytkownika, czy może użytkownik ma do niego dostęp, może podejrzeć harmonogram, edytować ustawienia przed publikacją?
+
+Obecny mechanizm działania:
+
+Po wygenerowaniu artykułu i dołączeniu grafiki oraz danych SEO, agent publikuje treść na WordPressie przez REST API.
+
+Wpis zostaje przypisany do odpowiednich kategorii, (jak podać te kategorie sąd je weźmie AGENT?) może być opublikowany od razu lub w określonym czasie.
+
+Agent rejestruje sukces lub błąd operacji.
+
+Pytania oceniające:
+
+Czy użytkownik obecnie widzi harmonogram publikacji? Czy może go zmienić?
+
+Czy użytkownik ma dostęp do podglądu treści przed publikacją?
+
+Czy nie warto dodać w dashboardzie linku do tej funkcji, który umożliwiałby:
+
+Przegląd wpisów gotowych do publikacji,
+
+Edycję harmonogramu (np. przesunięcie daty publikacji),
+
+Zmianę kategorii, tagów lub innych danych,
+
+Sprawdzenie statusu ostatnich publikacji (sukces/błąd),
+
+Podgląd wpisów już opublikowanych przez agenta.
+
+Sugestie funkcjonalne:
+
+Czy użytkownik powinien mieć opcję pauzowania automatycznej publikacji, np. na czas przeglądu treści?
+
+Czy dashboard powinien zawierać logi API – np. z informacjami o czasie publikacji, ewentualnych błędach, statusie wpisu?
+
+Czy warto dodać możliwość ręcznego zatwierdzenia wpisu przed publikacją?
+
+Twoja opinia:
+
+Jak oceniasz ryzyko związane z pełną automatyzacją publikacji – np. błędy w treści, złe przypisanie kategorii?
+
+Czy linkowanie tej funkcji do dashboardu i dodanie możliwości przeglądu i kontroli zwiększyłoby Twoje zaufanie i komfort pracy z systemem?
+
+Jakie elementy powinny być dostępne w panelu użytkownika dla tej funkcji, aby zapewnić pełną kontrolę lub przynajmniej przejrzystość?
+
+💡 Do przemyślenia: Automatyczna publikacja jest wygodna, ale czy nie warto mieć „ostatniego słowa” przed tym, jak treść trafi do sieci? Może warto wdrożyć tryb: automatyczny z opcją ręcznego zatwierdzenia? 📝🔒

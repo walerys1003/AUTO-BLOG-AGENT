@@ -1,57 +1,445 @@
 """
-WordPress API Client
-
-This module handles the interactions with the WordPress REST API.
+WordPress API client for interacting with WordPress sites
 """
-import logging
 import requests
-from typing import Dict, List, Any, Optional
+import logging
+import json
+import os
+from datetime import datetime
+from typing import Tuple, Dict, Any, List, Optional, Union
 
+# Setup logging
 logger = logging.getLogger(__name__)
 
-def publish_article(blog, title, content, meta_description=None, excerpt=None, 
-                   tags=None, categories=None, featured_image=None):
+def get_wordpress_client(blog_id: int) -> Tuple[str, str, str, str]:
     """
-    Publish an article to WordPress
+    Get WordPress API client configuration for a blog
     
     Args:
-        blog: The Blog object containing WordPress credentials
-        title (str): Article title
-        content (str): Article HTML content
-        meta_description (str, optional): Meta description for SEO
-        excerpt (str, optional): Article excerpt
-        tags (list, optional): List of tag names
-        categories (list, optional): List of category names
-        featured_image (dict, optional): Featured image data
+        blog_id: ID of the blog
         
     Returns:
-        dict: Result with post_id and URL if successful
+        Tuple of (api_url, username, api_token, blog name)
     """
-    logger.info(f"Would publish article to WordPress: {title}")
+    from app import db
+    from models import Blog
     
-    # In a real implementation, this would use the WordPress REST API
-    # to publish the article. For now, we'll just simulate success.
+    blog = db.session.get(Blog, blog_id)
+    if not blog:
+        raise ValueError(f"Blog with ID {blog_id} not found")
     
-    return {
-        "success": True,
-        "post_id": 12345,
-        "url": f"{blog.url}/sample-post-url"
+    return blog.api_url, blog.username, blog.api_token, blog.name
+
+def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
+    """
+    Get categories from WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        
+    Returns:
+        List of categories
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/categories"
+    auth = (username, token)
+    
+    try:
+        response = requests.get(url, auth=auth, params={"per_page": 100})
+        response.raise_for_status()
+        
+        categories = response.json()
+        
+        # Store categories in the database
+        from app import db
+        from models import Category
+        
+        for cat in categories:
+            existing = Category.query.filter_by(
+                blog_id=blog_id, 
+                wordpress_id=cat['id']
+            ).first()
+            
+            if not existing:
+                new_cat = Category(
+                    blog_id=blog_id,
+                    name=cat['name'],
+                    wordpress_id=cat['id'],
+                    parent_id=None if cat['parent'] == 0 else cat['parent'],
+                    description=cat.get('description', '')
+                )
+                db.session.add(new_cat)
+        
+        db.session.commit()
+        
+        return categories
+    
+    except Exception as e:
+        logger.error(f"Error getting WordPress categories: {str(e)}")
+        return []
+
+def get_wordpress_tags(blog_id: int) -> List[Dict[str, Any]]:
+    """
+    Get tags from WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        
+    Returns:
+        List of tags
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/tags"
+    auth = (username, token)
+    
+    try:
+        response = requests.get(url, auth=auth, params={"per_page": 100})
+        response.raise_for_status()
+        
+        tags = response.json()
+        
+        # Store tags in the database
+        from app import db
+        from models import Tag
+        
+        for tag in tags:
+            existing = Tag.query.filter_by(
+                blog_id=blog_id, 
+                wordpress_id=tag['id']
+            ).first()
+            
+            if not existing:
+                new_tag = Tag(
+                    blog_id=blog_id,
+                    name=tag['name'],
+                    wordpress_id=tag['id']
+                )
+                db.session.add(new_tag)
+        
+        db.session.commit()
+        
+        return tags
+    
+    except Exception as e:
+        logger.error(f"Error getting WordPress tags: {str(e)}")
+        return []
+
+def get_wordpress_post(blog_id: int, post_id: int) -> Dict[str, Any]:
+    """
+    Get a post from WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        post_id: ID of the post
+        
+    Returns:
+        Post data
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/posts/{post_id}"
+    auth = (username, token)
+    
+    try:
+        response = requests.get(url, auth=auth)
+        response.raise_for_status()
+        
+        return response.json()
+    
+    except Exception as e:
+        logger.error(f"Error getting WordPress post: {str(e)}")
+        return {}
+
+def create_wordpress_post(
+    blog_id: int,
+    title: str,
+    content: str,
+    excerpt: str = "",
+    status: str = "draft",
+    category_id: Optional[int] = None,
+    tags: Optional[List[str]] = None,
+    featured_media_id: Optional[int] = None,
+) -> Tuple[bool, Optional[int], Optional[str]]:
+    """
+    Create a new post in WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        title: Post title
+        content: Post content
+        excerpt: Post excerpt
+        status: Post status (draft, publish, future, etc.)
+        category_id: Category ID
+        tags: List of tag names
+        featured_media_id: Featured media ID
+        
+    Returns:
+        Tuple of (success, post_id, error_message)
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/posts"
+    auth = (username, token)
+    
+    # Prepare post data
+    post_data = {
+        "title": title,
+        "content": content,
+        "status": status
     }
+    
+    if excerpt:
+        post_data["excerpt"] = excerpt
+    
+    if category_id:
+        post_data["categories"] = [category_id]
+    
+    if tags:
+        post_data["tags"] = tags
+    
+    if featured_media_id:
+        post_data["featured_media"] = featured_media_id
+    
+    try:
+        response = requests.post(url, auth=auth, json=post_data)
+        response.raise_for_status()
+        
+        post = response.json()
+        
+        return True, post["id"], None
+    
+    except Exception as e:
+        logger.error(f"Error creating WordPress post: {str(e)}")
+        return False, None, str(e)
 
-
-def get_categories(blog):
+def update_wordpress_post(
+    blog_id: int,
+    post_id: int,
+    title: Optional[str] = None,
+    content: Optional[str] = None,
+    excerpt: Optional[str] = None,
+    status: Optional[str] = None,
+    category_id: Optional[int] = None,
+    tags: Optional[List[str]] = None,
+    featured_media_id: Optional[int] = None,
+) -> Tuple[bool, Optional[int], Optional[str]]:
     """
-    Get categories from WordPress blog
+    Update an existing post in WordPress
     
     Args:
-        blog: The Blog object containing WordPress credentials
+        blog_id: ID of the blog
+        post_id: ID of the post to update
+        title: Post title
+        content: Post content
+        excerpt: Post excerpt
+        status: Post status (draft, publish, future, etc.)
+        category_id: Category ID
+        tags: List of tag names
+        featured_media_id: Featured media ID
         
     Returns:
-        list: List of category objects
+        Tuple of (success, post_id, error_message)
     """
-    logger.info(f"Would fetch categories from WordPress blog: {blog.name}")
+    api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    # In a real implementation, this would use the WordPress REST API
-    # to fetch the categories. For now, we'll just return a sample list.
+    url = f"{api_url}/posts/{post_id}"
+    auth = (username, token)
     
-    return ["Business", "Technology", "Marketing", "Finance"]
+    # Prepare post data
+    post_data = {}
+    
+    if title is not None:
+        post_data["title"] = title
+    
+    if content is not None:
+        post_data["content"] = content
+    
+    if excerpt is not None:
+        post_data["excerpt"] = excerpt
+    
+    if status is not None:
+        post_data["status"] = status
+    
+    if category_id is not None:
+        post_data["categories"] = [category_id]
+    
+    if tags is not None:
+        post_data["tags"] = tags
+    
+    if featured_media_id is not None:
+        post_data["featured_media"] = featured_media_id
+    
+    try:
+        response = requests.post(url, auth=auth, json=post_data)
+        response.raise_for_status()
+        
+        post = response.json()
+        
+        return True, post["id"], None
+    
+    except Exception as e:
+        logger.error(f"Error updating WordPress post: {str(e)}")
+        return False, None, str(e)
+
+def publish_wordpress_post(
+    blog_id: int,
+    title: str,
+    content: str,
+    excerpt: str = "",
+    post_id: Optional[int] = None,
+    category_id: Optional[int] = None,
+    tags: Optional[List[str]] = None,
+    featured_image: Optional[Dict[str, Any]] = None,
+    scheduled_date: Optional[datetime] = None,
+) -> Tuple[bool, Optional[int], Optional[str]]:
+    """
+    Publish a post to WordPress
+    If post_id is provided, updates an existing post
+    Otherwise creates a new post
+    
+    Args:
+        blog_id: ID of the blog
+        title: Post title
+        content: Post content
+        excerpt: Post excerpt
+        post_id: Optional ID of existing post to update
+        category_id: Category ID
+        tags: List of tag names
+        featured_image: Featured image data
+        scheduled_date: Date to schedule the post for
+        
+    Returns:
+        Tuple of (success, post_id, error_message)
+    """
+    # First upload the featured image if provided
+    featured_media_id = None
+    if featured_image:
+        success, media_id, error = upload_media_to_wordpress(
+            blog_id=blog_id,
+            image_url=featured_image.get('url'),
+            image_name=featured_image.get('name', 'featured-image.jpg'),
+            alt_text=featured_image.get('alt_text', title)
+        )
+        
+        if success:
+            featured_media_id = media_id
+        else:
+            logger.warning(f"Failed to upload featured image: {error}")
+    
+    # Determine status and date
+    status = "publish"
+    if scheduled_date:
+        if scheduled_date > datetime.now():
+            status = "future"
+    
+    # Create or update the post
+    if post_id:
+        return update_wordpress_post(
+            blog_id=blog_id,
+            post_id=post_id,
+            title=title,
+            content=content,
+            excerpt=excerpt,
+            status=status,
+            category_id=category_id,
+            tags=tags,
+            featured_media_id=featured_media_id
+        )
+    else:
+        return create_wordpress_post(
+            blog_id=blog_id,
+            title=title,
+            content=content,
+            excerpt=excerpt,
+            status=status,
+            category_id=category_id,
+            tags=tags,
+            featured_media_id=featured_media_id
+        )
+
+def upload_media_to_wordpress(
+    blog_id: int,
+    image_url: str,
+    image_name: str,
+    alt_text: str = "",
+) -> Tuple[bool, Optional[int], Optional[str]]:
+    """
+    Upload media to WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        image_url: URL of the image
+        image_name: Name of the image
+        alt_text: Alt text for the image
+        
+    Returns:
+        Tuple of (success, media_id, error_message)
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/media"
+    auth = (username, token)
+    
+    try:
+        # Download the image
+        image_response = requests.get(image_url)
+        image_response.raise_for_status()
+        
+        # Upload to WordPress
+        headers = {
+            "Content-Disposition": f'attachment; filename="{image_name}"',
+        }
+        
+        response = requests.post(
+            url, 
+            auth=auth, 
+            headers=headers,
+            data=image_response.content
+        )
+        response.raise_for_status()
+        
+        media = response.json()
+        
+        # Set alt text if provided
+        if alt_text:
+            update_url = f"{api_url}/media/{media['id']}"
+            update_data = {
+                "alt_text": alt_text
+            }
+            
+            update_response = requests.post(update_url, auth=auth, json=update_data)
+            update_response.raise_for_status()
+        
+        return True, media["id"], None
+    
+    except Exception as e:
+        logger.error(f"Error uploading media to WordPress: {str(e)}")
+        return False, None, str(e)
+
+def delete_wordpress_post(blog_id: int, post_id: int) -> bool:
+    """
+    Delete a post from WordPress
+    
+    Args:
+        blog_id: ID of the blog
+        post_id: ID of the post
+        
+    Returns:
+        Success status
+    """
+    api_url, username, token, _ = get_wordpress_client(blog_id)
+    
+    url = f"{api_url}/posts/{post_id}"
+    auth = (username, token)
+    
+    try:
+        response = requests.delete(url, auth=auth, params={"force": True})
+        response.raise_for_status()
+        
+        return True
+    
+    except Exception as e:
+        logger.error(f"Error deleting WordPress post: {str(e)}")
+        return False

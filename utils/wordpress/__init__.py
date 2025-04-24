@@ -1,1 +1,1 @@
-# WordPress module initialization
+# WordPress utilities package
