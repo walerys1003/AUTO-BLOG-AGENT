@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Logs - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-4">Content Logs</h1>
+    </div>
+</div>
+
+<!-- Filter Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Filter Logs</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
+                    <option value="publishing" {% if current_status == 'publishing' %}selected{% endif %}>Publishing</option>
+                    <option value="published" {% if current_status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="error" {% if current_status == 'error' %}selected{% endif %}>Error</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="blog_id" class="form-label">Blog</label>
+                <select class="form-select" id="blog_id" name="blog_id">
+                    <option value="all" {% if current_blog == 'all' %}selected{% endif %}>All</option>
+                    {% for blog in blogs %}
+                    <option value="{{ blog.id }}" {% if current_blog|string == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="days" class="form-label">Time Range</label>
+                <select class="form-select" id="days" name="days">
+                    <option value="1" {% if days == 1 %}selected{% endif %}>Last 24 hours</option>
+                    <option value="7" {% if days == 7 %}selected{% endif %}>Last week</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Logs Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Content Activity Logs</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Blog</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Published</th>
+                        <th>Social Media</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>
+                            {% if log.post_id %}
+                            <a href="{{ log.blog.url }}/?p={{ log.post_id }}" target="_blank">{{ log.title }}</a>
+                            {% else %}
+                            {{ log.title }}
+                            {% endif %}
+                        </td>
+                        <td>{{ log.blog.name }}</td>
+                        <td>
+                            {% if log.status == 'published' %}
+                            <span class="badge bg-success">Published</span>
+                            {% elif log.status == 'error' %}
+                            <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ log.error_message }}">Error</span>
+                            {% else %}
+                            <span class="badge bg-warning">{{ log.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ log.published_at.strftime('%Y-%m-%d %H:%M') if log.published_at else 'N/A' }}</td>
+                        <td>
+                            {% if log.social_media_posts %}
+                            {% set social_posts = log.get_social_posts() %}
+                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#socialModal{{ log.id }}">
+                                <i class="fas fa-share-alt"></i> {{ social_posts|length }} platforms
+                            </button>
+                            
+                            <!-- Social Media Modal -->
+                            <div class="modal fade" id="socialModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Social Media Posts</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h6>Article: {{ log.title }}</h6>
+                                            <ul class="list-group mt-3">
+                                                {% for platform, details in social_posts.items() %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        {% if platform == 'facebook' %}
+                                                        <i class="fab fa-facebook text-primary me-2"></i>
+                                                        {% elif platform == 'twitter' %}
+                                                        <i class="fab fa-twitter text-info me-2"></i>
+                                                        {% elif platform == 'linkedin' %}
+                                                        <i class="fab fa-linkedin text-primary me-2"></i>
+                                                        {% elif platform == 'instagram' %}
+                                                        <i class="fab fa-instagram text-danger me-2"></i>
+                                                        {% else %}
+                                                        <i class="fas fa-share-alt me-2"></i>
+                                                        {% endif %}
+                                                        {{ platform|capitalize }}
+                                                    </div>
+                                                    <div>
+                                                        {% if details.success %}
+                                                        <span class="badge bg-success">Posted</span>
+                                                        {% if details.post_url %}
+                                                        <a href="{{ details.post_url }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                        {% else %}
+                                                        <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ details.error }}">Failed</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <p class="mb-0">No logs found for the selected filters.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="card-footer">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if logs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('logs', page=logs.prev_num, status=current_status, blog_id=current_blog, days=days) }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if logs.page == page_num %}
+                        <li class="page-item active">
+                            <a class="page-link" href="{{ url_for('logs', page=page_num, status=current_status, blog_id=current_blog, days=days) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('logs', page=page_num, status=current_status, blog_id=current_blog, days=days) }}">{{ page_num }}</a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if logs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('logs', page=logs.next_num, status=current_status, blog_id=current_blog, days=days) }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+</script>
+{% endblock %}

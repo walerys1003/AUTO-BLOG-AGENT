@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if action == 'add' %}
+Add New Blog - BlogAutomationAgent
+{% else %}
+Edit Blog - BlogAutomationAgent
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-4">
+            {% if action == 'add' %}
+            Add New Blog
+            {% else %}
+            Edit Blog
+            {% endif %}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if action == 'add' %}
+                    Blog Details
+                    {% else %}
+                    Edit {{ blog.name }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Blog Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required 
+                               value="{{ blog.name if blog else '' }}">
+                        <div class="form-text">A recognizable name for your blog</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Blog URL</label>
+                        <input type="url" class="form-control" id="url" name="url" required
+                               value="{{ blog.url if blog else '' }}"
+                               placeholder="https://yourblog.com">
+                        <div class="form-text">The main URL of your WordPress blog</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_url" class="form-label">WordPress API URL</label>
+                        <input type="url" class="form-control" id="api_url" name="api_url" required
+                               value="{{ blog.api_url if blog else '' }}"
+                               placeholder="https://yourblog.com">
+                        <div class="form-text">Typically the same as your blog URL, unless you have a custom API endpoint</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">WordPress Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required
+                               value="{{ blog.username if blog else '' }}">
+                        <div class="form-text">Username with permissions to create posts (Editor or Administrator)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_token" class="form-label">API Token / Application Password</label>
+                        <input type="password" class="form-control" id="api_token" name="api_token"
+                               {% if not blog %}required{% endif %}>
+                        <div class="form-text">
+                            {% if blog %}
+                            Leave blank to keep the current API token, or enter a new one to update
+                            {% else %}
+                            Your WordPress application password (created in Users → Your Profile)
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categories" class="form-label">Categories</label>
+                        <textarea class="form-control" id="categories" name="categories" rows="4">{{ blog.categories if blog else '[]' }}</textarea>
+                        <div class="form-text">JSON array of category objects with "id" and "name" fields
+                            <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#categoriesHelp">
+                                See Example
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if blog %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="active" name="active"
+                               {% if blog.active %}checked{% endif %}>
+                        <label class="form-check-label" for="active">Active</label>
+                        <div class="form-text">When inactive, content won't be generated for this blog</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('blogs_list') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if action == 'add' %}
+                            Add Blog
+                            {% else %}
+                            Save Changes
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">WordPress API Guide</h5>
+            </div>
+            <div class="card-body">
+                <p>To connect your WordPress blog, you need:</p>
+                
+                <ol>
+                    <li class="mb-2">
+                        <strong>REST API Access</strong>: Ensure REST API is enabled (default in WordPress 4.7+)
+                    </li>
+                    <li class="mb-2">
+                        <strong>Application Password</strong>: Generate one in WordPress admin → Users → Your Profile
+                    </li>
+                    <li class="mb-2">
+                        <strong>Correct Permissions</strong>: The user needs permission to create and edit posts
+                    </li>
+                </ol>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Never share your API token or application password with others.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Help Modal -->
+<div class="modal fade" id="categoriesHelp" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Categories Format Example</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Enter categories as a JSON array of objects with "id" and "name" fields.</p>
+                <pre><code>[
+    {
+        "id": 1,
+        "name": "Technology"
+    },
+    {
+        "id": 5,
+        "name": "Health"
+    },
+    {
+        "id": 8,
+        "name": "Travel"
+    }
+]</code></pre>
+                <p class="mt-3">You can find category IDs in your WordPress admin panel under Posts → Categories. The ID is typically shown in the URL when you edit a category.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got It</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

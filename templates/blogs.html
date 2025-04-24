@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Blogs - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <h1 class="mb-0">Manage Blogs</h1>
+        <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Blog
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Configured Blogs</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Categories</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for blog in blogs %}
+                    <tr>
+                        <td>{{ blog.name }}</td>
+                        <td><a href="{{ blog.url }}" target="_blank">{{ blog.url }}</a></td>
+                        <td>
+                            {% set categories = blog.get_categories() %}
+                            {% if categories %}
+                                {% for category in categories %}
+                                <span class="badge bg-info me-1">{{ category.name }}</span>
+                                {% if loop.index == 3 and categories|length > 3 %}
+                                <span class="badge bg-secondary">+{{ categories|length - 3 }} more</span>
+                                {% break %}
+                                {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">No categories</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if blog.active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ blog.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('edit_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteBlogModal{{ blog.id }}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteBlogModal{{ blog.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Delete Blog</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete <strong>{{ blog.name }}</strong>?</p>
+                                            <p class="text-danger">This action cannot be undone. All associated content logs and topics will also be deleted.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Delete Blog</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <p class="mb-0">No blogs configured yet.</p>
+                            <a href="{{ url_for('add_blog') }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Add Your First Blog
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">WordPress Configuration Guide</h5>
+            </div>
+            <div class="card-body">
+                <p>To connect your WordPress blog to BlogAutomationAgent, you'll need the following:</p>
+                
+                <ol>
+                    <li class="mb-2">
+                        <strong>WordPress REST API Access:</strong> Ensure your WordPress installation has the REST API enabled (it's enabled by default in WordPress 4.7+).
+                    </li>
+                    <li class="mb-2">
+                        <strong>Application Password:</strong> Generate an application password in WordPress:
+                        <ul>
+                            <li>Go to your WordPress admin panel → Users → Your Profile</li>
+                            <li>Scroll down to "Application Passwords" section</li>
+                            <li>Enter a name for the application (e.g., "BlogAutomationAgent")</li>
+                            <li>Click "Add New Application Password"</li>
+                            <li>Copy the generated password (you'll need it when adding the blog)</li>
+                        </ul>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Categories:</strong> Prepare a list of category IDs you want to publish to. You can find these in your WordPress admin panel under Posts → Categories.
+                    </li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    For enhanced security, we recommend using HTTPS for your WordPress site and creating a dedicated user with Editor permissions for API access.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

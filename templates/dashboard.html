@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-4">Dashboard</h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Blogs</h5>
+                <p class="card-text display-4">{{ stats.total_blogs }}</p>
+                <small class="text-white-50">{{ stats.active_blogs }} active</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Published Articles</h5>
+                <p class="card-text display-4">{{ stats.total_posts }}</p>
+                <small class="text-white-50">across all blogs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Pending Topics</h5>
+                <p class="card-text display-4">{{ stats.pending_topics }}</p>
+                <small class="text-white-50">ready for publishing</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Today's Schedule</h5>
+                <p class="card-text display-4">{{ blog_stats|sum(attribute='posts_today') }}</p>
+                <small class="text-dark-50">posts published today</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blog Status -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Blog Status</h5>
+                <a href="{{ url_for('blogs_list') }}" class="btn btn-sm btn-outline-primary">Manage Blogs</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Blog Name</th>
+                                <th>URL</th>
+                                <th>Status</th>
+                                <th>Total Posts</th>
+                                <th>Today's Posts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blog in blog_stats %}
+                            <tr>
+                                <td>{{ blog.name }}</td>
+                                <td><a href="{{ blog.url }}" target="_blank">{{ blog.url }}</a></td>
+                                <td>
+                                    {% if blog.active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ blog.posts_count }}</td>
+                                <td>{{ blog.posts_today }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary process-blog" data-blog-id="{{ blog.id }}">
+                                        <i class="fas fa-sync-alt"></i> Process
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="mb-0">No blogs configured yet.</p>
+                                    <a href="{{ url_for('add_blog') }}" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus"></i> Add Your First Blog
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Posts -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Posts</h5>
+                <a href="{{ url_for('logs') }}" class="btn btn-sm btn-outline-primary">View All Logs</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Blog</th>
+                                <th>Status</th>
+                                <th>Published</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for post in recent_posts %}
+                            <tr>
+                                <td>{{ post.title }}</td>
+                                <td>{{ post.blog.name }}</td>
+                                <td>
+                                    {% if post.status == 'published' %}
+                                    <span class="badge bg-success">Published</span>
+                                    {% elif post.status == 'error' %}
+                                    <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ post.error_message }}">Error</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">{{ post.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ post.published_at.strftime('%Y-%m-%d %H:%M') if post.published_at else 'N/A' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <p class="mb-0">No posts published yet.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Process blog buttons
+    document.querySelectorAll('.process-blog').forEach(button => {
+        button.addEventListener('click', function() {
+            const blogId = this.getAttribute('data-blog-id');
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            this.disabled = true;
+            
+            fetch(`/api/process_blog/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.innerHTML = '<i class="fas fa-check"></i> Success';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-success');
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-primary');
+                        this.disabled = false;
+                    }, 3000);
+                } else {
+                    this.innerHTML = '<i class="fas fa-times"></i> Failed';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-danger');
+                    this.setAttribute('data-bs-toggle', 'tooltip');
+                    this.setAttribute('title', data.message);
+                    new bootstrap.Tooltip(this).show();
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-primary');
+                        this.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = '<i class="fas fa-times"></i> Error';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-danger');
+                this.disabled = false;
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if action == 'add' %}
+Add Social Media Account - BlogAutomationAgent
+{% else %}
+Edit Social Media Account - BlogAutomationAgent
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-4">
+            {% if action == 'add' %}
+            Add Social Media Account
+            {% else %}
+            Edit Social Media Account
+            {% endif %}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if action == 'add' %}
+                    Account Details
+                    {% else %}
+                    Edit {{ account.platform }} - {{ account.name }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">Platform</label>
+                        <select class="form-select" id="platform" name="platform" required>
+                            <option value="" disabled {% if not account %}selected{% endif %}>Select platform</option>
+                            <option value="Facebook" {% if account and account.platform == 'Facebook' %}selected{% endif %}>Facebook</option>
+                            <option value="Twitter" {% if account and account.platform == 'Twitter' %}selected{% endif %}>Twitter</option>
+                            <option value="LinkedIn" {% if account and account.platform == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
+                            <option value="Instagram" {% if account and account.platform == 'Instagram' %}selected{% endif %}>Instagram</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ account.name if account else '' }}">
+                        <div class="form-text">A recognizable name for this account (e.g., "Company Facebook Page")</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_token" class="form-label">API Token / Access Token</label>
+                        <input type="password" class="form-control" id="api_token" name="api_token"
+                               {% if not account %}required{% endif %}>
+                        <div class="form-text">
+                            {% if account %}
+                            Leave blank to keep the current token, or enter a new one to update
+                            {% else %}
+                            Your access token for this platform's API
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api_secret" class="form-label">API Secret / Client Secret</label>
+                        <input type="password" class="form-control" id="api_secret" name="api_secret">
+                        <div class="form-text">
+                            {% if account %}
+                            Leave blank to keep the current secret, or enter a new one to update
+                            {% else %}
+                            Required for some platforms (Twitter, LinkedIn)
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="account_id" class="form-label">Account ID / Page ID</label>
+                        <input type="text" class="form-control" id="account_id" name="account_id"
+                               value="{{ account.account_id if account else '' }}">
+                        <div class="form-text">The unique identifier for your page or account (required for Facebook, Instagram, LinkedIn)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="blog_id" class="form-label">Associated Blog</label>
+                        <select class="form-select" id="blog_id" name="blog_id" required>
+                            <option value="" disabled {% if not account %}selected{% endif %}>Select blog</option>
+                            {% for blog in blogs %}
+                            <option value="{{ blog.id }}" {% if account and account.blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">This social account will be used to promote content from the selected blog</div>
+                    </div>
+                    
+                    {% if account %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="active" name="active"
+                               {% if account.active %}checked{% endif %}>
+                        <label class="form-check-label" for="active">Active</label>
+                        <div class="form-text">When inactive, this account won't be used for social media posting</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('social_accounts') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if action == 'add' %}
+                            Add Account
+                            {% else %}
+                            Save Changes
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">API Access Guide</h5>
+            </div>
+            <div class="card-body">
+                <p>Each social media platform requires different API access setup:</p>
+                
+                <div class="platform-guide" id="facebook-guide">
+                    <h6><i class="fab fa-facebook text-primary me-2"></i>Facebook</h6>
+                    <ul>
+                        <li>API Token: Page Access Token</li>
+                        <li>Account ID: Page ID</li>
+                        <li>API Secret: Not required</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide" id="twitter-guide">
+                    <h6><i class="fab fa-twitter text-info me-2"></i>Twitter</h6>
+                    <ul>
+                        <li>API Token: API Key</li>
+                        <li>API Secret: API Secret</li>
+                        <li>Account ID: Optional</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide" id="linkedin-guide">
+                    <h6><i class="fab fa-linkedin text-primary me-2"></i>LinkedIn</h6>
+                    <ul>
+                        <li>API Token: Access Token</li>
+                        <li>API Secret: Optional</li>
+                        <li>Account ID: Your LinkedIn User ID</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-guide" id="instagram-guide">
+                    <h6><i class="fab fa-instagram text-danger me-2"></i>Instagram</h6>
+                    <ul>
+                        <li>API Token: Access Token</li>
+                        <li>Account ID: Instagram Business ID</li>
+                        <li>API Secret: Not required</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Never share your API tokens or secrets with others. These provide access to your social media accounts.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show/hide platform-specific guides based on selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const platformSelect = document.getElementById('platform');
+        const guides = document.querySelectorAll('.platform-guide');
+        
+        function updateGuides() {
+            const platform = platformSelect.value.toLowerCase();
+            
+            guides.forEach(guide => {
+                guide.style.display = 'none';
+            });
+            
+            if (platform) {
+                const guideId = platform.toLowerCase() + '-guide';
+                const targetGuide = document.getElementById(guideId);
+                if (targetGuide) {
+                    targetGuide.style.display = 'block';
+                }
+            }
+        }
+        
+        // Update on load
+        updateGuides();
+        
+        // Update on change
+        platformSelect.addEventListener('change', updateGuides);
+    });
+</script>
+{% endblock %}

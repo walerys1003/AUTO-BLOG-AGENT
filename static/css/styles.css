@@ -1,0 +1,135 @@
+/* Additional custom styles beyond Bootstrap */
+
+/* Main layout adjustments */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Dashboard cards */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tables */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+}
+
+/* Form improvements */
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+/* Badge styles */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Button adjustments */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Icon adjustments */
+.fa, .fas, .far, .fab {
+    vertical-align: middle;
+}
+
+/* Tooltip darker style */
+.tooltip .tooltip-inner {
+    background-color: #212529;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Progress bar adjustments */
+.progress {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modal adjustments */
+.modal-content {
+    border-radius: 0.5rem;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header, .modal-footer {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card header with button */
+.card-header {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Pagination adjustments */
+.pagination {
+    margin-bottom: 0;
+}
+
+/* Platform guides in the social form */
+.platform-guide {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-guide:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Code/pre formatting */
+pre {
+    background-color: #2d2d2d;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    color: #f8f9fa;
+    font-size: 0.9rem;
+    overflow: auto;
+}
+
+code {
+    color: #20c997;
+}
+
+/* Alerts with icons */
+.alert i {
+    margin-right: 0.5rem;
+}
