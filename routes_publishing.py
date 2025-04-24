@@ -310,6 +310,30 @@ def edit_article(content_id):
     # Add tags and other metadata to content object for template access
     content.tags_str = tags_str
     
+    # Modyfikacja treści artykułu, aby ustawić czarny kolor tekstu dla podglądu (tylko dla GET)
+    if request.method == 'GET' and content.content:
+        # Dodajemy wrapper div z czarnym kolorem tekstu
+        modified_content = f'<div style="color: #000000 !important">{content.content}</div>'
+        # Dodajemy style inline dla wszystkich elementów HTML
+        modified_content = modified_content.replace('<p', '<p style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h1', '<h1 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h2', '<h2 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h3', '<h3 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h4', '<h4 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h5', '<h5 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h6', '<h6 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<li', '<li style="color: #000000 !important"')
+        modified_content = modified_content.replace('<ul', '<ul style="color: #000000 !important"')
+        modified_content = modified_content.replace('<ol', '<ol style="color: #000000 !important"')
+        modified_content = modified_content.replace('<span', '<span style="color: #000000 !important"')
+        modified_content = modified_content.replace('<div', '<div style="color: #000000 !important"')
+        modified_content = modified_content.replace('<strong', '<strong style="color: #000000 !important"')
+        modified_content = modified_content.replace('<em', '<em style="color: #000000 !important"')
+        modified_content = modified_content.replace('<blockquote', '<blockquote style="color: #000000 !important"')
+        
+        # Tymczasowo aktualizujemy treść dla widoku
+        content.content = modified_content
+    
     if request.method == 'POST':
         try:
             # Get action type

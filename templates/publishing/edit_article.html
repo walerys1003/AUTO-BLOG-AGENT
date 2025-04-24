@@ -58,7 +58,7 @@
 {% block content %}
 <div class="container-fluid my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">{{ content.title }}</h1>
+        <h1 class="mb-0" style="color: #000000 !important;">{{ content.title }}</h1>
         <div>
             <button type="button" class="btn btn-outline-primary me-2 toggle-view-btn" data-mode="preview">
                 <i class="fas fa-eye me-1"></i> Podgląd
@@ -76,7 +76,7 @@
         <div class="col-lg-9 edit-mode" id="content-container">
             <!-- Preview Panel -->
             <div class="preview-panel mb-4">
-                <h2 id="preview-title">{{ content.title }}</h2>
+                <h2 id="preview-title" style="color: #000000 !important;">{{ content.title }}</h2>
                 <div id="preview-content"></div>
             </div>
 
