@@ -628,6 +628,30 @@ def preview_article(content_id):
         meta_title = ''
         meta_description = ''
     
+    # Modyfikacja treści artykułu, aby ustawić czarny kolor tekstu
+    if content.content:
+        # Dodajemy wrapper div z czarnym kolorem tekstu
+        modified_content = f'<div style="color: #000000 !important">{content.content}</div>'
+        # Dodajemy style inline dla wszystkich elementów HTML
+        modified_content = modified_content.replace('<p', '<p style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h1', '<h1 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h2', '<h2 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h3', '<h3 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h4', '<h4 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h5', '<h5 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<h6', '<h6 style="color: #000000 !important"')
+        modified_content = modified_content.replace('<li', '<li style="color: #000000 !important"')
+        modified_content = modified_content.replace('<ul', '<ul style="color: #000000 !important"')
+        modified_content = modified_content.replace('<ol', '<ol style="color: #000000 !important"')
+        modified_content = modified_content.replace('<span', '<span style="color: #000000 !important"')
+        modified_content = modified_content.replace('<div', '<div style="color: #000000 !important"')
+        modified_content = modified_content.replace('<strong', '<strong style="color: #000000 !important"')
+        modified_content = modified_content.replace('<em', '<em style="color: #000000 !important"')
+        modified_content = modified_content.replace('<blockquote', '<blockquote style="color: #000000 !important"')
+        
+        # Tymczasowo aktualizujemy treść dla widoku podglądu
+        content.content = modified_content
+    
     # Render template
     return render_template(
         'publishing/preview_article.html',
