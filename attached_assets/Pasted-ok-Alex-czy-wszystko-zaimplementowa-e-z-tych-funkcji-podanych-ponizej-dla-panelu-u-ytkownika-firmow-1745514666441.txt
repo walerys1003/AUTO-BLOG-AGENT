@@ -1,0 +1,145 @@
+ok Alex czy wszystko zaimplementowałeś z tych funkcji podanych ponizej dla panelu użytkownika firmowego, jezeli nie wszystko to przejdz do dalszego kodowania celem zakodowania wszystich opisanych tu funkcji : 
+🔹 Panel Użytkownika Firmowego – Struktura i Funkcjonalności
+1. Dashboard Firmy (Strona Główna Panelu)
+Podsumowanie:
+
+Liczba aktywnych rezerwacji.
+
+Najnowsze opinie klientów.
+
+Statystyki widoczności oferty: wyświetlenia, kliknięcia, rezerwacje.
+
+Powiadomienia:
+
+Nowe rezerwacje – szczegóły do akceptacji.
+
+Wiadomości od klientów (system wewnętrznego czatu/e-maila).
+
+Przypomnienia o kończących się terminach publikacji ofert/promocji.
+
+2. Zarządzanie Ofertą (Usługi)
+Dodawanie i edycja usług:
+
+Tytuł, opis, cennik, zdjęcia (galeria).
+
+Kategorie usług: pogrzebowe, kamieniarskie, florystyczne itp.
+
+Lokalizacja firmy, zasięg działania (miasto, województwo).
+
+Harmonogram dostępności:
+
+Możliwość ustawienia godzin i dni pracy.
+
+Integracja z kalendarzem (blokowanie terminów).
+
+3. Rezerwacje Klientów
+Lista rezerwacji:
+
+Status: nowe / oczekujące / potwierdzone / zrealizowane / anulowane.
+
+Dane klienta: imię, nazwisko, kontakt.
+
+Szczegóły usługi, termin, dodatkowe życzenia.
+
+Akcje:
+
+Potwierdzenie, zmiana terminu, odrzucenie.
+
+Generowanie faktur i potwierdzeń.
+
+4. Opinie i Reputacja
+Przegląd opinii:
+
+Lista wszystkich recenzji, możliwość odpowiedzi na opinię.
+
+Zarządzanie reputacją:
+
+Zgłaszanie nieprawdziwych opinii do weryfikacji.
+
+Statystyka: średnia ocena, liczba opinii.
+
+5. Statystyki i Analityka
+Wizyty profilu firmy:
+
+Ilość wyświetleń oferty.
+
+Ilość kliknięć w dane kontaktowe.
+
+Konwersje:
+
+Stosunek wyświetleń do rezerwacji.
+
+Źródła ruchu:
+
+Skąd przychodzą klienci (Google, portal, reklama).
+
+6. Wiadomości i Kontakt z Klientem
+Wewnętrzna skrzynka odbiorcza:
+
+Wiadomości od użytkowników portalu.
+
+Powiadomienia o zmianach statusu rezerwacji.
+
+Automatyczne odpowiedzi:
+
+Ustawienia powitalnych / potwierdzających wiadomości.
+
+7. Profil Firmy
+Edycja danych firmy:
+
+Nazwa, logo, opis działalności.
+
+Adresy, telefony, e-mail, linki do social media.
+
+Opcje wizerunkowe:
+
+Dodawanie certyfikatów, nagród.
+
+Prezentacja zespołu (opcjonalne zdjęcia pracowników).
+
+Bezpieczeństwo konta:
+
+Zmiana hasła, 2FA, historia logowań.
+
+🔹 Dodatkowe, Wyróżniające Funkcje Panelu Firmowego
+Panel Promocji Usług:
+
+Możliwość wyróżnienia oferty na stronie głównej / w wynikach wyszukiwania.
+
+Kampanie promocyjne – rabaty czasowe.
+
+Statystyki efektywności promocji.
+
+Integracja z zewnętrznymi systemami:
+
+Możliwość połączenia z systemem fakturowania (np. Fakturownia).
+
+Eksport rezerwacji do pliku CSV / PDF.
+
+Recenzje Premium:
+
+Możliwość proszenia klientów o szczegółowe opinie po zrealizowanej usłudze (szablony wysyłane automatycznie).
+
+Kalendarz Zajętości:
+
+Widok miesięczny wszystkich zaplanowanych usług z możliwością filtrowania.
+
+Baza wiedzy dla firm:
+
+Poradniki: jak zwiększyć widoczność oferty, jak zarządzać reputacją.
+
+Webinary nt. rozwoju firm funeralnych.
+
+🔹 Podsumowanie – Nowoczesny Panel Firmowy
+
+Sekcja	Kluczowe Funkcje
+Dashboard	Statystyki, powiadomienia, nowe rezerwacje.
+Usługi	Zarządzanie ofertami, cenniki, galeria, harmonogram.
+Rezerwacje	Lista, statusy, kontakt z klientem, faktury.
+Opinie	Przegląd, odpowiedzi, zarządzanie reputacją.
+Statystyki	Wizyty, konwersje, źródła ruchu, skuteczność ofert.
+Wiadomości	Wewnętrzna skrzynka, automatyczne odpowiedzi.
+Profil	Logo, opis, dane, zespół, bezpieczeństwo.
+Promocje i kampanie	Wyróżnienia, rabaty, kampanie specjalne.
+Kalendarz	Widok zajętości, zarządzanie dostępnością.
+Baza wiedzy	Materiały edukacyjne i wsparcie dla firm.
