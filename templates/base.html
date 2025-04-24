@@ -12,23 +12,50 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
+        /* Zmienne kolorów Consist UI */
+        :root {
+            --primary-color: #287F71;       /* Zielony - kolor główny */
+            --secondary-color: #EB862A;     /* Pomarańczowy - akcent */
+            --accent-color: #ABBDD3;        /* Jasny niebieski - akcent dodatkowy */
+            --neutral-color: #97A3B6;       /* Szaro-niebieski */
+            --dark-color: #111729;          /* Granatowy - tekst */
+            --bg-color: #f8f9fa;            /* Tło strony */
+            --card-bg: #FFFFFF;             /* Tło kart */
+            --text-color: #111729;          /* Kolor tekstu */
+        }
+        
         /* Globalne style dla wszystkich funkcji agenta */
         body {
-            background-color: #f8f9fa !important;
-            color: #212529 !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
         }
         
         /* Wszystkie nagłówki w aplikacji */
         h1, h2, h3, h4, h5, h6, 
         .h1, .h2, .h3, .h4, .h5, .h6 {
-            color: #000000 !important;
+            color: var(--dark-color) !important;
             font-weight: bold !important;
         }
         
         /* Wszystkie karty i panele w aplikacji */
-        .card, .card-header, .card-body, .card-footer {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
+        .card {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border: none !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        .card-header {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-bottom: 1px solid rgba(151, 163, 182, 0.2) !important;
+        }
+        
+        .card-body, .card-footer {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
         }
         
         /* Tytuły kart */
@@ -36,46 +63,98 @@
         .card-header h4, .card-header h5, .card-header h6,
         .card-header .h1, .card-header .h2, .card-header .h3, 
         .card-header .h4, .card-header .h5, .card-header .h6 {
-            color: #000000 !important;
+            color: var(--dark-color) !important;
             font-weight: bold !important;
             margin-bottom: 0 !important;
         }
         
         /* Elementy tekstowe w kartach */
-        .card p, .card li, .card div, .card span, .card a {
-            color: #000000 !important;
+        .card p, .card li, .card div, .card span {
+            color: var(--text-color) !important;
+        }
+        
+        .card a:not(.btn) {
+            color: var(--primary-color) !important;
         }
         
         /* Formularze */
         .form-label, .form-check-label {
-            color: #000000 !important;
+            color: var(--text-color) !important;
             font-weight: 500 !important;
         }
         
-        /* Pozostawienie kolorów bootstrapowych dla przycisków */
-        .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info {
+        /* Style przycisków */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--neutral-color) !important;
+            border-color: var(--neutral-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-success {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-danger {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-info {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            color: var(--dark-color) !important;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color) !important;
             color: #fff !important;
         }
         
         /* Kontrolki i pola formularzy */
         input, select, textarea {
             background-color: #fff !important;
-            color: #000000 !important;
-            border: 1px solid #ced4da !important;
+            color: var(--dark-color) !important;
+            border: 1px solid var(--neutral-color) !important;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 0.25rem rgba(40, 127, 113, 0.25) !important;
         }
         
         /* Tabele */
         .table {
-            color: #000000 !important;
+            color: var(--dark-color) !important;
         }
         
         .table th {
-            color: #000000 !important;
+            color: var(--dark-color) !important;
             font-weight: bold !important;
+            border-bottom-color: var(--primary-color) !important;
         }
         
         .table td {
-            color: #000000 !important;
+            color: var(--dark-color) !important;
+            border-color: rgba(151, 163, 182, 0.2) !important;
+        }
+        
+        /* Dodatkowe style dla tabel */
+        .table-hover tbody tr:hover {
+            background-color: rgba(40, 127, 113, 0.05) !important;
         }
         
         /* Szczególne style dla funkcji podglądu artykułów */
@@ -159,11 +238,11 @@
     <!-- Navigation -->
     <header>
         <!-- Główne menu nawigacyjne -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-light border-bottom shadow-sm" style="background-color: var(--card-bg) !important;">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
                     <img src="{{ url_for('static', filename='img/muscle-icon-36.png') }}" alt="BLOG AUTOMATION MASTER" width="36" height="36" class="me-2">
-                    <span style="color: #000000 !important; font-weight: bold;">BLOG AUTOMATION MASTER</span>
+                    <span style="color: var(--dark-color) !important; font-weight: bold;">BLOG AUTOMATION MASTER</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -189,7 +268,7 @@
                             <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-share-alt me-1"></i> Social Media
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="socialDropdown">
+                            <ul class="dropdown-menu" style="background-color: var(--dark-color) !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
                                 <li>
                                     <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}">
                                         <i class="fas fa-tachometer-alt me-1"></i> Dashboard
@@ -231,7 +310,7 @@
                             <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-newspaper me-1"></i> WordPress Publishing
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="publishingDropdown">
+                            <ul class="dropdown-menu" style="background-color: var(--dark-color) !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
                                 <li>
                                     <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
                                         <i class="fas fa-tachometer-alt me-1"></i> Dashboard
@@ -312,14 +391,14 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer py-3 bg-dark mt-auto">
+    <footer class="footer py-3 mt-auto" style="background-color: var(--dark-color) !important;">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <span class="text-muted">BLOG AUTOMATION MASTER &copy; {{ now.year }}</span>
+                    <span style="color: var(--accent-color) !important;">BLOG AUTOMATION MASTER &copy; {{ now.year }}</span>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
-                    <span class="text-muted">Powered by OpenRouter AI</span>
+                    <span style="color: var(--accent-color) !important;">Powered by <span style="color: var(--secondary-color) !important;">OpenRouter AI</span></span>
                 </div>
             </div>
         </div>

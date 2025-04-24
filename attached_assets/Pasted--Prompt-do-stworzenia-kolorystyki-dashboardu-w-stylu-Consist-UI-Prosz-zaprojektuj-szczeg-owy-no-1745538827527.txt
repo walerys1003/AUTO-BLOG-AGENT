@@ -1,0 +1,86 @@
+📝 Prompt do stworzenia kolorystyki dashboardu w stylu Consist UI
+Proszę zaprojektuj szczegółowy, nowoczesny schemat kolorystyczny dla interfejsu użytkownika dashboardu, inspirowany estetyką Consist UI. Uwzględnij poniższe wytyczne, aby uzyskać minimalistyczny, czytelny i funkcjonalny design z odpowiednim balansem kolorów neutralnych i akcentujących.
+
+🎨 Założenia projektowe:
+Styl ogólny:
+
+Design ma być nowoczesny i minimalistyczny, oparty na zasadach flat design z delikatnymi akcentami soft UI.
+
+Interfejs ma promować czytelność, przejrzystość i łatwość nawigacji.
+
+Stosuj stonowane kolory neutralne jako bazę oraz intensywne akcenty dla elementów interaktywnych (np. przyciski, wykresy, alerty).
+
+Schemat kolorów:
+
+Primary Color:
+
+#287F71 – Zieleń:
+
+Kolor akcentów (przyciski, sukcesy, aktywne elementy).
+
+Wzmacnia stabilność i zaufanie.
+
+Secondary Accent:
+
+#EB862A – Pomarańcz:
+
+Dla kluczowych CTA, przycisków akcji, alertów.
+
+Przyciąga uwagę, dodaje energii.
+
+Tło i delikatne wyróżnienia:
+
+#ABBDD3 – Jasny Niebieski:
+
+Obramowania, wykresy, ikonografia wspierająca.
+
+Spokojne, nieinwazyjne wizualnie.
+
+Neutral Colors:
+
+#97A3B6 – Szaro-Niebieski:
+
+Tło kart, formularzy, pól danych.
+
+Subtelne, wspierające główną treść.
+
+#111729 – Czarny-Grafit:
+
+Tytuły, nagłówki, ważne teksty, ikony.
+
+Kontrastowy, zwiększający czytelność.
+
+Tło kart i sekcji:
+
+#FFFFFF – Białe tło z cieniem lub obramowaniem w #97A3B6.
+
+Typografia:
+
+Font: Inter, warianty: Bold, Medium, Regular.
+
+Kolor tekstu:
+
+Nagłówki: #111729
+
+Podtytuły, dane: odcienie szarości zbliżone do #97A3B6.
+
+🧩 Zastosowanie kolorów w UI:
+Przyciski CTA: Zielony #287F71 i Pomarańczowy #EB862A w zależności od priorytetu akcji.
+
+Wskaźniki sukcesu: #287F71 (np. wzrosty, pozytywne trendy).
+
+Wskaźniki negatywne: Odmiany czerwieni/pomarańczy – dopasowane, np. modyfikacja #EB862A.
+
+Wykresy i diagramy: Linie i punkty w #287F71, #EB862A, #ABBDD3 z bazą #FFFFFF.
+
+Panele i formularze: Tła w #FFFFFF, obramowania #97A3B6.
+
+🌐 Wrażenia estetyczne:
+Design ma zapewniać przejrzystość dzięki jasnemu tłu i wyraźnym, ciemnym nagłówkom.
+
+Kolory akcentujące muszą być używane oszczędnie i strategicznie, podkreślając tylko najważniejsze elementy.
+
+Balans pomiędzy minimalizmem a wizualnym bogactwem dzięki miękkim przejściom, cieniom i subtelnym obramowaniom.
+
+🎯 Cel prompta:
+Stwórz kompletną paletę kolorystyczną wraz z dokładnym zastosowaniem każdego koloru w kontekście elementów UI dashboardu. Uwzględnij wszystkie interaktywne komponenty oraz zachowaj spójność wizualną, zgodnie z powyższym opisem.
