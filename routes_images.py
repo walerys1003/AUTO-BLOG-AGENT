@@ -20,7 +20,7 @@ images_bp = Blueprint('images', __name__, url_prefix='/images')
 
 # Import utility functions
 from utils.images.unsplash import search_unsplash_images
-from utils.images.finder import search_images, get_image_details
+from utils.images.finder import search_images as find_images, get_image_details
 
 @images_bp.route('/')
 def index():
@@ -41,7 +41,7 @@ def search_images():
     if query:
         try:
             # Search for images
-            images = search_images(
+            images = find_images(
                 query=query,
                 source=source,
                 orientation=orientation

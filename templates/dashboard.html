@@ -9,6 +9,54 @@
     </div>
 </div>
 
+<!-- Quick Access Cards -->
+<div class="row mb-5">
+    <div class="col-md-12">
+        <div class="card-group mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-newspaper fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">WordPress Publishing</h5>
+                    <p class="card-text small">Manage your content publication schedule and monitor publishing status</p>
+                    <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-newspaper me-1"></i> Publishing Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Schedule Calendar</h5>
+                    <p class="card-text small">View and manage your publication schedule calendar</p>
+                    <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-success">
+                        <i class="fas fa-calendar-alt me-1"></i> Publication Calendar
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Publishing Settings</h5>
+                    <p class="card-text small">Configure your publication settings and automation rules</p>
+                    <a href="{{ url_for('publishing.publishing_settings') }}" class="btn btn-info">
+                        <i class="fas fa-cog me-1"></i> Publishing Settings
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x mb-3 text-warning"></i>
+                    <h5 class="card-title">Pending Articles</h5>
+                    <p class="card-text small">Review and manage articles waiting for publication</p>
+                    <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-warning">
+                        <i class="fas fa-clock me-1"></i> Pending Articles
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Statistics Cards -->
 <div class="row mb-5">
     <div class="col-md-3">

@@ -2,6 +2,8 @@ from app import db
 from datetime import datetime, timedelta
 import json
 from sqlalchemy.ext.hybrid import hybrid_property
+from typing import List, Optional, Dict, Any
+import os
 
 class Blog(db.Model):
     """Model for WordPress blog configuration"""
@@ -142,6 +144,74 @@ class ContentLog(db.Model):
             return json.loads(self.seo_metadata)
         return {}
 
+class SystemSettings(db.Model):
+    """Model for system-wide settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), nullable=False, unique=True)
+    value = db.Column(db.Text, nullable=True)
+    description = db.Column(db.String(255), nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @classmethod
+    def get(cls, key: str, default: Any = None) -> Any:
+        """Get a setting value by key with optional default"""
+        setting = cls.query.filter_by(key=key).first()
+        if setting and setting.value:
+            try:
+                return json.loads(setting.value)
+            except:
+                return setting.value
+        return default
+    
+    @classmethod
+    def set(cls, key: str, value: Any, description: str = None) -> 'SystemSettings':
+        """Set a setting value by key"""
+        setting = cls.query.filter_by(key=key).first()
+        
+        if not setting:
+            setting = cls(key=key, description=description)
+            
+        if isinstance(value, (dict, list, set, tuple)):
+            setting.value = json.dumps(value)
+        else:
+            setting.value = str(value)
+            
+        db.session.add(setting)
+        db.session.commit()
+        return setting
+    
+    @classmethod
+    def get_publishing_times(cls) -> List[str]:
+        """Get the default publishing times"""
+        times = cls.get('default_publishing_times', ["08:00", "12:00", "16:00", "20:00"])
+        return sorted(times)  # Ensure the times are sorted
+    
+    @classmethod
+    def get_articles_per_day(cls) -> int:
+        """Get the default number of articles per day"""
+        return int(cls.get('default_articles_per_day', 4))
+
+
+class Notification(db.Model):
+    """Model for system notifications"""
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False)  # info, warning, error, success
+    title = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    is_email_sent = db.Column(db.Boolean, default=False)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)
+    content_id = db.Column(db.Integer, db.ForeignKey('content_log.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Define relationships
+    blog = db.relationship('Blog', backref=db.backref('notifications', lazy=True))
+    content = db.relationship('ContentLog', backref=db.backref('notifications', lazy=True))
+    
+    def __repr__(self):
+        return f"<Notification {self.type} - {self.title}>"
+
+
 class PublishingSchedule(db.Model):
     """Model for managing publication schedule"""
     id = db.Column(db.Integer, primary_key=True)
@@ -223,6 +293,50 @@ class ContentMetrics(db.Model):
         if self.raw_data:
             return json.loads(self.raw_data)
         return {}
+
+class ImageLibrary(db.Model):
+    """Model for storing saved images"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=True)
+    url = db.Column(db.String(512), nullable=False)
+    thumbnail_url = db.Column(db.String(512), nullable=True)
+    source = db.Column(db.String(50), nullable=True)  # unsplash, google, upload, etc.
+    source_id = db.Column(db.String(100), nullable=True)
+    width = db.Column(db.Integer, nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    attribution = db.Column(db.String(255), nullable=True)  # Attribution text
+    attribution_url = db.Column(db.String(512), nullable=True)  # Attribution link
+    tags = db.Column(db.Text, nullable=True)  # JSON string of tags
+    image_metadata = db.Column(db.Text, nullable=True)  # JSON string of additional metadata
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Define relationship with Blog if applicable
+    blog = db.relationship('Blog', backref=db.backref('images', lazy=True))
+    
+    def __repr__(self):
+        return f"<ImageLibrary {self.title or 'untitled'}>"
+    
+    def get_tags(self):
+        """Returns tags as a Python list"""
+        if self.tags:
+            return json.loads(self.tags)
+        return []
+    
+    def set_tags(self, tags_list):
+        """Sets tags from a Python list"""
+        self.tags = json.dumps(tags_list)
+    
+    def get_image_metadata(self):
+        """Returns image metadata as a Python dict"""
+        if self.image_metadata:
+            return json.loads(self.image_metadata)
+        return {}
+    
+    def set_image_metadata(self, metadata_dict):
+        """Sets image metadata from a Python dict"""
+        self.image_metadata = json.dumps(metadata_dict)
+
 
 class PerformanceReport(db.Model):
     """Model for storing aggregated performance reports"""
@@ -363,15 +477,31 @@ class Newsletter(db.Model):
     recipients_count = db.Column(db.Integer, default=0)
     open_count = db.Column(db.Integer, default=0)
     click_count = db.Column(db.Integer, default=0)
-    bounce_count = db.Column(db.Integer, default=0)
     unsubscribe_count = db.Column(db.Integer, default=0)
     
-    # Foreign key to blog if relevant
+    # Template and design settings
+    template_id = db.Column(db.String(100), nullable=True)
+    design_settings = db.Column(db.Text, nullable=True)  # JSON string of design settings
+    
+    # Foreign key to blog if this is a blog-specific newsletter
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)
     blog = db.relationship('Blog', backref=db.backref('newsletters', lazy=True))
     
     def __repr__(self):
         return f"<Newsletter {self.title}>"
+    
+    def get_design_settings(self):
+        """Returns design settings as a Python dict"""
+        if not self.design_settings:
+            return {}
+        try:
+            return json.loads(self.design_settings)
+        except Exception:
+            return {}
+    
+    def set_design_settings(self, settings_dict):
+        """Sets design settings from a Python dict"""
+        self.design_settings = json.dumps(settings_dict)
 
 class NewsletterConfig(db.Model):
     """Model for newsletter configuration settings"""
@@ -404,87 +534,47 @@ class NewsletterConfig(db.Model):
         return f"<NewsletterConfig {self.blog.name}>"
     
     def get_settings(self):
-        """Returns settings as a Python dict"""
-        if self.settings:
-            try:
-                return json.loads(self.settings)
-            except Exception:
-                return {}
-        return {}
+        """Returns additional settings as a Python dict"""
+        if not self.settings:
+            return {}
+        try:
+            return json.loads(self.settings)
+        except Exception:
+            return {}
     
     def set_settings(self, settings_dict):
-        """Sets settings from a Python dict"""
+        """Sets additional settings from a Python dict"""
         self.settings = json.dumps(settings_dict)
 
-class ImageLibrary(db.Model):
-    """Model for storing images for reuse across articles"""
+class AutomationRule(db.Model):
+    """Model for content automation rules"""
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
-    title = db.Column(db.String(255), nullable=True)
-    url = db.Column(db.String(512), nullable=False)
-    thumbnail_url = db.Column(db.String(512), nullable=True)
-    width = db.Column(db.Integer, nullable=True)
-    height = db.Column(db.Integer, nullable=True)
-    source = db.Column(db.String(50), nullable=True)  # unsplash, google, upload
-    source_id = db.Column(db.String(100), nullable=True)  # original ID from source
-    attribution = db.Column(db.String(255), nullable=True)  # attribution text
-    attribution_url = db.Column(db.String(512), nullable=True)  # attribution URL
-    tags = db.Column(db.Text, nullable=True)  # JSON string of tags
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    image_metadata = db.Column(db.Text, nullable=True)  # JSON string of additional metadata
-    
-    # Define relationship with Blog
-    blog = db.relationship('Blog', backref=db.backref('image_library', lazy=True))
-    
-    def __repr__(self):
-        return f"<ImageLibrary {self.title or self.url[:30]}>"
-    
-    def get_tags(self):
-        """Returns tags as a Python list"""
-        if self.tags:
-            return json.loads(self.tags)
-        return []
-    
-    def set_tags(self, tags_list):
-        """Sets tags from a Python list"""
-        self.tags = json.dumps(tags_list)
-    
-    def get_metadata(self):
-        """Returns metadata as a Python dict"""
-        if self.image_metadata:
-            try:
-                return json.loads(self.image_metadata)
-            except Exception:
-                return {}
-        return {}
-    
-    def set_metadata(self, metadata_dict):
-        """Sets metadata from a Python dict"""
-        self.image_metadata = json.dumps(metadata_dict)
-
-class AutomationRule(db.Model):
-    """Content automation rules"""
-    id = db.Column(db.Integer, primary_key=True)
-    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'))
-    name = db.Column(db.String(255))
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     
-    # Content Generation Settings
-    writing_style = db.Column(db.String(50), default='informative')  # informative, conversational, professional, storytelling, persuasive
-    content_length = db.Column(db.String(50), default='medium')  # short, medium, long
+    # Schedule settings
+    days_of_week = db.Column(db.String(20), default="0,1,2,3,4")  # Monday=0, Sunday=6
+    time_slots = db.Column(db.Text, nullable=True)  # JSON string of time slots
+    posts_per_day = db.Column(db.Integer, default=1)
+    min_interval_hours = db.Column(db.Integer, default=4)  # Minimum hours between posts
     
-    # Publishing Settings
-    publishing_days = db.Column(db.String(255), default='0,1,2,3,4,5,6')  # Days of week (0=Monday, 6=Sunday)
-    publishing_time = db.Column(db.String(50), default='12:00')  # Time of day for publishing
-    posts_per_day = db.Column(db.Integer, default=1)  # Number of posts to publish per day
+    # Content settings
+    min_word_count = db.Column(db.Integer, default=1200)
+    max_word_count = db.Column(db.Integer, default=1600)
+    content_tone = db.Column(db.String(50), default="informative")  # informative, casual, professional, etc.
+    topic_categories = db.Column(db.Text, nullable=True)  # JSON string of category IDs to focus on
     
-    # Topic Selection Criteria
-    topic_min_score = db.Column(db.Float, default=0.7)  # Minimum topic score to consider
-    categories = db.Column(db.Text, nullable=True)  # JSON list of categories to publish to
+    # Approval settings
+    require_approval = db.Column(db.Boolean, default=False)
     
-    # Auto-scheduling Settings
-    auto_enable_topics = db.Column(db.Boolean, default=False)  # Auto-approve topics
-    auto_promote_content = db.Column(db.Boolean, default=True)  # Auto-promote to social media
+    # Publication settings
+    publish_immediately = db.Column(db.Boolean, default=False)
+    apply_featured_image = db.Column(db.Boolean, default=True)
+    
+    # Priority (higher number = higher priority)
+    priority = db.Column(db.Integer, default=10)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -492,22 +582,39 @@ class AutomationRule(db.Model):
     # Define relationship with Blog
     blog = db.relationship('Blog', backref=db.backref('automation_rules', lazy=True))
     
-    def get_categories(self):
-        """Returns categories as a Python list"""
-        if self.categories:
-            return json.loads(self.categories)
+    def __repr__(self):
+        status = "active" if self.is_active else "inactive"
+        return f"<AutomationRule {self.name} ({status})>"
+    
+    def get_time_slots(self):
+        """Returns time slots as a Python list"""
+        if self.time_slots:
+            return json.loads(self.time_slots)
         return []
     
-    def set_categories(self, categories_list):
-        """Sets categories from a Python list"""
-        self.categories = json.dumps(categories_list)
+    def set_time_slots(self, slots_list):
+        """Sets time slots from a Python list"""
+        self.time_slots = json.dumps(slots_list)
     
-    def get_publishing_days(self):
-        """Returns publishing days as a list of integers"""
-        if self.publishing_days:
-            return [int(day) for day in self.publishing_days.split(',')]
-        return [0, 1, 2, 3, 4, 5, 6]  # Default to all days
+    def get_topic_categories(self):
+        """Returns topic categories as a Python list"""
+        if self.topic_categories:
+            return json.loads(self.topic_categories)
+        return []
     
-    def set_publishing_days(self, days_list):
-        """Sets publishing days from a list of integers"""
-        self.publishing_days = ','.join([str(day) for day in days_list])
+    def set_topic_categories(self, categories_list):
+        """Sets topic categories from a Python list"""
+        self.topic_categories = json.dumps(categories_list)
+    
+    def get_days_list(self):
+        """Returns days of week as a Python list of integers"""
+        if not self.days_of_week:
+            return []
+        try:
+            return [int(day) for day in self.days_of_week.split(',')]
+        except ValueError:
+            return []
+    
+    def set_days_list(self, days_list):
+        """Sets days of week from a Python list of integers"""
+        self.days_of_week = ','.join([str(day) for day in days_list])

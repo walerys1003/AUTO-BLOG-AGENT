@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from sqlalchemy import or_, and_, desc
 from app import db
-from models import Blog, ContentLog, Category, Tag, PublishingSchedule, AutomationRule
+from models import Blog, ContentLog, Category, Tag, PublishingSchedule, AutomationRule, SystemSettings, Notification
 from utils.wordpress.client import get_wordpress_post, update_wordpress_post
+from utils.notifications import send_notification
 
 # Setup logging
 logger = logging.getLogger(__name__)
