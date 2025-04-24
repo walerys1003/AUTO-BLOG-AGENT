@@ -260,14 +260,17 @@ Format your response as a JSON object with these fields:
             Dictionary with improvement suggestions
         """
         try:
+            # Initialize valid_areas variable
+            valid_areas = ["clarity", "engagement", "structure"]
+            
             # Use default focus areas if none provided
             if not focus_areas or len(focus_areas) == 0:
-                focus_areas = ["clarity", "engagement", "structure"]
-            
-            # Filter to valid focus areas
-            valid_areas = [area for area in focus_areas if area in self.improvement_types]
-            if len(valid_areas) == 0:
-                valid_areas = ["clarity", "engagement", "structure"]
+                focus_areas = valid_areas
+            else:
+                # Filter to valid focus areas
+                valid_areas = [area for area in focus_areas if area in self.improvement_types]
+                if len(valid_areas) == 0:
+                    valid_areas = ["clarity", "engagement", "structure"]
             
             # Limit content length
             if len(content) > 15000:

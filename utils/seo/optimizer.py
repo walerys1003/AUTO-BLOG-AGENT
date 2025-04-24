@@ -1,7 +1,7 @@
 import logging
 import json
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 from bs4 import BeautifulSoup
 from utils.openrouter import openrouter
 from utils.seo.analyzer import seo_analyzer
@@ -220,7 +220,7 @@ class SEOOptimizer:
     def generate_seo_title_variations(self, 
                                      topic: str, 
                                      primary_keyword: str,
-                                     secondary_keywords: List[str] = None,
+                                     secondary_keywords: Optional[List[str]] = None,
                                      count: int = 5) -> List[str]:
         """
         Generate SEO-optimized title variations for a topic

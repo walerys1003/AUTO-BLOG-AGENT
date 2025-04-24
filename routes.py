@@ -1,4 +1,5 @@
 import logging
+import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from models import Blog, SocialAccount, ContentLog, ArticleTopic
 from app import db
@@ -66,6 +67,11 @@ def register_routes(app: Flask):
             })
         
         return render_template('dashboard.html', stats=stats, recent_posts=recent_posts, blog_stats=blog_stats)
+        
+    @app.route('/seo-tools')
+    def seo_tools():
+        """SEO tools and content optimization page"""
+        return render_template('seo_tools.html')
     
     @app.route('/blogs')
     def blogs_list():
@@ -547,6 +553,324 @@ def register_routes(app: Flask):
             })
         except Exception as e:
             logger.error(f"Error testing OpenRouter: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+    
+    # SEO API endpoints
+    @app.route('/api/seo/analyze', methods=['POST'])
+    def analyze_seo():
+        """Analyze content for SEO optimization opportunities"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            html_content = data.get('content')
+            primary_keyword = data.get('primary_keyword')
+            secondary_keywords = data.get('secondary_keywords', [])
+            meta_title = data.get('meta_title')
+            meta_description = data.get('meta_description')
+            
+            if not html_content or not primary_keyword:
+                return jsonify({"error": "Content and primary keyword are required"}), 400
+            
+            # Perform SEO analysis
+            analysis = seo_analyzer.analyze_content(
+                html_content=html_content,
+                primary_keyword=primary_keyword,
+                secondary_keywords=secondary_keywords,
+                meta_title=meta_title,
+                meta_description=meta_description
+            )
+            
+            # Return the analysis
+            return jsonify(analysis)
+            
+        except Exception as e:
+            logger.error(f"Error analyzing SEO: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/seo/optimize', methods=['POST'])
+    def optimize_seo():
+        """Optimize content for SEO based on analysis"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            html_content = data.get('content')
+            primary_keyword = data.get('primary_keyword')
+            secondary_keywords = data.get('secondary_keywords', [])
+            meta_title = data.get('meta_title')
+            meta_description = data.get('meta_description')
+            
+            if not html_content or not primary_keyword:
+                return jsonify({"error": "Content and primary keyword are required"}), 400
+            
+            # Optimize content for SEO
+            optimization = seo_optimizer.optimize_article_content(
+                html_content=html_content,
+                primary_keyword=primary_keyword,
+                secondary_keywords=secondary_keywords,
+                meta_title=meta_title,
+                meta_description=meta_description
+            )
+            
+            # Return the optimized content
+            return jsonify(optimization)
+            
+        except Exception as e:
+            logger.error(f"Error optimizing SEO: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/seo/title-variations', methods=['POST'])
+    def generate_title_variations():
+        """Generate SEO-optimized title variations"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            topic = data.get('topic')
+            primary_keyword = data.get('primary_keyword')
+            secondary_keywords = data.get('secondary_keywords', [])
+            count = data.get('count', 5)
+            
+            if not topic or not primary_keyword:
+                return jsonify({"error": "Topic and primary keyword are required"}), 400
+            
+            # Generate title variations
+            titles = seo_optimizer.generate_seo_title_variations(
+                topic=topic,
+                primary_keyword=primary_keyword,
+                secondary_keywords=secondary_keywords,
+                count=count
+            )
+            
+            # Return the titles
+            return jsonify({"titles": titles})
+            
+        except Exception as e:
+            logger.error(f"Error generating title variations: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/seo/meta-description', methods=['POST'])
+    def optimize_meta_description():
+        """Generate an optimized meta description"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            content_snippet = data.get('content')
+            primary_keyword = data.get('primary_keyword')
+            max_length = data.get('max_length', 160)
+            
+            if not content_snippet or not primary_keyword:
+                return jsonify({"error": "Content snippet and primary keyword are required"}), 400
+            
+            # Generate meta description
+            description = seo_optimizer.optimize_meta_description(
+                content_snippet=content_snippet,
+                primary_keyword=primary_keyword,
+                max_length=max_length
+            )
+            
+            # Return the description
+            return jsonify({"meta_description": description})
+            
+        except Exception as e:
+            logger.error(f"Error generating meta description: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+            
+    @app.route('/api/seo/keyword-competition', methods=['POST'])
+    def analyze_keyword_competition():
+        """Analyze competition for a keyword"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            keyword = data.get('keyword')
+            related_keywords = data.get('related_keywords')
+            
+            if not keyword:
+                return jsonify({"error": "Keyword is required"}), 400
+            
+            # Analyze competition
+            analysis = seo_analyzer.analyze_keyword_competition(
+                keyword=keyword,
+                related_keywords=related_keywords
+            )
+            
+            # Return the analysis
+            return jsonify(analysis)
+            
+        except Exception as e:
+            logger.error(f"Error analyzing keyword competition: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    # Writing assistant API endpoints
+    @app.route('/api/writing/improve', methods=['POST'])
+    def improve_content():
+        """Improve content using AI writing assistant"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            content = data.get('content')
+            target_tone = data.get('tone', 'professional')
+            improvement_type = data.get('improvement_type', 'comprehensive')
+            keywords = data.get('keywords')
+            context = data.get('context')
+            
+            if not content:
+                return jsonify({"error": "Content is required"}), 400
+            
+            # Improve content
+            improvement = writing_assistant.improve_content(
+                content=content,
+                target_tone=target_tone,
+                improvement_type=improvement_type,
+                keywords=keywords,
+                context=context
+            )
+            
+            # Return the improved content
+            return jsonify(improvement)
+            
+        except Exception as e:
+            logger.error(f"Error improving content: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/writing/suggest', methods=['POST'])
+    def suggest_improvements():
+        """Suggest improvements for content without changing it"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            content = data.get('content')
+            focus_areas = data.get('focus_areas')
+            
+            if not content:
+                return jsonify({"error": "Content is required"}), 400
+            
+            # Get improvement suggestions
+            suggestions = writing_assistant.suggest_improvements(
+                content=content,
+                focus_areas=focus_areas
+            )
+            
+            # Return the suggestions
+            return jsonify(suggestions)
+            
+        except Exception as e:
+            logger.error(f"Error generating improvement suggestions: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/writing/rewrite', methods=['POST'])
+    def rewrite_section():
+        """Rewrite a specific section of content"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            original_text = data.get('text')
+            instructions = data.get('instructions')
+            context = data.get('context')
+            tone = data.get('tone', 'professional')
+            
+            if not original_text or not instructions:
+                return jsonify({"error": "Text and instructions are required"}), 400
+            
+            # Rewrite section
+            rewrite = writing_assistant.rewrite_section(
+                original_text=original_text,
+                instructions=instructions,
+                context=context,
+                tone=tone
+            )
+            
+            # Return the rewritten section
+            return jsonify(rewrite)
+            
+        except Exception as e:
+            logger.error(f"Error rewriting section: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/writing/variations', methods=['POST'])
+    def content_variations():
+        """Generate variations of content"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            content = data.get('content')
+            variation_count = data.get('count', 3)
+            instruction = data.get('instruction')
+            
+            if not content:
+                return jsonify({"error": "Content is required"}), 400
+            
+            # Generate variations
+            variations = writing_assistant.generate_content_variations(
+                content=content,
+                variation_count=variation_count,
+                instruction=instruction
+            )
+            
+            # Return the variations
+            return jsonify({"variations": variations})
+            
+        except Exception as e:
+            logger.error(f"Error generating content variations: {str(e)}")
+            logger.error(traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route('/api/writing/check-grammar', methods=['POST'])
+    def check_grammar():
+        """Check content for grammar and style issues"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "Invalid JSON data"}), 400
+                
+            content = data.get('content')
+            
+            if not content:
+                return jsonify({"error": "Content is required"}), 400
+            
+            # Check grammar
+            check_results = writing_assistant.check_grammar_and_style(content=content)
+            
+            # Return the check results
+            return jsonify(check_results)
+            
+        except Exception as e:
+            logger.error(f"Error checking grammar: {str(e)}")
+            logger.error(traceback.format_exc())
             return jsonify({"error": str(e)}), 500
     
     # Error handlers

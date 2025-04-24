@@ -1,0 +1,791 @@
+{% extends 'base.html' %}
+
+{% block title %}SEO Tools - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Real-time SEO Analysis & Content Optimization</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="seo-analyze-tab" data-bs-toggle="tab" data-bs-target="#seo-analyze" type="button" role="tab" aria-controls="seo-analyze" aria-selected="true">SEO Analysis</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="content-improve-tab" data-bs-toggle="tab" data-bs-target="#content-improve" type="button" role="tab" aria-controls="content-improve" aria-selected="false">Content Improvement</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="title-generator-tab" data-bs-toggle="tab" data-bs-target="#title-generator" type="button" role="tab" aria-controls="title-generator" aria-selected="false">Title Variations</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="myTabContent">
+                <!-- SEO Analysis Tab -->
+                <div class="tab-pane fade show active p-3" id="seo-analyze" role="tabpanel" aria-labelledby="seo-analyze-tab">
+                    <h3>Analyze Content for SEO</h3>
+                    <form id="seo-analysis-form" class="mt-3">
+                        <div class="mb-3">
+                            <label for="primary-keyword" class="form-label">Primary Keyword</label>
+                            <input type="text" class="form-control" id="primary-keyword" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="secondary-keywords" class="form-label">Secondary Keywords (comma-separated)</label>
+                            <input type="text" class="form-control" id="secondary-keywords">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="meta-title" class="form-label">Meta Title (optional)</label>
+                            <input type="text" class="form-control" id="meta-title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="meta-description" class="form-label">Meta Description (optional)</label>
+                            <textarea class="form-control" id="meta-description" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content (HTML format)</label>
+                            <textarea class="form-control" id="content" rows="10" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Analyze SEO</button>
+                        <button type="button" class="btn btn-outline-secondary" id="optimize-btn" style="display: none;">Optimize This Content</button>
+                    </form>
+                    
+                    <div id="seo-results" class="mt-4" style="display: none;">
+                        <h4>SEO Analysis Results</h4>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">SEO Score</h5>
+                                <div class="progress mb-3">
+                                    <div id="seo-score-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                </div>
+                                <p id="seo-score-text" class="card-text">Score: 0/10</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header">Content Issues</div>
+                                    <div class="card-body">
+                                        <ul id="seo-issues" class="list-group list-group-flush">
+                                            <!-- Issues will be inserted here -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header">Recommendations</div>
+                                    <div class="card-body">
+                                        <ul id="seo-recommendations" class="list-group list-group-flush">
+                                            <!-- Recommendations will be inserted here -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">Content Stats</div>
+                            <div class="card-body">
+                                <div id="content-stats">
+                                    <!-- Content stats will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content Improvement Tab -->
+                <div class="tab-pane fade p-3" id="content-improve" role="tabpanel" aria-labelledby="content-improve-tab">
+                    <h3>Improve Content with AI Assistant</h3>
+                    <form id="content-improvement-form" class="mt-3">
+                        <div class="mb-3">
+                            <label for="content-to-improve" class="form-label">Content to Improve</label>
+                            <textarea class="form-control" id="content-to-improve" rows="10" required></textarea>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="improvement-tone" class="form-label">Target Tone</label>
+                                <select class="form-select" id="improvement-tone">
+                                    <option value="professional" selected>Professional</option>
+                                    <option value="conversational">Conversational</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="persuasive">Persuasive</option>
+                                    <option value="entertaining">Entertaining</option>
+                                    <option value="casual">Casual</option>
+                                    <option value="formal">Formal</option>
+                                    <option value="technical">Technical</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="improvement-type" class="form-label">Improvement Focus</label>
+                                <select class="form-select" id="improvement-type">
+                                    <option value="comprehensive" selected>Comprehensive</option>
+                                    <option value="style_and_tone">Style & Tone</option>
+                                    <option value="clarity">Clarity</option>
+                                    <option value="readability">Readability</option>
+                                    <option value="engagement">Engagement</option>
+                                    <option value="grammar_and_spelling">Grammar & Spelling</option>
+                                    <option value="vocabulary">Vocabulary</option>
+                                    <option value="structure">Structure</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="improvement-keywords" class="form-label">Keywords to Maintain (comma-separated, optional)</label>
+                            <input type="text" class="form-control" id="improvement-keywords">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="improvement-context" class="form-label">Additional Context (optional)</label>
+                            <textarea class="form-control" id="improvement-context" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="btn-group" role="group">
+                            <button type="submit" class="btn btn-primary">Improve Content</button>
+                            <button type="button" class="btn btn-outline-secondary" id="suggest-btn">Suggest Without Changing</button>
+                            <button type="button" class="btn btn-outline-secondary" id="grammar-btn">Check Grammar & Style</button>
+                        </div>
+                    </form>
+                    
+                    <div id="improvement-results" class="mt-4" style="display: none;">
+                        <h4>Improved Content</h4>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="improved-content-explanation" class="mb-3">
+                                    <!-- Explanation will be inserted here -->
+                                </div>
+                                <div id="improved-content">
+                                    <!-- Improved content will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="suggestions-results" class="mt-4" style="display: none;">
+                        <h4>Content Improvement Suggestions</h4>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Overall Assessment</h5>
+                                <p id="overall-assessment" class="card-text"></p>
+                                
+                                <h5 class="card-title">Improvement Suggestions</h5>
+                                <div id="improvement-suggestions">
+                                    <!-- Suggestions will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Title Generator Tab -->
+                <div class="tab-pane fade p-3" id="title-generator" role="tabpanel" aria-labelledby="title-generator-tab">
+                    <h3>Generate SEO Title Variations</h3>
+                    <form id="title-generator-form" class="mt-3">
+                        <div class="mb-3">
+                            <label for="title-topic" class="form-label">Article Topic</label>
+                            <input type="text" class="form-control" id="title-topic" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title-primary-keyword" class="form-label">Primary Keyword</label>
+                            <input type="text" class="form-control" id="title-primary-keyword" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title-secondary-keywords" class="form-label">Secondary Keywords (comma-separated, optional)</label>
+                            <input type="text" class="form-control" id="title-secondary-keywords">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title-count" class="form-label">Number of Variations</label>
+                            <select class="form-select" id="title-count">
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="7">7</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Generate Titles</button>
+                    </form>
+                    
+                    <div id="title-results" class="mt-4" style="display: none;">
+                        <h4>Title Variations</h4>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <ul id="title-variations" class="list-group list-group-flush">
+                                    <!-- Titles will be inserted here -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // SEO Analysis Form
+    const seoAnalysisForm = document.getElementById('seo-analysis-form');
+    const optimizeBtn = document.getElementById('optimize-btn');
+    
+    seoAnalysisForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const primaryKeyword = document.getElementById('primary-keyword').value;
+        const secondaryKeywords = document.getElementById('secondary-keywords').value.split(',').map(k => k.trim()).filter(k => k);
+        const metaTitle = document.getElementById('meta-title').value;
+        const metaDescription = document.getElementById('meta-description').value;
+        const content = document.getElementById('content').value;
+        
+        // Show loading state
+        document.getElementById('seo-results').style.display = 'none';
+        const submitBtn = seoAnalysisForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Analyzing...';
+        submitBtn.disabled = true;
+        
+        // Call the API
+        fetch('/api/seo/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                primary_keyword: primaryKeyword,
+                secondary_keywords: secondaryKeywords,
+                meta_title: metaTitle || null,
+                meta_description: metaDescription || null
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display results
+            displaySEOResults(data);
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            optimizeBtn.style.display = 'inline-block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error analyzing content: ' + error);
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // Optimize Content Button
+    optimizeBtn.addEventListener('click', function() {
+        const primaryKeyword = document.getElementById('primary-keyword').value;
+        const secondaryKeywords = document.getElementById('secondary-keywords').value.split(',').map(k => k.trim()).filter(k => k);
+        const metaTitle = document.getElementById('meta-title').value;
+        const metaDescription = document.getElementById('meta-description').value;
+        const content = document.getElementById('content').value;
+        
+        optimizeBtn.innerHTML = 'Optimizing...';
+        optimizeBtn.disabled = true;
+        
+        // Call the API
+        fetch('/api/seo/optimize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                primary_keyword: primaryKeyword,
+                secondary_keywords: secondaryKeywords,
+                meta_title: metaTitle || null,
+                meta_description: metaDescription || null
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update content with optimized version
+            document.getElementById('content').value = data.optimized_content;
+            if (data.meta_title) document.getElementById('meta-title').value = data.meta_title;
+            if (data.meta_description) document.getElementById('meta-description').value = data.meta_description;
+            
+            // Display updated analysis
+            displaySEOResults(data.new_analysis);
+            
+            // Show changes made
+            const changesList = document.createElement('div');
+            changesList.innerHTML = `
+                <div class="alert alert-success mt-3">
+                    <h5>Optimization Complete</h5>
+                    <p>Content optimized with an improvement of ${data.improvement} points.</p>
+                    <strong>Changes made:</strong>
+                    <ul>
+                        ${data.changes_made.map(change => `<li>${change}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            document.getElementById('seo-results').prepend(changesList);
+            
+            optimizeBtn.innerHTML = 'Optimize This Content';
+            optimizeBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error optimizing content: ' + error);
+            optimizeBtn.innerHTML = 'Optimize This Content';
+            optimizeBtn.disabled = false;
+        });
+    });
+    
+    // Content Improvement Form
+    const contentImprovementForm = document.getElementById('content-improvement-form');
+    const suggestBtn = document.getElementById('suggest-btn');
+    const grammarBtn = document.getElementById('grammar-btn');
+    
+    contentImprovementForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const content = document.getElementById('content-to-improve').value;
+        const tone = document.getElementById('improvement-tone').value;
+        const improvementType = document.getElementById('improvement-type').value;
+        const keywords = document.getElementById('improvement-keywords').value.split(',').map(k => k.trim()).filter(k => k);
+        const context = document.getElementById('improvement-context').value;
+        
+        const submitBtn = contentImprovementForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Improving...';
+        submitBtn.disabled = true;
+        suggestBtn.disabled = true;
+        grammarBtn.disabled = true;
+        
+        // Hide any previous results
+        document.getElementById('improvement-results').style.display = 'none';
+        document.getElementById('suggestions-results').style.display = 'none';
+        
+        // Call the API
+        fetch('/api/writing/improve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                tone: tone,
+                improvement_type: improvementType,
+                keywords: keywords.length > 0 ? keywords : null,
+                context: context || null
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display results
+            document.getElementById('improved-content-explanation').innerHTML = `
+                <div class="alert alert-info">
+                    <h5>Improvement Explanation</h5>
+                    <p>${data.explanation}</p>
+                </div>
+            `;
+            
+            document.getElementById('improved-content').innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <pre style="white-space: pre-wrap;">${data.improved_content}</pre>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('improvement-results').style.display = 'block';
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            suggestBtn.disabled = false;
+            grammarBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error improving content: ' + error);
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            suggestBtn.disabled = false;
+            grammarBtn.disabled = false;
+        });
+    });
+    
+    // Suggest Without Changing Button
+    suggestBtn.addEventListener('click', function() {
+        const content = document.getElementById('content-to-improve').value;
+        const focusAreas = [document.getElementById('improvement-type').value];
+        
+        suggestBtn.innerHTML = 'Analyzing...';
+        suggestBtn.disabled = true;
+        contentImprovementForm.querySelector('button[type="submit"]').disabled = true;
+        grammarBtn.disabled = true;
+        
+        // Hide any previous results
+        document.getElementById('improvement-results').style.display = 'none';
+        document.getElementById('suggestions-results').style.display = 'none';
+        
+        // Call the API
+        fetch('/api/writing/suggest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                focus_areas: focusAreas
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display results
+            document.getElementById('overall-assessment').textContent = data.overall_assessment;
+            
+            const suggestionsHTML = Object.entries(data.suggestions).map(([area, suggestions]) => {
+                return `
+                    <div class="mb-3">
+                        <h6>${formatAreaName(area)}</h6>
+                        <ul class="list-group">
+                            ${suggestions.map(suggestion => `<li class="list-group-item">${suggestion}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add strengths and weaknesses if available
+            let extraHTML = '';
+            if (data.strengths) {
+                extraHTML += `
+                    <div class="mb-3">
+                        <h6>Strengths</h6>
+                        <ul class="list-group">
+                            ${data.strengths.map(strength => `<li class="list-group-item list-group-item-success">${strength}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (data.weaknesses) {
+                extraHTML += `
+                    <div class="mb-3">
+                        <h6>Weaknesses</h6>
+                        <ul class="list-group">
+                            ${data.weaknesses.map(weakness => `<li class="list-group-item list-group-item-warning">${weakness}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('improvement-suggestions').innerHTML = extraHTML + suggestionsHTML;
+            document.getElementById('suggestions-results').style.display = 'block';
+            
+            suggestBtn.innerHTML = 'Suggest Without Changing';
+            suggestBtn.disabled = false;
+            contentImprovementForm.querySelector('button[type="submit"]').disabled = false;
+            grammarBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error analyzing content: ' + error);
+            suggestBtn.innerHTML = 'Suggest Without Changing';
+            suggestBtn.disabled = false;
+            contentImprovementForm.querySelector('button[type="submit"]').disabled = false;
+            grammarBtn.disabled = false;
+        });
+    });
+    
+    // Check Grammar & Style Button
+    grammarBtn.addEventListener('click', function() {
+        const content = document.getElementById('content-to-improve').value;
+        
+        grammarBtn.innerHTML = 'Checking...';
+        grammarBtn.disabled = true;
+        contentImprovementForm.querySelector('button[type="submit"]').disabled = true;
+        suggestBtn.disabled = true;
+        
+        // Hide any previous results
+        document.getElementById('improvement-results').style.display = 'none';
+        document.getElementById('suggestions-results').style.display = 'none';
+        
+        // Call the API
+        fetch('/api/writing/check-grammar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display results
+            let suggestionsHTML = '';
+            
+            // Grammar issues
+            if (data.grammar_issues && data.grammar_issues.length > 0) {
+                suggestionsHTML += `
+                    <div class="mb-3">
+                        <h6>Grammar Issues</h6>
+                        <ul class="list-group">
+                            ${data.grammar_issues.map(issue => `
+                                <li class="list-group-item">
+                                    <strong>Issue:</strong> ${issue.issue}<br>
+                                    <strong>Correction:</strong> ${issue.correction}<br>
+                                    <strong>Context:</strong> <mark>${issue.location}</mark>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Style issues
+            if (data.style_issues && data.style_issues.length > 0) {
+                suggestionsHTML += `
+                    <div class="mb-3">
+                        <h6>Style Issues</h6>
+                        <ul class="list-group">
+                            ${data.style_issues.map(issue => `
+                                <li class="list-group-item">
+                                    <strong>Issue:</strong> ${issue.issue}<br>
+                                    <strong>Suggestion:</strong> ${issue.correction}<br>
+                                    <strong>Context:</strong> <mark>${issue.location}</mark>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Readability
+            if (data.readability) {
+                suggestionsHTML += `
+                    <div class="mb-3">
+                        <h6>Readability Assessment</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <p><strong>Score:</strong> ${data.readability.score}/10</p>
+                                <p><strong>Reading Level:</strong> ${data.readability.level}</p>
+                                ${data.readability.issues ? `
+                                    <strong>Issues:</strong>
+                                    <ul>
+                                        ${data.readability.issues.map(issue => `<li>${issue}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Recommendations
+            if (data.recommendations && data.recommendations.length > 0) {
+                suggestionsHTML += `
+                    <div class="mb-3">
+                        <h6>Recommendations</h6>
+                        <ul class="list-group">
+                            ${data.recommendations.map(rec => `<li class="list-group-item">${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('overall-assessment').textContent = "Grammar and style check completed.";
+            document.getElementById('improvement-suggestions').innerHTML = suggestionsHTML;
+            document.getElementById('suggestions-results').style.display = 'block';
+            
+            grammarBtn.innerHTML = 'Check Grammar & Style';
+            grammarBtn.disabled = false;
+            contentImprovementForm.querySelector('button[type="submit"]').disabled = false;
+            suggestBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error checking grammar: ' + error);
+            grammarBtn.innerHTML = 'Check Grammar & Style';
+            grammarBtn.disabled = false;
+            contentImprovementForm.querySelector('button[type="submit"]').disabled = false;
+            suggestBtn.disabled = false;
+        });
+    });
+    
+    // Title Generator Form
+    const titleGeneratorForm = document.getElementById('title-generator-form');
+    
+    titleGeneratorForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const topic = document.getElementById('title-topic').value;
+        const primaryKeyword = document.getElementById('title-primary-keyword').value;
+        const secondaryKeywords = document.getElementById('title-secondary-keywords').value.split(',').map(k => k.trim()).filter(k => k);
+        const count = parseInt(document.getElementById('title-count').value);
+        
+        const submitBtn = titleGeneratorForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Generating...';
+        submitBtn.disabled = true;
+        
+        // Hide any previous results
+        document.getElementById('title-results').style.display = 'none';
+        
+        // Call the API
+        fetch('/api/seo/title-variations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                topic: topic,
+                primary_keyword: primaryKeyword,
+                secondary_keywords: secondaryKeywords.length > 0 ? secondaryKeywords : null,
+                count: count
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display results
+            const titlesList = document.getElementById('title-variations');
+            titlesList.innerHTML = '';
+            
+            data.titles.forEach((title, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `<strong>${index + 1}.</strong> ${title}`;
+                titlesList.appendChild(li);
+            });
+            
+            document.getElementById('title-results').style.display = 'block';
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating titles: ' + error);
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // Helper Functions
+    function displaySEOResults(data) {
+        // Update score
+        const score = data.overall_score;
+        const scorePercent = Math.round(score * 10);
+        const scoreBar = document.getElementById('seo-score-bar');
+        scoreBar.style.width = `${scorePercent}%`;
+        scoreBar.textContent = `${scorePercent}%`;
+        scoreBar.setAttribute('aria-valuenow', scorePercent);
+        
+        // Set color based on score
+        if (score >= 8) {
+            scoreBar.className = 'progress-bar bg-success';
+        } else if (score >= 6) {
+            scoreBar.className = 'progress-bar bg-warning';
+        } else {
+            scoreBar.className = 'progress-bar bg-danger';
+        }
+        
+        document.getElementById('seo-score-text').textContent = `Score: ${score}/10`;
+        
+        // Update issues
+        const issuesList = document.getElementById('seo-issues');
+        issuesList.innerHTML = '';
+        
+        if (data.issues && data.issues.length > 0) {
+            data.issues.forEach(issue => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-danger';
+                li.textContent = issue;
+                issuesList.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-success';
+            li.textContent = 'No issues found!';
+            issuesList.appendChild(li);
+        }
+        
+        // Update recommendations
+        const recsList = document.getElementById('seo-recommendations');
+        recsList.innerHTML = '';
+        
+        if (data.recommendations && data.recommendations.length > 0) {
+            data.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = rec;
+                recsList.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = 'No recommendations available.';
+            recsList.appendChild(li);
+        }
+        
+        // Update content stats
+        const statsDiv = document.getElementById('content-stats');
+        const stats = data.content_stats || {};
+        
+        statsDiv.innerHTML = `
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Word Count:</strong> ${stats.word_count || 0}</p>
+                    <p><strong>Primary Keyword:</strong> ${stats.primary_keyword || ''}</p>
+                    <p><strong>Primary Keyword Count:</strong> ${stats.primary_keyword_count || 0}</p>
+                    <p><strong>Primary Keyword Density:</strong> ${stats.primary_keyword_density || 0}%</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Headings:</strong> H1: ${(stats.headings?.h1 || []).length}, H2: ${(stats.headings?.h2 || []).length}, H3: ${(stats.headings?.h3 || []).length}</p>
+                    <p><strong>Internal Links:</strong> ${stats.internal_links || 0}</p>
+                    <p><strong>External Links:</strong> ${stats.external_links || 0}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Images:</strong> ${stats.images || 0}</p>
+                    <p><strong>Images with Alt Text:</strong> ${stats.images_with_alt || 0}</p>
+                </div>
+            </div>
+        `;
+        
+        // Individual scores
+        const scores = data.scores || {};
+        statsDiv.innerHTML += `
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Detailed Scores</h6>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Content Length:</strong> ${scores.content_length || 0}/10</p>
+                    <p><strong>Keyword Usage:</strong> ${scores.keyword_usage || 0}/10</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Headings:</strong> ${scores.headings || 0}/10</p>
+                    <p><strong>Meta Tags:</strong> ${scores.meta_tags || 0}/10</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Links:</strong> ${scores.links || 0}/10</p>
+                    <p><strong>Media:</strong> ${scores.media || 0}/10</p>
+                </div>
+            </div>
+        `;
+        
+        // Show results
+        document.getElementById('seo-results').style.display = 'block';
+    }
+    
+    function formatAreaName(area) {
+        return area.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+});
+</script>
+{% endblock %}
