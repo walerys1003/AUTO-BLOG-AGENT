@@ -79,6 +79,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if '/publishing' in request.path %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
+                                <i class="fas fa-newspaper me-1"></i> WordPress Publishing
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}">
                                 <i class="fas fa-chart-line me-1"></i> Analytics
                             </a>
