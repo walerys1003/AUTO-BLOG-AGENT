@@ -12,6 +12,7 @@ from utils.seo.analyzer import seo_analyzer
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
+from routes_newsletter import register_newsletter_routes
 import json
 from datetime import datetime, timedelta
 
@@ -885,3 +886,6 @@ def register_routes(app: Flask):
         
     # Register analytics routes
     register_analytics_routes(app)
+    
+    # Register newsletter routes
+    register_newsletter_routes(app)

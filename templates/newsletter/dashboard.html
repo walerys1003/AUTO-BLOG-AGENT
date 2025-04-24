@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Newsletter Management - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-0">Newsletter Management</h1>
+        <p class="text-muted">Automate weekly newsletter creation and distribution</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('newsletter.newsletters') }}" class="btn btn-outline-primary">
+            <i class="fas fa-envelope me-1"></i> All Newsletters
+        </a>
+        <a href="{{ url_for('newsletter.subscribers') }}" class="btn btn-outline-success ms-2">
+            <i class="fas fa-users me-1"></i> Subscribers
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Active Blogs</h5>
+                <p class="card-text display-4">{{ blogs|selectattr('enabled', 'equalto', true)|list|length }}</p>
+                <small class="text-white-50">with newsletter enabled</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Subscribers</h5>
+                <p class="card-text display-4">{{ total_subscribers }}</p>
+                <small class="text-white-50">across all blogs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Recent Campaigns</h5>
+                <p class="card-text display-4">{{ newsletters|selectattr('status', 'equalto', 'sent')|list|length }}</p>
+                <small class="text-white-50">sent in the last 30 days</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blog Newsletter Settings -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Blog Newsletter Configuration</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Blog</th>
+                                <th>Status</th>
+                                <th>Frequency</th>
+                                <th>Recipients</th>
+                                <th>API Integration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blog in blogs %}
+                            <tr>
+                                <td>{{ blog.name }}</td>
+                                <td>
+                                    {% if blog.enabled %}
+                                    <span class="badge bg-success">Enabled</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Disabled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if blog.config %}
+                                    {{ blog.config.frequency|capitalize }} 
+                                    {% if blog.config.frequency == 'weekly' %}
+                                        ({{ ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][blog.config.send_day] }})
+                                    {% endif %}
+                                    {% else %}
+                                    Not configured
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- This would be filled with actual data in a real implementation -->
+                                    {% if blog.enabled %}
+                                    <span class="badge bg-secondary">--</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">--</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if blog.config and blog.config.email_octopus_api_key %}
+                                    <span class="badge bg-success">Connected</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Not Configured</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('newsletter.newsletter_config', blog_id=blog.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-cog me-1"></i> Configure
+                                    </a>
+                                    {% if blog.enabled %}
+                                    <a href="{{ url_for('newsletter.create_newsletter', blog_id=blog.id) }}" class="btn btn-sm btn-success ms-1">
+                                        <i class="fas fa-plus me-1"></i> Create Newsletter
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="mb-0">No blogs configured yet.</p>
+                                    <a href="{{ url_for('add_blog') }}" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus"></i> Add Your First Blog
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Newsletters -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Newsletters</h5>
+                <a href="{{ url_for('newsletter.newsletters') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Blog</th>
+                                <th>Status</th>
+                                <th>Scheduled For</th>
+                                <th>Sent</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for newsletter in newsletters %}
+                            <tr>
+                                <td>{{ newsletter.title }}</td>
+                                <td>{{ newsletter.blog.name }}</td>
+                                <td>
+                                    {% if newsletter.status == 'sent' %}
+                                    <span class="badge bg-success">Sent</span>
+                                    {% elif newsletter.status == 'scheduled' %}
+                                    <span class="badge bg-info">Scheduled</span>
+                                    {% elif newsletter.status == 'draft' %}
+                                    <span class="badge bg-warning">Draft</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ newsletter.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if newsletter.scheduled_for %}
+                                    {{ newsletter.scheduled_for.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if newsletter.sent_at %}
+                                    {{ newsletter.sent_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('newsletter.preview_newsletter', newsletter_id=newsletter.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if newsletter.status != 'sent' %}
+                                    <form action="{{ url_for('newsletter.send_newsletter', newsletter_id=newsletter.id) }}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="mb-0">No newsletters created yet.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Schedule -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Weekly Newsletter Schedule</h5>
+            </div>
+            <div class="card-body">
+                {% if weekly_blogs %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Blog</th>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for blog in weekly_blogs %}
+                            <tr>
+                                <td>{{ blog.name }}</td>
+                                <td>{{ blog.day }}</td>
+                                <td>{{ blog.time }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary create-weekly" data-blog-id="{{ blog.id }}">
+                                        <i class="fas fa-sync-alt"></i> Generate Next
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button id="process-pending" class="btn btn-success">
+                        <i class="fas fa-tasks"></i> Process Pending Newsletters
+                    </button>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <p>No blogs are configured for weekly newsletters. Configure a blog to enable automatic weekly newsletters.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Process pending newsletters
+    document.getElementById('process-pending').addEventListener('click', function() {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        this.disabled = true;
+        
+        fetch('/newsletter/api/process-pending', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.innerHTML = '<i class="fas fa-tasks"></i> Process Pending Newsletters';
+            this.disabled = false;
+            
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                alert(`Processing complete: ${data.sent} sent, ${data.failed} failed`);
+                if (data.sent > 0) {
+                    window.location.reload();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.innerHTML = '<i class="fas fa-tasks"></i> Process Pending Newsletters';
+            this.disabled = false;
+            alert('Error processing pending newsletters');
+        });
+    });
+    
+    // Create weekly newsletter
+    document.querySelectorAll('.create-weekly').forEach(button => {
+        button.addEventListener('click', function() {
+            const blogId = this.getAttribute('data-blog-id');
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            this.disabled = true;
+            
+            fetch(`/newsletter/api/create-weekly/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.innerHTML = '<i class="fas fa-sync-alt"></i> Generate Next';
+                this.disabled = false;
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    alert('Newsletter scheduled successfully!');
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = '<i class="fas fa-sync-alt"></i> Generate Next';
+                this.disabled = false;
+                alert('Error generating newsletter');
+            });
+        });
+    });
+</script>
+{% endblock %}
