@@ -49,6 +49,36 @@
     </div>
 </div>
 
+<!-- Analytics Summary -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Analytics Overview</h5>
+                <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chart-line me-1"></i> Full Analytics
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <h6 class="text-muted">Page Views (30 days)</h6>
+                        <h3>{{ stats.page_views|default(0)|int }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3 mb-md-0 border-start border-end">
+                        <h6 class="text-muted">Unique Visitors</h6>
+                        <h3>{{ stats.unique_visitors|default(0)|int }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">Engagement Rate</h6>
+                        <h3>{{ stats.engagement_rate|default(0)|round(1) }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Blog Status -->
 <div class="row mb-4">
     <div class="col-md-12">
