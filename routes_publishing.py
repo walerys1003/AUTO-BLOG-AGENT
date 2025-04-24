@@ -533,6 +533,196 @@ def publication_history():
         success_data=success_data
     )
 
+@publishing_bp.route('/workload')
+def workload_visualization():
+    """Workload visualization for scheduled content"""
+    # Get query parameters
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    selected_blog_id = request.args.get('blog_id', type=int)
+    
+    # Set default dates if not provided
+    today = datetime.utcnow().date()
+    if not start_date_str:
+        start_date = today - timedelta(days=today.weekday())  # Start of current week (Monday)
+    else:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    
+    if not end_date_str:
+        end_date = start_date + timedelta(days=27)  # 4 weeks from start
+    else:
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    
+    # Format for template
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    
+    # Get blogs
+    blogs = Blog.query.all()
+    
+    # Build query for scheduled content
+    query = PublishingSchedule.query.filter(
+        PublishingSchedule.publish_date >= start_date,
+        PublishingSchedule.publish_date <= end_date
+    ).order_by(PublishingSchedule.publish_date, PublishingSchedule.publish_time)
+    
+    # Filter by blog if selected
+    if selected_blog_id:
+        query = query.filter_by(blog_id=selected_blog_id)
+    
+    # Get schedule items
+    schedule_items = query.all()
+    
+    # Calculate statistics
+    total_posts = len(schedule_items)
+    days_count = (end_date - start_date).days + 1
+    avg_per_day = round(total_posts / days_count, 1) if days_count > 0 else 0
+    
+    # Create data for daily distribution
+    day_counts = [0] * 7  # One entry per day of week
+    hour_counts = [0] * 24  # One entry per hour
+    date_counts = {}  # Counts per date
+    blog_counts = {}  # Counts per blog
+    
+    # Process each schedule item
+    for item in schedule_items:
+        # Day of week (0 = Monday, 6 = Sunday)
+        day_of_week = item.publish_date.weekday()
+        day_counts[day_of_week] += 1
+        
+        # Hour
+        hour = item.publish_time.hour
+        hour_counts[hour] += 1
+        
+        # Date
+        date_str = item.publish_date.strftime('%Y-%m-%d')
+        if date_str in date_counts:
+            date_counts[date_str] += 1
+        else:
+            date_counts[date_str] = 1
+        
+        # Blog
+        if item.blog_id in blog_counts:
+            blog_counts[item.blog_id] += 1
+        else:
+            blog_counts[item.blog_id] = 1
+    
+    # Find busiest day
+    busiest_day_index = day_counts.index(max(day_counts)) if day_counts else 0
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    busiest_day_name = day_names[busiest_day_index]
+    busiest_day_count = day_counts[busiest_day_index]
+    
+    # Find peak hour
+    peak_hour_index = hour_counts.index(max(hour_counts)) if hour_counts else 0
+    peak_hour = f"{peak_hour_index:02d}:00" if peak_hour_index < 12 else f"{peak_hour_index:02d}:00"
+    peak_hour_count = hour_counts[peak_hour_index]
+    
+    # Build blog distribution data
+    blog_distribution = []
+    blog_chart_labels = []
+    blog_chart_data = []
+    
+    # Get top blog
+    top_blog_id = max(blog_counts.items(), key=lambda x: x[1])[0] if blog_counts else None
+    top_blog = Blog.query.get(top_blog_id) if top_blog_id else None
+    top_blog_name = top_blog.name if top_blog else "N/A"
+    top_blog_count = blog_counts.get(top_blog_id, 0)
+    top_blog_percentage = round((top_blog_count / total_posts) * 100) if total_posts > 0 else 0
+    
+    # Build blog distribution
+    for blog in blogs:
+        count = blog_counts.get(blog.id, 0)
+        blog_distribution.append({
+            'name': blog.name,
+            'count': count
+        })
+        blog_chart_labels.append(blog.name)
+        blog_chart_data.append(count)
+    
+    # Build timeline data (by date)
+    timeline_labels = []
+    timeline_data = []
+    
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.strftime('%Y-%m-%d')
+        timeline_labels.append(current_date.strftime('%b %d'))
+        timeline_data.append(date_counts.get(date_str, 0))
+        current_date += timedelta(days=1)
+    
+    # Build weekly heatmap data
+    weekday_data = []
+    time_slots = []
+    
+    # Create time slots (every 2 hours)
+    for hour in range(0, 24, 2):
+        time_slots.append(f"{hour:02d}:00")
+    
+    # Create data for each day
+    for day_idx, day_name in enumerate(day_names):
+        slots = []
+        
+        # Create 2-hour slots
+        for slot_idx, hour in enumerate(range(0, 24, 2)):
+            # Count posts in this time slot for this day of week
+            count = 0
+            for item in schedule_items:
+                if (item.publish_date.weekday() == day_idx and 
+                    item.publish_time.hour >= hour and 
+                    item.publish_time.hour < hour + 2):
+                    count += 1
+            
+            # Determine heatmap class
+            slot_class = ""
+            if count == 0:
+                slot_class = "bg-light slot-light"
+            elif count <= 2:
+                slot_class = "heatmap-low"
+            elif count <= 4:
+                slot_class = "heatmap-medium"
+            elif count <= 6:
+                slot_class = "heatmap-high"
+            else:
+                slot_class = "heatmap-critical"
+            
+            slots.append({
+                'hour': f"{hour:02d}:00-{hour+2:02d}:00",
+                'count': count,
+                'class': slot_class
+            })
+        
+        weekday_data.append({
+            'name': day_name,
+            'slots': slots
+        })
+    
+    return render_template(
+        'publishing/workload.html',
+        blogs=blogs,
+        selected_blog_id=selected_blog_id,
+        start_date=start_date,
+        end_date=end_date,
+        start_date_str=start_date_str,
+        end_date_str=end_date_str,
+        total_posts=total_posts,
+        avg_per_day=avg_per_day,
+        busiest_day_name=busiest_day_name,
+        busiest_day_count=busiest_day_count,
+        peak_hour=peak_hour,
+        peak_hour_count=peak_hour_count,
+        top_blog_name=top_blog_name,
+        top_blog_count=top_blog_count,
+        top_blog_percentage=top_blog_percentage,
+        blog_distribution=blog_distribution,
+        blog_chart_labels=json.dumps(blog_chart_labels),
+        blog_chart_data=json.dumps(blog_chart_data),
+        timeline_labels=json.dumps(timeline_labels),
+        timeline_data=json.dumps(timeline_data),
+        weekday_data=weekday_data,
+        time_slots=time_slots
+    )
+
 @publishing_bp.route('/settings')
 def publishing_settings():
     """Publication settings"""
