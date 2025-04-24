@@ -6,468 +6,273 @@
 <div class="row mb-4">
     <div class="col-lg-8">
         <h1 class="h2 mb-0">
-            <i class="fas fa-robot text-primary me-2"></i> Content Automation
+            <i class="fas fa-robot text-secondary me-2"></i> Content Automation
         </h1>
         <p class="text-muted mt-2">
-            Configure automated content creation and publishing rules for your blogs.
+            Configure automated content creation rules to publish content on a schedule without manual intervention.
         </p>
     </div>
     <div class="col-lg-4 text-end">
         <div class="btn-group" role="group">
-            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-pen-fancy me-2"></i> Content Dashboard
             </a>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRuleModal">
+            <a href="{{ url_for('content_creator.create_automation_rule') }}" class="btn btn-outline-success">
                 <i class="fas fa-plus me-2"></i> New Rule
-            </button>
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Automation Rules -->
-<div class="card border-0 shadow-sm mb-4">
+<!-- Active Rules -->
+<div class="card mb-4 border-0 shadow-sm">
     <div class="card-header bg-white py-3">
-        <h5 class="mb-0">Active Automation Rules</h5>
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Active Automation Rules</h5>
+            {% if active_rules %}
+            <span class="badge bg-success">{{ active_rules|length }}</span>
+            {% else %}
+            <span class="badge bg-secondary">0</span>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body p-0">
-        {% if automation_rules %}
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Blog</th>
-                            <th>Schedule</th>
-                            <th>Content</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for rule in automation_rules %}
-                        <tr>
-                            <td>{{ rule.name }}</td>
-                            <td>{{ rule.blog.name }}</td>
-                            <td>
-                                <small>
-                                    {% set days = rule.get_publishing_days() %}
-                                    {% if days|length == 7 %}
-                                        Every day
-                                    {% else %}
-                                        {% for day in days %}
-                                            {% if day == 0 %}Mon{% elif day == 1 %}Tue{% elif day == 2 %}Wed{% elif day == 3 %}Thu{% elif day == 4 %}Fri{% elif day == 5 %}Sat{% elif day == 6 %}Sun{% endif %}{% if not loop.last %}, {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                    <br>
-                                    {{ rule.publishing_time }} • {{ rule.posts_per_day }} post(s)/day
-                                </small>
-                            </td>
-                            <td>
-                                <small>
-                                    Style: {{ rule.writing_style|capitalize }}<br>
-                                    Length: {{ rule.content_length|capitalize }}
-                                </small>
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" role="switch" 
-                                           id="active-{{ rule.id }}" 
-                                           onchange="toggleRule('{{ rule.id }}', this.checked)"
-                                           {% if rule.active %}checked{% endif %}>
-                                    <label class="form-check-label" for="active-{{ rule.id }}">
-                                        {% if rule.active %}Active{% else %}Inactive{% endif %}
-                                    </label>
-                                </div>
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-primary" onclick="editRule('{{ rule.id }}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="deleteRule('{{ rule.id }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        {% if active_rules %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Blog</th>
+                        <th>Frequency</th>
+                        <th>Style</th>
+                        <th>Last Run</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in active_rules %}
+                    <tr>
+                        <td>{{ rule.name }}</td>
+                        <td>{{ rule.blog.name }}</td>
+                        <td>
+                            {% set days = rule.get_publishing_days()|length %}
+                            {% if days == 7 %}
+                            Daily
+                            {% elif days > 1 %}
+                            {{ days }} days/week
+                            {% else %}
+                            1 day/week
+                            {% endif %}
+                            ({{ rule.posts_per_day }}/day)
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                {{ rule.writing_style|capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if rule.updated_at and rule.updated_at != rule.created_at %}
+                            {{ rule.updated_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('content_creator.edit_automation_rule', rule_id=rule.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        onclick="toggleRule('{{ rule.id }}')">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="runRuleNow('{{ rule.id }}')">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="deleteRule('{{ rule.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-            <div class="text-center py-5">
-                <div class="mb-3">
-                    <i class="fas fa-robot fa-3x text-muted"></i>
-                </div>
-                <h4>No Automation Rules Yet</h4>
-                <p class="text-muted">
-                    Set up your first automation rule to start automatic content creation and publishing.
-                </p>
-                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newRuleModal">
-                    <i class="fas fa-plus me-2"></i> Create First Rule
-                </button>
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-robot fa-3x text-muted"></i>
             </div>
+            <h4>No Active Automation Rules</h4>
+            <p class="text-muted">
+                Create automation rules to start publishing content automatically.
+            </p>
+            <a href="{{ url_for('content_creator.create_automation_rule') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i> Create First Rule
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Info Cards -->
-<div class="row mb-4">
-    <!-- Automation Strategy -->
-    <div class="col-md-4 mb-4 mb-md-0">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Automation Strategy</h5>
-            </div>
-            <div class="card-body">
-                <p>Automation works by:</p>
-                <ol>
-                    <li>Selecting approved topics with high SEO scores</li>
-                    <li>Generating high-quality content automatically</li>
-                    <li>Publishing directly to your WordPress blogs</li>
-                    <li>Promoting content across your social media accounts</li>
-                </ol>
-                <p class="text-muted small">Content is generated based on your style preferences and SEO-optimized.</p>
-            </div>
+<!-- Inactive Rules -->
+{% if inactive_rules %}
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Inactive Automation Rules</h5>
+            <span class="badge bg-secondary">{{ inactive_rules|length }}</span>
         </div>
     </div>
-    
-    <!-- Scheduling Tips -->
-    <div class="col-md-4 mb-4 mb-md-0">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">Scheduling Tips</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-check-circle text-success me-2"></i> Schedule 1-4 posts per day</li>
-                    <li><i class="fas fa-check-circle text-success me-2"></i> Choose days based on your audience activity</li>
-                    <li><i class="fas fa-check-circle text-success me-2"></i> Set publishing times during peak hours</li>
-                    <li><i class="fas fa-check-circle text-success me-2"></i> Vary content length for different topics</li>
-                    <li><i class="fas fa-check-circle text-success me-2"></i> Auto-promote to maximize reach</li>
-                </ul>
-                <p class="text-muted small">Rules will only publish if enough approved topics are available.</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quality Control -->
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">Quality Control</h5>
-            </div>
-            <div class="card-body">
-                <p>Ensuring high-quality automated content:</p>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-sliders-h text-primary me-2"></i> Set minimum topic score thresholds</li>
-                    <li><i class="fas fa-filter text-primary me-2"></i> Filter by specific categories</li>
-                    <li><i class="fas fa-check-double text-primary me-2"></i> Auto-enable topics for faster workflows</li>
-                    <li><i class="fas fa-share-alt text-primary me-2"></i> Configure automatic social promotion</li>
-                </ul>
-                <p class="text-muted small">You can pause or adjust automation rules at any time.</p>
-            </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Blog</th>
+                        <th>Frequency</th>
+                        <th>Style</th>
+                        <th>Last Run</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in inactive_rules %}
+                    <tr class="table-secondary">
+                        <td>{{ rule.name }}</td>
+                        <td>{{ rule.blog.name }}</td>
+                        <td>
+                            {% set days = rule.get_publishing_days()|length %}
+                            {% if days == 7 %}
+                            Daily
+                            {% elif days > 1 %}
+                            {{ days }} days/week
+                            {% else %}
+                            1 day/week
+                            {% endif %}
+                            ({{ rule.posts_per_day }}/day)
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {{ rule.writing_style|capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if rule.updated_at and rule.updated_at != rule.created_at %}
+                            {{ rule.updated_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('content_creator.edit_automation_rule', rule_id=rule.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="toggleRule('{{ rule.id }}')">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="deleteRule('{{ rule.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+{% endif %}
 
-<!-- Recent Automation Activity -->
+<!-- Automation Activity -->
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <h5 class="mb-0">Recent Automation Activity</h5>
     </div>
     <div class="card-body p-0">
-        {% if automation_logs %}
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>Rule</th>
-                            <th>Action</th>
-                            <th>Status</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in automation_logs %}
-                        <tr>
-                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>{{ log.rule_name }}</td>
-                            <td>{{ log.action }}</td>
-                            <td>
-                                <span class="badge {% if log.status == 'success' %}bg-success{% elif log.status == 'error' %}bg-danger{% else %}bg-warning{% endif %}">
-                                    {{ log.status|capitalize }}
-                                </span>
-                            </td>
-                            <td>{{ log.details }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Rule</th>
+                        <th>Action</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.timestamp }}</td>
+                        <td>{{ log.rule_name }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>
+                            <span class="badge {% if log.success %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ log.message }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-            <div class="text-center py-4">
-                <p class="text-muted mb-0">No automation activity logs yet.</p>
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-clipboard-list fa-3x text-muted"></i>
             </div>
+            <h4>No Activity Yet</h4>
+            <p class="text-muted">
+                Once your automation rules are active, you'll see logs of their activity here.
+            </p>
+        </div>
         {% endif %}
     </div>
 </div>
 
-<!-- New Rule Modal -->
-<div class="modal fade" id="newRuleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="{{ url_for('content_creator.create_automation_rule') }}" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Automation Rule</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="name" name="name" placeholder="Rule Name" required>
-                                <label for="name">Rule Name</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="blog_id" name="blog_id" required>
-                                    <option value="" selected disabled>Select a blog</option>
-                                    {% for blog in blogs %}
-                                    <option value="{{ blog.id }}">{{ blog.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <label for="blog_id">Blog</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <h6 class="mb-3">Content Generation Settings</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="writing_style" name="writing_style">
-                                    <option value="informative" selected>Informative & Educational</option>
-                                    <option value="conversational">Conversational & Friendly</option>
-                                    <option value="professional">Professional & Technical</option>
-                                    <option value="storytelling">Storytelling & Narrative</option>
-                                    <option value="persuasive">Persuasive & Compelling</option>
-                                </select>
-                                <label for="writing_style">Writing Style</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="content_length" name="content_length">
-                                    <option value="short">Short (~800 words)</option>
-                                    <option value="medium" selected>Medium (~1200 words)</option>
-                                    <option value="long">Long (~1600 words)</option>
-                                </select>
-                                <label for="content_length">Content Length</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <h6 class="mb-3">Publishing Schedule</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Publishing Days</label>
-                            <div class="mb-3">
-                                <div class="btn-group d-flex flex-wrap" role="group">
-                                    <input type="checkbox" class="btn-check" id="day0" name="publishing_days" value="0" checked>
-                                    <label class="btn btn-outline-primary" for="day0">Mon</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day1" name="publishing_days" value="1" checked>
-                                    <label class="btn btn-outline-primary" for="day1">Tue</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day2" name="publishing_days" value="2" checked>
-                                    <label class="btn btn-outline-primary" for="day2">Wed</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day3" name="publishing_days" value="3" checked>
-                                    <label class="btn btn-outline-primary" for="day3">Thu</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day4" name="publishing_days" value="4" checked>
-                                    <label class="btn btn-outline-primary" for="day4">Fri</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day5" name="publishing_days" value="5" checked>
-                                    <label class="btn btn-outline-primary" for="day5">Sat</label>
-                                    
-                                    <input type="checkbox" class="btn-check" id="day6" name="publishing_days" value="6" checked>
-                                    <label class="btn btn-outline-primary" for="day6">Sun</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-floating mb-3">
-                                <input type="time" class="form-control" id="publishing_time" name="publishing_time" value="12:00">
-                                <label for="publishing_time">Publishing Time</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="posts_per_day" name="posts_per_day">
-                                    <option value="1" selected>1 post</option>
-                                    <option value="2">2 posts</option>
-                                    <option value="3">3 posts</option>
-                                    <option value="4">4 posts</option>
-                                </select>
-                                <label for="posts_per_day">Posts Per Day</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <h6 class="mb-3">Topic Selection Criteria</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="number" class="form-control" id="topic_min_score" name="topic_min_score" min="0.1" max="1.0" step="0.05" value="0.7">
-                                <label for="topic_min_score">Minimum Topic Score (0.1-1.0)</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="categories" name="categories" multiple>
-                                    <option value="" selected>All Categories</option>
-                                    <!-- This would be populated dynamically based on the selected blog -->
-                                    <option value="Health">Health</option>
-                                    <option value="Fitness">Fitness</option>
-                                    <option value="Nutrition">Nutrition</option>
-                                    <option value="Wellness">Wellness</option>
-                                </select>
-                                <label for="categories">Categories (Optional)</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <h6 class="mb-3">Advanced Settings</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" role="switch" id="auto_enable_topics" name="auto_enable_topics">
-                                <label class="form-check-label" for="auto_enable_topics">
-                                    Auto-approve topics that meet criteria
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" role="switch" id="auto_promote_content" name="auto_promote_content" checked>
-                                <label class="form-check-label" for="auto_promote_content">
-                                    Auto-promote content to social media
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Rule</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Rule Modal (This would be populated via JavaScript) -->
-<div class="modal fade" id="editRuleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form id="editRuleForm" action="" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Automation Rule</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Form fields would be identical to the New Rule Modal but populated with existing data -->
-                    <div id="editRuleContent">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Loading rule data...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Rule Confirmation Modal -->
-<div class="modal fade" id="deleteRuleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this automation rule? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteRuleForm" action="" method="post">
-                    <button type="submit" class="btn btn-danger">Delete Rule</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Hidden forms for actions -->
-<form id="toggleRuleForm" action="" method="post" style="display: none;">
-    <input type="hidden" name="active" id="toggleRuleActive" value="">
-</form>
+<!-- Hidden Forms for Actions -->
+<form id="toggleForm" action="" method="post" style="display: none;"></form>
+<form id="deleteForm" action="" method="post" style="display: none;"></form>
+<form id="runForm" action="" method="post" style="display: none;"></form>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Toggle rule active status
-function toggleRule(ruleId, isActive) {
-    const form = document.getElementById('toggleRuleForm');
-    form.action = "{{ url_for('content_creator.toggle_automation_rule', rule_id=0) }}".replace('0', ruleId);
-    document.getElementById('toggleRuleActive').value = isActive ? 'true' : 'false';
-    form.submit();
-}
-
-// Edit rule
-function editRule(ruleId) {
-    // In a real implementation, this would fetch the rule data via AJAX
-    // For now, we'll just redirect to the edit page
-    window.location.href = "{{ url_for('content_creator.edit_automation_rule', rule_id=0) }}".replace('0', ruleId);
-}
-
-// Delete rule
-function deleteRule(ruleId) {
-    const deleteForm = document.getElementById('deleteRuleForm');
-    deleteForm.action = "{{ url_for('content_creator.delete_automation_rule', rule_id=0) }}".replace('0', ruleId);
-    
-    // Show the confirmation modal
-    new bootstrap.Modal(document.getElementById('deleteRuleModal')).show();
-}
-
-// When blog selection changes, fetch categories for that blog
-document.getElementById('blog_id').addEventListener('change', function() {
-    const blogId = this.value;
-    if (blogId) {
-        // In a real implementation, this would fetch categories via AJAX
-        // For now, we'll just show a log message
-        console.log('Would fetch categories for blog ID:', blogId);
+    // Toggle rule active/inactive
+    function toggleRule(ruleId) {
+        if (confirm('Are you sure you want to toggle the status of this rule?')) {
+            const form = document.getElementById('toggleForm');
+            form.action = "{{ url_for('content_creator.toggle_automation_rule', rule_id=0) }}".replace('0', ruleId);
+            form.submit();
+        }
     }
-});
+    
+    // Delete rule
+    function deleteRule(ruleId) {
+        if (confirm('Are you sure you want to delete this automation rule? This action cannot be undone.')) {
+            const form = document.getElementById('deleteForm');
+            form.action = "{{ url_for('content_creator.delete_automation_rule', rule_id=0) }}".replace('0', ruleId);
+            form.submit();
+        }
+    }
+    
+    // Run rule now
+    function runRuleNow(ruleId) {
+        if (confirm('Are you sure you want to run this automation rule now?')) {
+            const form = document.getElementById('runForm');
+            form.action = "{{ url_for('content_creator.run_automation_rule', rule_id=0) }}".replace('0', ruleId);
+            form.submit();
+        }
+    }
 </script>
 {% endblock %}

@@ -22,6 +22,9 @@
                 <i class="fas fa-file-alt me-2"></i> View Drafts
             </a>
             {% endif %}
+            <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-robot me-2"></i> Automation
+            </a>
         </div>
     </div>
 </div>
@@ -69,15 +72,15 @@
             <div class="card-header bg-secondary text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Full Automation</h5>
-                    <span class="badge bg-warning">Coming Soon</span>
+                    <span class="badge bg-success">Active</span>
                 </div>
             </div>
             <div class="card-body">
                 <p>Set up rules for fully automated content creation and publishing without manual review.</p>
                 <div class="d-grid">
-                    <button type="button" class="btn btn-secondary" disabled>
+                    <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-secondary">
                         <i class="fas fa-robot me-2"></i> Configure Automation
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
