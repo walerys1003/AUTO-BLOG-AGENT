@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Publication Workload Visualization - BLOG AUTOMATION MASTER{% endblock %}
+
+{% block styles %}
+<!-- Chart.js CSS (if needed) -->
+<style>
+    .workload-card {
+        min-height: 400px;
+    }
+    .day-column {
+        min-height: 300px;
+    }
+    .hour-slot {
+        padding: 0.5rem;
+        margin-bottom: 0.25rem;
+        border-radius: 0.25rem;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .slot-light {
+        color: #212529;
+    }
+    .heatmap-low {
+        background-color: #cfe8fc;
+        color: #0a58ca;
+    }
+    .heatmap-medium {
+        background-color: #6ea8fe;
+        color: #fff;
+    }
+    .heatmap-high {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+    .heatmap-critical {
+        background-color: #0a47a9;
+        color: #fff;
+    }
+    .time-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-align: right;
+        padding-right: 0.5rem;
+    }
+    .time-marker {
+        border-top: 1px dashed #dee2e6;
+        height: 1px;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .blog-tag {
+        display: inline-block;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .summary-box {
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.5rem;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="h2 mb-1">Publication Workload</h1>
+            <p class="text-muted">Visualization of planned content across blogs</p>
+        </div>
+        <div class="col-auto">
+            <form id="date-range-form" class="row g-3">
+                <div class="col-auto">
+                    <input type="date" name="start_date" id="start-date" class="form-control" value="{{ start_date_str }}" onchange="this.form.submit()">
+                </div>
+                <div class="col-auto">
+                    <span class="form-text">to</span>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="end_date" id="end-date" class="form-control" value="{{ end_date_str }}" onchange="this.form.submit()">
+                </div>
+            </form>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-calendar-alt me-2"></i>Calendar
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-25 p-3 rounded-3 me-3">
+                            <i class="fas fa-calendar-week text-primary fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Total Scheduled</h5>
+                            <p class="text-muted small mb-0">{{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d') }}</p>
+                        </div>
+                    </div>
+                    <h2 class="display-5 fw-bold mb-0">{{ total_posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-25 p-3 rounded-3 me-3">
+                            <i class="fas fa-chart-line text-success fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Avg. Per Day</h5>
+                            <p class="text-muted small mb-0">Across period</p>
+                        </div>
+                    </div>
+                    <h2 class="display-5 fw-bold mb-0">{{ avg_per_day }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-25 p-3 rounded-3 me-3">
+                            <i class="fas fa-signal text-info fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Busiest Day</h5>
+                            <p class="text-muted small mb-0">Most content</p>
+                        </div>
+                    </div>
+                    <h2 class="h4 fw-bold mb-0">{{ busiest_day_name }}</h2>
+                    <p class="text-info">{{ busiest_day_count }} posts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-25 p-3 rounded-3 me-3">
+                            <i class="fas fa-clock text-warning fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Peak Time</h5>
+                            <p class="text-muted small mb-0">Most active hour</p>
+                        </div>
+                    </div>
+                    <h2 class="h4 fw-bold mb-0">{{ peak_hour }}</h2>
+                    <p class="text-warning">{{ peak_hour_count }} posts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Distribution -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Content Distribution by Blog</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <canvas id="blogDistributionChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Top Blog</h6>
+                                    <h4>{{ top_blog_name }}</h4>
+                                    <p class="text-muted">{{ top_blog_count }} posts ({{ top_blog_percentage }}%)</p>
+                                    
+                                    <hr class="my-3">
+                                    
+                                    <h6 class="mb-3">Blog Distribution</h6>
+                                    <div class="small">
+                                        {% for blog in blog_distribution %}
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>{{ blog.name }}</span>
+                                            <span class="fw-bold">{{ blog.count }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Heatmap -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Weekly Publication Heatmap</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="legend-item">
+                            <div class="legend-color heatmap-low"></div>
+                            <span>1-2 posts</span>
+                        </div>
+                        <div class="legend-item ms-3">
+                            <div class="legend-color heatmap-medium"></div>
+                            <span>3-4 posts</span>
+                        </div>
+                        <div class="legend-item ms-3">
+                            <div class="legend-color heatmap-high"></div>
+                            <span>5-6 posts</span>
+                        </div>
+                        <div class="legend-item ms-3">
+                            <div class="legend-color heatmap-critical"></div>
+                            <span>7+ posts</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-1 time-column">
+                            {% for time_slot in time_slots %}
+                            <div class="time-label">{{ time_slot }}</div>
+                            <div class="time-marker"></div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% for day in weekday_data %}
+                        <div class="col day-column">
+                            <h6 class="text-center mb-3">{{ day.name }}</h6>
+                            {% for slot in day.slots %}
+                            <div class="hour-slot {{ slot.class }}" data-bs-toggle="tooltip" title="{{ slot.count }} posts at {{ slot.hour }}">
+                                {{ slot.count }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Publication Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="timelineChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Blog Distribution Chart
+    var blogCtx = document.getElementById('blogDistributionChart').getContext('2d');
+    var blogChart = new Chart(blogCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ blog_chart_labels|safe }},
+            datasets: [{
+                label: 'Number of Posts',
+                data: {{ blog_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // Timeline Chart
+    var timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    var timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: {{ timeline_labels|safe }},
+            datasets: [{
+                label: 'Number of Publications',
+                data: {{ timeline_data|safe }},
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
