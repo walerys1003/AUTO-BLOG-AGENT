@@ -1,19 +1,9 @@
 import os
 import logging
 import json
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union
-
-from googleapiclient.discovery import build
-from google.oauth2.service_account import Credentials
-from google.analytics.data_v1beta import BetaAnalyticsDataClient
-from google.analytics.data_v1beta.types import (
-    DateRange,
-    Dimension,
-    Metric,
-    RunReportRequest,
-    RunReportResponse,
-)
 
 logger = logging.getLogger(__name__)
 

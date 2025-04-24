@@ -11,6 +11,7 @@ from social.autopost import post_article_to_social_media
 from utils.seo.analyzer import seo_analyzer
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
+from routes_analytics import register_analytics_routes
 import json
 from datetime import datetime, timedelta
 
@@ -881,3 +882,6 @@ def register_routes(app: Flask):
     @app.errorhandler(500)
     def server_error(e):
         return render_template('error.html', error_code=500, error_message='Server error'), 500
+        
+    # Register analytics routes
+    register_analytics_routes(app)
