@@ -79,10 +79,42 @@
                                 <i class="fas fa-images me-1"></i> Images
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/publishing' in request.path and request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-newspaper me-1"></i> WordPress Publishing
                             </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="publishingDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}">
+                                        <i class="fas fa-calendar-alt me-1"></i> Schedule
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}">
+                                        <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}">
+                                        <i class="fas fa-list-ul me-1"></i> Pending Articles
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}">
+                                        <i class="fas fa-history me-1"></i> Publication History
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}">
+                                        <i class="fas fa-cog me-1"></i> Settings
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}">
@@ -98,54 +130,6 @@
                 </div>
             </div>
         </nav>
-        
-        <!-- Podmenu dla modułu publikacji, wyświetlane tylko gdy jesteśmy w sekcji publishing -->
-        {% if '/publishing' in request.path %}
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark bg-opacity-90 border-top border-dark py-0">
-            <div class="container">
-                <span class="navbar-text text-white-50 d-none d-md-block">
-                    <i class="fas fa-newspaper text-white-50"></i> WordPress Publishing:
-                </span>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publishingSubNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="publishingSubNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
-                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}">
-                                <i class="fas fa-calendar-alt me-1"></i> Schedule
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.workload_visualization') %}active bg-primary{% endif %}" href="{{ url_for('publishing.workload_visualization') }}">
-                                <i class="fas fa-chart-bar me-1"></i> Workload Visualization
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}">
-                                <i class="fas fa-list-ul me-1"></i> Pending Articles
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}">
-                                <i class="fas fa-history me-1"></i> Publication History
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-2 fs-6 {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}">
-                                <i class="fas fa-cog me-1"></i> Settings
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        {% endif %}
     </header>
 
     <!-- Main Content -->
