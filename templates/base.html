@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BlogAutomationAgent - AI-powered content generation and management for WordPress blogs">
     <title>{% block title %}BlogAutomationAgent{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
@@ -11,79 +12,121 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block styles %}{% endblock %}
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#212529">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-robot me-2"></i>
-                BlogAutomationAgent
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}">
-                            <i class="fas fa-blog me-1"></i> Blogs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}">
-                            <i class="fas fa-lightbulb me-1"></i> Topics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/social' in request.path %}active{% endif %}" href="{{ url_for('social_accounts') }}">
-                            <i class="fas fa-share-alt me-1"></i> Social Media
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}">
-                            <i class="fas fa-clipboard-list me-1"></i> Logs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}">
-                            <i class="fas fa-brain me-1"></i> AI Models
-                        </a>
-                    </li>
-                </ul>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                    <div class="brand-icon d-flex align-items-center justify-content-center rounded-circle bg-primary me-2" style="width: 36px; height: 36px;">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <span>BlogAutomationAgent</span>
+                    <span class="badge bg-info ms-2">ZYGA</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}">
+                                <i class="fas fa-blog me-1"></i> Blogs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}">
+                                <i class="fas fa-lightbulb me-1"></i> Topics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/social' in request.path %}active{% endif %}" href="{{ url_for('social_accounts') }}">
+                                <i class="fas fa-share-alt me-1"></i> Social Media
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}">
+                                <i class="fas fa-clipboard-list me-1"></i> Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}">
+                                <i class="fas fa-brain me-1"></i> AI Models
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
     <!-- Main Content -->
-    <div class="container mb-5">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <main class="flex-grow-1 py-4">
+        <div class="container">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                {% elif category == 'danger' %}
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% elif category == 'info' %}
+                                    <i class="fas fa-info-circle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                {% endif %}
+            {% endwith %}
 
-        <!-- Page Content -->
-        {% block content %}{% endblock %}
-    </div>
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
     <!-- Footer -->
-    <footer class="footer py-4 bg-dark mt-auto">
-        <div class="container text-center">
-            <span class="text-muted">BlogAutomationAgent ZYGA &copy; {{ now.year }}</span>
+    <footer class="footer py-3 bg-dark mt-auto">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <span class="text-muted">BlogAutomationAgent ZYGA &copy; {{ now.year }}</span>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <span class="text-muted">Powered by OpenRouter AI</span>
+                </div>
+            </div>
         </div>
     </footer>
+
+    <!-- Tooltips Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

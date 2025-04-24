@@ -5,64 +5,107 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col d-flex justify-content-between align-items-center">
-        <h1 class="mb-0">Manage Blogs</h1>
+        <div>
+            <h1 class="mb-0">Manage Blogs</h1>
+            <p class="text-muted">Configure your WordPress blogs for automated content generation</p>
+        </div>
         <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add New Blog
         </a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-info-circle fa-lg me-3"></i>
+            <div>
+                <strong>Quick Tip:</strong> For best results, connect blogs with well-defined categories and existing content that the AI can learn from.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Configured Blogs</h5>
+        <span class="badge bg-primary">{{ blogs|length }} blogs</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>URL</th>
-                        <th>Categories</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th style="width: 20%">Name</th>
+                        <th style="width: 20%">URL</th>
+                        <th style="width: 25%">Categories</th>
+                        <th style="width: 10%">Status</th>
+                        <th style="width: 10%">Content</th>
+                        <th style="width: 15%">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for blog in blogs %}
                     <tr>
-                        <td>{{ blog.name }}</td>
-                        <td><a href="{{ blog.url }}" target="_blank">{{ blog.url }}</a></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="blog-icon rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" style="width: 38px; height: 38px;">
+                                    <i class="fas fa-blog text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ blog.name }}</div>
+                                    <small class="text-muted">Created {{ blog.created_at.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ blog.url }}" target="_blank" class="d-flex align-items-center text-decoration-none">
+                                <span class="text-truncate d-inline-block" style="max-width: 200px;">{{ blog.url }}</span>
+                                <i class="fas fa-external-link-alt ms-2 text-secondary"></i>
+                            </a>
+                        </td>
                         <td>
                             {% set categories = blog.get_categories() %}
                             {% if categories %}
-                                {% for category in categories %}
-                                <span class="badge bg-info me-1">{{ category.name }}</span>
-                                {% if loop.index == 3 and categories|length > 3 %}
-                                <span class="badge bg-secondary">+{{ categories|length - 3 }} more</span>
-                                {% break %}
-                                {% endif %}
-                                {% endfor %}
+                                <div class="d-flex flex-wrap">
+                                    {% for category in categories %}
+                                    <span class="badge bg-info me-1 mb-1">{{ category.name }}</span>
+                                    {% if loop.index == 5 and categories|length > 5 %}
+                                    <span class="badge bg-secondary mb-1" data-bs-toggle="tooltip" title="{{', '.join([cat.name for cat in categories[5:]])}}">+{{ categories|length - 5 }} more</span>
+                                    {% break %}
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
                             {% else %}
-                                <span class="text-muted">No categories</span>
+                                <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i> No categories</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if blog.active %}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Active</span>
                             {% else %}
-                            <span class="badge bg-danger">Inactive</span>
+                            <span class="badge bg-danger"><i class="fas fa-pause me-1"></i> Paused</span>
                             {% endif %}
                         </td>
-                        <td>{{ blog.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% set content_count = blog.content_logs|selectattr('post_id', 'defined')|list|length %}
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">{{ content_count }}</div>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ 100 if content_count > 100 else content_count }}%"></div>
+                                </div>
+                            </div>
+                        </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="{{ url_for('edit_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edit
+                                <a href="{{ url_for('edit_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit Blog">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteBlogModal{{ blog.id }}">
-                                    <i class="fas fa-trash"></i> Delete
+                                <a href="{{ url_for('api_process_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="Generate Content">
+                                    <i class="fas fa-robot"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteBlogModal{{ blog.id }}" title="Delete Blog">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                             
@@ -75,13 +118,24 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <p>Are you sure you want to delete <strong>{{ blog.name }}</strong>?</p>
-                                            <p class="text-danger">This action cannot be undone. All associated content logs and topics will also be deleted.</p>
+                                            <div class="d-flex flex-column align-items-center justify-content-center mb-4">
+                                                <div class="text-danger mb-3" style="font-size: 3rem;">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </div>
+                                                <h4>Are you sure?</h4>
+                                                <p class="text-center">You are about to delete <strong>{{ blog.name }}</strong></p>
+                                            </div>
+                                            <div class="alert alert-danger">
+                                                <i class="fas fa-exclamation-circle me-2"></i>
+                                                <strong>Warning:</strong> This action cannot be undone. All associated content logs and topics will also be deleted.
+                                            </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                             <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="post">
-                                                <button type="submit" class="btn btn-danger">Delete Blog</button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash me-1"></i> Delete Blog
+                                                </button>
                                             </form>
                                         </div>
                                     </div>
@@ -91,11 +145,17 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <p class="mb-0">No blogs configured yet.</p>
-                            <a href="{{ url_for('add_blog') }}" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus"></i> Add Your First Blog
-                            </a>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="mb-3">
+                                    <i class="fas fa-blog fa-4x text-muted"></i>
+                                </div>
+                                <h4>No blogs configured yet</h4>
+                                <p class="text-muted mb-3">Add your WordPress blog to start automating content generation</p>
+                                <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i> Add Your First Blog
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
