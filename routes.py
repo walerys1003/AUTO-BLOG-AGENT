@@ -12,6 +12,7 @@ from utils.seo.analyzer import seo_analyzer
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
+from routes_seo_inspiration import seo_inspiration_bp
 from newsletter import newsletter_bp
 import json
 from datetime import datetime, timedelta
@@ -905,6 +906,9 @@ def register_routes(app: Flask):
         
     # Register analytics routes
     register_analytics_routes(app)
+    
+    # Register SEO Inspirations blueprint
+    app.register_blueprint(seo_inspiration_bp)
     
     # Register newsletter blueprint
     app.register_blueprint(newsletter_bp)
