@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from models import Blog, SocialAccount, ContentLog, ArticleTopic
 from app import db
 from utils.logger import log_event
