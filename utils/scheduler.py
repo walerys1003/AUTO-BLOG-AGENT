@@ -1,290 +1,389 @@
 import logging
 import schedule
-import time
 import threading
+import time
+import random
+from datetime import datetime, timedelta
+import json
 import traceback
-from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import List, Dict, Any, Optional
 from config import Config
 from generator.seo import generate_article_topics
 from generator.content import generate_article_content
 from generator.images import get_featured_image_for_article
-from wordpress.publisher import publish_article_to_blog, check_scheduled_posts
+from wordpress.publisher import publish_article, check_scheduled_posts, get_optimal_publish_time
+from social.autopost import post_article_to_social_media
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Global scheduler object
+# Global variables for scheduler
+running = False
 scheduler_thread = None
-is_running = False
 
-def setup_scheduler():
-    """
-    Set up and start the scheduler for automated content generation and publishing
-    """
-    global scheduler_thread, is_running
+def start_scheduler():
+    """Start the scheduler in a background thread"""
+    global running, scheduler_thread
     
-    if is_running:
-        logger.warning("Scheduler is already running!")
+    if running:
+        logger.warning("Scheduler is already running")
         return
     
-    # Set up content generation jobs
-    # Run content generation once per day at 00:01
-    schedule.every().day.at("00:01").do(generate_content_for_all_blogs)
+    logger.info("Scheduler started")
+    running = True
     
-    # Check for scheduled posts every hour
-    schedule.every(1).hour.do(check_scheduled_posts)
+    # Set up scheduled tasks
+    # Check for pending tasks every hour
+    schedule.every(1).hours.do(process_content_generation)
     
-    # Start the scheduler in a separate thread
-    is_running = True
+    # Check for failed scheduled posts every 2 hours
+    schedule.every(2).hours.do(check_scheduled_posts)
+    
+    # Run maintenance tasks once a day (3 AM UTC)
+    schedule.every().day.at("03:00").do(run_maintenance_tasks)
+    
+    # Start scheduler in a separate thread
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
     scheduler_thread.start()
+
+def stop_scheduler():
+    """Stop the scheduler thread"""
+    global running, scheduler_thread
     
-    logger.info("Scheduler started")
+    if not running:
+        logger.warning("Scheduler is not running")
+        return
+    
+    logger.info("Stopping scheduler")
+    running = False
+    
+    # Wait for thread to terminate
+    if scheduler_thread:
+        scheduler_thread.join(timeout=5)
+        scheduler_thread = None
 
 def run_scheduler():
-    """
-    Run the scheduler continuously
-    """
-    global is_running
+    """Run the scheduler continuously"""
+    global running
     
-    while is_running:
+    while running:
         try:
             schedule.run_pending()
-            time.sleep(60)  # Sleep for 1 minute between checks
+            time.sleep(60)  # Check every minute
         except Exception as e:
             logger.error(f"Error in scheduler: {str(e)}")
             logger.error(traceback.format_exc())
-            time.sleep(300)  # Sleep longer on error
+            time.sleep(300)  # Wait 5 minutes after error
 
-def stop_scheduler():
-    """
-    Stop the scheduler
-    """
-    global is_running
-    is_running = False
-    
-    # Clear all scheduled jobs
-    schedule.clear()
-    
-    logger.info("Scheduler stopped")
-
-def generate_content_for_all_blogs():
-    """
-    Generate and publish content for all active blogs
-    """
+def process_content_generation():
+    """Process content generation for all active blogs"""
     try:
         # Import here to avoid circular imports
         from app import db
-        from models import Blog, ArticleTopic
+        from models import Blog, ArticleTopic, ContentLog
         
         # Get all active blogs
-        active_blogs = Blog.query.filter_by(active=True).all()
-        logger.info(f"Generating content for {len(active_blogs)} active blogs")
+        blogs = Blog.query.filter_by(active=True).all()
         
-        for blog in active_blogs:
+        if not blogs:
+            logger.warning("No active blogs found")
+            return
+        
+        logger.info(f"Processing content generation for {len(blogs)} blogs")
+        
+        # Process each blog
+        for blog in blogs:
             try:
-                # Check if we need to generate topics first
-                pending_topics = ArticleTopic.query.filter_by(
-                    blog_id=blog.id, 
-                    status='approved'
+                logger.info(f"Processing blog: {blog.name} ({blog.id})")
+                
+                # Check if we need to generate new topics
+                approved_topics = ArticleTopic.query.filter_by(
+                    blog_id=blog.id,
+                    status="approved"
                 ).count()
                 
-                if pending_topics < Config.ARTICLES_PER_DAY_PER_BLOG * 2:
-                    # Generate new topics if we're running low
-                    logger.info(f"Generating new topics for blog {blog.name} (ID: {blog.id})")
-                    generate_topics_for_blog(blog.id)
-                
-                # Get the number of articles to generate for this blog today
-                articles_to_generate = Config.ARTICLES_PER_DAY_PER_BLOG
-                
-                # Generate and publish each article
-                for i in range(articles_to_generate):
-                    process_blog_content(blog.id)
+                if approved_topics < 10:
+                    logger.info(f"Blog {blog.id} has only {approved_topics} approved topics, generating more")
                     
-                    # Sleep to avoid overloading the AI service
-                    time.sleep(30)
+                    # Generate new topics
+                    categories = blog.get_categories()
+                    if not categories:
+                        categories = ["General", "News", "Guides"]
+                    
+                    # Generate 15 new topics
+                    topics = generate_article_topics(
+                        blog_name=blog.name,
+                        categories=categories,
+                        count=15
+                    )
+                    
+                    # Save topics to database
+                    for topic in topics:
+                        try:
+                            new_topic = ArticleTopic(
+                                blog_id=blog.id,
+                                title=topic.get('title', ''),
+                                category=topic.get('category', categories[0]),
+                                status="pending",
+                                score=float(topic.get('score', 0.5))
+                            )
+                            
+                            # Set keywords as JSON
+                            new_topic.set_keywords(topic.get('keywords', []))
+                            
+                            db.session.add(new_topic)
+                            db.session.commit()
+                            logger.info(f"Added new topic: {new_topic.title}")
+                        except Exception as e:
+                            logger.error(f"Error adding topic: {str(e)}")
+                            db.session.rollback()
+                
+                # Check if we need to publish articles today
+                now = datetime.utcnow()
+                today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+                
+                # Count articles published/scheduled today
+                today_articles = ContentLog.query.filter(
+                    ContentLog.blog_id == blog.id,
+                    ContentLog.created_at >= today_start
+                ).count()
+                
+                # Get configured articles per day
+                articles_per_day = Config.ARTICLES_PER_DAY_PER_BLOG
+                
+                if today_articles >= articles_per_day:
+                    logger.info(f"Blog {blog.id} already has {today_articles} articles today (max: {articles_per_day})")
+                    continue
+                
+                # We need to publish more articles
+                articles_to_publish = articles_per_day - today_articles
+                logger.info(f"Blog {blog.id} needs {articles_to_publish} more articles today")
+                
+                # Get next approved topics
+                topics_to_use = ArticleTopic.query.filter_by(
+                    blog_id=blog.id,
+                    status="approved"
+                ).order_by(
+                    ArticleTopic.score.desc()
+                ).limit(articles_to_publish).all()
+                
+                if not topics_to_use:
+                    logger.warning(f"No approved topics available for blog {blog.id}")
+                    continue
+                
+                # Process each topic
+                for topic in topics_to_use:
+                    try:
+                        logger.info(f"Creating article from topic: {topic.title}")
+                        
+                        # Get data from topic
+                        title = topic.title
+                        keywords = topic.get_keywords()
+                        category = topic.category
+                        
+                        # Generate article content
+                        article = generate_article_content(
+                            title=title,
+                            keywords=keywords,
+                            category=category,
+                            blog_name=blog.name
+                        )
+                        
+                        if not article:
+                            logger.error(f"Failed to generate article for topic {topic.id}")
+                            continue
+                        
+                        # Get featured image
+                        featured_image = get_featured_image_for_article(
+                            title=title,
+                            keywords=keywords
+                        )
+                        
+                        # Publish article
+                        success, post_id, error = publish_article(
+                            blog_id=blog.id,
+                            title=title,
+                            content=article.get('content', ''),
+                            excerpt=article.get('excerpt', ''),
+                            tags=article.get('tags', []),
+                            category=category,
+                            featured_image=featured_image,
+                            schedule=True
+                        )
+                        
+                        if success and post_id:
+                            # Update topic status
+                            topic.status = "used"
+                            db.session.commit()
+                            
+                            # Check if we should post to social media
+                            content_log = ContentLog.query.filter_by(
+                                blog_id=blog.id,
+                                post_id=post_id
+                            ).first()
+                            
+                            if content_log:
+                                # Get article URL from WordPress
+                                url = f"{blog.url}/?p={post_id}"
+                                
+                                # Post to social media
+                                social_posts = post_article_to_social_media(
+                                    content_log_id=content_log.id,
+                                    blog_id=blog.id,
+                                    title=title,
+                                    excerpt=article.get('excerpt', ''),
+                                    url=url,
+                                    keywords=keywords,
+                                    featured_image=featured_image
+                                )
+                                
+                                if social_posts:
+                                    logger.info(f"Posted article to {len(social_posts)} social platforms")
+                        else:
+                            logger.error(f"Failed to publish article: {error}")
+                    
+                    except Exception as e:
+                        logger.error(f"Error processing topic {topic.id}: {str(e)}")
+                        logger.error(traceback.format_exc())
             
-            except Exception as blog_e:
-                logger.error(f"Error generating content for blog {blog.id}: {str(blog_e)}")
+            except Exception as e:
+                logger.error(f"Error processing blog {blog.id}: {str(e)}")
                 logger.error(traceback.format_exc())
-                continue
     
     except Exception as e:
-        logger.error(f"Error in generate_content_for_all_blogs: {str(e)}")
+        logger.error(f"Error in content generation: {str(e)}")
         logger.error(traceback.format_exc())
 
-def generate_topics_for_blog(blog_id: int, count: int = 10) -> List[Dict[str, Any]]:
+def get_optimal_publish_time(blog_id: int) -> datetime:
     """
-    Generate new topics for a blog
+    Get the optimal time to publish an article
     
     Args:
         blog_id: ID of the blog
-        count: Number of topics to generate
         
     Returns:
-        List of generated topics
+        Datetime for optimal publishing
     """
     try:
         # Import here to avoid circular imports
         from app import db
-        from models import Blog, ArticleTopic
+        from models import ContentLog
         
-        # Get blog data
-        blog = Blog.query.get(blog_id)
-        if not blog:
-            logger.error(f"Blog with ID {blog_id} not found")
-            return []
+        # Get today's date
+        now = datetime.utcnow()
         
-        # Get blog categories
-        categories = blog.get_categories()
+        # Get publishing times from config (e.g., "08:00,12:00,16:00,20:00")
+        publishing_times = Config.PUBLISHING_TIMES
         
-        # Generate topics
-        topics = generate_article_topics(
-            blog_name=blog.name,
-            categories=categories,
-            count=count
-        )
-        
-        # Save topics to database
-        saved_topics = []
-        for topic in topics:
+        # Convert to datetime objects for today
+        today_slots = []
+        for time_str in publishing_times:
             try:
-                article_topic = ArticleTopic(
-                    blog_id=blog_id,
-                    title=topic.get('title', ''),
-                    category=topic.get('category', ''),
-                    status='pending',
-                    score=topic.get('score', 0.0)
-                )
+                hour, minute = map(int, time_str.split(':'))
+                slot_time = datetime(now.year, now.month, now.day, hour, minute, 0)
                 
-                # Set keywords
-                if 'keywords' in topic:
-                    article_topic.set_keywords(topic['keywords'])
-                
-                db.session.add(article_topic)
-                db.session.commit()
-                
-                # Add to saved topics list
-                saved_topics.append({
-                    'id': article_topic.id,
-                    'title': article_topic.title,
-                    'category': article_topic.category,
-                    'keywords': article_topic.get_keywords(),
-                    'score': article_topic.score
-                })
-                
-            except Exception as topic_e:
-                logger.error(f"Error saving topic: {str(topic_e)}")
-                db.session.rollback()
+                # If this time is in the past, skip it
+                if slot_time <= now:
+                    continue
+                    
+                today_slots.append(slot_time)
+            except:
                 continue
         
-        logger.info(f"Generated and saved {len(saved_topics)} topics for blog {blog.name}")
-        return saved_topics
-    
-    except Exception as e:
-        logger.error(f"Error generating topics for blog {blog_id}: {str(e)}")
-        logger.error(traceback.format_exc())
-        return []
-
-def process_blog_content(blog_id: int) -> bool:
-    """
-    Process content generation and publishing for a single blog
-    
-    Args:
-        blog_id: ID of the blog
+        # If no valid slots for today, use tomorrow
+        if not today_slots:
+            tomorrow = now + timedelta(days=1)
+            for time_str in publishing_times:
+                try:
+                    hour, minute = map(int, time_str.split(':'))
+                    slot_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, hour, minute, 0)
+                    today_slots.append(slot_time)
+                except:
+                    continue
         
-    Returns:
-        True if successful, False otherwise
-    """
+        # Get already scheduled posts for this blog
+        scheduled_times = []
+        scheduled_posts = ContentLog.query.filter(
+            ContentLog.blog_id == blog_id,
+            ContentLog.status == "scheduled",
+            ContentLog.published_at > now
+        ).all()
+        
+        for post in scheduled_posts:
+            if post.published_at:
+                scheduled_times.append(post.published_at)
+        
+        # Find an available slot
+        for slot in sorted(today_slots):
+            # Check if this slot is already taken
+            taken = False
+            for scheduled in scheduled_times:
+                # If within 15 minutes of an existing post, consider it taken
+                if abs((slot - scheduled).total_seconds()) < 900:  # 15 minutes
+                    taken = True
+                    break
+            
+            if not taken:
+                return slot
+        
+        # If all slots are taken, add a random offset to the last slot
+        if today_slots:
+            last_slot = sorted(today_slots)[-1]
+            random_minutes = random.randint(30, 90)  # Add 30-90 minutes
+            return last_slot + timedelta(minutes=random_minutes)
+        
+        # Fallback to 6 hours from now
+        return now + timedelta(hours=6)
+        
+    except Exception as e:
+        logger.error(f"Error getting optimal publish time: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Fallback to 6 hours from now
+        return datetime.utcnow() + timedelta(hours=6)
+
+def run_maintenance_tasks():
+    """Run maintenance tasks like cleaning up old logs"""
     try:
         # Import here to avoid circular imports
         from app import db
-        from models import Blog, ArticleTopic
+        from models import ContentLog
         
-        # Get blog data
-        blog = Blog.query.get(blog_id)
-        if not blog:
-            logger.error(f"Blog with ID {blog_id} not found")
-            return False
+        logger.info("Running maintenance tasks")
         
-        # Get an approved topic
-        topic = ArticleTopic.query.filter_by(
-            blog_id=blog_id,
-            status='approved'
-        ).order_by(ArticleTopic.score.desc()).first()
+        # Delete old logs beyond retention period
+        retention_days = Config.LOG_RETENTION_DAYS
+        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
         
-        # If no approved topics, try to use a pending one
-        if not topic:
-            topic = ArticleTopic.query.filter_by(
-                blog_id=blog_id,
-                status='pending'
-            ).order_by(ArticleTopic.score.desc()).first()
+        old_logs = ContentLog.query.filter(
+            ContentLog.created_at < cutoff_date
+        ).delete()
         
-        # If still no topic, generate some
-        if not topic:
-            logger.info(f"No topics available for blog {blog.name}, generating new ones")
-            new_topics = generate_topics_for_blog(blog_id, count=5)
-            
-            if new_topics:
-                # Get the first generated topic
-                topic_id = new_topics[0]['id']
-                topic = ArticleTopic.query.get(topic_id)
-                
-                # Auto-approve this topic since we need it
-                topic.status = 'approved'
-                db.session.commit()
-            else:
-                logger.error(f"Failed to generate topics for blog {blog.name}")
-                return False
+        db.session.commit()
+        logger.info(f"Deleted {old_logs} old content logs")
         
-        # Generate article content
-        try:
-            logger.info(f"Generating article for topic: {topic.title}")
-            
-            article_content = generate_article_content(
-                title=topic.title,
-                keywords=topic.get_keywords(),
-                category=topic.category,
-                blog_name=blog.name,
-                min_length=Config.ARTICLE_MIN_LENGTH,
-                max_length=Config.ARTICLE_MAX_LENGTH
-            )
-            
-            if not article_content or not article_content.get('content'):
-                logger.error(f"Failed to generate content for topic {topic.title}")
-                return False
-            
-            # Get featured image
-            featured_image = get_featured_image_for_article(topic.title, topic.get_keywords())
-            
-            # Publish to WordPress
-            success, post_id, error = publish_article_to_blog(
-                blog_id=blog_id,
-                title=topic.title,
-                content=article_content,
-                featured_image=featured_image,
-                schedule=True  # Use scheduling
-            )
-            
-            if success:
-                # Mark topic as used
-                topic.status = 'used'
-                db.session.commit()
-                
-                logger.info(f"Successfully processed content for blog {blog.name}: {topic.title}")
-                return True
-            else:
-                logger.error(f"Failed to publish article for topic {topic.title}: {error}")
-                return False
-                
-        except Exception as content_e:
-            logger.error(f"Error generating content for topic {topic.title}: {str(content_e)}")
-            logger.error(traceback.format_exc())
-            return False
+    except Exception as e:
+        logger.error(f"Error in maintenance tasks: {str(e)}")
+        logger.error(traceback.format_exc())
+
+def setup_scheduler():
+    """Initialize and start the content scheduler"""
+    try:
+        # Import here to avoid circular imports
+        from app import db
+        from models import Blog
+        
+        logger.info("Setting up content scheduler")
+        
+        # Check if there are any active blogs
+        active_blogs = Blog.query.filter_by(active=True).count()
+        if active_blogs > 0:
+            logger.info(f"Found {active_blogs} active blogs, starting scheduler")
+            start_scheduler()
+        else:
+            logger.info("No active blogs found, scheduler will not start")
     
     except Exception as e:
-        logger.error(f"Error processing blog content for blog {blog_id}: {str(e)}")
+        logger.error(f"Error setting up scheduler: {str(e)}")
         logger.error(traceback.format_exc())
-        return False

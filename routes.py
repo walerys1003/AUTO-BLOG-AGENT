@@ -2,11 +2,10 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from models import Blog, SocialAccount, ContentLog, ArticleTopic
 from app import db
-from utils.logger import log_event
-from utils.scheduler import process_blog_content
+from utils.scheduler import start_scheduler, process_content_generation
 from generator.seo import generate_article_topics
 from generator.content import generate_article_content
-from wordpress.publisher import publish_article_to_blog, get_optimal_publish_time
+from wordpress.publisher import publish_article, get_optimal_publish_time
 from social.autopost import post_article_to_social_media
 import json
 from datetime import datetime, timedelta
@@ -338,8 +337,8 @@ def register_routes(app: Flask):
             
             # Generate topics
             topics = generate_article_topics(
-                category=category,
                 blog_name=blog.name,
+                categories=[category] if category else None,
                 count=count
             )
             
@@ -434,7 +433,7 @@ def register_routes(app: Flask):
         """API endpoint to manually process a blog's content pipeline"""
         try:
             # Start the content pipeline for this blog
-            process_blog_content(blog_id)
+            process_content_generation()
             
             return jsonify({
                 'success': True,

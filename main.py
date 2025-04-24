@@ -2,7 +2,7 @@ from app import app, db
 import logging
 import os
 from routes import register_routes
-from utils.scheduler import setup_scheduler
+from utils.scheduler import start_scheduler
 from models import Blog, SocialAccount, ContentLog
 
 # Setup logging
@@ -25,7 +25,7 @@ def initialize_database():
 with app.app_context():
     initialize_database()
     # Start the scheduler for automated content generation and posting
-    setup_scheduler()
+    start_scheduler()
     logger.info("Flask application initialized")
 
 if __name__ == "__main__":

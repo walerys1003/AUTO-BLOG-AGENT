@@ -1,184 +1,89 @@
-import os
 import logging
-import requests
 import json
-import random
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime, timedelta
-import traceback
-from config import Config
-from models import Blog, ContentLog
-from generator.images import get_featured_image_for_article
+import requests
 import base64
+import traceback
+from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional, Tuple
+from config import Config
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-def get_optimal_publish_time(blog_id: int) -> datetime:
+def publish_article(
+    blog_id: int,
+    title: str,
+    content: str,
+    excerpt: str = "",
+    tags: List[str] = None,
+    category: str = None,
+    featured_image: Optional[Dict[str, Any]] = None,
+    schedule: bool = False
+) -> Tuple[bool, Optional[int], Optional[str]]:
     """
-    Calculate optimal time to publish a post
+    Publish an article to WordPress
     
     Args:
         blog_id: ID of the blog
-        
-    Returns:
-        Datetime object for scheduled publishing
-    """
-    try:
-        # Get current time
-        now = datetime.utcnow()
-        
-        # Get publishing times from config
-        publishing_times = Config.PUBLISHING_TIMES
-        
-        # Get existing scheduled posts for today
-        from app import db
-        from models import ContentLog
-        
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
-        
-        scheduled_posts = ContentLog.query.filter(
-            ContentLog.blog_id == blog_id,
-            ContentLog.status == 'scheduled',
-            ContentLog.published_at >= today_start,
-            ContentLog.published_at < today_end
-        ).all()
-        
-        # Get all scheduled times
-        scheduled_times = [post.published_at.strftime('%H:%M') for post in scheduled_posts if post.published_at]
-        
-        # Find an available time slot
-        available_times = [time for time in publishing_times if time not in scheduled_times]
-        
-        if available_times:
-            # Pick the earliest available time that's in the future
-            available_times.sort()
-            chosen_time = None
-            
-            for time_str in available_times:
-                hours, minutes = map(int, time_str.split(':'))
-                potential_time = now.replace(hour=hours, minute=minutes, second=0, microsecond=0)
-                
-                # If the time is in the future, use it
-                if potential_time > now:
-                    chosen_time = potential_time
-                    break
-            
-            # If no future times available today, schedule for the earliest time tomorrow
-            if not chosen_time:
-                hours, minutes = map(int, available_times[0].split(':'))
-                chosen_time = (now + timedelta(days=1)).replace(hour=hours, minute=minutes, second=0, microsecond=0)
-            
-            return chosen_time
-        else:
-            # If all time slots are taken, schedule for tomorrow
-            hours, minutes = map(int, publishing_times[0].split(':'))
-            return (now + timedelta(days=1)).replace(hour=hours, minute=minutes, second=0, microsecond=0)
-    
-    except Exception as e:
-        logger.error(f"Error determining optimal publish time: {str(e)}")
-        logger.error(traceback.format_exc())
-        
-        # Fallback: schedule for 2 hours from now
-        return datetime.utcnow() + timedelta(hours=2)
-
-def format_post_content(content: Dict[str, Any], featured_image: Optional[Dict[str, Any]]) -> str:
-    """
-    Format post content for WordPress
-    
-    Args:
-        content: Article content data
-        featured_image: Featured image data
-        
-    Returns:
-        Formatted HTML content
-    """
-    try:
-        html_content = content.get('content', '')
-        
-        # Add featured image attribution if present
-        if featured_image and 'attribution' in featured_image:
-            attribution = featured_image['attribution']
-            attribution_html = f'<p class="image-attribution">Featured image by <a href="{attribution["url"]}" target="_blank" rel="noopener noreferrer">{attribution["name"]}</a></p>'
-            html_content += attribution_html
-        
-        return html_content
-        
-    except Exception as e:
-        logger.error(f"Error formatting post content: {str(e)}")
-        logger.error(traceback.format_exc())
-        return content.get('content', '')
-
-def publish_article_to_blog(
-    blog_id: int, 
-    title: str, 
-    content: Dict[str, Any], 
-    featured_image: Optional[Dict[str, Any]] = None,
-    schedule: bool = True
-) -> Tuple[bool, Optional[int], Optional[str]]:
-    """
-    Publish an article to a WordPress blog
-    
-    Args:
-        blog_id: ID of the blog to publish to
         title: Article title
-        content: Article content dictionary
+        content: HTML content
+        excerpt: Article excerpt
+        tags: List of tags
+        category: Article category
         featured_image: Featured image data
-        schedule: Whether to schedule the post or publish immediately
+        schedule: Whether to schedule for optimal time
         
     Returns:
         Tuple of (success, post_id, error_message)
     """
     try:
-        # Get blog data
+        # Import here to avoid circular imports
         from app import db
+        from models import Blog, ContentLog
+        
+        # Get blog
         blog = Blog.query.get(blog_id)
-        
         if not blog:
-            return False, None, f"Blog with ID {blog_id} not found"
+            error_msg = f"Blog not found: {blog_id}"
+            logger.error(error_msg)
+            return False, None, error_msg
         
-        # Get featured image if not provided
-        if not featured_image and content.get('keywords'):
-            featured_image = get_featured_image_for_article(title, content.get('keywords', []))
+        # Get blog categories
+        categories = blog.get_categories()
+        category_id = None
         
-        # Format post content
-        formatted_content = format_post_content(content, featured_image)
-        
-        # Prepare API endpoint
-        api_endpoint = f"{blog.api_url}/wp-json/wp/v2/posts"
+        # Find category ID
+        if category and isinstance(categories, dict):
+            for cat_id, cat_name in categories.items():
+                if cat_name.lower() == category.lower():
+                    category_id = int(cat_id)
+                    break
+            
+            # If category not found, log warning
+            if not category_id:
+                logger.warning(f"Category not found: {category}")
         
         # Prepare post data
         post_data = {
             "title": title,
-            "content": formatted_content,
-            "status": "draft",  # Start as draft, will update status later
-            "excerpt": content.get('excerpt', ''),
-            "categories": [],  # Will be updated with category IDs
-            "tags": []  # Will be updated with tag IDs
+            "content": content,
+            "status": "draft"  # Initially set as draft, will change later
         }
         
-        # Handle categories
-        category = content.get('category')
-        if category:
-            # Here you would map category name to WP category ID
-            # For now, just use default category 1 (Uncategorized)
-            post_data["categories"] = [1]
+        # Add excerpt if provided
+        if excerpt:
+            post_data["excerpt"] = excerpt
         
-        # Handle tags
-        tags = content.get('tags', [])
+        # Add tags if provided
         if tags:
-            # Here you would create tags if they don't exist
-            # For now, we'll skip this as it requires additional API calls
-            pass
+            post_data["tags"] = tags
         
-        # Handle metadata (SEO)
-        meta = {}
-        if content.get('meta_description'):
-            meta["_yoast_wpseo_metadesc"] = content.get('meta_description')
-            
-        if meta:
-            post_data["meta"] = meta
+        # Add category if found
+        if category_id:
+            post_data["categories"] = [category_id]
+        
+        # Set up API endpoint
+        api_endpoint = f"{blog.api_url}/wp-json/wp/v2/posts"
         
         # Set up authentication
         auth = (blog.username, blog.api_token)
@@ -315,7 +220,7 @@ def check_scheduled_posts():
         # Get posts that should have been published already but are still scheduled
         grace_period = timedelta(minutes=30)  # Give WP some time to handle scheduled posts
         from app import db
-        from models import ContentLog
+        from models import ContentLog, Blog
         
         overdue_posts = ContentLog.query.filter(
             ContentLog.status == 'scheduled',
@@ -374,3 +279,91 @@ def check_scheduled_posts():
     except Exception as e:
         logger.error(f"Error checking scheduled posts: {str(e)}")
         logger.error(traceback.format_exc())
+
+def get_optimal_publish_time(blog_id: int) -> datetime:
+    """
+    Get the optimal time to publish an article
+    
+    Args:
+        blog_id: ID of the blog
+        
+    Returns:
+        Datetime for optimal publishing
+    """
+    try:
+        # Import here to avoid circular imports
+        from app import db
+        from models import ContentLog
+        
+        # Get today's date
+        now = datetime.utcnow()
+        
+        # Get publishing times from config (e.g., "08:00,12:00,16:00,20:00")
+        publishing_times = Config.PUBLISHING_TIMES
+        
+        # Convert to datetime objects for today
+        today_slots = []
+        for time_str in publishing_times:
+            try:
+                hour, minute = map(int, time_str.split(':'))
+                slot_time = datetime(now.year, now.month, now.day, hour, minute, 0)
+                
+                # If this time is in the past, skip it
+                if slot_time <= now:
+                    continue
+                    
+                today_slots.append(slot_time)
+            except Exception:
+                continue
+        
+        # If no valid slots for today, use tomorrow
+        if not today_slots:
+            tomorrow = now + timedelta(days=1)
+            for time_str in publishing_times:
+                try:
+                    hour, minute = map(int, time_str.split(':'))
+                    slot_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, hour, minute, 0)
+                    today_slots.append(slot_time)
+                except Exception:
+                    continue
+        
+        # Get already scheduled posts for this blog
+        scheduled_times = []
+        scheduled_posts = ContentLog.query.filter(
+            ContentLog.blog_id == blog_id,
+            ContentLog.status == "scheduled",
+            ContentLog.published_at > now
+        ).all()
+        
+        for post in scheduled_posts:
+            if post.published_at:
+                scheduled_times.append(post.published_at)
+        
+        # Find an available slot
+        for slot in sorted(today_slots):
+            # Check if this slot is already taken
+            taken = False
+            for scheduled in scheduled_times:
+                # If within 15 minutes of an existing post, consider it taken
+                if abs((slot - scheduled).total_seconds()) < 900:  # 15 minutes
+                    taken = True
+                    break
+            
+            if not taken:
+                return slot
+        
+        # If all slots are taken, add a random offset to the last slot
+        if today_slots:
+            last_slot = sorted(today_slots)[-1]
+            random_minutes = 30  # Add 30 minutes
+            return last_slot + timedelta(minutes=random_minutes)
+        
+        # Fallback to 6 hours from now
+        return now + timedelta(hours=6)
+        
+    except Exception as e:
+        logger.error(f"Error getting optimal publish time: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Fallback to 6 hours from now
+        return datetime.utcnow() + timedelta(hours=6)
