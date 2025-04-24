@@ -1,5 +1,5 @@
 /**
- * BlogAutomationAgent (ZYGA) Dashboard JavaScript
+ * BLOG AUTOMATION MASTER Dashboard JavaScript
  * Handles interactive UI elements and dashboard functionality
  */
 
