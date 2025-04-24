@@ -13,6 +13,7 @@ from generator.content import generate_article_content
 from generator.images import get_featured_image_for_article
 from wordpress.publisher import publish_article, check_scheduled_posts, get_optimal_publish_time
 from social.autopost import post_article_to_social_media
+from utils.automation.content_automation import run_content_automation
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -38,6 +39,9 @@ def start_scheduler():
     
     # Check for failed scheduled posts every 2 hours
     schedule.every(2).hours.do(check_scheduled_posts)
+    
+    # Run content automation every hour
+    schedule.every(1).hours.do(run_content_automation)
     
     # Run maintenance tasks once a day (3 AM UTC)
     schedule.every().day.at("03:00").do(run_maintenance_tasks)
