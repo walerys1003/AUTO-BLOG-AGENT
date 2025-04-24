@@ -326,6 +326,15 @@ class AutomationRule(db.Model):
         if self.publishing_days:
             return [int(day) for day in self.publishing_days.split(',')]
         return [0, 1, 2, 3, 4, 5, 6]  # Default to all days
+        
+    def set_publishing_days(self, days_list):
+        """Sets publishing days from a list of integers"""
+        if not days_list:
+            self.publishing_days = '0,1,2,3,4,5,6'  # Default to all days
+        else:
+            # Convert all values to integers and remove duplicates
+            days_list = [str(int(day)) for day in days_list]
+            self.publishing_days = ','.join(days_list)
 
 
 class NewsletterConfig(db.Model):

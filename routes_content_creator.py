@@ -421,26 +421,40 @@ def automation_dashboard():
     # Get all blogs
     blogs = Blog.query.filter_by(active=True).all()
     
-    # Get all automation rules
-    automation_rules = AutomationRule.query.all()
+    # Get active automation rules
+    active_rules = AutomationRule.query.filter_by(active=True).all()
     
-    # Get automation logs (would be from AutomationLog table in real implementation)
-    # For now, we'll create some sample logs
-    automation_logs = []
+    # Get inactive automation rules
+    inactive_rules = AutomationRule.query.filter_by(active=False).all()
+    
+    # Get automation logs from the utility function
+    logs = content_automation.get_automation_logs(limit=20)
     
     # Render the automation dashboard
     return render_template(
         'content/automation.html',
         blogs=blogs,
-        automation_rules=automation_rules,
-        automation_logs=automation_logs,
+        active_rules=active_rules,
+        inactive_rules=inactive_rules,
+        logs=logs,
         title="Content Automation"
     )
 
 
-@content_creator_bp.route('/content-creator/automation/create', methods=['POST'])
+@content_creator_bp.route('/content-creator/automation/create', methods=['GET', 'POST'])
 def create_automation_rule():
     """Create a new automation rule"""
+    # If GET request, render the create form
+    if request.method == 'GET':
+        blogs = Blog.query.filter_by(active=True).all()
+        return render_template(
+            'content/edit_automation.html',
+            rule=None,
+            blogs=blogs,
+            title="Create Automation Rule"
+        )
+    
+    # If POST request, create a new rule
     try:
         # Get form data
         name = request.form.get('name', '')
@@ -602,3 +616,17 @@ def run_automation_rule(rule_id):
         flash(f'Error running automation rule: {str(e)}', 'danger')
     
     return redirect(url_for('content_creator.automation_dashboard'))
+
+
+@content_creator_bp.route('/api/blogs/<int:blog_id>/categories')
+def get_blog_categories(blog_id):
+    """API endpoint to get categories for a blog"""
+    blog = Blog.query.get_or_404(blog_id)
+    
+    # Get categories from the blog
+    categories = blog.get_categories()
+    
+    return jsonify({
+        'success': True,
+        'categories': categories
+    })
