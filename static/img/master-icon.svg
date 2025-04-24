@@ -6,47 +6,43 @@
             <stop stop-color="#4F8BFF" offset="0%"></stop>
             <stop stop-color="#7B68EE" offset="100%"></stop>
         </linearGradient>
-        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="eyeGradient">
-            <stop stop-color="#00FFFF" offset="0%"></stop>
-            <stop stop-color="#0088FF" offset="100%"></stop>
-        </linearGradient>
     </defs>
     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <!-- Background Circle -->
+        <!-- Main Circle Background -->
         <circle fill="url(#masterGradient)" cx="24" cy="24" r="24"></circle>
         
-        <!-- Robot Head -->
-        <rect x="12" y="10" width="24" height="22" rx="3" fill="#FFFFFF" fill-opacity="0.9"></rect>
-        
-        <!-- Robot Antenna -->
-        <rect x="22.5" y="5" width="3" height="5" fill="#FFFFFF"></rect>
-        <circle cx="24" cy="5" r="2" fill="#FFFFFF"></circle>
+        <!-- Robot Head with transparent fill -->
+        <path fill="#FFFFFF" opacity="0.9" d="M13,32 C11.343,32 10,30.657 10,29 L10,13 C10,11.343 11.343,10 13,10 L35,10 C36.657,10 38,11.343 38,13 L38,29 C38,30.657 36.657,32 35,32 L13,32 Z"></path>
         
         <!-- Robot Eyes -->
-        <circle cx="18" cy="18" r="3" fill="url(#eyeGradient)"></circle>
-        <circle cx="30" cy="18" r="3" fill="url(#eyeGradient)"></circle>
-        <circle cx="18" cy="18" r="1" fill="#FFFFFF" fill-opacity="0.7"></circle>
-        <circle cx="30" cy="18" r="1" fill="#FFFFFF" fill-opacity="0.7"></circle>
+        <circle fill="#00BFFF" cx="18" cy="17" r="4"></circle>
+        <circle fill="#00BFFF" cx="30" cy="17" r="4"></circle>
+        <circle fill="#FFFFFF" opacity="0.7" cx="18" cy="17" r="1.5"></circle>
+        <circle fill="#FFFFFF" opacity="0.7" cx="30" cy="17" r="1.5"></circle>
         
-        <!-- Robot Mouth/Control Panel -->
-        <rect x="16" y="24" width="16" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.5"></rect>
-        <rect x="18" y="25" width="2" height="2" rx="1" fill="url(#eyeGradient)"></rect>
-        <rect x="22" y="25" width="4" height="2" rx="1" fill="url(#eyeGradient)"></rect>
-        <rect x="28" y="25" width="2" height="2" rx="1" fill="url(#eyeGradient)"></rect>
+        <!-- Robot Antenna -->
+        <rect fill="#FFFFFF" x="22.5" y="5" width="3" height="5"></rect>
+        <circle fill="#FFFFFF" cx="24" cy="5" r="2"></circle>
         
-        <!-- Content/Document Indicators -->
-        <rect x="36" y="14" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="36" y="17" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="36" y="20" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="36" y="23" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
+        <!-- Robot Control Panel (Mouth) -->
+        <rect fill="#FFFFFF" opacity="0.5" x="16" y="24" width="16" height="4" rx="2"></rect>
+        <rect fill="#00BFFF" x="17" y="25" width="3" height="2" rx="1"></rect>
+        <rect fill="#00BFFF" x="22" y="25" width="4" height="2" rx="1"></rect>
+        <rect fill="#00BFFF" x="28" y="25" width="3" height="2" rx="1"></rect>
         
-        <rect x="6" y="14" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="6" y="17" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="6" y="20" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
-        <rect x="6" y="23" width="6" height="1" rx="0.5" fill="#FFFFFF"></rect>
+        <!-- Robot Ears/Signal Receivers -->
+        <rect fill="#FFFFFF" opacity="0.6" x="7" y="15" width="3" height="10" rx="1.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.6" x="38" y="15" width="3" height="10" rx="1.5"></rect>
         
-        <!-- Robot Ears/Connectors -->
-        <rect x="9" y="15" width="3" height="8" rx="1.5" fill="#FFFFFF" fill-opacity="0.6"></rect>
-        <rect x="36" y="15" width="3" height="8" rx="1.5" fill="#FFFFFF" fill-opacity="0.6"></rect>
+        <!-- Signal/Data Indicators (small lines) -->
+        <rect fill="#FFFFFF" opacity="0.8" x="6" y="14" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="6" y="17" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="6" y="20" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="6" y="23" width="5" height="1" rx="0.5"></rect>
+        
+        <rect fill="#FFFFFF" opacity="0.8" x="37" y="14" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="37" y="17" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="37" y="20" width="5" height="1" rx="0.5"></rect>
+        <rect fill="#FFFFFF" opacity="0.8" x="37" y="23" width="5" height="1" rx="0.5"></rect>
     </g>
 </svg>
