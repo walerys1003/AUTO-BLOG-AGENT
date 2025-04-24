@@ -291,8 +291,30 @@ def edit_article(content_id):
     # Get categories
     categories = Category.query.filter_by(blog_id=blog.id).all()
     
+    # Get schedule if exists
+    schedule = PublishingSchedule.query.filter_by(content_id=content.id).first()
+    
+    # Get metadata
+    try:
+        metadata = json.loads(content.metadata or '{}')
+        meta_title = metadata.get('meta_title', '')
+        meta_description = metadata.get('meta_description', '')
+    except:
+        metadata = {}
+        meta_title = ''
+        meta_description = ''
+    
+    # Get tags string
+    tags_str = ', '.join([tag.name for tag in content.tags]) if content.tags else ''
+    
+    # Add tags and other metadata to content object for template access
+    content.tags_str = tags_str
+    
     if request.method == 'POST':
         try:
+            # Get action type
+            action = request.form.get('action', 'save')
+            
             # Update content
             content.title = request.form.get('title')
             content.content = request.form.get('content')
@@ -324,12 +346,31 @@ def edit_article(content_id):
                     metadata = {}
                 
                 if meta_title:
-                    metadata['title'] = meta_title
+                    metadata['meta_title'] = meta_title
                 
                 if meta_description:
-                    metadata['description'] = meta_description
+                    metadata['meta_description'] = meta_description
                 
                 content.metadata = json.dumps(metadata)
+            
+            # Add edit history
+            try:
+                history = json.loads(content.edit_history or '[]')
+            except:
+                history = []
+            
+            # Add this edit to history
+            history.append({
+                'action': 'edit',
+                'timestamp': datetime.now().isoformat(),
+                'user': 'system',  # In future, replace with actual user
+                'changes': ['content', 'metadata']
+            })
+            
+            # Store history (keep only last 10 entries)
+            if len(history) > 10:
+                history = history[-10:]
+            content.edit_history = json.dumps(history)
             
             # Save changes
             db.session.commit()
@@ -349,7 +390,17 @@ def edit_article(content_id):
                 if not success:
                     flash(f'Warning: Post updated locally but failed to update on WordPress: {error}', 'warning')
             
+            # Handle different actions
+            if action == 'save_publish' and content.status != 'published':
+                # If user wants to save and publish, redirect to publish function
+                return redirect(url_for('publishing.publish_now', content_id=content.id))
+            
             flash('Article updated successfully', 'success')
+            
+            # If user clicked preview after save
+            if action == 'save_preview':
+                return redirect(url_for('publishing.preview_article', content_id=content.id))
+            
             return redirect(url_for('publishing.pending_articles'))
         
         except Exception as e:
@@ -364,14 +415,26 @@ def edit_article(content_id):
     except:
         metadata = {}
     
+    # Get edit history
+    try:
+        edit_history = json.loads(content.edit_history or '[]')
+    except:
+        edit_history = []
+    
+    # Current date for template
+    now = datetime.now()
+    
     # Render template
     return render_template(
-        'publishing/edit.html',
+        'publishing/edit_article.html',
         content=content,
         blog=blog,
         categories=categories,
-        metadata=metadata,
-        tags=', '.join(content.get_tags())
+        meta_title=metadata.get('meta_title', ''),
+        meta_description=metadata.get('meta_description', ''),
+        schedule=schedule,
+        edit_history=edit_history,
+        now=now
     )
 
 @publishing_bp.route('/publish-now/<int:content_id>', methods=['POST'])
@@ -541,6 +604,38 @@ def publication_history():
         to_date=to_date,
         pagination=pagination,
         success_data=success_data
+    )
+
+@publishing_bp.route('/preview/<int:content_id>')
+def preview_article(content_id):
+    """Preview article before publication"""
+    # Get content
+    content = ContentLog.query.get_or_404(content_id)
+    
+    # Get blog
+    blog = Blog.query.get_or_404(content.blog_id)
+    
+    # Get schedule if exists
+    schedule = PublishingSchedule.query.filter_by(content_id=content.id).first()
+    
+    # Get metadata
+    try:
+        metadata = json.loads(content.metadata or '{}')
+        meta_title = metadata.get('meta_title', '')
+        meta_description = metadata.get('meta_description', '')
+    except:
+        metadata = {}
+        meta_title = ''
+        meta_description = ''
+    
+    # Render template
+    return render_template(
+        'publishing/preview_article.html',
+        content=content,
+        blog=blog,
+        schedule=schedule,
+        meta_title=meta_title,
+        meta_description=meta_description
     )
 
 @publishing_bp.route('/workload')

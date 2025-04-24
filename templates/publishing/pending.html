@@ -131,15 +131,20 @@
                                         <i class="bi bi-pencil"></i> Edytuj
                                     </a>
                                     
+                                    <!-- Preview button for all statuses -->
+                                    <a href="{{ url_for('publishing.preview_article', content_id=article.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Podgląd
+                                    </a>
+                                    
                                     {% if article.status == 'pending_review' %}
                                     <button type="button" class="btn btn-sm btn-outline-success" onclick="confirmPublishNow({{ article.id }})">
-                                        <i class="bi bi-check-circle"></i> Zatwierdź
+                                        <i class="fas fa-check-circle"></i> Zatwierdź
                                     </button>
                                     {% endif %}
                                     
                                     {% if article.status == 'scheduled' %}
                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmCancel({{ article.id }})">
-                                        <i class="bi bi-x-circle"></i> Anuluj
+                                        <i class="fas fa-times-circle"></i> Anuluj
                                     </button>
                                     {% endif %}
                                 </div>
