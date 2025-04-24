@@ -1,17 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Oczekujące Publikacje{% endblock %}
+{% block title %}Oczekujące artykuły{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Oczekujące Publikacje</h1>
-        <div class="d-flex gap-2">
+        <h1 class="mb-0">Oczekujące artykuły</h1>
+        <div>
             <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Dashboard
-            </a>
-            <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-outline-primary">
-                <i class="bi bi-calendar3"></i> Harmonogram
             </a>
         </div>
     </div>
@@ -19,68 +16,85 @@
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white">
             <div class="d-flex justify-content-between align-items-center">
-                <ul class="nav nav-pills card-header-pills">
-                    <li class="nav-item">
-                        <a class="nav-link {% if status_filter == 'scheduled' %}active{% endif %}" 
-                           href="{{ url_for('publishing.pending_articles', status='scheduled', blog_id=selected_blog_id) }}">
-                            Zaplanowane
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if status_filter == 'draft' %}active{% endif %}" 
-                           href="{{ url_for('publishing.pending_articles', status='draft', blog_id=selected_blog_id) }}">
-                            Szkice
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if status_filter == 'pending_review' %}active{% endif %}" 
-                           href="{{ url_for('publishing.pending_articles', status='pending_review', blog_id=selected_blog_id) }}">
-                            Do zatwierdzenia
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if status_filter == 'failed' %}active{% endif %}" 
-                           href="{{ url_for('publishing.pending_articles', status='failed', blog_id=selected_blog_id) }}">
-                            Błędy
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if status_filter == 'all' %}active{% endif %}" 
-                           href="{{ url_for('publishing.pending_articles', status='all', blog_id=selected_blog_id) }}">
-                            Wszystkie
-                        </a>
-                    </li>
-                </ul>
-                
-                <div>
-                    <form id="blog-filter-form" class="d-flex gap-2" method="GET">
-                        <input type="hidden" name="status" value="{{ status_filter }}">
-                        <select name="blog_id" class="form-select form-select-sm">
-                            <option value="">Wszystkie blogi</option>
-                            {% for blog in blogs %}
-                            <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-primary">Filtruj</button>
-                    </form>
-                </div>
+                <h5 class="mb-0">Filtry</h5>
             </div>
         </div>
         <div class="card-body">
+            <form method="GET" id="filter-form" class="row g-3">
+                <div class="col-md-4">
+                    <label for="blog_id" class="form-label">Blog</label>
+                    <select class="form-select" id="blog_id" name="blog_id">
+                        <option value="">Wszystkie blogi</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Do zatwierdzenia</option>
+                        <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Zaplanowane</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Szkice</option>
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Wszystkie statusy</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtruj
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {% if status_filter == 'pending_review' %}
+                    Artykuły oczekujące na zatwierdzenie
+                    {% elif status_filter == 'scheduled' %}
+                    Artykuły zaplanowane
+                    {% elif status_filter == 'draft' %}
+                    Szkice artykułów
+                    {% else %}
+                    Wszystkie artykuły
+                    {% endif %}
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-success approve-all-btn" data-bs-toggle="modal" data-bs-target="#approveAllModal">
+                        <i class="bi bi-check2-all"></i> Zatwierdź wszystkie
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if articles %}
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <th style="width: 50px;">
+                                <div class="form-check">
+                                    <input class="form-check-input select-all" type="checkbox" id="selectAll">
+                                </div>
+                            </th>
                             <th>Tytuł</th>
                             <th>Blog</th>
                             <th>Status</th>
                             <th>Data publikacji</th>
-                            <th class="text-end">Akcje</th>
+                            <th>Akcje</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for article in articles %}
                         <tr>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input article-checkbox" type="checkbox" value="{{ article.id }}" id="article-{{ article.id }}">
+                                </div>
+                            </td>
                             <td>{{ article.title }}</td>
                             <td>{{ article.blog.name }}</td>
                             <td>
@@ -105,54 +119,66 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if article.published_at %}
-                                {{ article.published_at.strftime('%Y-%m-%d %H:%M') }}
-                                {% elif article.publish_date %}
+                                {% if article.publish_date %}
                                 {{ article.publish_date.strftime('%Y-%m-%d %H:%M') }}
                                 {% else %}
                                 -
                                 {% endif %}
                             </td>
-                            <td class="text-end">
+                            <td>
                                 <div class="btn-group">
-                                    <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}" 
-                                       class="btn btn-sm btn-outline-secondary">
-                                        Edytuj
+                                    <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i> Edytuj
                                     </a>
                                     
+                                    {% if article.status == 'pending_review' %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="confirmPublishNow({{ article.id }})">
+                                        <i class="bi bi-check-circle"></i> Zatwierdź
+                                    </button>
+                                    {% endif %}
+                                    
                                     {% if article.status == 'scheduled' %}
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmCancel({{ article.id }})">
-                                        Anuluj
-                                    </button>
-                                    {% endif %}
-                                    
-                                    {% if article.status == 'pending_review' or article.status == 'draft' %}
-                                    <button type="button" 
-                                            class="btn btn-sm btn-success"
-                                            onclick="confirmPublishNow({{ article.id }})">
-                                        Publikuj teraz
-                                    </button>
-                                    {% endif %}
-                                    
-                                    {% if article.status == 'failed' %}
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-primary"
-                                            onclick="confirmPublishNow({{ article.id }})">
-                                        Spróbuj ponownie
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmCancel({{ article.id }})">
+                                        <i class="bi bi-x-circle"></i> Anuluj
                                     </button>
                                     {% endif %}
                                 </div>
                             </td>
                         </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center">Brak artykułów</td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Brak artykułów</h4>
+                <p class="text-muted">
+                    {% if status_filter == 'pending_review' %}
+                    Nie ma artykułów oczekujących na zatwierdzenie.
+                    {% elif status_filter == 'scheduled' %}
+                    Nie ma zaplanowanych artykułów.
+                    {% elif status_filter == 'draft' %}
+                    Nie ma szkiców artykułów.
+                    {% else %}
+                    Nie znaleziono żadnych artykułów.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between">
+            <div>
+                <button class="btn btn-sm btn-outline-success approve-selected-btn" disabled>
+                    <i class="bi bi-check2"></i> Zatwierdź wybrane (<span id="selected-count">0</span>)
+                </button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary refresh-btn">
+                    <i class="bi bi-arrow-repeat"></i> Odśwież
+                </button>
             </div>
         </div>
     </div>
@@ -163,23 +189,23 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="publishNowModalLabel">Publikuj teraz</h5>
+                <h5 class="modal-title" id="publishNowModalLabel">Zatwierdź publikację</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Czy na pewno chcesz opublikować ten artykuł teraz?</p>
+                <p>Czy na pewno chcesz zatwierdzić i opublikować ten artykuł?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <form id="publish-now-form" method="POST">
-                    <button type="submit" class="btn btn-success">Publikuj</button>
+                <form id="publish-form" method="POST" action="">
+                    <button type="submit" class="btn btn-success">Zatwierdź</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Cancel Publication Confirmation Modal -->
+<!-- Cancel Publication Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -188,13 +214,34 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Czy na pewno chcesz anulować zaplanowaną publikację?</p>
+                <p>Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
+                <p class="text-muted">Artykuł zostanie przeniesiony do szkiców.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
-                <form id="cancel-form" method="POST">
+                <form id="cancel-form" method="POST" action="">
                     <button type="submit" class="btn btn-danger">Tak, anuluj</button>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve All Modal -->
+<div class="modal fade" id="approveAllModal" tabindex="-1" aria-labelledby="approveAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveAllModalLabel">Zatwierdź wszystkie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz zatwierdzić wszystkie oczekujące artykuły?</p>
+                <p class="text-muted">Ta operacja spowoduje publikację wszystkich artykułów oczekujących na zatwierdzenie.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-success">Zatwierdź wszystkie</button>
             </div>
         </div>
     </div>
@@ -204,25 +251,77 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
+        // Tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
         
-        // Publish now handling
+        // Refresh button
+        document.querySelector('.refresh-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+        
+        // Select all checkbox
+        const selectAll = document.getElementById('selectAll');
+        const articleCheckboxes = document.querySelectorAll('.article-checkbox');
+        const approveSelectedBtn = document.querySelector('.approve-selected-btn');
+        const selectedCountEl = document.getElementById('selected-count');
+        
+        selectAll.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            articleCheckboxes.forEach(function(checkbox) {
+                checkbox.checked = isChecked;
+            });
+            
+            updateSelectedCount();
+        });
+        
+        articleCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                updateSelectedCount();
+                
+                // Update select all state
+                if (!this.checked) {
+                    selectAll.checked = false;
+                } else {
+                    // Check if all checkboxes are selected
+                    const allChecked = Array.from(articleCheckboxes).every(function(cb) {
+                        return cb.checked;
+                    });
+                    
+                    selectAll.checked = allChecked;
+                }
+            });
+        });
+        
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('.article-checkbox:checked').length;
+            selectedCountEl.textContent = selectedCount;
+            
+            if (selectedCount > 0) {
+                approveSelectedBtn.removeAttribute('disabled');
+            } else {
+                approveSelectedBtn.setAttribute('disabled', 'disabled');
+            }
+        }
+        
+        // Confirm publish function
         window.confirmPublishNow = function(contentId) {
-            const modal = new bootstrap.Modal(document.getElementById('publishNowModal'));
-            const form = document.getElementById('publish-now-form');
+            const form = document.getElementById('publish-form');
             form.action = "{{ url_for('publishing.publish_now', content_id=0) }}".replace('0', contentId);
+            
+            const modal = new bootstrap.Modal(document.getElementById('publishNowModal'));
             modal.show();
         };
         
-        // Cancel publication handling
+        // Confirm cancel function
         window.confirmCancel = function(contentId) {
-            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
             const form = document.getElementById('cancel-form');
             form.action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('0', contentId);
+            
+            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
             modal.show();
         };
     });

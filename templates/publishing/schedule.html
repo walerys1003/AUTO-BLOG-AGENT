@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Harmonogram Publikacji{% endblock %}
+{% block title %}Harmonogram publikacji{% endblock %}
 
 {% block styles %}
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
@@ -8,44 +8,47 @@
     .fc-event {
         cursor: pointer;
     }
-    .calendar-container {
-        height: 650px;
+    .fc-toolbar-title {
+        font-size: 1.3rem !important;
     }
-    .automation-switch {
-        width: 60px;
+    .calendar-container {
+        height: 700px;
+    }
+    .blog-badge {
+        width: 12px;
+        height: 12px;
+        display: inline-block;
+        margin-right: 5px;
+        border-radius: 50%;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container my-4">
+<div class="container-fluid my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Harmonogram Publikacji</h1>
-        <div class="d-flex gap-2">
+        <h1 class="mb-0">Harmonogram publikacji</h1>
+        <div>
             <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Dashboard
-            </a>
-            <a href="{{ url_for('publishing.publishing_settings') }}" class="btn btn-outline-primary">
-                <i class="bi bi-gear"></i> Ustawienia
             </a>
         </div>
     </div>
     
-    <div class="row mb-4">
+    <div class="row">
         <div class="col-md-9">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Kalendarz publikacji</h5>
-                    <div class="d-flex gap-2">
-                        <form id="blog-filter-form" class="d-flex gap-2" method="GET">
-                            <select name="blog_id" class="form-select form-select-sm">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Kalendarz publikacji</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="blog-filter">
                                 <option value="">Wszystkie blogi</option>
                                 {% for blog in blogs %}
                                 <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="submit" class="btn btn-sm btn-primary">Filtruj</button>
-                        </form>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -53,66 +56,89 @@
                 </div>
             </div>
         </div>
+        
         <div class="col-md-3">
             <div class="card shadow-sm mb-4">
-                <div class="card-header">
+                <div class="card-header bg-white">
                     <h5 class="mb-0">Status automatyzacji</h5>
                 </div>
                 <div class="card-body">
-                    <div class="list-group">
+                    <ul class="list-group list-group-flush">
                         {% for blog in blogs %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">{{ blog.name }}</h6>
-                                <small class="text-muted">
-                                    {% if automation_status[blog.id]['active'] %}
-                                    <span class="text-success">
-                                        <i class="bi bi-check-circle-fill"></i> Aktywna
-                                    </span>
-                                    {% else %}
-                                    <span class="text-secondary">
-                                        <i class="bi bi-circle"></i> Nieaktywna
-                                    </span>
-                                    {% endif %}
-                                </small>
+                                <span style="background-color: {% if loop.index is divisibleby(5) %}#e63946{% elif loop.index is divisibleby(4) %}#457b9d{% elif loop.index is divisibleby(3) %}#2a9d8f{% elif loop.index is divisibleby(2) %}#f4a261{% else %}#a8dadc{% endif %};" class="blog-badge"></span>
+                                {{ blog.name }}
                             </div>
-                            <div class="form-check form-switch automation-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" 
-                                       id="automation-{{ blog.id }}" 
-                                       data-blog-id="{{ blog.id }}"
-                                       {% if automation_status[blog.id]['active'] %}checked{% endif %}
-                                       onchange="toggleAutomation({{ blog.id }}, this.checked)">
+                            <div>
+                                {% if automation_status.get(blog.id, {}).get('active', False) %}
+                                <span class="badge bg-success">Aktywna</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Nieaktywna</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-grid">
+                        <a href="{{ url_for('publishing.settings') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-gear-fill"></i> Zarządzaj automatyzacją
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informacje</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="mb-1 fw-bold">Status publikacji:</p>
+                        <div class="d-flex flex-column gap-2">
+                            <div>
+                                <span class="badge bg-info">Zaplanowany</span>
+                                <span class="text-muted small">Artykuł oczekuje na publikację</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-success">Opublikowany</span>
+                                <span class="text-muted small">Artykuł został opublikowany</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger">Błąd</span>
+                                <span class="text-muted small">Wystąpił problem</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning">Wymaga zatwierdzenia</span>
+                                <span class="text-muted small">Oczekuje na weryfikację</span>
                             </div>
                         </div>
-                        {% endfor %}
+                    </div>
+                    <div>
+                        <p class="mb-1 fw-bold">Wskazówki:</p>
+                        <ul class="small text-muted ps-3">
+                            <li>Przeciągnij artykuł, aby zmienić datę publikacji</li>
+                            <li>Kliknij na artykuł, aby zobaczyć szczegóły</li>
+                            <li>Możesz filtrować artykuły według blogu</li>
+                        </ul>
                     </div>
                 </div>
             </div>
             
             <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Legenda</h5>
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Akcje</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="me-2" style="width: 15px; height: 15px; background-color: #28a745; border-radius: 3px;"></div>
-                        <div>Opublikowane</div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="me-2" style="width: 15px; height: 15px; background-color: #17a2b8; border-radius: 3px;"></div>
-                        <div>Zaplanowane</div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="me-2" style="width: 15px; height: 15px; background-color: #6c757d; border-radius: 3px;"></div>
-                        <div>Szkic</div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="me-2" style="width: 15px; height: 15px; background-color: #dc3545; border-radius: 3px;"></div>
-                        <div>Błąd</div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="me-2" style="width: 15px; height: 15px; background-color: #ffc107; border-radius: 3px;"></div>
-                        <div>Oczekuje na zatwierdzenie</div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-hourglass-split"></i> Oczekujące artykuły
+                        </a>
+                        <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-clock-history"></i> Historia publikacji
+                        </a>
                     </div>
                 </div>
             </div>
@@ -120,7 +146,7 @@
     </div>
 </div>
 
-<!-- Event Details Modal -->
+<!-- Event Detail Modal -->
 <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -130,28 +156,57 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="event-title" class="form-label">Tytuł</label>
-                    <input type="text" class="form-control" id="event-title" readonly>
+                    <label class="form-label">Tytuł</label>
+                    <div id="event-title" class="form-control-plaintext fw-bold"></div>
                 </div>
                 <div class="mb-3">
-                    <label for="event-date" class="form-label">Data publikacji</label>
-                    <input type="date" class="form-control" id="event-date">
-                </div>
-                <div class="mb-3">
-                    <label for="event-time" class="form-label">Godzina publikacji</label>
-                    <input type="time" class="form-control" id="event-time">
+                    <label class="form-label">Blog</label>
+                    <div id="event-blog" class="form-control-plaintext"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Status</label>
                     <div id="event-status"></div>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Data publikacji</label>
+                    <input type="date" id="event-date" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Godzina publikacji</label>
+                    <input type="time" id="event-time" class="form-control">
+                </div>
             </div>
             <div class="modal-footer">
-                <input type="hidden" id="event-id">
-                <input type="hidden" id="content-id">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <a href="#" id="edit-content-btn" class="btn btn-primary">Edytuj treść</a>
-                <button type="button" class="btn btn-success" id="save-schedule-btn">Zapisz zmiany</button>
+                <button type="button" id="save-event" class="btn btn-primary">Zapisz zmiany</button>
+                <a href="#" id="edit-content-link" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Edytuj treść
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Automation Toggle Modal -->
+<div class="modal fade" id="automationModal" tabindex="-1" aria-labelledby="automationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="automationModalLabel">Zarządzanie automatyzacją</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy chcesz <span id="automation-action">włączyć</span> automatyzację dla bloga <span id="automation-blog-name" class="fw-bold"></span>?</p>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="automation-toggle">
+                    <label class="form-check-label" for="automation-toggle">
+                        <span id="automation-status">Włączona</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" id="save-automation" class="btn btn-primary">Zapisz</button>
             </div>
         </div>
     </div>
@@ -160,7 +215,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/pl.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Calendar events data
@@ -170,97 +225,115 @@
         const calendarEl = document.getElementById('calendar');
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
+            locale: 'pl',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
-            locale: 'pl',
             events: events,
-            eventClick: function(info) {
-                showEventModal(info.event);
-            },
-            businessHours: {
-                daysOfWeek: [1, 2, 3, 4, 5],
-                startTime: '09:00',
-                endTime: '17:00'
-            },
-            nowIndicator: true,
-            navLinks: true,
             editable: true,
-            dayMaxEvents: true,
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
+            eventClick: function(info) {
+                showEventDetails(info.event);
             },
             eventDrop: function(info) {
-                updateSchedule(
+                updateEventDate(
                     info.event.id, 
                     info.event.start.toISOString().split('T')[0],
-                    info.event.start.toTimeString().split(' ')[0].substring(0, 5)
+                    info.event.start.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
                 );
             }
         });
         
         calendar.render();
         
-        // Event Modal Handling
-        function showEventModal(event) {
-            const eventId = event.id;
+        // Blog filter
+        const blogFilter = document.getElementById('blog-filter');
+        blogFilter.addEventListener('change', function() {
+            const selectedBlogId = this.value;
+            window.location.href = "{{ url_for('publishing.publishing_schedule') }}" + (selectedBlogId ? "?blog_id=" + selectedBlogId : "");
+        });
+        
+        // Event details modal
+        const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+        let currentEvent = null;
+        
+        function showEventDetails(event) {
+            currentEvent = event;
             const title = event.title;
-            const start = event.start;
+            const blogId = event.extendedProps.blog_id;
             const contentId = event.extendedProps.content_id;
             const status = event.extendedProps.status;
+            const start = event.start;
             
-            document.getElementById('event-id').value = eventId;
-            document.getElementById('event-title').value = title;
-            document.getElementById('content-id').value = contentId;
+            // Find blog name
+            const blogName = findBlogName(blogId);
+            
+            // Set modal values
+            document.getElementById('event-title').textContent = title;
+            document.getElementById('event-blog').textContent = blogName;
             
             // Format date and time
             const date = start.toISOString().split('T')[0];
-            const time = start.toTimeString().split(' ')[0].substring(0, 5);
+            const time = start.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
             
             document.getElementById('event-date').value = date;
             document.getElementById('event-time').value = time;
             
             // Set status badge
+            const statusElement = document.getElementById('event-status');
             let statusHtml = '';
+            
             if (status === 'published') {
                 statusHtml = '<span class="badge bg-success">Opublikowany</span>';
             } else if (status === 'scheduled') {
                 statusHtml = '<span class="badge bg-info">Zaplanowany</span>';
-            } else if (status === 'draft') {
-                statusHtml = '<span class="badge bg-secondary">Szkic</span>';
             } else if (status === 'failed') {
                 statusHtml = '<span class="badge bg-danger">Błąd</span>';
             } else if (status === 'pending_review') {
                 statusHtml = '<span class="badge bg-warning">Oczekuje na zatwierdzenie</span>';
+            } else if (status === 'draft') {
+                statusHtml = '<span class="badge bg-secondary">Szkic</span>';
             } else {
-                statusHtml = `<span class="badge bg-dark">${status}</span>`;
+                statusHtml = '<span class="badge bg-dark">' + status + '</span>';
             }
-            document.getElementById('event-status').innerHTML = statusHtml;
             
-            // Set edit link
-            document.getElementById('edit-content-btn').href = `/publishing/edit/${contentId}`;
+            statusElement.innerHTML = statusHtml;
+            
+            // Update edit content link
+            document.getElementById('edit-content-link').href = "{{ url_for('publishing.edit_article', content_id=0) }}".replace('0', contentId);
             
             // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
-            modal.show();
+            eventModal.show();
         }
         
-        // Save schedule changes
-        document.getElementById('save-schedule-btn').addEventListener('click', function() {
-            const eventId = document.getElementById('event-id').value;
-            const date = document.getElementById('event-date').value;
-            const time = document.getElementById('event-time').value;
+        // Find blog name by ID
+        function findBlogName(blogId) {
+            const blogs = [
+                {% for blog in blogs %}
+                { id: {{ blog.id }}, name: "{{ blog.name }}" },
+                {% endfor %}
+            ];
             
-            updateSchedule(eventId, date, time);
+            const blog = blogs.find(b => b.id === parseInt(blogId));
+            return blog ? blog.name : 'Unknown';
+        }
+        
+        // Save event changes
+        document.getElementById('save-event').addEventListener('click', function() {
+            if (!currentEvent) return;
+            
+            const eventId = currentEvent.id;
+            const newDate = document.getElementById('event-date').value;
+            const newTime = document.getElementById('event-time').value;
+            
+            updateEventDate(eventId, newDate, newTime);
+            eventModal.hide();
         });
         
-        // AJAX function to update schedule
-        function updateSchedule(eventId, date, time) {
-            fetch('{{ url_for("publishing.update_schedule") }}', {
+        // Update event date via API
+        function updateEventDate(eventId, date, time) {
+            fetch("{{ url_for('publishing.update_schedule') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -274,91 +347,83 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Close modal if open
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-                    
-                    // Show success notification
-                    showNotification('Harmonogram został zaktualizowany', 'success');
-                    
-                    // Refresh calendar events
-                    const event = calendar.getEventById(eventId);
-                    if (event) {
-                        const newDate = new Date(`${date}T${time}`);
-                        event.setProp('start', newDate);
-                    }
+                    // Success - the server has updated the event
+                    // We don't need to update the calendar as the drag already updated the UI
                 } else {
-                    showNotification('Błąd: ' + data.message, 'danger');
+                    // Error - revert the change
+                    calendar.refetchEvents();
+                    alert('Error updating event: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Wystąpił błąd podczas aktualizacji harmonogramu', 'danger');
+                // Revert the change on error
+                calendar.refetchEvents();
+                alert('Error saving changes. Please try again.');
             });
         }
-    });
-    
-    // Toggle automation function
-    function toggleAutomation(blogId, status) {
-        fetch('{{ url_for("publishing.toggle_automation") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                blog_id: blogId,
-                status: status
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(`Automatyzacja ${status ? 'włączona' : 'wyłączona'}`, 'success');
-            } else {
-                showNotification('Błąd: ' + data.message, 'danger');
-                // Revert switch if failed
-                document.getElementById(`automation-${blogId}`).checked = !status;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Wystąpił błąd podczas zmiany statusu automatyzacji', 'danger');
-            // Revert switch if failed
-            document.getElementById(`automation-${blogId}`).checked = !status;
+        
+        // Automation toggle modal
+        const automationModal = new bootstrap.Modal(document.getElementById('automationModal'));
+        const automationToggle = document.getElementById('automation-toggle');
+        let currentBlogId = null;
+        
+        // Show automation modal when clicking on toggle
+        document.querySelectorAll('.automation-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const blogId = this.dataset.blogId;
+                const blogName = this.dataset.blogName;
+                const isActive = this.dataset.active === 'true';
+                
+                currentBlogId = blogId;
+                
+                document.getElementById('automation-blog-name').textContent = blogName;
+                document.getElementById('automation-action').textContent = isActive ? 'wyłączyć' : 'włączyć';
+                document.getElementById('automation-status').textContent = isActive ? 'Włączona' : 'Wyłączona';
+                automationToggle.checked = isActive;
+                
+                automationModal.show();
+            });
         });
-    }
-    
-    // Helper function to show notification
-    function showNotification(message, type) {
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${type} border-0`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
         
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        `;
+        // Update automation toggle text when changed
+        automationToggle.addEventListener('change', function() {
+            document.getElementById('automation-status').textContent = this.checked ? 'Włączona' : 'Wyłączona';
+            document.getElementById('automation-action').textContent = this.checked ? 'włączyć' : 'wyłączyć';
+        });
         
-        const toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            container.style.zIndex = '5';
-            document.body.appendChild(container);
-        }
-        
-        document.getElementById('toast-container').appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
-        bsToast.show();
-    }
+        // Save automation status
+        document.getElementById('save-automation').addEventListener('click', function() {
+            if (!currentBlogId) return;
+            
+            const isActive = automationToggle.checked;
+            
+            fetch("{{ url_for('publishing.toggle_automation') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    blog_id: currentBlogId,
+                    status: isActive
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the page to update the UI
+                    window.location.reload();
+                } else {
+                    alert('Error updating automation: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving changes. Please try again.');
+            });
+            
+            automationModal.hide();
+        });
+    });
 </script>
 {% endblock %}
