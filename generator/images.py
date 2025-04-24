@@ -3,10 +3,14 @@ import json
 import random
 import requests
 import os
+import base64
+import io
+from PIL import Image
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from config import Config
 import traceback
+from utils.openrouter.images import generate_image_prompts, enhance_image_metadata, generate_image_alt_text
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -146,18 +150,56 @@ def search_alternative_images(query: str, count: int = 1) -> List[Dict[str, Any]
             "source": "fallback"
         }]
 
-def get_featured_image_for_article(title: str, keywords: List[str]) -> Dict[str, Any]:
+def get_featured_image_for_article(title: str, keywords: List[str], content_snippet: str = "") -> Dict[str, Any]:
     """
-    Get a featured image for an article based on title and keywords
+    Get a featured image for an article based on title, keywords and content snippet
     
     Args:
         title: Article title
         keywords: Article keywords
+        content_snippet: Optional snippet of article content for context
         
     Returns:
         Dictionary with image data
     """
     try:
+        # First try to generate an optimized image prompt using AI
+        if content_snippet:
+            try:
+                # Generate AI-optimized image prompts for this article
+                image_prompts = generate_image_prompts(title, content_snippet, keywords, style="professional", count=1)
+                
+                if image_prompts and len(image_prompts) > 0:
+                    # Use the first prompt for searching
+                    ai_prompt = image_prompts[0]
+                    logger.info(f"Using AI-generated image prompt: {ai_prompt}")
+                    
+                    # Try to get an image using the AI-optimized prompt
+                    ai_images = search_unsplash_images(ai_prompt, count=1)
+                    
+                    if ai_images and len(ai_images) > 0:
+                        # Enhance metadata for better SEO
+                        ai_image = ai_images[0]
+                        
+                        # Generate better alt text
+                        alt_text = generate_image_alt_text(
+                            image_description=ai_prompt,
+                            article_context=f"{title}: {content_snippet[:100] if content_snippet else ''}"
+                        )
+                        
+                        # Update alt text with SEO-optimized version
+                        if alt_text:
+                            ai_image["alt_text"] = alt_text
+                            
+                        # Add original AI prompt for reference
+                        ai_image["ai_prompt"] = ai_prompt
+                        
+                        logger.info(f"Successfully found image using AI-optimized prompt")
+                        return ai_image
+            except Exception as ai_error:
+                logger.warning(f"Error using AI image optimization: {str(ai_error)}. Falling back to default method.")
+        
+        # Fallback to standard keyword-based approach
         # Build query from title and primary keywords
         query_parts = [title]
         
@@ -173,6 +215,21 @@ def get_featured_image_for_article(title: str, keywords: List[str]) -> Dict[str,
         images = search_unsplash_images(query, count=1)
         
         if images and len(images) > 0:
+            # Try to enhance alt text if we have content snippet
+            if content_snippet:
+                try:
+                    # Generate better alt text
+                    alt_text = generate_image_alt_text(
+                        image_description=query,
+                        article_context=f"{title}: {content_snippet[:100]}"
+                    )
+                    
+                    # Update alt text with SEO-optimized version
+                    if alt_text:
+                        images[0]["alt_text"] = alt_text
+                except Exception as alt_error:
+                    logger.warning(f"Error generating enhanced alt text: {str(alt_error)}")
+            
             return images[0]
         else:
             logger.warning(f"No featured image found for article: {title}")
@@ -183,13 +240,14 @@ def get_featured_image_for_article(title: str, keywords: List[str]) -> Dict[str,
         logger.error(traceback.format_exc())
         return {}
 
-def get_multiple_images_for_article(title: str, keywords: List[str], count: int = 3) -> List[Dict[str, Any]]:
+def get_multiple_images_for_article(title: str, keywords: List[str], content_snippet: str = "", count: int = 3) -> List[Dict[str, Any]]:
     """
-    Get multiple images for an article based on different keywords
+    Get multiple images for an article based on content and keywords
     
     Args:
         title: Article title
         keywords: Article keywords
+        content_snippet: Optional snippet of article content for context
         count: Number of images to retrieve
         
     Returns:
@@ -198,12 +256,45 @@ def get_multiple_images_for_article(title: str, keywords: List[str], count: int 
     try:
         images = []
         
-        # First, try to get a primary image based on the title
-        primary_image = get_featured_image_for_article(title, keywords)
+        # First, try to get a primary image based on the title and content
+        primary_image = get_featured_image_for_article(title, keywords, content_snippet)
         if primary_image:
             images.append(primary_image)
         
-        # If we need more images, try individual keywords
+        # If we have content snippet, try to get AI-suggested image locations
+        if content_snippet and len(images) < count:
+            try:
+                # Get suggestions for additional image locations/content
+                from utils.openrouter.images import suggest_image_locations
+                image_locations = suggest_image_locations(content_snippet)
+                
+                if image_locations and len(image_locations) > 0:
+                    # Use up to (count-1) suggested locations (keeping the featured image)
+                    for location in image_locations[:count-1]:
+                        if len(images) >= count:
+                            break
+                            
+                        # Get description from suggestion
+                        description = location.get("description", "")
+                        if not description:
+                            continue
+                            
+                        # Try to find an image matching this description
+                        desc_images = search_unsplash_images(description, count=1)
+                        if desc_images and len(desc_images) > 0:
+                            # Add caption from suggestion
+                            if location.get("caption"):
+                                desc_images[0]["caption"] = location.get("caption")
+                                
+                            # Add suggested location info
+                            desc_images[0]["suggested_location"] = location.get("location", "")
+                            
+                            # Add to our collection
+                            images.append(desc_images[0])
+            except Exception as suggest_error:
+                logger.warning(f"Error getting suggested image locations: {str(suggest_error)}")
+        
+        # If we still need more images, try individual keywords
         if len(images) < count and keywords:
             # Shuffle keywords for variety
             shuffled_keywords = keywords.copy()
@@ -227,6 +318,17 @@ def get_multiple_images_for_article(title: str, keywords: List[str], count: int 
                 # Search for an image with this keyword
                 keyword_images = search_unsplash_images(keyword, count=1)
                 if keyword_images and len(keyword_images) > 0:
+                    # Generate better alt text if possible
+                    try:
+                        alt_text = generate_image_alt_text(
+                            image_description=keyword,
+                            article_context=f"{title} - {keyword}"
+                        )
+                        if alt_text:
+                            keyword_images[0]["alt_text"] = alt_text
+                    except Exception:
+                        pass
+                    
                     images.append(keyword_images[0])
         
         # If we still need more images, use a generic search
@@ -235,6 +337,32 @@ def get_multiple_images_for_article(title: str, keywords: List[str], count: int 
             generic_query = title if not images else f"{title} {random.choice(keywords)}"
             generic_images = search_unsplash_images(generic_query, count=remaining)
             images.extend(generic_images)
+        
+        # Enhanced metadata for all images in collection
+        for i, image in enumerate(images):
+            try:
+                # Add additional SEO-friendly metadata
+                metadata = enhance_image_metadata(
+                    image_url=image.get("url", ""),
+                    article_title=title,
+                    article_keywords=keywords
+                )
+                
+                # Only update fields that don't already have good values
+                if metadata:
+                    # Only update alt_text if we don't have a good one already
+                    if metadata.get("alt_text") and (not image.get("alt_text") or image.get("alt_text") == image.get("id")):
+                        image["alt_text"] = metadata.get("alt_text")
+                        
+                    # Add caption if not already present
+                    if metadata.get("caption") and not image.get("caption"):
+                        image["caption"] = metadata.get("caption")
+                        
+                    # Add keywords for this specific image
+                    if metadata.get("keywords"):
+                        image["image_keywords"] = metadata.get("keywords")
+            except Exception as metadata_error:
+                logger.warning(f"Error enhancing image metadata: {str(metadata_error)}")
         
         return images[:count]
         

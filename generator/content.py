@@ -16,8 +16,8 @@ def generate_article_content(
     keywords: List[str], 
     category: str, 
     blog_name: str,
-    min_length: int = None,
-    max_length: int = None
+    min_length: int = 1200,
+    max_length: int = 1600
 ) -> Dict[str, Any]:
     """
     Generate a complete blog article with SEO optimization
