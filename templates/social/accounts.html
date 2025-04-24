@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Social Media Accounts - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <h1 class="mb-0">Social Media Accounts</h1>
+        <div>
+            <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Account
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Connected Social Media Accounts</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Account Name</th>
+                        <th>Blog</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in accounts %}
+                    <tr>
+                        <td>
+                            {% if account.platform.lower() == 'facebook' %}
+                            <i class="fab fa-facebook text-primary me-2"></i>
+                            {% elif account.platform.lower() == 'twitter' %}
+                            <i class="fab fa-twitter text-info me-2"></i>
+                            {% elif account.platform.lower() == 'linkedin' %}
+                            <i class="fab fa-linkedin text-primary me-2"></i>
+                            {% elif account.platform.lower() == 'instagram' %}
+                            <i class="fab fa-instagram text-danger me-2"></i>
+                            {% else %}
+                            <i class="fas fa-share-alt me-2"></i>
+                            {% endif %}
+                            {{ account.platform }}
+                        </td>
+                        <td>{{ account.name }}</td>
+                        <td>{{ account.blog.name }}</td>
+                        <td>
+                            {% if account.active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('social.edit_social_account', account_id=account.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSocialModal{{ account.id }}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteSocialModal{{ account.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Delete Social Account</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete the <strong>{{ account.platform }}</strong> account <strong>{{ account.name }}</strong>?</p>
+                                            <p class="text-danger">This action cannot be undone.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('social.delete_social_account', account_id=account.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Delete Account</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <p class="mb-0">No social media accounts configured yet.</p>
+                            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Add Your First Account
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Social Media Setup Guide</h5>
+            </div>
+            <div class="card-body">
+                <p>To automatically share your blog content on social media, you'll need to set up API access for each platform:</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="fab fa-facebook text-primary me-2"></i> Facebook
+                            </div>
+                            <div class="card-body">
+                                <ol>
+                                    <li>Create a <a href="https://developers.facebook.com/" target="_blank">Facebook Developer</a> account</li>
+                                    <li>Create a new app (Business type)</li>
+                                    <li>Add the "Facebook Login" product</li>
+                                    <li>Generate a Page Access Token for your Facebook page</li>
+                                    <li>Use your Page ID as the Account ID and the token as API Token when adding the account</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="fab fa-twitter text-info me-2"></i> Twitter
+                            </div>
+                            <div class="card-body">
+                                <ol>
+                                    <li>Create a <a href="https://developer.twitter.com/" target="_blank">Twitter Developer</a> account</li>
+                                    <li>Create a new project and app</li>
+                                    <li>Apply for Elevated access to use write capabilities</li>
+                                    <li>Generate API Key and API Secret</li>
+                                    <li>Set API Key as API Token and API Secret as API Secret when adding the account</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="fab fa-linkedin text-primary me-2"></i> LinkedIn
+                            </div>
+                            <div class="card-body">
+                                <ol>
+                                    <li>Create a <a href="https://www.linkedin.com/developers/" target="_blank">LinkedIn Developer</a> account</li>
+                                    <li>Create a new app</li>
+                                    <li>Request the "Share on LinkedIn" and "Sign In with LinkedIn" permissions</li>
+                                    <li>Generate a Client ID and Client Secret</li>
+                                    <li>Use Client ID as API Token, Client Secret as API Secret, and your LinkedIn user ID as Account ID</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="fab fa-instagram text-danger me-2"></i> Instagram
+                            </div>
+                            <div class="card-body">
+                                <ol>
+                                    <li>Create a <a href="https://developers.facebook.com/" target="_blank">Facebook Developer</a> account</li>
+                                    <li>Create a new app (Business type)</li>
+                                    <li>Add the "Instagram Graph API" product</li>
+                                    <li>Connect to your Instagram Business Account</li>
+                                    <li>Generate an access token for your Instagram account</li>
+                                    <li>Use your Instagram Business ID as Account ID and the token as API Token</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Each social media platform requires different API access setup. Refer to each platform's developer documentation for the most up-to-date instructions.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

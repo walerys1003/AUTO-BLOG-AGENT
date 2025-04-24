@@ -17,6 +17,7 @@ from routes_content_creator import content_creator_bp
 from routes_images import register_image_routes
 from newsletter import newsletter_bp
 from routes_publishing import publishing_bp
+from routes_social import social_bp
 import json
 from datetime import datetime, timedelta
 
@@ -924,3 +925,6 @@ def register_routes(app: Flask):
     
     # Register publishing blueprint
     app.register_blueprint(publishing_bp)
+    
+    # Register social media blueprint
+    app.register_blueprint(social_bp)

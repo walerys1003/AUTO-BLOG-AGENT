@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ platform|capitalize }} Post - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('social.social_dashboard') }}">Social Media</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('social.preview_posts', content_id=content.id) }}">Preview Posts</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Edit {{ platform|capitalize }} Post</li>
+            </ol>
+        </nav>
+        <h1 class="mb-4">
+            Edit 
+            {% if platform == 'facebook' %}
+            <i class="fab fa-facebook text-primary"></i> Facebook
+            {% elif platform == 'twitter' %}
+            <i class="fab fa-twitter text-info"></i> Twitter
+            {% elif platform == 'linkedin' %}
+            <i class="fab fa-linkedin text-primary"></i> LinkedIn
+            {% elif platform == 'instagram' %}
+            <i class="fab fa-instagram text-danger"></i> Instagram
+            {% endif %}
+            Post
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Edit Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Edit Post Content</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Post Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" required>{{ post_data.content }}</textarea>
+                        {% if platform == 'twitter' %}
+                        <div class="form-text">
+                            <span id="charCount">0</span>/280 characters
+                            {% if post_data.content|length > 280 %}
+                            <span class="text-danger ms-2">Exceeds Twitter's 280 character limit!</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hashtags" class="form-label">Hashtags</label>
+                        <input type="text" class="form-control" id="hashtags" name="hashtags" value="{{ post_data.hashtags|join(', ') }}">
+                        <div class="form-text">Comma-separated list of hashtags without the # symbol</div>
+                    </div>
+                    
+                    <!-- Platform-specific guidance -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                {% if platform == 'facebook' %}
+                                <i class="fab fa-facebook text-primary me-2"></i> Facebook Best Practices
+                                {% elif platform == 'twitter' %}
+                                <i class="fab fa-twitter text-info me-2"></i> Twitter Best Practices
+                                {% elif platform == 'linkedin' %}
+                                <i class="fab fa-linkedin text-primary me-2"></i> LinkedIn Best Practices
+                                {% elif platform == 'instagram' %}
+                                <i class="fab fa-instagram text-danger me-2"></i> Instagram Best Practices
+                                {% endif %}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                {% if platform == 'facebook' %}
+                                <li>Keep posts between 40-80 characters for optimal engagement</li>
+                                <li>Ask a question to encourage comments</li>
+                                <li>1-2 hashtags is optimal for Facebook</li>
+                                <li>Include a clear call to action</li>
+                                {% elif platform == 'twitter' %}
+                                <li>Keep tweets under 280 characters</li>
+                                <li>Use 1-2 relevant hashtags for better reach</li>
+                                <li>Include a clear call to action</li>
+                                <li>Use emojis sparingly to add personality</li>
+                                {% elif platform == 'linkedin' %}
+                                <li>Professional tone works best for LinkedIn</li>
+                                <li>Break content into short paragraphs for readability</li>
+                                <li>Use 3-5 industry-relevant hashtags</li>
+                                <li>Ask thoughtful questions to encourage professional discussion</li>
+                                {% elif platform == 'instagram' %}
+                                <li>Instagram has no character limit, but captions are truncated after 125 characters</li>
+                                <li>Use up to 30 hashtags for maximum discovery</li>
+                                <li>Include a call to action like "Click the link in bio"</li>
+                                <li>Use emojis to make your caption more engaging</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('social.preview_posts', content_id=content.id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                        <form action="{{ url_for('social.regenerate_post', content_id=content.id, platform=platform) }}" method="post">
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="fas fa-sync-alt me-1"></i> Regenerate
+                            </button>
+                        </form>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preview -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Live Preview</h5>
+            </div>
+            <div class="card-body">
+                {% if platform == 'facebook' %}
+                <div class="facebook-preview mb-3">
+                    <div class="fb-header mb-2">
+                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="fb-profile-img" alt="Profile">
+                        <div>
+                            <div class="fb-page-name">{{ content.blog.name }}</div>
+                            <div class="fb-post-time">Just now</div>
+                        </div>
+                    </div>
+                    <div class="fb-content" id="fb-content-preview">
+                        {{ post_data.content }}
+                        
+                        {% if post_data.hashtags %}
+                        <p class="text-primary" id="fb-hashtags-preview">
+                            {% for tag in post_data.hashtags %}
+                            #{{ tag }} 
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if content.get_featured_image() %}
+                    <div class="fb-image">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="fb-link-preview">
+                        <a href="{{ content.url }}" target="_blank" class="fb-link">
+                            <div class="fb-link-title">{{ content.title }}</div>
+                            <div class="fb-link-desc">{{ content.excerpt|truncate(100) }}</div>
+                            <div class="fb-link-domain">{{ content.url|replace('https://', '')|replace('http://', '')|split('/')|first }}</div>
+                        </a>
+                    </div>
+                </div>
+                {% elif platform == 'twitter' %}
+                <div class="twitter-preview mb-3">
+                    <div class="tweet-header mb-2">
+                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="tweet-profile-img" alt="Profile">
+                        <div>
+                            <div class="tweet-name">{{ content.blog.name }}</div>
+                            <div class="tweet-handle">@{{ content.blog.name|lower|replace(' ', '') }}</div>
+                        </div>
+                    </div>
+                    <div class="tweet-content" id="tweet-content-preview">
+                        {{ post_data.content }}
+                        
+                        {% if post_data.hashtags %}
+                        <p class="text-info" id="tweet-hashtags-preview">
+                            {% for tag in post_data.hashtags %}
+                            #{{ tag }} 
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                        
+                        <a href="{{ content.url }}" class="tweet-link" target="_blank">{{ content.url }}</a>
+                    </div>
+                    
+                    {% if content.get_featured_image() %}
+                    <div class="tweet-image mt-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid rounded">
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div id="twitter-warning" class="alert alert-warning {% if post_data.content|length <= 280 %}d-none{% endif %}" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> Tweet exceeds 280 character limit (<span id="charCount2">{{ post_data.content|length }}</span> characters).
+                </div>
+                {% elif platform == 'linkedin' %}
+                <div class="linkedin-preview mb-3">
+                    <div class="li-header mb-2">
+                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="li-profile-img" alt="Profile">
+                        <div>
+                            <div class="li-name">{{ content.blog.name }}</div>
+                            <div class="li-company-info">Company • {{ content.created_at.strftime('%d %b') }}</div>
+                        </div>
+                    </div>
+                    <div class="li-content" id="li-content-preview">
+                        {{ post_data.content|nl2br }}
+                        
+                        {% if post_data.hashtags %}
+                        <p class="text-primary" id="li-hashtags-preview">
+                            {% for tag in post_data.hashtags %}
+                            #{{ tag }} 
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if content.get_featured_image() %}
+                    <div class="li-image mt-2">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="li-link-preview mt-2">
+                        <a href="{{ content.url }}" target="_blank" class="li-link">
+                            <div>
+                                {% if content.get_featured_image() %}
+                                <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="li-link-img">
+                                {% endif %}
+                                <div class="li-link-content">
+                                    <div class="li-link-title">{{ content.title }}</div>
+                                    <div class="li-link-desc">{{ content.excerpt|truncate(100) }}</div>
+                                    <div class="li-link-domain">{{ content.url|replace('https://', '')|replace('http://', '')|split('/')|first }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% elif platform == 'instagram' %}
+                <div class="instagram-preview mb-3">
+                    <div class="ig-header mb-2">
+                        <img src="{{ url_for('static', filename='img/default-profile.png') }}" class="ig-profile-img" alt="Profile">
+                        <div class="ig-username">{{ content.blog.name|lower|replace(' ', '') }}</div>
+                    </div>
+                    
+                    {% if content.get_featured_image() %}
+                    <div class="ig-image">
+                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.get_featured_image().alt_text }}" class="img-fluid">
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Instagram requires an image.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="ig-caption mt-2">
+                        <div class="ig-username-caption">{{ content.blog.name|lower|replace(' ', '') }}</div>
+                        <p id="ig-content-preview">{{ post_data.content }}</p>
+                        
+                        {% if post_data.hashtags %}
+                        <p class="text-primary" id="ig-hashtags-preview">
+                            {% for tag in post_data.hashtags %}
+                            #{{ tag }} 
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="ig-link">
+                            <span class="text-muted">Link in bio:</span> {{ content.url|replace('https://', '')|replace('http://', '')|truncate(30) }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Article Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Title:</strong> {{ content.title }}</p>
+                        <p class="mb-2"><strong>URL:</strong> <a href="{{ content.url }}" target="_blank">{{ content.url }}</a></p>
+                        <p class="mb-0"><strong>Excerpt:</strong> {{ content.excerpt|truncate(100) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Social media preview styles */
+.facebook-preview, .twitter-preview, .linkedin-preview, .instagram-preview {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    background-color: #1e1e1e;
+}
+
+/* Facebook preview */
+.fb-header, .tweet-header, .li-header, .ig-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.fb-profile-img, .tweet-profile-img, .li-profile-img, .ig-profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.fb-page-name, .tweet-name, .li-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.fb-post-time, .tweet-handle, .li-company-info {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.fb-content, .tweet-content, .li-content, .ig-caption {
+    margin-bottom: 10px;
+    white-space: pre-line;
+}
+
+.fb-image img, .tweet-image img, .li-image img, .ig-image img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.fb-link-preview {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fb-link-preview a {
+    text-decoration: none;
+}
+
+.fb-link-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #eee;
+    padding: 10px 10px 5px 10px;
+}
+
+.fb-link-desc {
+    font-size: 0.8rem;
+    color: #bbb;
+    padding: 0 10px 5px 10px;
+}
+
+.fb-link-domain {
+    font-size: 0.7rem;
+    color: #999;
+    padding: 0 10px 10px 10px;
+}
+
+/* Twitter preview */
+.tweet-handle {
+    margin-top: -3px;
+}
+
+.tweet-link {
+    color: #1da1f2;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+/* LinkedIn preview */
+.li-link-preview {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.li-link {
+    text-decoration: none;
+}
+
+.li-link-content {
+    padding: 10px;
+}
+
+.li-link-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #eee;
+}
+
+.li-link-desc {
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-top: 5px;
+}
+
+.li-link-domain {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* Instagram preview */
+.ig-username {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.ig-username-caption {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.ig-link {
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTextarea = document.getElementById('content');
+    const hashtagsInput = document.getElementById('hashtags');
+    
+    // Set initial character count for Twitter
+    if (contentTextarea && '{{ platform }}' === 'twitter') {
+        const charCount = document.getElementById('charCount');
+        const charCount2 = document.getElementById('charCount2');
+        const twitterWarning = document.getElementById('twitter-warning');
+        
+        // Initial count
+        const contentLength = contentTextarea.value.length;
+        charCount.textContent = contentLength;
+        charCount2.textContent = contentLength;
+        
+        // Update on input
+        contentTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length;
+            charCount2.textContent = length;
+            
+            // Show/hide warning if exceeds 280 characters
+            if (length > 280) {
+                twitterWarning.classList.remove('d-none');
+            } else {
+                twitterWarning.classList.add('d-none');
+            }
+        });
+    }
+    
+    // Live preview
+    if (contentTextarea) {
+        // Platform-specific content preview elements
+        const previewElements = {
+            'facebook': document.getElementById('fb-content-preview'),
+            'twitter': document.getElementById('tweet-content-preview'),
+            'linkedin': document.getElementById('li-content-preview'),
+            'instagram': document.getElementById('ig-content-preview')
+        };
+        
+        const hashtagPreviewElements = {
+            'facebook': document.getElementById('fb-hashtags-preview'),
+            'twitter': document.getElementById('tweet-hashtags-preview'),
+            'linkedin': document.getElementById('li-hashtags-preview'),
+            'instagram': document.getElementById('ig-hashtags-preview')
+        };
+        
+        // Update content preview
+        contentTextarea.addEventListener('input', function() {
+            const platform = '{{ platform }}';
+            const previewElement = previewElements[platform];
+            
+            if (previewElement) {
+                previewElement.textContent = this.value;
+            }
+        });
+        
+        // Update hashtags preview
+        if (hashtagsInput) {
+            hashtagsInput.addEventListener('input', function() {
+                const platform = '{{ platform }}';
+                const hashtagPreviewElement = hashtagPreviewElements[platform];
+                
+                if (hashtagPreviewElement) {
+                    // Parse hashtags from comma-separated list
+                    const hashtags = this.value.split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag.length > 0)
+                        .map(tag => `#${tag}`)
+                        .join(' ');
+                    
+                    hashtagPreviewElement.textContent = hashtags;
+                    
+                    // Hide if no hashtags
+                    if (!hashtags) {
+                        hashtagPreviewElement.style.display = 'none';
+                    } else {
+                        hashtagPreviewElement.style.display = 'block';
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
