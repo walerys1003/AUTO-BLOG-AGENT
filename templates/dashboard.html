@@ -51,7 +51,7 @@
 
 <!-- Analytics Summary -->
 <div class="row mb-4">
-    <div class="col">
+    <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Analytics Overview</h5>
@@ -72,6 +72,30 @@
                     <div class="col-md-4 text-center">
                         <h6 class="text-muted">Engagement Rate</h6>
                         <h3>{{ stats.engagement_rate|default(0)|round(1) }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Newsletter Summary -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Newsletter Management</h5>
+                <a href="{{ url_for('newsletter.dashboard') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-envelope me-1"></i> Manage Newsletters
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 text-center mb-3 mb-md-0">
+                        <h6 class="text-muted">Active Subscribers</h6>
+                        <h3>{{ stats.subscribers|default(0)|int }}</h3>
+                    </div>
+                    <div class="col-md-6 text-center border-start">
+                        <h6 class="text-muted">Recent Campaigns</h6>
+                        <h3>{{ stats.newsletters|default(0)|int }}</h3>
                     </div>
                 </div>
             </div>

@@ -12,7 +12,7 @@ from utils.seo.analyzer import seo_analyzer
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
-from routes_newsletter import register_newsletter_routes
+from newsletter import newsletter_bp
 import json
 from datetime import datetime, timedelta
 
@@ -42,6 +42,25 @@ def register_routes(app: Flask):
             'total_posts': ContentLog.query.filter_by(status='published').count(),
             'pending_topics': ArticleTopic.query.filter_by(status='pending').count()
         }
+        
+        # Add newsletter stats if available
+        try:
+            from models import Subscriber, Newsletter
+            from datetime import datetime, timedelta
+            
+            # Active subscribers
+            stats['subscribers'] = Subscriber.query.filter_by(status='active').count()
+            
+            # Recent newsletters - last 30 days
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            stats['newsletters'] = Newsletter.query.filter(
+                Newsletter.status == 'sent',
+                Newsletter.sent_at >= thirty_days_ago
+            ).count()
+        except Exception as e:
+            logger.error(f"Error fetching newsletter stats: {str(e)}")
+            stats['subscribers'] = 0
+            stats['newsletters'] = 0
         
         # Get recent posts
         recent_posts = ContentLog.query.filter_by(status='published').order_by(ContentLog.published_at.desc()).limit(10).all()
@@ -887,5 +906,5 @@ def register_routes(app: Flask):
     # Register analytics routes
     register_analytics_routes(app)
     
-    # Register newsletter routes
-    register_newsletter_routes(app)
+    # Register newsletter blueprint
+    app.register_blueprint(newsletter_bp)

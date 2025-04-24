@@ -15,11 +15,11 @@ from models import Blog, Newsletter, Subscriber, NewsletterConfig
 from utils.newsletter.generator import NewsletterGenerator
 from utils.newsletter.distributor import NewsletterDistributor, create_weekly_newsletter_for_blog
 
-# Create blueprint
-newsletter_bp = Blueprint('newsletter', __name__, url_prefix='/newsletter')
-
 def register_newsletter_routes(app):
     """Register newsletter routes with the Flask app"""
+    
+    # Create blueprint
+    newsletter_bp = Blueprint('newsletter', __name__, url_prefix='/newsletter')
     
     app.register_blueprint(newsletter_bp)
     
