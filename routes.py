@@ -457,6 +457,96 @@ def register_routes(app: Flask):
             'timestamp': datetime.utcnow().isoformat()
         })
     
+    @app.route('/openrouter')
+    def openrouter_config():
+        """OpenRouter configuration page"""
+        from utils.openrouter import openrouter
+        from config import Config
+        
+        models = []
+        openrouter_api_key = Config.OPENROUTER_API_KEY
+        
+        # Only fetch models if we have an API key
+        if openrouter_api_key:
+            try:
+                models = openrouter.get_available_models()
+                
+                # Add some additional information for the UI
+                for model in models:
+                    model['provider'] = model.get('id', '').split('/')[0] if '/' in model.get('id', '') else 'Unknown'
+                    model['vision'] = 'vision' in model.get('capabilities', [])
+                    model['json_output'] = 'json' in model.get('capabilities', [])
+            except Exception as e:
+                logger.error(f"Error fetching OpenRouter models: {str(e)}")
+                flash('Error fetching models from OpenRouter API', 'danger')
+        
+        return render_template(
+            'openrouter.html',
+            models=models,
+            openrouter_api_key=openrouter_api_key,
+            default_topic_model=Config.DEFAULT_TOPIC_MODEL,
+            default_content_model=Config.DEFAULT_CONTENT_MODEL,
+            default_social_model=Config.DEFAULT_SOCIAL_MODEL
+        )
+    
+    @app.route('/openrouter/set_model/<purpose>/<path:model_id>')
+    def set_model(purpose, model_id):
+        """Set a model for a specific purpose"""
+        # This would normally update environment variables or database settings
+        # For now, we'll store in session and show a message that this would modify the env in prod
+        
+        model_purposes = {
+            'topic': 'Topic Generation',
+            'content': 'Content Creation',
+            'social': 'Social Media'
+        }
+        
+        if purpose not in model_purposes:
+            flash('Invalid model purpose', 'danger')
+        else:
+            session[f'DEFAULT_{purpose.upper()}_MODEL'] = model_id
+            flash(f'{model_purposes[purpose]} model set to {model_id}', 'success')
+            flash('Note: In production, this would update your environment variables.', 'info')
+        
+        return redirect(url_for('openrouter_config'))
+    
+    @app.route('/api/test_openrouter', methods=['POST'])
+    def test_openrouter():
+        """Test OpenRouter with a model and prompt"""
+        import time
+        from utils.openrouter import openrouter
+        
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        model = data.get('model')
+        prompt = data.get('prompt')
+        temperature = data.get('temperature', 0.7)
+        
+        if not model or not prompt:
+            return jsonify({"error": "Model and prompt are required"}), 400
+        
+        try:
+            start_time = time.time()
+            response = openrouter.generate_completion(
+                prompt=prompt,
+                model=model,
+                temperature=temperature
+            )
+            end_time = time.time()
+            
+            time_taken = end_time - start_time
+            
+            return jsonify({
+                "model": model,
+                "content": response,
+                "time_taken": time_taken
+            })
+        except Exception as e:
+            logger.error(f"Error testing OpenRouter: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+    
     # Error handlers
     @app.errorhandler(404)
     def page_not_found(e):

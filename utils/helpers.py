@@ -15,7 +15,8 @@ def get_ai_response(
     model: Optional[str] = None,
     temperature: float = 0.7,
     max_tokens: Optional[int] = None,
-    response_format: Optional[Dict[str, Any]] = None
+    response_format: Optional[Dict[str, Any]] = None,
+    system_prompt: Optional[str] = None
 ) -> Union[str, Dict[str, Any], None]:
     """
     Get AI-generated response using OpenRouter or fallback providers
@@ -26,6 +27,7 @@ def get_ai_response(
         temperature: Creativity parameter (0.0-1.0)
         max_tokens: Maximum tokens to generate
         response_format: Format specification for JSON responses
+        system_prompt: Optional system prompt for context
         
     Returns:
         Generated text or parsed JSON (if response_format is specified)
@@ -41,7 +43,8 @@ def get_ai_response(
                 model=model,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                response_format=response_format
+                response_format=response_format,
+                system_prompt=system_prompt
             )
             
             if response:
@@ -51,8 +54,14 @@ def get_ai_response(
         
         # Fallback to direct provider
         if "anthropic" in model.lower() and Config.ANTHROPIC_API_KEY:
+            # For Anthropic, if system prompt was provided, prepend to user prompt
+            if system_prompt:
+                enhanced_prompt = f"{system_prompt}\n\n{prompt}"
+            else:
+                enhanced_prompt = prompt
+                
             response = get_anthropic_response(
-                prompt=prompt, 
+                prompt=enhanced_prompt, 
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=response_format
@@ -60,9 +69,17 @@ def get_ai_response(
             if response:
                 return response
         
-        elif "openai" in model.lower() or "gpt" in model.lower() and Config.OPENAI_API_KEY:
+        elif ("openai" in model.lower() or "gpt" in model.lower()) and Config.OPENAI_API_KEY:
+            # For OpenAI, modify the call to include system prompt
+            # Note: This would require updating get_openai_response to handle system_prompt
+            # For simplicity, we're using a workaround here
+            if system_prompt:
+                enhanced_prompt = f"System instruction: {system_prompt}\n\nUser request: {prompt}"
+            else:
+                enhanced_prompt = prompt
+                
             response = get_openai_response(
-                prompt=prompt,
+                prompt=enhanced_prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=response_format
@@ -83,7 +100,8 @@ def get_openrouter_response(
     model: str,
     temperature: float = 0.7,
     max_tokens: Optional[int] = None,
-    response_format: Optional[Dict[str, Any]] = None
+    response_format: Optional[Dict[str, Any]] = None,
+    system_prompt: Optional[str] = None
 ) -> Union[str, Dict[str, Any], None]:
     """
     Get AI-generated response from OpenRouter
@@ -94,70 +112,23 @@ def get_openrouter_response(
         temperature: Creativity parameter (0.0-1.0)
         max_tokens: Maximum tokens to generate
         response_format: Format specification for JSON responses
+        system_prompt: Optional system prompt for context
         
     Returns:
         Generated text or parsed JSON (if response_format is specified)
     """
+    # Import here to avoid circular imports
+    from utils.openrouter import get_openrouter_response as openrouter_response
+    
     try:
-        api_key = Config.OPENROUTER_API_KEY
-        if not api_key:
-            logger.error("OpenRouter API key not found")
-            return None
-        
-        # OpenRouter endpoint
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        
-        # Prepare headers
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://blogautomationagent.com"  # Replace with your domain
-        }
-        
-        # Prepare payload
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": temperature
-        }
-        
-        # Add max tokens if specified
-        if max_tokens:
-            payload["max_tokens"] = max_tokens
-        
-        # Add response format if specified
-        if response_format:
-            payload["response_format"] = response_format
-        
-        # Make API request
-        response = requests.post(url, headers=headers, json=payload)
-        
-        if response.status_code == 200:
-            data = response.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
-            # If content is JSON and response_format was specified, parse it
-            if response_format and content:
-                try:
-                    return json.loads(content)
-                except json.JSONDecodeError:
-                    # If it fails to parse as JSON but we expected JSON, try to extract JSON
-                    json_match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL)
-                    if json_match:
-                        try:
-                            return json.loads(json_match.group(1))
-                        except:
-                            pass
-                    
-                    logger.warning("Failed to parse JSON response")
-                    return content
-            
-            return content
-        else:
-            logger.error(f"OpenRouter API error: {response.status_code}, {response.text}")
-            return None
+        return openrouter_response(
+            prompt=prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            system_prompt=system_prompt
+        )
             
     except Exception as e:
         logger.error(f"Error with OpenRouter: {str(e)}")
