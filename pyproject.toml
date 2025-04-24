@@ -21,6 +21,7 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "requests>=2.32.3",
     "schedule>=1.2.2",
+    "sendgrid>=6.11.0",
     "sqlalchemy>=2.0.40",
     "trafilatura>=2.0.0",
 ]

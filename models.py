@@ -220,3 +220,105 @@ class AnalyticsConfig(db.Model):
     
     def __repr__(self):
         return f"<AnalyticsConfig {self.blog.name}>"
+
+class Subscriber(db.Model):
+    """Model for newsletter subscribers"""
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    first_name = db.Column(db.String(100), nullable=True)
+    last_name = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(20), default='active')  # active, unsubscribed, bounced
+    preferences = db.Column(db.Text, nullable=True)  # JSON string of preferences
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_activity = db.Column(db.DateTime, nullable=True)
+    
+    # Foreign key to blog if relevant
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)
+    blog = db.relationship('Blog', backref=db.backref('subscribers', lazy=True))
+    
+    def __repr__(self):
+        return f"<Subscriber {self.email}>"
+    
+    def get_preferences(self):
+        """Returns preferences as a Python dict"""
+        if not self.preferences:
+            return {}
+        try:
+            return json.loads(self.preferences)
+        except Exception:
+            return {}
+    
+    def set_preferences(self, preferences_dict):
+        """Sets preferences from a Python dict"""
+        self.preferences = json.dumps(preferences_dict)
+
+class Newsletter(db.Model):
+    """Model for newsletter campaigns"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(255), nullable=False)
+    content_html = db.Column(db.Text, nullable=False)
+    content_text = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='draft')  # draft, scheduled, sent, cancelled
+    scheduled_for = db.Column(db.DateTime, nullable=True)
+    sent_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Campaign metrics
+    recipients_count = db.Column(db.Integer, default=0)
+    open_count = db.Column(db.Integer, default=0)
+    click_count = db.Column(db.Integer, default=0)
+    bounce_count = db.Column(db.Integer, default=0)
+    unsubscribe_count = db.Column(db.Integer, default=0)
+    
+    # Foreign key to blog if relevant
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=True)
+    blog = db.relationship('Blog', backref=db.backref('newsletters', lazy=True))
+    
+    def __repr__(self):
+        return f"<Newsletter {self.title}>"
+
+class NewsletterConfig(db.Model):
+    """Model for newsletter configuration settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False, unique=True)
+    enabled = db.Column(db.Boolean, default=False)
+    frequency = db.Column(db.String(20), default='weekly')  # daily, weekly, monthly
+    send_day = db.Column(db.Integer, default=1)  # 0-6 for weekly (Monday=0), 1-31 for monthly
+    send_time = db.Column(db.String(5), default='10:00')  # HH:MM format
+    template_id = db.Column(db.String(100), nullable=True)  # EmailOctopus template ID if used
+    from_name = db.Column(db.String(100), nullable=True)
+    from_email = db.Column(db.String(255), nullable=True)
+    reply_to = db.Column(db.String(255), nullable=True)
+    
+    # API keys and credentials
+    email_octopus_api_key = db.Column(db.String(255), nullable=True)
+    email_octopus_list_id = db.Column(db.String(255), nullable=True)
+    aws_ses_region = db.Column(db.String(50), default='us-east-1')
+    
+    # Advanced settings as JSON
+    settings = db.Column(db.Text, nullable=True)  # JSON string of additional settings
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Define relationship with Blog
+    blog = db.relationship('Blog', backref=db.backref('newsletter_config', uselist=False))
+    
+    def __repr__(self):
+        return f"<NewsletterConfig {self.blog.name}>"
+    
+    def get_settings(self):
+        """Returns settings as a Python dict"""
+        if not self.settings:
+            return {}
+        try:
+            return json.loads(self.settings)
+        except Exception:
+            return {}
+    
+    def set_settings(self, settings_dict):
+        """Sets settings from a Python dict"""
+        self.settings = json.dumps(settings_dict)
