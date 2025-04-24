@@ -7,6 +7,9 @@ from generator.seo import generate_article_topics
 from generator.content import generate_article_content
 from wordpress.publisher import publish_article, get_optimal_publish_time
 from social.autopost import post_article_to_social_media
+from utils.seo.analyzer import seo_analyzer
+from utils.seo.optimizer import seo_optimizer
+from utils.writing.assistant import writing_assistant
 import json
 from datetime import datetime, timedelta
 

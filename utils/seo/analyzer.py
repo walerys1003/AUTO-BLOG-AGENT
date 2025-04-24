@@ -106,8 +106,8 @@ class SEOAnalyzer:
             }
             
             # Analyze links
-            internal_links = len(soup.find_all('a', href=lambda href: href and not href.startswith(('http', 'https', '//'))))
-            external_links = len(soup.find_all('a', href=lambda href: href and href.startswith(('http', 'https', '//'))))
+            internal_links = len(soup.find_all('a', href=lambda href: isinstance(href, str) and not href.startswith(('http', 'https', '//'))))
+            external_links = len(soup.find_all('a', href=lambda href: isinstance(href, str) and href.startswith(('http', 'https', '//'))))
             
             # Analyze images
             images = soup.find_all('img')

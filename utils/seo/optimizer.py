@@ -133,16 +133,17 @@ class SEOOptimizer:
         # 1. Fix heading structure if needed
         if not soup.find('h1'):
             # Create H1 with primary keyword if missing
-            if soup.find('body'):
+            body_tag = soup.find('body')
+            if body_tag:
                 new_h1 = soup.new_tag('h1')
-                new_h1.string = meta_title or f"Complete Guide to {primary_keyword}"
+                new_h1.append(meta_title or f"Complete Guide to {primary_keyword}")
                 
                 # Find good insertion point (before first paragraph or at start of body)
                 first_p = soup.find('p')
                 if first_p:
                     first_p.insert_before(new_h1)
                 else:
-                    soup.body.insert(0, new_h1)
+                    body_tag.insert(0, new_h1)
                 
                 changes_made.append("Added missing H1 heading with primary keyword")
         
@@ -202,7 +203,9 @@ class SEOOptimizer:
             # Add keyword to first H2 if it exists
             h2 = soup.find('h2')
             if h2:
-                h2.string = f"{primary_keyword}: {h2.get_text()}"
+                h2_text = h2.get_text()
+                h2.clear()
+                h2.append(f"{primary_keyword}: {h2_text}")
                 changes_made.append("Added primary keyword to H2 heading")
         
         # 6. Apply AI content improvements if available
