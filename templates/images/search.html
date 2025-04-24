@@ -28,6 +28,12 @@
                                 </option>
                                 {% endfor %}
                             </select>
+                            {% if selected_source == 'google' %}
+                            <div class="form-text text-warning mt-1">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                Always verify image licensing before use. Google Images may include copyrighted content.
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-3">

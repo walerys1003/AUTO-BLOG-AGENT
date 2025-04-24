@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional, Union
 import urllib.parse
 
 from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
+from utils.images.google import search_google_images, get_google_image_details
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -51,11 +52,18 @@ def search_images(
             logger.warning(f"Error searching Unsplash: {str(e)}")
     
     if source == 'google' or source == 'all':
-        # TODO: Implement Google Images search
-        # Since there's no official API for Google Images, a custom solution would be needed
-        # Potentially using a library like serpapi or a custom scraper
-        # For now, only show a placeholder message
-        logger.warning("Google Images search not implemented yet")
+        try:
+            # Call Google Images search function
+            google_results = search_google_images(
+                query=query,
+                per_page=per_page,
+                page=page,
+                orientation=orientation,
+                safe_search=True
+            )
+            results.extend(google_results)
+        except Exception as e:
+            logger.warning(f"Error searching Google Images: {str(e)}")
     
     # Filter results by tags if provided
     if tags and len(tags) > 0:
@@ -84,9 +92,21 @@ def get_image_details(image_id: str, source: str) -> Dict[str, Any]:
     if source == 'unsplash':
         return get_unsplash_photo(photo_id=image_id)
     elif source == 'google':
-        # TODO: Implement Google Images detail retrieval
-        logger.warning("Google Images detail retrieval not implemented yet")
-        raise NotImplementedError("Google Images detail retrieval not implemented yet")
+        try:
+            return get_google_image_details(image_id=image_id)
+        except NotImplementedError:
+            # Fallback message for Google Images detail retrieval
+            logger.warning("Google Images detail retrieval not fully implemented. Returning basic info.")
+            # Create a minimal stub response with the ID
+            return {
+                'id': image_id,
+                'url': '',
+                'thumb_url': '',
+                'description': 'Google image details not available',
+                'source': 'google',
+                'attribution_text': 'Unknown source - verify licensing',
+                'attribution_url': ''
+            }
     else:
         raise ValueError(f"Unknown image source: {source}")
 
