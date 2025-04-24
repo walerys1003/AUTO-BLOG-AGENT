@@ -131,10 +131,8 @@
                     </div>
                     {% endif %}
                     
-                    <div class="preview-content" style="background-color: white !important; color: black !important;">
-                        <div style="background-color: white !important; color: black !important; font-family: Arial, sans-serif !important;">
-                            {{ content.content|safe }}
-                        </div>
+                    <div class="preview-content">
+                        {{ content.content|safe }}
                     </div>
                     
                     {% if content.tags %}

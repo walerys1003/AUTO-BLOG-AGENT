@@ -21,19 +21,7 @@
         max-width: 100%;
         height: auto;
     }
-    .preview-panel * {
-        color: #000000 !important;
-    }
-    
-    .preview-panel h1, .preview-panel h2, .preview-panel h3,
-    .preview-panel h4, .preview-panel h5, .preview-panel h6,
-    .preview-panel p, .preview-panel li, .preview-panel ul,
-    .preview-panel ol, .preview-panel blockquote, .preview-panel span,
-    .preview-panel div, .preview-panel a, .preview-panel td,
-    .preview-panel th, .preview-panel strong, .preview-panel em,
-    .preview-panel small, .preview-panel code, .preview-panel pre {
-        color: #000000 !important;
-    }
+
     .tabbed-section .nav-tabs {
         margin-bottom: 1rem;
     }
@@ -76,7 +64,7 @@
         <div class="col-lg-9 edit-mode" id="content-container">
             <!-- Preview Panel -->
             <div class="preview-panel mb-4">
-                <h2 id="preview-title" style="color: #000000 !important;">{{ content.title }}</h2>
+                <h2 id="preview-title">{{ content.title }}</h2>
                 <div id="preview-content"></div>
             </div>
 
