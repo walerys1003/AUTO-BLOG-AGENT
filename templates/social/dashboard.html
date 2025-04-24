@@ -114,8 +114,8 @@
 
 <!-- Filter by blog -->
 <div class="card mb-4">
-    <div class="card-header bg-white">
-        <h5 class="mb-0">Filter Content</h5>
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0 fw-bold">Filter Content</h5>
     </div>
     <div class="card-body">
         <form action="{{ url_for('social.social_dashboard') }}" method="get" class="row g-3">
@@ -139,8 +139,8 @@
 
 <!-- Social media posts table -->
 <div class="card">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Recent Social Media Posts</h5>
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">Recent Social Media Posts</h5>
     </div>
     <div class="card-body p-0">
         {% if social_data %}
