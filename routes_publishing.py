@@ -378,6 +378,7 @@ def edit_article(content_id):
 def publish_now(content_id):
     """Publish article immediately"""
     from utils.wordpress.client import publish_wordpress_post
+    from social.autopost import create_social_media_posts
     
     # Get content
     content = ContentLog.query.get_or_404(content_id)
@@ -406,7 +407,16 @@ def publish_now(content_id):
             content.post_id = post_id
             db.session.commit()
             
-            flash('Article published successfully', 'success')
+            # Generate social media posts
+            try:
+                social_posts = create_social_media_posts(content_id)
+                if social_posts:
+                    flash('Article published successfully and social media posts created', 'success')
+                else:
+                    flash('Article published successfully, but no social accounts found for creating social posts', 'warning')
+            except Exception as social_error:
+                logger.error(f"Error creating social media posts: {str(social_error)}")
+                flash(f'Article published successfully, but failed to create social media posts: {str(social_error)}', 'warning')
         else:
             # Update status
             content.status = 'failed'
