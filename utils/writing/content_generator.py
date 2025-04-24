@@ -1,334 +1,284 @@
 """
-Content Generator Utility Module
-"""
-import json
-import random
-import logging
-import re
-from datetime import datetime
-import os
+Content Generator Module
 
+This module handles the generation of article content using AI.
+"""
+import logging
+import os
+import json
+import re
+import sys
+from typing import Dict, List, Any, Optional
+
+# Import libraries for AI content generation
 import anthropic
 from anthropic import Anthropic
-from app import db
 
 logger = logging.getLogger(__name__)
 
-# Content style templates to guide the AI
-CONTENT_STYLES = {
-    'informative': "Write in an informative, educational style with a neutral tone. Focus on providing clear explanations and factual information. Use a professional third-person perspective.",
-    
-    'conversational': "Write in a friendly, conversational style as if talking directly to the reader. Use 'you' and 'we' pronouns, ask rhetorical questions, and maintain an approachable, helpful tone.",
-    
-    'professional': "Write in a formal, authoritative style appropriate for a business or technical audience. Use industry terminology where appropriate and maintain a serious, professional tone.",
-    
-    'storytelling': "Write using narrative techniques and storytelling elements. Include anecdotes, scenarios, or case studies to illustrate points. Create an engaging flow that draws the reader through the content.",
-    
-    'persuasive': "Write in a persuasive style that aims to convince the reader of a particular viewpoint. Use compelling arguments, evidence, and calls-to-action.",
-}
+# Initialize the AI client
+anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
+openrouter_key = os.environ.get('OPENROUTER_API_KEY')
 
-# Content length settings in approximate word counts
-CONTENT_LENGTHS = {
-    'short': {
-        'word_count': 800,
-        'description': "A concise article of around 800 words with essential information only."
-    },
-    'medium': {
-        'word_count': 1200,
-        'description': "A standard article of around 1200 words with comprehensive coverage of the topic."
-    },
-    'long': {
-        'word_count': 1600,
-        'description': "An in-depth article of around 1600 words with detailed explanations and examples."
-    }
-}
+# Try to use OpenRouter API key first, then fall back to Anthropic direct
+if openrouter_key:
+    # When using OpenRouter, we need to configure anthropic client with OpenRouter endpoint
+    client = Anthropic(
+        api_key=openrouter_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+elif anthropic_key:
+    # Direct connection to Anthropic
+    client = Anthropic(
+        api_key=anthropic_key,
+    )
+else:
+    logger.warning("No API keys found for content generation. Using mock responses.")
+    client = None
 
-
-def generate_article(topic, keywords=None, style='informative', length='medium'):
+def generate_article(topic, keywords=None, style="informative", length="medium"):
     """
-    Generate a complete article using AI models
+    Generate an article using AI
     
     Args:
-        topic (str): The main topic/title of the article
-        keywords (list): List of keywords to include in the article
-        style (str): Writing style to use (e.g., 'informative', 'conversational')
-        length (str): Desired article length ('short', 'medium', 'long')
-    
+        topic (str): The article topic or title
+        keywords (list, optional): List of keywords to include
+        style (str): Writing style (informative, conversational, professional, storytelling, persuasive)
+        length (str): Content length (short, medium, long)
+        
     Returns:
-        dict: Generated article content and metadata
+        dict: Generated content data including HTML, meta description, etc.
     """
-    logger.info(f"Generating article: '{topic}' with style '{style}' and length '{length}'")
+    logger.info(f"Generating article content for topic: {topic}")
     
-    # Default to sensible values if invalid options provided
-    if style not in CONTENT_STYLES:
-        style = 'informative'
+    # Convert length to approximate word count
+    word_count = {
+        "short": 600,
+        "medium": 1200,
+        "long": 1800
+    }.get(length, 1200)
     
-    if length not in CONTENT_LENGTHS:
-        length = 'medium'
-    
-    # Ensure keywords is a list
-    if keywords is None:
-        keywords = []
-    elif isinstance(keywords, str):
-        keywords = [k.strip() for k in keywords.split(',')]
-    
-    # Try to use Anthropic API
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    
-    if api_key:
+    # Create the prompt
+    system_prompt = f"""You are an expert content writer specializing in creating high-quality blog articles.
+Your task is to write a well-structured, engaging, and informative article on the provided topic.
+
+Article specifications:
+- Topic: {topic}
+- Style: {style}
+- Target length: Approximately {word_count} words
+- Keywords to include: {', '.join(keywords) if keywords else 'No specific keywords required'}
+
+Please format the article with proper HTML structure including:
+1. An engaging headline (H1 tag)
+2. Introduction with a hook
+3. Well-organized sections with appropriate H2 and H3 subheadings
+4. Bullet points or numbered lists where appropriate
+5. A strong conclusion
+6. Include a meta description and excerpt for SEO purposes
+
+The article should be factually accurate, well-researched, and provide real value to readers.
+Be creative but professional, and make the content readable and engaging for web audiences."""
+
+    user_prompt = f"Please write a complete blog article about '{topic}' following the specifications I've provided."
+
+    # If we have a client, use it to generate content
+    if client:
         try:
-            logger.info("Using Anthropic API for content generation")
-            return generate_with_anthropic(topic, keywords, style, length)
+            # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
+            response = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                system=system_prompt,
+                messages=[
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=4000
+            )
+            
+            content = response.content[0].text
+            
+            # Extract content sections
+            html_content = _extract_html_content(content)
+            meta_description = _extract_meta_description(content)
+            excerpt = _extract_excerpt(content)
+            
+            # Generate tags
+            tags = _generate_tags_from_content(topic, keywords, content)
+            
+            return {
+                "content": html_content,
+                "meta_description": meta_description,
+                "excerpt": excerpt,
+                "tags": tags,
+                "featured_image_url": ""  # In a real implementation, this would be generated or fetched
+            }
+            
         except Exception as e:
-            logger.error(f"Error with Anthropic API: {str(e)}")
-            # Fall back to template-based generation
-    
-    # If we don't have an API key or the API call failed, use template-based generation
-    return generate_with_templates(topic, keywords, style, length)
-
-
-def generate_with_anthropic(topic, keywords, style, length):
-    """Generate article using Anthropic Claude API"""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    client = Anthropic(api_key=api_key)
-    
-    # Prepare keywords string
-    keywords_str = ", ".join(keywords) if keywords else "No specific keywords required"
-    
-    # Get content style and length descriptions
-    style_description = CONTENT_STYLES.get(style, CONTENT_STYLES['informative'])
-    length_info = CONTENT_LENGTHS.get(length, CONTENT_LENGTHS['medium'])
-    word_count = length_info['word_count']
-    
-    # Create the system prompt
-    system_prompt = f"""You are an expert content writer specializing in creating SEO-optimized blog articles.
-Your task is to create a high-quality article on the provided topic that is informative, engaging, and optimized for search engines."""
-
-    # Create the user prompt
-    user_prompt = f"""Please write a complete blog article with the following specifications:
-
-TITLE: {topic}
-
-KEYWORDS TO INCLUDE: {keywords_str}
-
-STYLE GUIDELINES: {style_description}
-
-LENGTH: Approximately {word_count} words
-
-STRUCTURE REQUIREMENTS:
-1. Include an engaging introduction
-2. Use properly formatted H2 and H3 headings throughout the article
-3. Include bullet points or numbered lists where appropriate
-4. Write short, readable paragraphs (2-4 sentences each)
-5. Include a conclusion section
-
-SEO CONSIDERATIONS:
-1. Naturally incorporate the keywords throughout the text
-2. Create SEO-friendly headings
-3. Optimize readability with short sentences and paragraphs
-4. Include transitional phrases between sections
-
-OUTPUT FORMAT:
-1. Provide the article in HTML format with appropriate tags (<h2>, <h3>, <p>, <ul>, <li>, etc.)
-2. After the article, provide:
-   - A meta description (150-160 characters)
-   - An excerpt/snippet (50-60 words)
-   - A list of 5-8 relevant tags for the article
-
-The article should be comprehensive, factually accurate, and provide genuine value to readers interested in this topic."""
-
-    # Send the request to Anthropic
-    try:
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=4000,
-            temperature=0.7,
-            system=system_prompt,
-            messages=[
-                {"role": "user", "content": user_prompt}
-            ]
-        )
-        
-        # Extract the content
-        content = response.content[0].text
-        
-        # Parse the response to extract different components
-        article_html, meta_description, excerpt, tags = parse_anthropic_response(content)
-        
-        # Return the structured content
-        return {
-            'content': article_html,
-            'meta_description': meta_description,
-            'excerpt': excerpt,
-            'tags': tags,
-            'featured_image_url': '' # We're not generating images in this example
-        }
-        
-    except Exception as e:
-        logger.error(f"Error generating content with Anthropic: {str(e)}")
-        # Fall back to template-based generation
-        return generate_with_templates(topic, keywords, style, length)
-
-
-def parse_anthropic_response(content):
-    """Parse the response from Anthropic to extract article, meta description, excerpt, and tags"""
-    # Default values
-    article_html = ""
-    meta_description = ""
-    excerpt = ""
-    tags = []
-    
-    # Extract article HTML (everything before Meta Description)
-    meta_desc_match = re.search(r'(?i)META\s+DESCRIPTION', content)
-    if meta_desc_match:
-        article_html = content[:meta_desc_match.start()].strip()
+            logger.error(f"Error generating content with AI: {str(e)}")
+            return _get_mock_content(topic, keywords, style, length)
     else:
-        # If meta description not found, take the whole content as article
-        article_html = content
-        return article_html, meta_description, excerpt, tags
-    
-    # Extract meta description
-    excerpt_match = re.search(r'(?i)EXCERPT', content[meta_desc_match.end():])
-    if excerpt_match:
-        meta_desc_text = content[meta_desc_match.end():meta_desc_match.end() + excerpt_match.start()].strip()
-        
-        # Extract the actual text, removing labels and special characters
-        meta_desc_clean = re.sub(r'(?i)^.*?:', '', meta_desc_text).strip()
-        meta_description = meta_desc_clean
-    
-    # Extract excerpt
-    tags_match = re.search(r'(?i)TAGS', content[meta_desc_match.end() + excerpt_match.end():])
-    if tags_match:
-        excerpt_text = content[meta_desc_match.end() + excerpt_match.end():meta_desc_match.end() + excerpt_match.end() + tags_match.start()].strip()
-        
-        # Extract the actual text, removing labels and special characters
-        excerpt_clean = re.sub(r'(?i)^.*?:', '', excerpt_text).strip()
-        excerpt = excerpt_clean
-    
-    # Extract tags
-    if tags_match:
-        tags_text = content[meta_desc_match.end() + excerpt_match.end() + tags_match.end():].strip()
-        
-        # Remove any labels and get individual tags
-        tags_clean = re.sub(r'(?i)^.*?:', '', tags_text).strip()
-        
-        # Extract individual tags
-        # Try to handle various formats (comma-separated, bullet points, etc.)
-        if ',' in tags_clean:
-            tags = [tag.strip() for tag in tags_clean.split(',')]
-        else:
-            # Look for bullet points or numbered lists
-            tag_lines = [line.strip() for line in tags_clean.split('\n') if line.strip()]
-            tag_items = []
-            for line in tag_lines:
-                # Remove bullets, numbers, dashes, etc.
-                cleaned = re.sub(r'^[\*\-•#\d\.\s]+', '', line).strip()
-                if cleaned:
-                    tag_items.append(cleaned)
-            
-            if tag_items:
-                tags = tag_items
-            else:
-                # Just use the whole thing as one tag if we couldn't parse it
-                tags = [tags_clean]
-    
-    return article_html, meta_description, excerpt, tags
+        # No API key, return mock content
+        return _get_mock_content(topic, keywords, style, length)
 
 
-def generate_with_templates(topic, keywords, style, length):
-    """Generate article using templates when API is not available"""
-    # In a real implementation, this would use a more sophisticated template system
-    # For now, we'll generate a very basic article structure
+def _extract_html_content(content):
+    """
+    Extract HTML content from the AI response
     
-    word_count = CONTENT_LENGTHS.get(length, CONTENT_LENGTHS['medium'])['word_count']
-    
-    # Generate a simple article structure
-    article_parts = []
-    
-    # Introduction
-    article_parts.append(f"<h1>{topic}</h1>")
-    article_parts.append("<p>This is an introductory paragraph about the topic. It provides an overview and sets the stage for the detailed discussion that follows.</p>")
-    
-    # Main content sections
-    for i in range(3):
-        section_title = f"Major Aspect {i+1} of {topic}"
-        article_parts.append(f"<h2>{section_title}</h2>")
-        article_parts.append("<p>This paragraph explains an important aspect of the main topic. It provides detailed information and examples to help the reader understand the concept better.</p>")
+    Args:
+        content (str): The AI-generated content
         
-        for j in range(2):
-            subsection = f"Sub-component {j+1}"
-            article_parts.append(f"<h3>{subsection}</h3>")
-            article_parts.append("<p>This paragraph explores a specific element of the section topic. It goes into greater depth on this particular aspect.</p>")
-            
-            # Add a list
-            if j == 0:
-                article_parts.append("<p>Here are some key points to consider:</p>")
-                article_parts.append("<ul>")
-                for k in range(3):
-                    list_item = f"Important point {k+1}"
-                    if keywords and k < len(keywords):
-                        list_item += f" related to {keywords[k]}"
-                    article_parts.append(f"<li>{list_item}</li>")
-                article_parts.append("</ul>")
+    Returns:
+        str: Clean HTML content
+    """
+    # Look for HTML content between opening and closing tags
+    html_start = content.find("<h1")
+    if html_start == -1:
+        html_start = content.find("<H1")
     
-    # Conclusion
-    article_parts.append("<h2>Conclusion</h2>")
-    article_parts.append("<p>This final paragraph summarizes the key points discussed in the article and may suggest next steps or additional resources for the reader.</p>")
+    html_end = content.rfind("</p>")
+    if html_end == -1:
+        html_end = content.rfind("</P>")
     
-    # Combine parts into HTML
-    article_html = "\n".join(article_parts)
+    if html_start != -1 and html_end != -1:
+        return content[html_start:html_end+4]
     
-    # Generate metadata
-    meta_description = f"Learn all about {topic} in this comprehensive guide. Discover key insights and practical advice on {', '.join(keywords[:3]) if keywords else 'this topic'}."
+    # If no clear HTML, return the whole content
+    return content
+
+
+def _extract_meta_description(content):
+    """
+    Extract meta description from the AI response
     
-    excerpt = f"This article provides a comprehensive overview of {topic}. Read on to learn the essential aspects of this important subject."
+    Args:
+        content (str): The AI-generated content
+        
+    Returns:
+        str: Meta description
+    """
+    meta_desc_patterns = [
+        r"(?i)Meta\s*Description:\s*\"?([^\"]+)\"?",
+        r"(?i)Meta\s*Description:\s*(.+?)(?:\n|$)",
+        r"(?i)<meta\s+name=\"description\"\s+content=\"([^\"]+)\"",
+    ]
     
-    # Generate tags
-    tags = keywords[:8] if keywords else [f"Tag {i+1} for {topic}" for i in range(5)]
+    for pattern in meta_desc_patterns:
+        match = re.search(pattern, content)
+        if match:
+            return match.group(1).strip()
     
-    # Return the generated content
+    # If no meta description found, create one from the first paragraph
+    paragraphs = re.findall(r"<p>(.*?)</p>", content, re.DOTALL)
+    if paragraphs:
+        # Clean the first paragraph of any HTML and limit to ~155 chars
+        first_para = re.sub(r"<.*?>", "", paragraphs[0])
+        if len(first_para) > 155:
+            return first_para[:152] + "..."
+        return first_para
+        
+    return ""
+
+
+def _extract_excerpt(content):
+    """
+    Extract excerpt from the AI response
+    
+    Args:
+        content (str): The AI-generated content
+        
+    Returns:
+        str: Excerpt
+    """
+    excerpt_patterns = [
+        r"(?i)Excerpt:\s*\"?([^\"]+)\"?",
+        r"(?i)Excerpt:\s*(.+?)(?:\n|$)",
+    ]
+    
+    for pattern in excerpt_patterns:
+        match = re.search(pattern, content)
+        if match:
+            return match.group(1).strip()
+    
+    # If no excerpt found, use the meta description
+    meta_desc = _extract_meta_description(content)
+    if meta_desc:
+        return meta_desc
+        
+    return ""
+
+
+def _generate_tags_from_content(topic, keywords, content):
+    """
+    Generate tags from the content
+    
+    Args:
+        topic (str): The article topic
+        keywords (list): List of keywords
+        content (str): The article content
+        
+    Returns:
+        list: Generated tags
+    """
+    # Start with keywords if available
+    tags = list(keywords) if keywords else []
+    
+    # Add the main topic as a tag if not already present
+    topic_words = topic.lower().split()
+    for word in topic_words:
+        if len(word) > 3 and word not in [t.lower() for t in tags]:
+            tags.append(word.capitalize())
+    
+    # Limit to 5 tags maximum
+    return tags[:5]
+
+
+def _get_mock_content(topic, keywords, style, length):
+    """
+    Generate mock content when API is not available
+    
+    Args:
+        topic (str): The article topic
+        keywords (list): List of keywords
+        style (str): Writing style
+        length (str): Content length
+        
+    Returns:
+        dict: Mock content data
+    """
+    logger.warning("Using mock content generator")
+    
+    title = f"The Complete Guide to {topic}"
+    
+    html_content = f"""
+    <h1>{title}</h1>
+    <p>This is a sample article about {topic}. In a real implementation, this would be generated using AI.</p>
+    <h2>Key Points About {topic}</h2>
+    <p>Here are some important aspects to consider when discussing {topic}:</p>
+    <ul>
+        <li>First key point about {topic}</li>
+        <li>Second key point about {topic}</li>
+        <li>Third key point about {topic}</li>
+    </ul>
+    <h2>Best Practices for {topic}</h2>
+    <p>When implementing {topic}, consider these best practices:</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.</p>
+    <h3>Advanced Strategies</h3>
+    <p>For those looking to take their {topic} to the next level:</p>
+    <p>Vestibulum pellentesque felis eu massa. Quisque ullamcorper placerat ipsum.</p>
+    <h2>Conclusion</h2>
+    <p>In conclusion, {topic} is an important subject that requires careful consideration.</p>
+    """
+    
+    meta_description = f"Learn everything you need to know about {topic} in this comprehensive guide. We cover key concepts, best practices, and advanced strategies."
+    
+    excerpt = f"This comprehensive guide explores {topic} in detail, providing you with essential knowledge and practical tips."
+    
+    tags = [topic] + (keywords if keywords else [])
+    
     return {
-        'content': article_html,
-        'meta_description': meta_description,
-        'excerpt': excerpt,
-        'tags': tags,
-        'featured_image_url': '' # We're not generating images in this example
-    }
-
-
-def generate_metadata(content):
-    """Generate metadata (meta description, excerpt, tags) from existing content"""
-    # Extract text from HTML content
-    text_content = re.sub(r'<[^>]+>', ' ', content)
-    text_content = re.sub(r'\s+', ' ', text_content).strip()
-    
-    # Create a meta description from the first ~155 characters
-    meta_description = text_content[:155] + "..." if len(text_content) > 155 else text_content
-    
-    # Create an excerpt from the first ~50 words
-    words = text_content.split()
-    excerpt = " ".join(words[:50]) + "..." if len(words) > 50 else text_content
-    
-    # Extract potential tags from headings in the content
-    headings = re.findall(r'<h[1-3][^>]*>(.*?)</h[1-3]>', content)
-    potential_tags = []
-    
-    for heading in headings:
-        # Clean the heading text
-        clean_heading = re.sub(r'<[^>]+>', '', heading).strip()
-        
-        # Split into words and keep those longer than 3 characters
-        words = clean_heading.split()
-        for word in words:
-            word = re.sub(r'[^\w\s]', '', word).strip()
-            if len(word) > 3 and word.lower() not in ['this', 'that', 'with', 'from', 'have', 'what', 'been', 'were', 'when', 'where', 'will', 'your', 'their']:
-                potential_tags.append(word)
-    
-    # Take unique tags, up to 8
-    tags = list(set(potential_tags))[:8]
-    
-    return {
-        'meta_description': meta_description,
-        'excerpt': excerpt,
-        'tags': tags
+        "content": html_content,
+        "meta_description": meta_description,
+        "excerpt": excerpt,
+        "tags": tags[:5],
+        "featured_image_url": ""
     }
