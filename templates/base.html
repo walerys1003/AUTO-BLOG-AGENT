@@ -11,6 +11,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Globalne style dla funkcji podglądu artykułów */
+        .preview-title, 
+        .preview-content,
+        .preview-article h1, 
+        .preview-article h2, 
+        .preview-article h3,
+        .preview-article h4, 
+        .preview-article h5, 
+        .preview-article h6,
+        .preview-article p, 
+        .preview-article ul, 
+        .preview-article ol,
+        .preview-article li, 
+        .preview-article span, 
+        .preview-article div,
+        .preview-article a, 
+        .preview-article blockquote,
+        .preview-article strong,
+        .preview-article em,
+        .preview-article td,
+        .preview-article th,
+        .preview-article small,
+        .preview-article code,
+        .preview-article pre,
+        .lead {
+            color: #000000 !important;
+        }
+        
+        .preview-article {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        
+        /* Globalne style dla funkcji podglądu w panelu edycji */
+        .preview-panel * {
+            color: #000000 !important;
+        }
+    </style>
     {% block styles %}{% endblock %}
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">

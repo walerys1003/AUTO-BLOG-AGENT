@@ -1,0 +1,91 @@
+Prompt: Rozbudowany prompt do wdrożenia globalnego stylu graficznego dla wszystkich funkcji agenta – białe pola z czarnymi tytułami
+Proszę o szczegółowy opis implementacji globalnego stylu graficznego w interfejsie użytkownika agenta AI (np. BlogPostMaster, ZYGA), który będzie spójnie stosowany do wszystkich białych pól funkcjonalnych. Styl ten ma dotyczyć każdego okna, sekcji, karty, formularza, w których znajdują się poszczególne funkcje agenta. Wprowadź jednolitą zasadę, według której:
+
+Tło każdego pola/okna/funkcji jest białe (#FFFFFF).
+
+Tytuł funkcji lub sekcji (nagłówek w danym polu) jest umieszczony w górnej części tego pola i zapisany czarną czcionką (#000000), z wyraźnym wyróżnieniem (np. bold, rozmiar 18-20px).
+
+Styl ten ma być globalny, tzn. obowiązujący w całym systemie agenta, dla każdej funkcji i każdego widoku.
+
+📌 Zakres prompta:
+🎨 Ogólne założenia stylu:
+
+Określ, w jaki sposób globalny styl zostanie zaimplementowany (CSS/SCSS/Styled Components).
+
+Zdefiniuj dokładnie wygląd tytułu funkcji (font, wielkość, kolor, marginesy, padding).
+
+Zasady odseparowania tytułu od zawartości pola (np. cienka linia, przestrzeń).
+
+📋 Zakres funkcji objętych stylem:
+
+Każde białe pole w systemie, które zawiera funkcjonalność agenta:
+
+Generowanie tematów,
+
+Tworzenie treści,
+
+Pozyskiwanie grafik,
+
+Harmonogram publikacji,
+
+Ustawienia SEO,
+
+Publikacja na WordPressie,
+
+Promocja w social media,
+
+Statystyki,
+
+Logi i powiadomienia,
+
+Zarządzanie użytkownikami,
+
+Reguły automatyzacji.
+
+⚙️ Techniczne aspekty wdrożenia:
+
+Jakie klasy CSS zostaną użyte (np. .function-box, .function-title)?
+
+Czy styl będzie zdefiniowany w osobnym pliku CSS globalnym?
+
+Sposób dziedziczenia stylu dla komponentów w frameworkach (np. React, Vue).
+
+🔄 Responsywność i UX:
+
+Jak styl będzie wyglądał na różnych urządzeniach (desktop, tablet, mobile)?
+
+Czy tytuły będą zawsze widoczne (sticky na mobile?)?
+
+Jak zachowa się białe pole przy przewijaniu dłuższych treści?
+
+🌐 Przykład implementacji (CSS):
+
+css
+Kopiuj
+Edytuj
+.function-box {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.function-title {
+    color: #000000;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+📊 Estetyka i ergonomia:
+
+Jak styl wpłynie na przejrzystość interfejsu?
+
+Jak zapewnić czytelność i spójność przy dużej liczbie funkcji?
+
+🧩 Dodatkowe wymagania:
+Uwzględnij ciemny tryb (jeśli stosowany) – jak styl będzie adaptował się do dark mode?
+
+Opcjonalnie: cienie i efekty hover na białych polach.
+
+📣 Cel prompta: Dostarcz pełny plan wdrożenia i techniczny opis stylu, który zapewni spójność wizualną w agencie AI. Styl musi obejmować wszystkie funkcje i być łatwy do utrzymania oraz rozwoju.
