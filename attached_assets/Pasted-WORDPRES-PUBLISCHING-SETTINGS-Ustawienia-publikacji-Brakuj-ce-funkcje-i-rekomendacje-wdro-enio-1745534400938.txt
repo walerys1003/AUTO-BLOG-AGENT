@@ -1,0 +1,71 @@
+WORDPRES PUBLISCHING - SETTINGS - Ustawienia publikacji - Brakujące funkcje i rekomendacje wdrożeniowe:
+🔗 Linkowanie do szczegółowych logów działań agenta:
+
+Brak opcji podglądu historii działań: co, kiedy, i przez kogo było wygenerowane, zatwierdzone, odrzucone, opublikowane.
+
+Wdrożenie: Historia aktywności dla każdego artykułu i akcji (np. „Wygenerowano”, „Czeka na akceptację”, „Opublikowano”, „Promowano w SM”).
+
+🔍 Czego brakuje w obecnych ustawieniach publikacji i co trzeba wdrożyć:
+📅 Zaawansowany harmonogram z kalendarzem:
+
+Obecnie: Tylko domyślny czas publikacji (np. 10:00).
+
+Wdrożenie: Graficzny kalendarz publikacji z możliwością ręcznego ustawiania dni i godzin dla konkretnych artykułów.
+
+📝 Podgląd i edycja przed publikacją (Preview Mode):
+
+Brakuje: Możliwości podejrzenia i edycji artykułu bezpośrednio z poziomu dashboardu przed jego publikacją.
+
+Wdrożenie: Przycisk „Podgląd” i „Edytuj” przy każdym wygenerowanym artykule.
+
+🎨 Personalizacja stylu i formatu treści:
+
+Brakuje: Możliwości wyboru stylu (ekspercki, poradnikowy, marketingowy) i długości treści per blog lub kategoria.
+
+Wdrożenie: Sekcja w panelu: „Styl treści” – z opcjami do wyboru lub szablonami.
+
+📊 Raportowanie i analityka działań ZYGI:
+
+Brakuje: Logów co agent zrobił: jakie artykuły wygenerował, co opublikował, co wymaga akceptacji.
+
+Wdrożenie: Panel „Historia działań” z datą, statusem, rezultatem (np. „Sukces”, „Błąd”, „Oczekuje na akceptację”).
+
+📱 Kontrola promocji w social media:
+
+Brakuje: Widoczności jakie posty zostały wygenerowane dla social media i gdzie będą opublikowane.
+
+Wdrożenie: Sekcja „Promocja SM” z podglądem treści postów (FB, IG, LinkedIn itd.), opcją edycji i harmonogramu.
+
+👥 Zarządzanie uprawnieniami użytkowników:
+
+Brakuje: Możliwości nadawania ról: kto może zatwierdzać, edytować, zmieniać reguły automatyzacji.
+
+Wdrożenie: System ról i uprawnień (np. Admin, Moderator).
+
+🔗 Linkowanie do sekcji konfiguracji automatyzacji:
+
+Brakuje: Bezpośrednich linków do edycji reguł automatyzacji z poziomu artykułu lub harmonogramu.
+
+Wdrożenie: Przycisk „Edytuj reguły” dostępny przy każdym artykule lub w dashboardzie.
+
+💡 Ocena i rekomendacja:
+Twoje ustawienia bazowe są solidne, ale linkowanie do dashboardu powinno zostać rozbudowane, aby użytkownik:
+
+Mógł śledzić cały cykl życia artykułu (od generacji, przez zatwierdzenie, po publikację i promocję).
+
+Miał łatwy dostęp do reguł automatyzacji i mógł je elastycznie dostosować.
+
+Kontrolował harmonogram i treści w social media.
+
+Otrzymywał powiadomienia i miał wgląd w logi systemowe.
+
+🧩 Twoja obecna konfiguracja ma podstawy, ale warto wdrożyć:
+Transparentność działań (logi, statystyki),
+
+Lepszą kontrolę graficzną i treściową (grafiki, styl, personalizacja),
+
+Zarządzanie promocją (SM post preview, harmonogramy),
+
+Użytkowników i uprawnienia, jeśli zespół jest większy.
+
+💡 Podsumowanie: Linkowanie do dashboardu w przypadku każdej z tych funkcji zwiększyłoby przejrzystość i kontrolę. Warto, by użytkownik nie tylko akceptował publikacje, ale i miał pełen obraz ich przygotowania, promocji i efektów.

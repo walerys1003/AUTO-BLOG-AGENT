@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block title %}Edycja artykułu{% endblock %}
+
+{% block styles %}
+<!-- Quill editor styles -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    .ql-editor {
+        min-height: 300px;
+    }
+    .preview-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #f8f9fa;
+    }
+    .preview-panel img {
+        max-width: 100%;
+        height: auto;
+    }
+    .tabbed-section .nav-tabs {
+        margin-bottom: 1rem;
+    }
+    .preview-mode .edit-form {
+        display: none;
+    }
+    .edit-mode .preview-panel {
+        display: none;
+    }
+    .meta-card {
+        border-top: 3px solid #6c757d;
+    }
+    .meta-card.seo {
+        border-top-color: #28a745;
+    }
+    .meta-card.social {
+        border-top-color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">{{ content.title }}</h1>
+        <div>
+            <button type="button" class="btn btn-outline-primary me-2 toggle-view-btn" data-mode="preview">
+                <i class="fas fa-eye me-1"></i> Podgląd
+            </button>
+            <button type="button" class="btn btn-outline-primary me-2 toggle-view-btn active" data-mode="edit">
+                <i class="fas fa-pencil-alt me-1"></i> Edycja
+            </button>
+            <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Powrót
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-9 edit-mode" id="content-container">
+            <!-- Preview Panel -->
+            <div class="preview-panel mb-4">
+                <h2 id="preview-title">{{ content.title }}</h2>
+                <div id="preview-content"></div>
+            </div>
+
+            <!-- Edit Form -->
+            <form method="POST" class="edit-form" id="edit-form">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Zawartość artykułu</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Tytuł</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ content.title }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="excerpt" class="form-label">Fragment (skrót artykułu)</label>
+                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3">{{ content.excerpt }}</textarea>
+                            <div class="form-text">Krótki fragment tekstu, pokazywany na listach artykułów i w mediach społecznościowych.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editor" class="form-label">Treść</label>
+                            <div id="editor">{{ content.content|safe }}</div>
+                            <input type="hidden" name="content" id="content-hidden">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Obraz wyróżniający</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {% if content.featured_image_data %}
+                                    <img src="{{ content.featured_image_data }}" alt="Obraz wyróżniający" class="img-fluid img-thumbnail mb-2" id="featured-image-preview">
+                                    {% else %}
+                                    <div class="border p-5 text-center text-muted mb-2" id="featured-image-placeholder">
+                                        <i class="fas fa-image fa-3x mb-2"></i>
+                                        <p>Brak obrazu wyróżniającego</p>
+                                    </div>
+                                    <img src="" alt="Obraz wyróżniający" class="img-fluid img-thumbnail mb-2 d-none" id="featured-image-preview">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="hidden" name="featured_image" id="featured-image-input" value="{{ content.featured_image_data }}">
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-outline-primary w-100 mb-2" id="select-image-btn">
+                                            <i class="fas fa-search me-1"></i> Wybierz obraz
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger w-100" id="remove-image-btn" {% if not content.featured_image_data %}disabled{% endif %}>
+                                            <i class="fas fa-trash-alt me-1"></i> Usuń obraz
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        Obraz wyróżniający jest używany jako główny obraz artykułu, widoczny na listach wpisów i w mediach społecznościowych.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100 meta-card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Kategoria i tagi</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="category_id" class="form-label">Kategoria</label>
+                                    <select class="form-select" id="category_id" name="category_id">
+                                        <option value="">-- Wybierz kategorię --</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if content.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tags" class="form-label">Tagi</label>
+                                    <input type="text" class="form-control" id="tags" name="tags" value="{{ content.tags_str }}">
+                                    <div class="form-text">Wprowadź tagi oddzielone przecinkami.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100 meta-card seo">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Meta dane SEO</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="meta_title" class="form-label">Meta tytuł (SEO)</label>
+                                    <input type="text" class="form-control" id="meta_title" name="meta_title" value="{{ meta_title }}">
+                                    <div class="form-text">Pozostaw puste, aby użyć domyślnego tytułu.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="meta_description" class="form-label">Meta opis (SEO)</label>
+                                    <textarea class="form-control" id="meta_description" name="meta_description" rows="3">{{ meta_description }}</textarea>
+                                    <div class="form-text">Opis widoczny w wynikach wyszukiwania.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Historia zmian</h5>
+                        <span class="badge bg-secondary">Nowa funkcja</span>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">Utworzenie artykułu</div>
+                                    <span class="text-muted">Automatycznie wygenerowany</span>
+                                </div>
+                                <span class="text-muted">{{ content.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">Aktualna edycja</div>
+                                    <span class="text-muted">{{ current_user.username if current_user else 'System' }}</span>
+                                </div>
+                                <span class="text-muted">{{ now.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-5">
+                    <button type="submit" name="action" value="save" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Zapisz zmiany
+                    </button>
+                    <button type="submit" name="action" value="save_publish" class="btn btn-success">
+                        <i class="fas fa-check-circle me-1"></i> Zapisz i opublikuj
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card shadow-sm mb-4 sticky-top" style="top: 1rem; z-index: 100;">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informacje</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Status:</dt>
+                        <dd class="col-6">
+                            {% if content.status == 'published' %}
+                            <span class="badge bg-success">Opublikowany</span>
+                            {% elif content.status == 'scheduled' %}
+                            <span class="badge bg-info">Zaplanowany</span>
+                            {% elif content.status == 'draft' %}
+                            <span class="badge bg-secondary">Szkic</span>
+                            {% elif content.status == 'failed' %}
+                            <span class="badge bg-danger">Błąd</span>
+                            {% elif content.status == 'pending_review' %}
+                            <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
+                            {% else %}
+                            <span class="badge bg-dark">{{ content.status }}</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-6">Blog:</dt>
+                        <dd class="col-6">{{ blog.name }}</dd>
+                        
+                        <dt class="col-6">Data utworzenia:</dt>
+                        <dd class="col-6">{{ content.created_at.strftime('%Y-%m-%d') }}</dd>
+                        
+                        {% if content.publish_date %}
+                        <dt class="col-6">Data publikacji:</dt>
+                        <dd class="col-6">{{ content.publish_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        {% elif content.status == 'scheduled' %}
+                        <dt class="col-6">Zaplanowana data:</dt>
+                        <dd class="col-6">
+                            {% if schedule %}
+                            {{ schedule.publish_date.strftime('%Y-%m-%d') }} {{ schedule.publish_time }}
+                            {% else %}
+                            Nieznana
+                            {% endif %}
+                        </dd>
+                        {% endif %}
+                        
+                        {% if content.wordpress_id %}
+                        <dt class="col-6">ID WordPress:</dt>
+                        <dd class="col-6">{{ content.wordpress_id }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-grid gap-2">
+                        {% if content.status == 'published' and content.post_url %}
+                        <a href="{{ content.post_url }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt me-1"></i> Zobacz na stronie
+                        </a>
+                        {% endif %}
+                        
+                        {% if content.status == 'pending_review' %}
+                        <a href="{{ url_for('publishing.publish_now', content_id=content.id) }}" class="btn btn-success">
+                            <i class="fas fa-check-circle me-1"></i> Zatwierdź publikację
+                        </a>
+                        {% endif %}
+                        
+                        {% if content.status == 'scheduled' %}
+                        <button type="button" class="btn btn-danger" onclick="confirmCancel({{ content.id }})">
+                            <i class="fas fa-times-circle me-1"></i> Anuluj publikację
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Promocja w mediach społecznościowych</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid">
+                        <a href="{{ url_for('social.article_promotion', content_id=content.id) }}" class="btn btn-primary mb-2">
+                            <i class="fas fa-share-alt me-1"></i> Zarządzaj promocją
+                        </a>
+                    </div>
+                    <div class="form-text mb-2">
+                        Zaplanuj i zarządzaj promocją tego artykułu w mediach społecznościowych.
+                    </div>
+                    <div class="social-preview">
+                        <div class="d-flex mb-2">
+                            <div class="me-2"><i class="fab fa-facebook text-primary"></i></div>
+                            <div>Facebook</div>
+                            <div class="ms-auto">
+                                <span class="badge bg-secondary">Do skonfigurowania</span>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div class="me-2"><i class="fab fa-twitter text-info"></i></div>
+                            <div>Twitter</div>
+                            <div class="ms-auto">
+                                <span class="badge bg-secondary">Do skonfigurowania</span>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-0">
+                            <div class="me-2"><i class="fab fa-linkedin text-primary"></i></div>
+                            <div>LinkedIn</div>
+                            <div class="ms-auto">
+                                <span class="badge bg-secondary">Do skonfigurowania</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Publication Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Anuluj publikację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
+                <p class="text-muted">Artykuł zostanie przeniesiony do szkiców.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form id="cancel-form" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">Tak, anuluj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Selection Modal -->
+<div class="modal fade" id="imageSelectionModal" tabindex="-1" aria-labelledby="imageSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageSelectionModalLabel">Wybierz obraz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="imageTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-content" type="button" role="tab" aria-controls="search-content" aria-selected="true">Wyszukaj obrazy</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-content" type="button" role="tab" aria-controls="upload-content" aria-selected="false">Prześlij obraz</button>
+                    </li>
+                </ul>
+                <div class="tab-content p-3" id="imageTabsContent">
+                    <div class="tab-pane fade show active" id="search-content" role="tabpanel" aria-labelledby="search-tab">
+                        <div class="mb-3">
+                            <label for="image-search" class="form-label">Wyszukaj obrazy</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="image-search" placeholder="Wpisz frazę...">
+                                <button class="btn btn-primary" type="button" id="search-image-btn">Szukaj</button>
+                            </div>
+                        </div>
+                        <div class="image-search-results row" id="image-search-results">
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="fas fa-search fa-3x mb-3"></i>
+                                <p>Wpisz frazę, aby wyszukać obrazy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="upload-content" role="tabpanel" aria-labelledby="upload-tab">
+                        <div class="mb-3">
+                            <label for="image-upload" class="form-label">Prześlij własny obraz</label>
+                            <input class="form-control" type="file" id="image-upload" accept="image/*">
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="button" id="upload-image-btn">Prześlij</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary" id="select-image-confirm-btn" disabled>Wybierz</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Quill editor -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Quill editor
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['blockquote', 'code-block'],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'align': [] }],
+                    ['clean'],
+                    ['link', 'image']
+                ]
+            }
+        });
+
+        // Handle form submission
+        const form = document.getElementById('edit-form');
+        const contentHidden = document.getElementById('content-hidden');
+
+        form.addEventListener('submit', function(e) {
+            // Set the content value before submitting
+            contentHidden.value = quill.root.innerHTML;
+        });
+
+        // Toggle between edit and preview modes
+        const contentContainer = document.getElementById('content-container');
+        const toggleBtns = document.querySelectorAll('.toggle-view-btn');
+        const previewTitle = document.getElementById('preview-title');
+        const previewContent = document.getElementById('preview-content');
+        const titleInput = document.getElementById('title');
+
+        toggleBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const mode = this.getAttribute('data-mode');
+                
+                // Update active button
+                toggleBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update mode class
+                contentContainer.className = mode + '-mode col-lg-9';
+                
+                // If preview mode, update preview content
+                if (mode === 'preview') {
+                    previewTitle.textContent = titleInput.value;
+                    previewContent.innerHTML = quill.root.innerHTML;
+                }
+            });
+        });
+
+        // Handle featured image selection
+        const selectImageBtn = document.getElementById('select-image-btn');
+        const removeImageBtn = document.getElementById('remove-image-btn');
+        const featuredImageInput = document.getElementById('featured-image-input');
+        const featuredImagePreview = document.getElementById('featured-image-preview');
+        const featuredImagePlaceholder = document.getElementById('featured-image-placeholder');
+        
+        // Show image modal
+        selectImageBtn.addEventListener('click', function() {
+            const imageModal = new bootstrap.Modal(document.getElementById('imageSelectionModal'));
+            imageModal.show();
+        });
+        
+        // Remove image
+        removeImageBtn.addEventListener('click', function() {
+            featuredImageInput.value = '';
+            featuredImagePreview.src = '';
+            featuredImagePreview.classList.add('d-none');
+            featuredImagePlaceholder.classList.remove('d-none');
+            this.setAttribute('disabled', 'disabled');
+        });
+        
+        // Mock image search for demo purposes
+        const searchImageBtn = document.getElementById('search-image-btn');
+        const imageSearchInput = document.getElementById('image-search');
+        const imageSearchResults = document.getElementById('image-search-results');
+        const selectImageConfirmBtn = document.getElementById('select-image-confirm-btn');
+        
+        searchImageBtn.addEventListener('click', function() {
+            const query = imageSearchInput.value.trim();
+            if (!query) return;
+            
+            // Show loading state
+            imageSearchResults.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Wyszukiwanie obrazów...</p>
+                </div>
+            `;
+            
+            // Demo: Simulate API call
+            setTimeout(function() {
+                // Mock results
+                const mockResults = [
+                    '/static/img/demo-image-1.jpg',
+                    '/static/img/demo-image-2.jpg',
+                    '/static/img/demo-image-3.jpg',
+                    '/static/img/demo-image-4.jpg'
+                ];
+                
+                let resultsHtml = '';
+                mockResults.forEach(function(url, index) {
+                    resultsHtml += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 image-selection-card" data-image-url="${url}">
+                                <img src="${url}" class="card-img-top" alt="Obraz ${index + 1}">
+                                <div class="card-body">
+                                    <h6 class="card-title">Obraz ${index + 1}</h6>
+                                    <p class="card-text small text-muted">Losowy obraz demonstracyjny</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                imageSearchResults.innerHTML = resultsHtml;
+                
+                // Add selection functionality
+                document.querySelectorAll('.image-selection-card').forEach(function(card) {
+                    card.addEventListener('click', function() {
+                        // Remove selected class from all cards
+                        document.querySelectorAll('.image-selection-card').forEach(c => c.classList.remove('border-primary'));
+                        
+                        // Add selected class to this card
+                        this.classList.add('border-primary');
+                        
+                        // Enable confirm button
+                        selectImageConfirmBtn.removeAttribute('disabled');
+                        selectImageConfirmBtn.setAttribute('data-image-url', this.getAttribute('data-image-url'));
+                    });
+                });
+            }, 1000);
+        });
+        
+        // Handle image selection confirmation
+        selectImageConfirmBtn.addEventListener('click', function() {
+            const imageUrl = this.getAttribute('data-image-url');
+            featuredImageInput.value = imageUrl;
+            featuredImagePreview.src = imageUrl;
+            featuredImagePreview.classList.remove('d-none');
+            featuredImagePlaceholder.classList.add('d-none');
+            removeImageBtn.removeAttribute('disabled');
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('imageSelectionModal')).hide();
+        });
+        
+        // Confirm cancel function
+        window.confirmCancel = function(contentId) {
+            const form = document.getElementById('cancel-form');
+            form.action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('0', contentId);
+            
+            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+            modal.show();
+        };
+    });
+</script>
+{% endblock %}

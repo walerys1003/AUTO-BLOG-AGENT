@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+
+{% block title %}Podgląd artykułu{% endblock %}
+
+{% block styles %}
+<style>
+    .preview-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .preview-article {
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    
+    .preview-article img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .preview-meta {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .preview-title {
+        margin-bottom: 1rem;
+    }
+    
+    .preview-featured-image {
+        margin-bottom: 1.5rem;
+    }
+    
+    .preview-tools {
+        position: sticky;
+        top: 1rem;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Preview Toolbar -->
+<div class="bg-light py-3 mb-4 shadow-sm">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Podgląd artykułu</h5>
+                <p class="text-muted mb-0 small">Tak będzie wyglądał opublikowany artykuł</p>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-pencil-alt me-1"></i> Edytuj
+                </a>
+                <div class="btn-group" role="group">
+                    <button id="previewOptionsDropdown" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-desktop me-1"></i> Widok
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="previewOptionsDropdown">
+                        <li><button class="dropdown-item active" id="desktop-view">Komputer</button></li>
+                        <li><button class="dropdown-item" id="tablet-view">Tablet</button></li>
+                        <li><button class="dropdown-item" id="mobile-view">Telefon</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" id="facebook-view">Facebook</button></li>
+                        <li><button class="dropdown-item" id="twitter-view">Twitter</button></li>
+                    </ul>
+                </div>
+                <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Powrót
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-md-9">
+            <!-- Preview Container -->
+            <div class="preview-container" id="preview-container">
+                <div class="preview-article">
+                    <div class="preview-meta">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted mb-1">
+                                    {% if content.category %}
+                                    <span class="badge bg-primary">{{ content.category.name }}</span>
+                                    {% endif %}
+                                    
+                                    {% if content.created_at %}
+                                    <span class="ms-2">{{ content.created_at.strftime('%d.%m.%Y') }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <h1 class="preview-title">{{ content.title }}</h1>
+                                
+                                {% if content.excerpt %}
+                                <div class="lead mb-0">{{ content.excerpt }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if content.featured_image_data %}
+                    <div class="preview-featured-image">
+                        <img src="{{ content.featured_image_data }}" alt="{{ content.title }}" class="img-fluid rounded">
+                        <div class="text-muted small mt-1">Obraz wyróżniający</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="preview-content">
+                        {{ content.content|safe }}
+                    </div>
+                    
+                    {% if content.tags %}
+                    <div class="mt-4 pt-3 border-top">
+                        {% for tag in content.tags %}
+                        <span class="badge bg-light text-dark me-1">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <!-- Preview Tools -->
+            <div class="card shadow-sm mb-4 preview-tools">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informacje</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Status:</dt>
+                        <dd class="col-6">
+                            {% if content.status == 'published' %}
+                            <span class="badge bg-success">Opublikowany</span>
+                            {% elif content.status == 'scheduled' %}
+                            <span class="badge bg-info">Zaplanowany</span>
+                            {% elif content.status == 'draft' %}
+                            <span class="badge bg-secondary">Szkic</span>
+                            {% elif content.status == 'failed' %}
+                            <span class="badge bg-danger">Błąd</span>
+                            {% elif content.status == 'pending_review' %}
+                            <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
+                            {% else %}
+                            <span class="badge bg-dark">{{ content.status }}</span>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-6">Blog:</dt>
+                        <dd class="col-6">{{ blog.name }}</dd>
+                        
+                        {% if content.publish_date %}
+                        <dt class="col-6">Data publikacji:</dt>
+                        <dd class="col-6">{{ content.publish_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        {% elif content.status == 'scheduled' %}
+                        <dt class="col-6">Zaplanowana data:</dt>
+                        <dd class="col-6">
+                            {% if schedule %}
+                            {{ schedule.publish_date.strftime('%Y-%m-%d') }} {{ schedule.publish_time }}
+                            {% else %}
+                            Nieznana
+                            {% endif %}
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-grid gap-2">
+                        {% if content.status == 'pending_review' %}
+                        <a href="{{ url_for('publishing.publish_now', content_id=content.id) }}" class="btn btn-success">
+                            <i class="fas fa-check-circle me-1"></i> Zatwierdź publikację
+                        </a>
+                        {% endif %}
+                        
+                        {% if content.status == 'scheduled' %}
+                        <button type="button" class="btn btn-danger" onclick="confirmCancel({{ content.id }})">
+                            <i class="fas fa-times-circle me-1"></i> Anuluj publikację
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-primary">
+                            <i class="fas fa-pencil-alt me-1"></i> Edytuj artykuł
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Preview Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Podgląd SEO</h5>
+                </div>
+                <div class="card-body">
+                    <div class="seo-preview border rounded p-3 mb-3">
+                        <div class="text-primary mb-1 text-truncate" style="font-size: 0.9rem;">
+                            {{ blog.site_url }}/{{ content.slug if content.slug else 'artykul' }}
+                        </div>
+                        <div style="font-size: 1.1rem; color: #1a0dab; font-weight: 500;" class="mb-1">
+                            {{ meta_title or content.title }}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #4d5156;">
+                            {{ meta_description or content.excerpt or (content.content|striptags|truncate(160)) }}
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0">Tak Twój artykuł może wyglądać w wynikach wyszukiwania Google.</p>
+                </div>
+            </div>
+            
+            <!-- Social Preview Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Udostępnianie w mediach społecznościowych</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('social.article_promotion', content_id=content.id) }}" class="btn btn-primary mb-2">
+                            <i class="fas fa-share-alt me-1"></i> Zarządzaj promocją
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Publication Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Anuluj publikację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
+                <p class="text-muted">Artykuł zostanie przeniesiony do szkiców.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form id="cancel-form" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">Tak, anuluj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Device preview switcher
+        const previewContainer = document.getElementById('preview-container');
+        const desktopViewBtn = document.getElementById('desktop-view');
+        const tabletViewBtn = document.getElementById('tablet-view');
+        const mobileViewBtn = document.getElementById('mobile-view');
+        const facebookViewBtn = document.getElementById('facebook-view');
+        const twitterViewBtn = document.getElementById('twitter-view');
+        
+        // Set default view
+        previewContainer.style.maxWidth = '800px';
+        
+        // Handle view changes
+        desktopViewBtn.addEventListener('click', function() {
+            updateActiveViewButton(this);
+            previewContainer.style.maxWidth = '800px';
+        });
+        
+        tabletViewBtn.addEventListener('click', function() {
+            updateActiveViewButton(this);
+            previewContainer.style.maxWidth = '600px';
+        });
+        
+        mobileViewBtn.addEventListener('click', function() {
+            updateActiveViewButton(this);
+            previewContainer.style.maxWidth = '380px';
+        });
+        
+        facebookViewBtn.addEventListener('click', function() {
+            updateActiveViewButton(this);
+            showSocialPreview('facebook');
+        });
+        
+        twitterViewBtn.addEventListener('click', function() {
+            updateActiveViewButton(this);
+            showSocialPreview('twitter');
+        });
+        
+        function updateActiveViewButton(button) {
+            // Remove active class from all buttons
+            document.querySelectorAll('[id$="-view"]').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+        }
+        
+        function showSocialPreview(platform) {
+            const title = "{{ content.title }}";
+            const excerpt = "{{ content.excerpt or '' }}";
+            const imageUrl = "{{ content.featured_image_data or '' }}";
+            const blogName = "{{ blog.name }}";
+            
+            let previewHtml = '';
+            
+            if (platform === 'facebook') {
+                previewContainer.style.maxWidth = '500px';
+                previewHtml = `
+                    <div class="social-preview facebook-preview border rounded overflow-hidden mb-3">
+                        <div class="border-bottom p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="bg-light rounded-circle me-2" style="width: 40px; height: 40px;"></div>
+                                <div>
+                                    <div class="fw-bold">${blogName}</div>
+                                    <div class="text-muted small">Teraz · <i class="fas fa-globe-americas"></i></div>
+                                </div>
+                            </div>
+                            <p class="mb-0">Nowy artykuł na naszym blogu!</p>
+                        </div>
+                        ${imageUrl ? `<img src="${imageUrl}" class="img-fluid w-100" alt="${title}">` : ''}
+                        <div class="bg-light p-3">
+                            <div class="text-muted small text-uppercase">blog.${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com</div>
+                            <div class="fw-bold mb-1">${title}</div>
+                            <div class="small mb-0 text-muted">${excerpt}</div>
+                        </div>
+                        <div class="border-top p-2 d-flex justify-content-around">
+                            <button class="btn btn-light btn-sm"><i class="far fa-thumbs-up me-1"></i> Lubię to</button>
+                            <button class="btn btn-light btn-sm"><i class="far fa-comment me-1"></i> Komentarz</button>
+                            <button class="btn btn-light btn-sm"><i class="fas fa-share me-1"></i> Udostępnij</button>
+                        </div>
+                    </div>
+                    <p class="text-muted small">Przykładowy podgląd wpisu na Facebooku</p>
+                `;
+            } else if (platform === 'twitter') {
+                previewContainer.style.maxWidth = '500px';
+                previewHtml = `
+                    <div class="social-preview twitter-preview border rounded overflow-hidden mb-3">
+                        <div class="p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="bg-light rounded-circle me-2" style="width: 48px; height: 48px;"></div>
+                                <div>
+                                    <div class="fw-bold">${blogName} <span class="text-primary">✓</span></div>
+                                    <div class="text-muted small">@${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}</div>
+                                </div>
+                            </div>
+                            <p class="mb-2">Nowy artykuł na naszym blogu: ${title}</p>
+                            <p class="mb-2">${excerpt}</p>
+                            <p class="mb-3 text-primary">#blog #content #article</p>
+                            ${imageUrl ? `
+                            <div class="border rounded overflow-hidden mb-2">
+                                <img src="${imageUrl}" class="img-fluid w-100" alt="${title}">
+                                <div class="bg-light p-2">
+                                    <div class="text-muted small">blog.${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com</div>
+                                    <div class="fw-bold small">${title}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div class="d-flex justify-content-between text-muted mt-2">
+                                <span>11:23 AM · Apr 24, 2025</span>
+                                <span><i class="fas fa-external-link-alt"></i></span>
+                            </div>
+                        </div>
+                        <div class="border-top p-2 d-flex justify-content-around">
+                            <button class="btn btn-light btn-sm"><i class="far fa-comment me-1"></i> 8</button>
+                            <button class="btn btn-light btn-sm"><i class="fas fa-retweet me-1"></i> 15</button>
+                            <button class="btn btn-light btn-sm"><i class="far fa-heart me-1"></i> 32</button>
+                            <button class="btn btn-light btn-sm"><i class="fas fa-share-alt me-1"></i></button>
+                        </div>
+                    </div>
+                    <p class="text-muted small">Przykładowy podgląd wpisu na Twitterze</p>
+                `;
+            }
+            
+            // Update preview
+            document.querySelector('.preview-container').innerHTML = previewHtml;
+        }
+        
+        // Confirm cancel function
+        window.confirmCancel = function(contentId) {
+            const form = document.getElementById('cancel-form');
+            form.action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('0', contentId);
+            
+            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+            modal.show();
+        };
+    });
+</script>
+{% endblock %}
