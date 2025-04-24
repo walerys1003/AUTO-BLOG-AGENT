@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Preview - BLOG AUTOMATION MASTER{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <h1 class="h2 mb-0">
+            <i class="fas fa-eye text-primary me-2"></i> Content Preview
+        </h1>
+        <p class="text-muted mt-2">
+            Preview how your article will look when published.
+        </p>
+    </div>
+    <div class="col-lg-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('content_creator.edit_content', content_id=content_log.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit me-2"></i> Edit
+            </a>
+            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Article Content Preview -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h1 class="h3 mb-0">{{ content_log.title }}</h1>
+                <p class="text-muted mb-0">
+                    <small>
+                        <i class="fas fa-globe me-1"></i> {{ blog.name }} | 
+                        <i class="fas fa-calendar me-1"></i> {{ content_log.created_at.strftime('%B %d, %Y') }}
+                    </small>
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Featured Image (if provided) -->
+                {% if featured_image_url %}
+                <div class="text-center mb-4">
+                    <img src="{{ featured_image_url }}" alt="{{ content_log.title }}" class="img-fluid rounded">
+                </div>
+                {% endif %}
+                
+                <!-- Article Excerpt -->
+                <div class="mb-4">
+                    <p class="lead">
+                        {{ excerpt }}
+                    </p>
+                    <hr>
+                </div>
+                
+                <!-- Article Content -->
+                <div class="article-content">
+                    {{ content_html|safe }}
+                </div>
+                
+                <!-- Tags -->
+                {% if tags %}
+                <div class="mt-4">
+                    <h5>Tags:</h5>
+                    <div>
+                        {% for tag in tags %}
+                        <span class="badge bg-light text-dark me-2 mb-2">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Metadata Preview -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">SEO Metadata</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>Google Search Preview:</h6>
+                    <div class="border rounded p-3 bg-light">
+                        <div style="color: #1a0dab; font-size: 18px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ content_log.title }}</div>
+                        <div style="color: #006621; font-size: 14px; margin-bottom: 5px;">{{ blog.url }}</div>
+                        <div style="color: #545454; font-size: 14px; line-height: 1.4;">{{ meta_description }}</div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Meta Description:</h6>
+                    <p class="mb-2">{{ meta_description }}</p>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar {{ 'bg-success' if meta_description|length <= 160 else 'bg-danger' }}" 
+                             role="progressbar" 
+                             style="width: {{ (meta_description|length / 160 * 100)|min(100) }}%">
+                        </div>
+                    </div>
+                    <small class="text-{{ 'success' if meta_description|length <= 160 else 'danger' }}">
+                        {{ meta_description|length }} / 160 characters
+                    </small>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Excerpt:</h6>
+                    <p>{{ excerpt }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Word Count:</h6>
+                    {% set word_count = content_html|striptags|replace('&nbsp;', ' ')|replace('\n', ' ')|replace('\t', ' ')|replace('  ', ' ')|split(' ')|length %}
+                    <p>{{ word_count }} words</p>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar {{ 'bg-danger' if word_count < 800 else 'bg-warning' if word_count < 1200 else 'bg-success' if word_count <= 1600 else 'bg-info' }}" 
+                             role="progressbar" 
+                             style="width: {{ (word_count / 1600 * 100)|min(100) }}%">
+                        </div>
+                    </div>
+                    <small>
+                        {% if word_count < 800 %}
+                        Too short (< 800 words)
+                        {% elif word_count < 1200 %}
+                        Short (800-1200 words)
+                        {% elif word_count <= 1600 %}
+                        Optimal (1200-1600 words)
+                        {% else %}
+                        Long (> 1600 words)
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <!-- Publish Action -->
+                {% if content_log.status == 'ready_to_publish' %}
+                <div class="d-grid mt-4">
+                    <form action="{{ url_for('content_creator.publish_content', content_id=content_log.id) }}" method="post">
+                        <input type="hidden" name="topic_id" value="{{ topic.id if topic else '' }}">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i> Publish Now
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Mobile Preview (mock) -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Mobile Preview</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mock-mobile-device mx-auto border rounded" style="max-width: 300px; height: 500px; overflow: hidden;">
+                    <div class="mock-mobile-header bg-dark text-white p-2">
+                        <small>
+                            <i class="fas fa-globe"></i> {{ blog.name }}
+                        </small>
+                    </div>
+                    <div class="mock-mobile-content p-3" style="height: 440px; overflow-y: auto;">
+                        <h3 style="font-size: 1.2rem;">{{ content_log.title }}</h3>
+                        <p><small>{{ content_log.created_at.strftime('%B %d, %Y') }}</small></p>
+                        
+                        {% if featured_image_url %}
+                        <img src="{{ featured_image_url }}" alt="{{ content_log.title }}" class="img-fluid rounded mb-3">
+                        {% endif %}
+                        
+                        <p style="font-size: 0.9rem;">{{ excerpt }}</p>
+                        <hr>
+                        
+                        <div style="font-size: 0.8rem;">
+                            {{ content_html|safe|truncate(2000) }}
+                            {% if content_html|length > 2000 %}
+                            <p class="text-center text-muted">
+                                <small>(Content truncated for preview)</small>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

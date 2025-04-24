@@ -1,0 +1,412 @@
+"""
+Content Creator Routes Module
+"""
+import json
+import logging
+from datetime import datetime, timedelta
+
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from sqlalchemy import desc, and_, or_, func
+
+from app import db
+from models import Blog, ArticleTopic, ContentLog
+from utils.writing import content_generator
+
+# Create Blueprint
+content_creator_bp = Blueprint('content_creator', __name__)
+logger = logging.getLogger(__name__)
+
+
+@content_creator_bp.route('/content-creator')
+def content_dashboard():
+    """Content creation dashboard view"""
+    # Get all blogs
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    # Get status filter
+    status_filter = request.args.get('status', 'pending')
+    
+    # Get blog filter
+    blog_filter = request.args.get('blog_id', '')
+    try:
+        blog_filter = int(blog_filter) if blog_filter else None
+    except ValueError:
+        blog_filter = None
+    
+    # Get all approved topics for the selected blogs
+    query = ArticleTopic.query.filter(ArticleTopic.status == 'approved')
+    
+    if blog_filter:
+        query = query.filter(ArticleTopic.blog_id == blog_filter)
+    
+    # Get approved topics ordered by score (high to low)
+    approved_topics = query.order_by(desc(ArticleTopic.score)).limit(10).all()
+    
+    # Get recent content logs
+    content_query = ContentLog.query
+    
+    if blog_filter:
+        content_query = content_query.filter(ContentLog.blog_id == blog_filter)
+    
+    # Get the latest content logs
+    recent_content = content_query.order_by(desc(ContentLog.created_at)).limit(10).all()
+    
+    # Get any drafts in progress
+    draft_query = ContentLog.query.filter(ContentLog.status == 'draft')
+    
+    if blog_filter:
+        draft_query = draft_query.filter(ContentLog.blog_id == blog_filter)
+    
+    drafts = draft_query.all()
+    
+    return render_template(
+        'content/dashboard.html',
+        blogs=blogs,
+        approved_topics=approved_topics,
+        recent_content=recent_content,
+        drafts=drafts,
+        active_blog=blog_filter,
+        title="Content Creator"
+    )
+
+
+@content_creator_bp.route('/content-creator/generate', methods=['POST'])
+def generate_content():
+    """Generate content from a topic"""
+    topic_id = request.form.get('topic_id')
+    style = request.form.get('style', 'informative')
+    length = request.form.get('length', 'medium')
+    
+    if not topic_id:
+        flash('Topic ID is required', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    try:
+        # Get the topic
+        topic = ArticleTopic.query.get(topic_id)
+        
+        if not topic:
+            flash('Topic not found', 'danger')
+            return redirect(url_for('content_creator.content_dashboard'))
+        
+        # Create a draft content log
+        content_log = ContentLog(
+            blog_id=topic.blog_id,
+            title=topic.title,
+            status='draft',
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(content_log)
+        db.session.commit()
+        
+        # Redirect to the content generation page
+        return redirect(url_for('content_creator.edit_content', content_id=content_log.id, topic_id=topic_id, style=style, length=length))
+        
+    except Exception as e:
+        logger.error(f"Error starting content generation: {str(e)}")
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/edit/<int:content_id>', methods=['GET', 'POST'])
+def edit_content(content_id):
+    """Edit content before publishing"""
+    content_log = ContentLog.query.get_or_404(content_id)
+    topic_id = request.args.get('topic_id')
+    style = request.args.get('style', 'informative')
+    length = request.args.get('length', 'medium')
+    
+    # If this is a POST request, update the content and metadata
+    if request.method == 'POST':
+        try:
+            content_log.title = request.form.get('title', content_log.title)
+            
+            # Store the content and metadata in the error_message field temporarily
+            # In a production system, there would be a better structure for this
+            content_data = {
+                'content': request.form.get('content', ''),
+                'meta_description': request.form.get('meta_description', ''),
+                'excerpt': request.form.get('excerpt', ''),
+                'tags': request.form.get('tags', '').split(','),
+                'featured_image_url': request.form.get('featured_image_url', '')
+            }
+            
+            content_log.error_message = json.dumps(content_data)
+            
+            # Update status based on action
+            action = request.form.get('action', 'save')
+            
+            if action == 'publish':
+                content_log.status = 'ready_to_publish'
+                flash('Content marked as ready to publish', 'success')
+            else:
+                content_log.status = 'draft'
+                flash('Draft saved successfully', 'success')
+            
+            db.session.commit()
+            
+            if action == 'publish':
+                return redirect(url_for('content_creator.content_dashboard'))
+            else:
+                return redirect(url_for('content_creator.edit_content', content_id=content_id))
+                
+        except Exception as e:
+            logger.error(f"Error saving content: {str(e)}")
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('content_creator.edit_content', content_id=content_id))
+    
+    # For GET requests, show the edit form
+    topic = None
+    content_html = ''
+    meta_description = ''
+    excerpt = ''
+    tags = []
+    featured_image_url = ''
+    
+    # Load content from the content_log if it exists
+    if content_log.error_message:
+        try:
+            content_data = json.loads(content_log.error_message)
+            content_html = content_data.get('content', '')
+            meta_description = content_data.get('meta_description', '')
+            excerpt = content_data.get('excerpt', '')
+            tags = content_data.get('tags', [])
+            featured_image_url = content_data.get('featured_image_url', '')
+        except json.JSONDecodeError:
+            # If the JSON is invalid, we'll just use the defaults
+            pass
+    
+    # If the content is empty and we have a topic, generate content
+    if not content_html and topic_id:
+        try:
+            topic = ArticleTopic.query.get(topic_id)
+            
+            if topic:
+                # Generate content using the AI
+                generation_result = content_generator.generate_article(
+                    topic=topic.title,
+                    keywords=topic.get_keywords() if topic.get_keywords() else [],
+                    style=style,
+                    length=length
+                )
+                
+                content_html = generation_result.get('content', '')
+                meta_description = generation_result.get('meta_description', '')
+                excerpt = generation_result.get('excerpt', '')
+                tags = generation_result.get('tags', [])
+                featured_image_url = generation_result.get('featured_image_url', '')
+                
+                # Save the generated content to the content_log
+                content_data = {
+                    'content': content_html,
+                    'meta_description': meta_description,
+                    'excerpt': excerpt,
+                    'tags': tags,
+                    'featured_image_url': featured_image_url
+                }
+                
+                content_log.error_message = json.dumps(content_data)
+                db.session.commit()
+                
+        except Exception as e:
+            logger.error(f"Error generating content: {str(e)}")
+            flash(f'Error generating content: {str(e)}', 'danger')
+    
+    # If we don't have a topic object yet but we have a topic_id, get it
+    if not topic and topic_id:
+        topic = ArticleTopic.query.get(topic_id)
+    
+    # Get the blog
+    blog = Blog.query.get(content_log.blog_id)
+    
+    return render_template(
+        'content/editor.html',
+        content_log=content_log,
+        topic=topic,
+        blog=blog,
+        content_html=content_html,
+        meta_description=meta_description,
+        excerpt=excerpt,
+        tags=tags,
+        featured_image_url=featured_image_url,
+        style=style,
+        length=length
+    )
+
+
+@content_creator_bp.route('/content-creator/preview/<int:content_id>')
+def preview_content(content_id):
+    """Preview content before publishing"""
+    content_log = ContentLog.query.get_or_404(content_id)
+    
+    content_html = ''
+    meta_description = ''
+    excerpt = ''
+    tags = []
+    featured_image_url = ''
+    
+    # Load content from the content_log if it exists
+    if content_log.error_message:
+        try:
+            content_data = json.loads(content_log.error_message)
+            content_html = content_data.get('content', '')
+            meta_description = content_data.get('meta_description', '')
+            excerpt = content_data.get('excerpt', '')
+            tags = content_data.get('tags', [])
+            featured_image_url = content_data.get('featured_image_url', '')
+        except json.JSONDecodeError:
+            # If the JSON is invalid, we'll just use the defaults
+            pass
+    
+    # Get the blog
+    blog = Blog.query.get(content_log.blog_id)
+    
+    return render_template(
+        'content/preview.html',
+        content_log=content_log,
+        blog=blog,
+        content_html=content_html,
+        meta_description=meta_description,
+        excerpt=excerpt,
+        tags=tags,
+        featured_image_url=featured_image_url
+    )
+
+
+@content_creator_bp.route('/content-creator/publish/<int:content_id>', methods=['POST'])
+def publish_content(content_id):
+    """Publish content to WordPress"""
+    content_log = ContentLog.query.get_or_404(content_id)
+    
+    # Only allow publishing of content that's marked as ready
+    if content_log.status != 'ready_to_publish':
+        flash('Content is not ready to publish', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    try:
+        # Load content from the content_log
+        if not content_log.error_message:
+            flash('No content found to publish', 'danger')
+            return redirect(url_for('content_creator.content_dashboard'))
+        
+        content_data = json.loads(content_log.error_message)
+        content_html = content_data.get('content', '')
+        meta_description = content_data.get('meta_description', '')
+        excerpt = content_data.get('excerpt', '')
+        tags = content_data.get('tags', [])
+        featured_image_url = content_data.get('featured_image_url', '')
+        
+        # Get the blog
+        blog = Blog.query.get(content_log.blog_id)
+        
+        if not blog:
+            flash('Blog not found', 'danger')
+            return redirect(url_for('content_creator.content_dashboard'))
+        
+        # In a real implementation, this would publish to WordPress
+        # For now, we'll just mark it as published
+        content_log.status = 'published'
+        content_log.published_at = datetime.utcnow()
+        
+        # Update the topic to mark it as used
+        topic_id = request.form.get('topic_id')
+        if topic_id:
+            try:
+                topic = ArticleTopic.query.get(topic_id)
+                if topic and topic.status == 'approved':
+                    topic.status = 'used'
+                    db.session.commit()
+            except Exception as e:
+                logger.error(f"Error updating topic status: {str(e)}")
+        
+        db.session.commit()
+        
+        flash('Content published successfully', 'success')
+        return redirect(url_for('content_creator.content_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error publishing content: {str(e)}")
+        flash(f'Error publishing content: {str(e)}', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/delete/<int:content_id>', methods=['POST'])
+def delete_content(content_id):
+    """Delete a draft content log"""
+    content_log = ContentLog.query.get_or_404(content_id)
+    
+    # Only allow deletion of drafts
+    if content_log.status not in ['draft', 'ready_to_publish']:
+        flash('Only drafts can be deleted', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    try:
+        db.session.delete(content_log)
+        db.session.commit()
+        
+        flash('Draft deleted successfully', 'success')
+        return redirect(url_for('content_creator.content_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error deleting draft: {str(e)}")
+        flash(f'Error deleting draft: {str(e)}', 'danger')
+        return redirect(url_for('content_creator.content_dashboard'))
+
+
+@content_creator_bp.route('/content-creator/regenerate/<int:content_id>', methods=['POST'])
+def regenerate_content(content_id):
+    """Regenerate content with different settings"""
+    content_log = ContentLog.query.get_or_404(content_id)
+    
+    topic_id = request.form.get('topic_id')
+    style = request.form.get('style', 'informative')
+    length = request.form.get('length', 'medium')
+    
+    if not topic_id:
+        flash('Topic ID is required', 'danger')
+        return redirect(url_for('content_creator.edit_content', content_id=content_id))
+    
+    try:
+        # Get the topic
+        topic = ArticleTopic.query.get(topic_id)
+        
+        if not topic:
+            flash('Topic not found', 'danger')
+            return redirect(url_for('content_creator.edit_content', content_id=content_id))
+        
+        # Clear existing content
+        content_log.error_message = None
+        db.session.commit()
+        
+        # Redirect to the content editor to trigger regeneration
+        return redirect(url_for('content_creator.edit_content', content_id=content_id, topic_id=topic_id, style=style, length=length))
+        
+    except Exception as e:
+        logger.error(f"Error regenerating content: {str(e)}")
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('content_creator.edit_content', content_id=content_id))
+
+
+@content_creator_bp.route('/content-creator/generate-metadata', methods=['POST'])
+def generate_metadata():
+    """Generate metadata from content"""
+    content = request.form.get('content', '')
+    
+    if not content:
+        return jsonify({'success': False, 'message': 'Content is required'})
+    
+    try:
+        # Use the content generator to create metadata
+        metadata = content_generator.generate_metadata(content)
+        
+        return jsonify({
+            'success': True,
+            'meta_description': metadata.get('meta_description', ''),
+            'excerpt': metadata.get('excerpt', ''),
+            'tags': metadata.get('tags', [])
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating metadata: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})

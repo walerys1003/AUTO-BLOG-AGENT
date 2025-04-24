@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Creator - BLOG AUTOMATION MASTER{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <h1 class="h2 mb-0">
+            <i class="fas fa-pen-fancy text-primary me-2"></i> Content Creator
+        </h1>
+        <p class="text-muted mt-2">
+            Generate and manage high-quality content for your blogs using AI assistance.
+        </p>
+    </div>
+    <div class="col-lg-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('topics') }}" class="btn btn-outline-primary">
+                <i class="fas fa-lightbulb me-2"></i> Manage Topics
+            </a>
+            {% if drafts %}
+            <a href="#drafts" class="btn btn-outline-info">
+                <i class="fas fa-file-alt me-2"></i> View Drafts
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body bg-light">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 d-md-block d-none">Filter Content</h5>
+                    <div class="form-group">
+                        <select class="form-select" id="blogFilter" onchange="filterByBlog(this.value)">
+                            <option value="">All Blogs</option>
+                            {% for blog in blogs %}
+                            <option value="{{ blog.id }}" {% if active_blog == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Creation Modes -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Controlled Automation</h5>
+            </div>
+            <div class="card-body">
+                <p>Create content from approved topics with customization and review before publishing.</p>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#topicSelectionModal">
+                        <i class="fas fa-magic me-2"></i> Start Creating Content
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Full Automation</h5>
+                    <span class="badge bg-warning">Coming Soon</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>Set up rules for fully automated content creation and publishing without manual review.</p>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-secondary" disabled>
+                        <i class="fas fa-robot me-2"></i> Configure Automation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Drafts Section -->
+{% if drafts %}
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="drafts">In-Progress Drafts</h5>
+            <span class="badge bg-info">{{ drafts|length }}</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Blog</th>
+                        <th>Created</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for draft in drafts %}
+                    <tr>
+                        <td>{{ draft.title }}</td>
+                        <td>{{ draft.blog.name }}</td>
+                        <td>{{ draft.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <span class="badge {% if draft.status == 'draft' %}bg-secondary{% else %}bg-success{% endif %}">
+                                {% if draft.status == 'draft' %}Draft{% else %}Ready{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('content_creator.edit_content', content_id=draft.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('content_creator.preview_content', content_id=draft.id) }}" class="btn btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if draft.status == 'ready_to_publish' %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="publishContent('{{ draft.id }}')">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="deleteDraft('{{ draft.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Content Section -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Recently Published Content</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if recent_content %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Blog</th>
+                        <th>Published</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for content in recent_content %}
+                    {% if content.status == 'published' %}
+                    <tr>
+                        <td>{{ content.title }}</td>
+                        <td>{{ content.blog.name }}</td>
+                        <td>{{ content.published_at.strftime('%Y-%m-%d %H:%M') if content.published_at else 'N/A' }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ content.blog.url }}/{{ content.post_id }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-info" 
+                                        onclick="duplicateContent('{{ content.id }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-file-alt fa-3x text-muted"></i>
+            </div>
+            <h4>No Published Content Yet</h4>
+            <p class="text-muted">
+                Start creating content to see your published articles here.
+            </p>
+            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#topicSelectionModal">
+                <i class="fas fa-magic me-2"></i> Create First Article
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Topic Selection Modal -->
+<div class="modal fade" id="topicSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select a Topic for Content Creation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if approved_topics %}
+                <div class="mb-4">
+                    <div class="form-text mb-3">Select from approved topics to create new content.</div>
+                    <div class="list-group">
+                        {% for topic in approved_topics %}
+                        <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="collapse" data-bs-target="#topicOptions{{ topic.id }}">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h5 class="mb-1">{{ topic.title }}</h5>
+                                <span class="badge bg-primary rounded-pill">Score: {{ "%.1f"|format(topic.score) }}</span>
+                            </div>
+                            <p class="mb-1">
+                                {% if topic.get_keywords() %}
+                                <small class="text-muted">
+                                    Keywords: 
+                                    {% for keyword in topic.get_keywords() %}
+                                    <span class="badge bg-light text-dark">{{ keyword }}</span>
+                                    {% endfor %}
+                                </small>
+                                {% endif %}
+                            </p>
+                        </button>
+                        <div class="collapse" id="topicOptions{{ topic.id }}">
+                            <div class="card card-body border-top-0">
+                                <form action="{{ url_for('content_creator.generate_content') }}" method="post">
+                                    <input type="hidden" name="topic_id" value="{{ topic.id }}">
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="style{{ topic.id }}" class="form-label">Writing Style</label>
+                                            <select class="form-select" id="style{{ topic.id }}" name="style">
+                                                <option value="informative">Informative & Educational</option>
+                                                <option value="conversational">Conversational & Friendly</option>
+                                                <option value="professional">Professional & Technical</option>
+                                                <option value="storytelling">Storytelling & Narrative</option>
+                                                <option value="persuasive">Persuasive & Compelling</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="length{{ topic.id }}" class="form-label">Article Length</label>
+                                            <select class="form-select" id="length{{ topic.id }}" name="length">
+                                                <option value="short">Short (~800 words)</option>
+                                                <option value="medium" selected>Medium (~1200 words)</option>
+                                                <option value="long">Long (~1600 words)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid mt-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-magic me-2"></i> Generate Article
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No approved topics available. Please approve topics in the 
+                    <a href="{{ url_for('topics') }}">Topics section</a> or 
+                    <a href="{{ url_for('seo_inspiration.seo_inspirations') }}">SEO Inspirations</a> first.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden forms for actions -->
+<form id="publishForm" action="" method="post" style="display: none;">
+    <input type="hidden" name="topic_id" id="publishTopicId" value="">
+</form>
+
+<form id="deleteForm" action="" method="post" style="display: none;"></form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter by blog
+function filterByBlog(blogId) {
+    const url = new URL(window.location);
+    url.searchParams.set('blog_id', blogId);
+    window.location.href = url.toString();
+}
+
+// Publish content
+function publishContent(contentId) {
+    if (confirm('Are you sure you want to publish this content?')) {
+        const form = document.getElementById('publishForm');
+        form.action = "{{ url_for('content_creator.publish_content', content_id=0) }}".replace('0', contentId);
+        form.submit();
+    }
+}
+
+// Delete draft
+function deleteDraft(contentId) {
+    if (confirm('Are you sure you want to delete this draft? This action cannot be undone.')) {
+        const form = document.getElementById('deleteForm');
+        form.action = "{{ url_for('content_creator.delete_content', content_id=0) }}".replace('0', contentId);
+        form.submit();
+    }
+}
+
+// Duplicate content (not implemented yet)
+function duplicateContent(contentId) {
+    alert('This feature is not yet implemented. It will allow you to create a new draft based on existing content.');
+}
+</script>
+{% endblock %}

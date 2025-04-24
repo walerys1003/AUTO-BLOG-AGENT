@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Editor - BLOG AUTOMATION MASTER{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <h1 class="h2 mb-0">
+            <i class="fas fa-pen-fancy text-primary me-2"></i> Content Editor
+        </h1>
+        <p class="text-muted mt-2">
+            Edit and refine your article before publishing.
+        </p>
+    </div>
+    <div class="col-lg-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+            <a href="{{ url_for('content_creator.preview_content', content_id=content_log.id) }}" class="btn btn-outline-info" target="_blank">
+                <i class="fas fa-eye me-2"></i> Preview
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Editor Form -->
+    <div class="col-lg-12">
+        <form id="contentForm" action="{{ url_for('content_creator.edit_content', content_id=content_log.id) }}" method="post">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="title" name="title" placeholder="Article Title" value="{{ content_log.title }}" required>
+                                <label for="title">Article Title</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group mt-2 mt-md-0">
+                                <button type="submit" name="action" value="save" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Save Draft
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="confirmPublish()">
+                                    <i class="fas fa-paper-plane me-2"></i> Ready to Publish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Article Content -->
+                    <div class="mb-4">
+                        <label for="content" class="form-label">Article Content <small class="text-muted">(HTML)</small></label>
+                        <textarea class="form-control" id="content" name="content" rows="20" style="font-family: monospace;">{{ content_html }}</textarea>
+                    </div>
+                    
+                    <!-- Meta Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="meta_description" name="meta_description" placeholder="Meta Description" value="{{ meta_description }}">
+                                <label for="meta_description">Meta Description <small class="text-muted">(150-160 characters)</small></label>
+                                <div class="form-text">
+                                    <span id="metaDescriptionCount">0</span>/160 characters
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="excerpt" name="excerpt" placeholder="Excerpt" value="{{ excerpt }}">
+                                <label for="excerpt">Excerpt/Snippet</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="tags" name="tags" placeholder="Tags" value="{{ tags|join(', ') }}">
+                                <label for="tags">Tags <small class="text-muted">(comma-separated)</small></label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="featured_image_url" name="featured_image_url" placeholder="Featured Image URL" value="{{ featured_image_url }}">
+                                <label for="featured_image_url">Featured Image URL <small class="text-muted">(optional)</small></label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 text-end">
+                            <button type="button" id="generateMetadataBtn" class="btn btn-outline-primary">
+                                <i class="fas fa-magic me-2"></i> Generate Metadata
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generation Settings -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Regeneration Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="topic_id" class="form-label">Topic</label>
+                            <input type="text" class="form-control" value="{{ topic.title if topic else 'N/A' }}" readonly>
+                            <input type="hidden" name="topic_id" id="topic_id" value="{{ topic.id if topic else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="style" class="form-label">Writing Style</label>
+                            <select class="form-select" id="style" name="style">
+                                <option value="informative" {% if style == 'informative' %}selected{% endif %}>Informative & Educational</option>
+                                <option value="conversational" {% if style == 'conversational' %}selected{% endif %}>Conversational & Friendly</option>
+                                <option value="professional" {% if style == 'professional' %}selected{% endif %}>Professional & Technical</option>
+                                <option value="storytelling" {% if style == 'storytelling' %}selected{% endif %}>Storytelling & Narrative</option>
+                                <option value="persuasive" {% if style == 'persuasive' %}selected{% endif %}>Persuasive & Compelling</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="length" class="form-label">Article Length</label>
+                            <select class="form-select" id="length" name="length">
+                                <option value="short" {% if length == 'short' %}selected{% endif %}>Short (~800 words)</option>
+                                <option value="medium" {% if length == 'medium' %}selected{% endif %}>Medium (~1200 words)</option>
+                                <option value="long" {% if length == 'long' %}selected{% endif %}>Long (~1600 words)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-3">
+                        <button type="button" class="btn btn-warning" onclick="confirmRegenerate()">
+                            <i class="fas fa-sync-alt me-2"></i> Regenerate Content
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden action field for form submission -->
+            <input type="hidden" name="action" id="formAction" value="save">
+        </form>
+        
+        <!-- Regeneration Form -->
+        <form id="regenerateForm" action="{{ url_for('content_creator.regenerate_content', content_id=content_log.id) }}" method="post" style="display: none;">
+            <input type="hidden" name="topic_id" id="regenerateTopicId" value="{{ topic.id if topic else '' }}">
+            <input type="hidden" name="style" id="regenerateStyle" value="{{ style }}">
+            <input type="hidden" name="length" id="regenerateLength" value="{{ length }}">
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6.4.2/tinymce.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize TinyMCE
+    tinymce.init({
+        selector: '#content',
+        height: 600,
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+    });
+    
+    // Update meta description character count
+    const metaDescription = document.getElementById('meta_description');
+    const metaDescriptionCount = document.getElementById('metaDescriptionCount');
+    
+    if (metaDescription && metaDescriptionCount) {
+        metaDescriptionCount.textContent = metaDescription.value.length;
+        
+        metaDescription.addEventListener('input', function() {
+            metaDescriptionCount.textContent = this.value.length;
+            
+            // Change color if too long
+            if (this.value.length > 160) {
+                metaDescriptionCount.style.color = 'red';
+            } else {
+                metaDescriptionCount.style.color = '';
+            }
+        });
+    }
+    
+    // Generate metadata button
+    const generateMetadataBtn = document.getElementById('generateMetadataBtn');
+    
+    if (generateMetadataBtn) {
+        generateMetadataBtn.addEventListener('click', function() {
+            // Get the content from TinyMCE
+            const content = tinymce.get('content').getContent();
+            
+            if (!content) {
+                alert('Please add some content before generating metadata');
+                return;
+            }
+            
+            // Show loading state
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Generating...';
+            this.disabled = true;
+            
+            // Send request to generate metadata
+            fetch("{{ url_for('content_creator.generate_metadata') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `content=${encodeURIComponent(content)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update fields with generated metadata
+                    document.getElementById('meta_description').value = data.meta_description;
+                    document.getElementById('excerpt').value = data.excerpt;
+                    document.getElementById('tags').value = data.tags.join(', ');
+                    
+                    // Update character count
+                    metaDescriptionCount.textContent = data.meta_description.length;
+                    
+                    // Show success message
+                    alert('Metadata generated successfully');
+                } else {
+                    alert('Error generating metadata: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating metadata');
+            })
+            .finally(() => {
+                // Reset button
+                this.innerHTML = '<i class="fas fa-magic me-2"></i> Generate Metadata';
+                this.disabled = false;
+            });
+        });
+    }
+});
+
+// Functions for form submission
+function confirmPublish() {
+    if (confirm('Are you sure this content is ready to publish?')) {
+        document.getElementById('formAction').value = 'publish';
+        document.getElementById('contentForm').submit();
+    }
+}
+
+function confirmRegenerate() {
+    if (confirm('Are you sure you want to regenerate the content? This will replace your current work.')) {
+        // Get current values
+        const style = document.getElementById('style').value;
+        const length = document.getElementById('length').value;
+        const topicId = document.getElementById('topic_id').value;
+        
+        // Set values in regenerate form
+        document.getElementById('regenerateStyle').value = style;
+        document.getElementById('regenerateLength').value = length;
+        document.getElementById('regenerateTopicId').value = topicId;
+        
+        // Submit the regenerate form
+        document.getElementById('regenerateForm').submit();
+    }
+}
+</script>
+{% endblock %}

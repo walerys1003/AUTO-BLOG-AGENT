@@ -13,6 +13,7 @@ from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
 from routes_seo_inspiration import seo_inspiration_bp
+from routes_content_creator import content_creator_bp
 from newsletter import newsletter_bp
 import json
 from datetime import datetime, timedelta
