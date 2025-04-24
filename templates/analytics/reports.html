@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Raporty wydajności - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Raporty wydajności treści</h1>
+        <div>
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            </a>
+            <div class="btn-group ms-2">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-plus me-1"></i> Nowy raport
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='daily') }}">Raport dzienny</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='weekly') }}">Raport tygodniowy</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='monthly') }}">Raport miesięczny</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('custom_report') }}">Raport niestandardowy</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Controls -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('analytics_reports') }}" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="blog_id" class="form-label">Blog</label>
+                    <select class="form-select" id="blog_id" name="blog_id">
+                        <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}" {% if selected_blog_id == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="report_type" class="form-label">Typ raportu</label>
+                    <select class="form-select" id="report_type" name="report_type">
+                        <option value="all" {% if selected_type == 'all' %}selected{% endif %}>Wszystkie typy</option>
+                        <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>Dzienny</option>
+                        <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>Tygodniowy</option>
+                        <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>Miesięczny</option>
+                        <option value="custom" {% if selected_type == 'custom' %}selected{% endif %}>Niestandardowy</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date_range" class="form-label">Zakres dat</label>
+                    <select class="form-select" id="date_range" name="date_range">
+                        <option value="7" {% if days == 7 %}selected{% endif %}>Ostatnie 7 dni</option>
+                        <option value="30" {% if days == 30 %}selected{% endif %}>Ostatnie 30 dni</option>
+                        <option value="90" {% if days == 90 %}selected{% endif %}>Ostatnie 90 dni</option>
+                        <option value="180" {% if days == 180 %}selected{% endif %}>Ostatnie 6 miesięcy</option>
+                        <option value="365" {% if days == 365 %}selected{% endif %}>Ostatni rok</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtruj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Reports Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Blog</th>
+                            <th>Typ raportu</th>
+                            <th>Okres</th>
+                            <th class="text-end">Wyświetlenia</th>
+                            <th class="text-end">Użytkownicy</th>
+                            <th>Data utworzenia</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports.items %}
+                        <tr>
+                            <td>{{ report.blog.name }}</td>
+                            <td>
+                                {% if report.report_type == 'daily' %}
+                                    <span class="badge bg-info">Dzienny</span>
+                                {% elif report.report_type == 'weekly' %}
+                                    <span class="badge bg-primary">Tygodniowy</span>
+                                {% elif report.report_type == 'monthly' %}
+                                    <span class="badge bg-success">Miesięczny</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ report.report_type|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.start_date.strftime('%Y-%m-%d') }} - {{ report.end_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="text-end">{{ report.total_views }}</td>
+                            <td class="text-end">{{ report.total_visitors }}</td>
+                            <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('download_report', report_id=report.id, format='pdf') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteReportModal" 
+                                            data-report-id="{{ report.id }}" data-report-name="{{ report.blog.name }} ({{ report.start_date.strftime('%Y-%m-%d') }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">Brak raportów spełniających kryteria filtrowania</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if reports.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if reports.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in reports.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page_num %}
+                            {% if page_num == reports.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if reports.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteReportModalLabel">Potwierdzenie usunięcia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz usunąć raport <strong id="reportNameToDelete"></strong>?
+                <p class="text-danger mt-2">Tej operacji nie można cofnąć.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <form action="{{ url_for('delete_report') }}" method="post" id="deleteReportForm">
+                    <input type="hidden" name="report_id" id="reportIdToDelete">
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete confirmation modal
+    var deleteReportModal = document.getElementById('deleteReportModal');
+    if (deleteReportModal) {
+        deleteReportModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var reportId = button.getAttribute('data-report-id');
+            var reportName = button.getAttribute('data-report-name');
+            
+            document.getElementById('reportIdToDelete').value = reportId;
+            document.getElementById('reportNameToDelete').textContent = reportName;
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Raport wydajności - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Raport wydajności treści</h1>
+        <div>
+            <a href="{{ url_for('analytics_reports', blog_id=report.blog_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Wszystkie raporty
+            </a>
+            <a href="{{ url_for('download_report', report_id=report.id, format='pdf') }}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-file-pdf me-1"></i> Eksportuj PDF
+            </a>
+        </div>
+    </div>
+    
+    <!-- Report Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>{{ report.blog.name }}</h3>
+                    <p class="text-muted">
+                        {% if report.report_type == 'daily' %}
+                            Raport dzienny
+                        {% elif report.report_type == 'weekly' %}
+                            Raport tygodniowy
+                        {% elif report.report_type == 'monthly' %}
+                            Raport miesięczny
+                        {% else %}
+                            {{ report.report_type|capitalize }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>
+                        <strong>Okres:</strong> {{ report.start_date.strftime('%Y-%m-%d') }} do {{ report.end_date.strftime('%Y-%m-%d') }}
+                    </p>
+                    <p class="text-muted">
+                        Wygenerowano: {{ report.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Performance Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Podsumowanie wydajności</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-start border-4 border-primary px-3 py-2">
+                                <div class="text-muted small">Łączne wyświetlenia</div>
+                                <h2 class="mb-0">{{ report.total_views }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-start border-4 border-success px-3 py-2">
+                                <div class="text-muted small">Unikalni użytkownicy</div>
+                                <h2 class="mb-0">{{ report.total_visitors }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-start border-4 border-info px-3 py-2">
+                                <div class="text-muted small">Wyświetlenia/Dzień</div>
+                                <h2 class="mb-0">
+                                    {% set days = (report.end_date - report.start_date).days %}
+                                    {{ (report.total_views / days)|round|int if days > 0 else report.total_views }}
+                                </h2>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-start border-4 border-warning px-3 py-2">
+                                <div class="text-muted small">Wsp. odrzuceń</div>
+                                <h2 class="mb-0">{{ '%0.1f'|format(report.avg_bounce_rate|float) }}%</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Posts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Najlepsze treści w tym okresie</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tytuł</th>
+                                    <th class="text-end">Wyświetlenia</th>
+                                    <th class="text-end">Użytkownicy</th>
+                                    <th class="text-end">Wsp. odrzuceń</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in top_posts %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ post.url }}" target="_blank">{{ post.title }}</a>
+                                    </td>
+                                    <td class="text-end">{{ post.views }}</td>
+                                    <td class="text-end">{{ post.visitors }}</td>
+                                    <td class="text-end">{{ '%0.1f'|format(post.bounce_rate|float) }}%</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Brak danych o postach w tym okresie</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Insights and Recommendations -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i> Analizy AI
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for insight in insights %}
+                        <li class="list-group-item">{{ insight }}</li>
+                        {% else %}
+                        <li class="list-group-item">Brak dostępnych analiz.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-check-circle me-2"></i> Rekomendacje
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for rec in recommendations %}
+                        <li class="list-group-item">{{ rec }}</li>
+                        {% else %}
+                        <li class="list-group-item">Brak dostępnych rekomendacji.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent text-center">
+                    <a href="{{ url_for('generate_content_plan', blog_id=report.blog_id) }}" class="btn btn-outline-success">
+                        <i class="fas fa-magic me-1"></i> Zaplanuj treści na podstawie rekomendacji
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="text-center mt-4 mb-5">
+        <a href="{{ url_for('generate_report', blog_id=report.blog_id, report_type='daily') }}" class="btn btn-primary me-2">
+            <i class="fas fa-chart-line me-1"></i> Wygeneruj raport dzienny
+        </a>
+        <a href="{{ url_for('generate_report', blog_id=report.blog_id, report_type='weekly') }}" class="btn btn-primary me-2">
+            <i class="fas fa-chart-bar me-1"></i> Wygeneruj raport tygodniowy
+        </a>
+        <a href="{{ url_for('generate_report', blog_id=report.blog_id, report_type='monthly') }}" class="btn btn-primary">
+            <i class="fas fa-chart-pie me-1"></i> Wygeneruj raport miesięczny
+        </a>
+    </div>
+</div>
+{% endblock %}

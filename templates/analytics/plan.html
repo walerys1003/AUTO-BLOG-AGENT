@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Generowanie planu treści - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Generowanie planu treści opartego na analityce</h1>
+        <div>
+            <a href="{{ url_for('content_calendar') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Powrót do kalendarza
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-7 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Ustawienia generowania planu</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('generate_content_plan') }}" method="post">
+                        <div class="mb-3">
+                            <label for="blog_id" class="form-label">Blog</label>
+                            <select class="form-select" id="blog_id" name="blog_id" required>
+                                <option value="">Wybierz blog</option>
+                                {% for blog in blogs %}
+                                <option value="{{ blog.id }}" data-topics="{{ topic_counts[blog.id] }}">
+                                    {{ blog.name }} (dostępne tematy: {{ topic_counts[blog.id] }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="days_ahead" class="form-label">Liczba dni do przodu</label>
+                            <select class="form-select" id="days_ahead" name="days_ahead">
+                                <option value="7">7 dni</option>
+                                <option value="14">14 dni</option>
+                                <option value="30" selected>30 dni</option>
+                                <option value="60">60 dni</option>
+                                <option value="90">90 dni</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="posts_per_day" class="form-label">Publikacji dziennie (opcjonalnie)</label>
+                            <select class="form-select" id="posts_per_day" name="posts_per_day">
+                                <option value="">Użyj domyślnych ustawień bloga</option>
+                                <option value="1">1 publikacja dziennie</option>
+                                <option value="2">2 publikacje dziennie</option>
+                                <option value="3">3 publikacje dziennie</option>
+                                <option value="4">4 publikacje dziennie</option>
+                            </select>
+                            <div class="form-text">
+                                Pozostaw puste, aby użyć domyślnych ustawień bloga z konfiguracji.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="skip_weekends" name="skip_weekends" checked>
+                            <label class="form-check-label" for="skip_weekends">Pomiń weekendy</label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="strategy" class="form-label">Strategia planowania</label>
+                            <select class="form-select" id="strategy" name="strategy">
+                                <option value="balanced" selected>Zrównoważona (domyślna)</option>
+                                <option value="performance">Zorientowana na wydajność</option>
+                                <option value="frequency">Zorientowana na częstotliwość</option>
+                                <option value="topics">Zorientowana na najlepsze tematy</option>
+                            </select>
+                            <div class="form-text">
+                                Zrównoważona: uwzględnia dane wydajności i priorytet tematów.<br>
+                                Zorientowana na wydajność: wybiera tematy podobne do najlepiej działających treści.<br>
+                                Zorientowana na częstotliwość: optymalizuje równomierne rozłożenie publikacji.<br>
+                                Zorientowana na tematy: wybiera tematy o najwyższym priorytecie nawet kosztem częstotliwości.
+                            </div>
+                        </div>
+                        
+                        <div id="topicsWarning" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle me-2"></i> Ten blog ma mniej zatwierdzonych tematów (0) niż planowanych postów. Wygeneruj więcej tematów przed planowaniem.
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Plan zostanie wygenerowany na podstawie zatwierdzonych tematów i danych analitycznych. Tematy są wybierane na podstawie przewidywanej wydajności i przyznanego priorytetu.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="generateBtn">Generuj plan treści</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i> Rekomendacje AI
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h5>Sugestie dotyczące planowania</h5>
+                    
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-chart-line text-success me-2"></i> Planuj treści na co najmniej 30 dni do przodu dla spójności.
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-calendar-check text-primary me-2"></i> Dostosuj częstotliwość publikacji do możliwości bloga i oczekiwań czytelników.
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-clock text-info me-2"></i> Publikuj w stałych porach dla budowania nawyku czytelników.
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-lightbulb text-warning me-2"></i> Wykorzystaj zróżnicowane tematy dla dotarcia do szerszej grupy odbiorców.
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-sync-alt text-danger me-2"></i> Regularnie synchronizuj dane analityczne dla lepszych sugestii.
+                        </li>
+                    </ul>
+                    
+                    <h5>Optymalne dni i godziny</h5>
+                    <p>Na podstawie zgromadzonych danych, sugerujemy następujące dni i godziny publikacji:</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Dzień</th>
+                                    <th>Najlepsza pora</th>
+                                    <th>Zaangażowanie</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Poniedziałek</td>
+                                    <td>08:00, 16:00</td>
+                                    <td><span class="badge bg-success">Wysokie</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Wtorek</td>
+                                    <td>10:00, 18:00</td>
+                                    <td><span class="badge bg-primary">Średnie</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Środa</td>
+                                    <td>09:00, 15:00</td>
+                                    <td><span class="badge bg-success">Wysokie</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Czwartek</td>
+                                    <td>11:00, 19:00</td>
+                                    <td><span class="badge bg-primary">Średnie</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Piątek</td>
+                                    <td>08:00, 14:00</td>
+                                    <td><span class="badge bg-success">Wysokie</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-bar me-1"></i> Sprawdź szczegółowe dane analityczne
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle topic count warning
+    const blogSelect = document.getElementById('blog_id');
+    const daysSelect = document.getElementById('days_ahead');
+    const postsPerDaySelect = document.getElementById('posts_per_day');
+    const topicsWarning = document.getElementById('topicsWarning');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    function updateTopicsWarning() {
+        if (!blogSelect.value) {
+            topicsWarning.classList.add('d-none');
+            return;
+        }
+        
+        const selectedOption = blogSelect.options[blogSelect.selectedIndex];
+        const topicCount = parseInt(selectedOption.getAttribute('data-topics') || '0');
+        
+        // Calculate total posts
+        const days = parseInt(daysSelect.value);
+        let postsPerDay = postsPerDaySelect.value ? parseInt(postsPerDaySelect.value) : 2; // Default assumption
+        
+        // Adjust for weekends if checkbox checked
+        const skipWeekends = document.getElementById('skip_weekends').checked;
+        let totalPosts = days * postsPerDay;
+        
+        if (skipWeekends) {
+            // Approximate number of weekdays in the period
+            const weekdayRatio = 5/7; // 5 weekdays out of 7 days
+            totalPosts = Math.round(days * weekdayRatio * postsPerDay);
+        }
+        
+        if (topicCount < totalPosts) {
+            topicsWarning.classList.remove('d-none');
+            topicsWarning.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Ten blog ma mniej zatwierdzonych tematów (${topicCount}) niż planowanych postów (około ${totalPosts}). Wygeneruj więcej tematów przed planowaniem.`;
+            generateBtn.disabled = topicCount === 0;
+        } else {
+            topicsWarning.classList.add('d-none');
+            generateBtn.disabled = false;
+        }
+    }
+    
+    blogSelect.addEventListener('change', updateTopicsWarning);
+    daysSelect.addEventListener('change', updateTopicsWarning);
+    postsPerDaySelect.addEventListener('change', updateTopicsWarning);
+    document.getElementById('skip_weekends').addEventListener('change', updateTopicsWarning);
+});
+</script>
+{% endblock %}
+
+{% endblock %}

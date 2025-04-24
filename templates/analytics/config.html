@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Konfiguracja Analytics - BlogAutomationAgent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Konfiguracja Google Analytics</h1>
+        <div>
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            </a>
+        </div>
+    </div>
+    
+    <!-- Global Configuration -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Globalna konfiguracja Google Analytics 4</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('save_global_analytics') }}" method="post">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="ga4_measurement_id" class="form-label">Measurement ID (G-XXXXXXXXXX)</label>
+                            <input type="text" class="form-control" id="ga4_measurement_id" name="ga4_measurement_id" 
+                                value="{{ global_config.measurement_id }}" placeholder="G-XXXXXXXXXX">
+                            <div class="form-text">
+                                Znajdziesz ten identyfikator w ustawieniach GA4 > Data Streams > Web > Measurement ID
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="ga4_api_secret" class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="ga4_api_secret" name="ga4_api_secret" 
+                                value="{{ global_config.api_secret }}" placeholder="Tajny klucz GA4">
+                            <div class="form-text">
+                                Utwórz go w GA4 > Admin > Data Streams > [Twój stream] > Measurement Protocol > Create
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="sync_frequency" class="form-label">Częstotliwość synchronizacji</label>
+                            <select class="form-select" id="sync_frequency" name="sync_frequency">
+                                <option value="6" {% if global_config.sync_frequency == 6 %}selected{% endif %}>Co 6 godzin</option>
+                                <option value="12" {% if global_config.sync_frequency == 12 %}selected{% endif %}>Co 12 godzin</option>
+                                <option value="24" {% if global_config.sync_frequency == 24 %}selected{% endif %}>Raz dziennie</option>
+                                <option value="48" {% if global_config.sync_frequency == 48 %}selected{% endif %}>Co 2 dni</option>
+                                <option value="168" {% if global_config.sync_frequency == 168 %}selected{% endif %}>Raz w tygodniu</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3 form-check mt-4">
+                            <input type="checkbox" class="form-check-input" id="enable_global" name="enable_global" 
+                                {% if global_config.enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="enable_global">Włącz globalne śledzenie GA4</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i> Ta konfiguracja będzie używana jako domyślna dla nowych blogów. Możesz nadpisać ją dla konkretnego bloga poniżej.
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Zapisz konfigurację globalną</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Per-Blog Configuration -->
+    <h2 class="mb-3">Konfiguracja dla poszczególnych blogów</h2>
+    
+    <div class="row">
+        {% for blog in blogs %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ blog.name }}</h5>
+                    {% if blog.config and blog.config.active %}
+                    <span class="badge bg-success">Aktywna</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Nieaktywna</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('save_blog_analytics', blog_id=blog.id) }}" method="post">
+                        <div class="mb-3">
+                            <label for="property_id_{{ blog.id }}" class="form-label">Property ID (GA4)</label>
+                            <input type="text" class="form-control" id="property_id_{{ blog.id }}" 
+                                name="property_id" value="{{ blog.config.property_id if blog.config else '' }}" 
+                                placeholder="123456789">
+                            <div class="form-text">
+                                Liczbowy ID property (można go znaleźć w URL po wybraniu Property w GA4)
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="measurement_id_{{ blog.id }}" class="form-label">Measurement ID</label>
+                            <input type="text" class="form-control" id="measurement_id_{{ blog.id }}" 
+                                name="measurement_id" value="{{ blog.config.measurement_id if blog.config else global_config.measurement_id }}" 
+                                placeholder="G-XXXXXXXXXX">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="custom_tracking_{{ blog.id }}" class="form-label">Niestandardowy kod śledzenia (opcjonalnie)</label>
+                            <textarea class="form-control" id="custom_tracking_{{ blog.id }}" name="tracking_code" 
+                                rows="3" placeholder="<!-- Wklej niestandardowy kod śledzenia tutaj -->">{{ blog.config.tracking_code if blog.config else '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="active_{{ blog.id }}" 
+                                name="active" {% if blog.config and blog.config.active %}checked{% endif %}>
+                            <label class="form-check-label" for="active_{{ blog.id }}">Aktywne śledzenie</label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="sync_frequency_{{ blog.id }}" class="form-label">Częstotliwość synchronizacji</label>
+                            <select class="form-select" id="sync_frequency_{{ blog.id }}" name="sync_frequency">
+                                <option value="0">Użyj ustawień globalnych</option>
+                                <option value="6" {% if blog.config and blog.config.sync_frequency == 6 %}selected{% endif %}>Co 6 godzin</option>
+                                <option value="12" {% if blog.config and blog.config.sync_frequency == 12 %}selected{% endif %}>Co 12 godzin</option>
+                                <option value="24" {% if blog.config and blog.config.sync_frequency == 24 %}selected{% endif %}>Raz dziennie</option>
+                                <option value="48" {% if blog.config and blog.config.sync_frequency == 48 %}selected{% endif %}>Co 2 dni</option>
+                                <option value="168" {% if blog.config and blog.config.sync_frequency == 168 %}selected{% endif %}>Raz w tygodniu</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Zapisz</button>
+                            <a href="{{ url_for('sync_analytics', blog_id=blog.id) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-sync me-1"></i> Synchronizuj
+                            </a>
+                        </div>
+                        
+                        {% if blog.config and blog.config.last_sync %}
+                        <div class="mt-3 text-muted small">
+                            Ostatnia synchronizacja: {{ blog.config.last_sync.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Brak skonfigurowanych blogów. Dodaj blog, aby skonfigurować dla niego Google Analytics.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Setup Instructions -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Instrukcje konfiguracji Google Analytics 4</h5>
+        </div>
+        <div class="card-body">
+            <h5>Kroki konfiguracji</h5>
+            <ol>
+                <li>Utwórz konto Google Analytics jeśli jeszcze go nie masz.</li>
+                <li>Utwórz property GA4 dla swoich stron.</li>
+                <li>Skonfiguruj Data Stream dla każdej strony internetowej.</li>
+                <li>Skopiuj Measurement ID (format G-XXXXXXXXXX) i dodaj go do konfiguracji globalnej.</li>
+                <li>Utwórz API Secret dla Measurement Protocol i dodaj go do konfiguracji.</li>
+                <li>Skopiuj Property ID (liczba) z URL po wybraniu swojego Property.</li>
+                <li>Uzupełnij konfigurację dla każdego bloga i włącz śledzenie.</li>
+                <li>Kliknij "Synchronizuj" aby pobrać dane po wygenerowaniu i opublikowaniu treści.</li>
+            </ol>
+            
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i> Ważne: Dane zaczną się pojawiać w Google Analytics po skonfigurowaniu i rozpoczęciu śledzenia. Może minąć 24-48 godzin zanim znacząca ilość danych będzie dostępna.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

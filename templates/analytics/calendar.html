@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+
+{% block title %}Kalendarz treści - BlogAutomationAgent{% endblock %}
+
+{% block styles %}
+<style>
+    .calendar-day {
+        min-height: 120px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+    }
+    
+    .calendar-day-header {
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        font-size: 1.2rem;
+        opacity: 0.7;
+    }
+    
+    .calendar-day.inactive {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .calendar-day.today {
+        border: 2px solid var(--bs-primary);
+    }
+    
+    .calendar-day.weekend {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .calendar-item {
+        padding: 5px 8px;
+        margin: 5px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    
+    .calendar-item.priority-1 {
+        background-color: rgba(var(--bs-secondary-rgb), 0.4);
+    }
+    
+    .calendar-item.priority-2 {
+        background-color: rgba(var(--bs-info-rgb), 0.4);
+    }
+    
+    .calendar-item.priority-3 {
+        background-color: rgba(var(--bs-success-rgb), 0.4);
+    }
+    
+    .calendar-item.priority-4 {
+        background-color: rgba(var(--bs-warning-rgb), 0.4);
+    }
+    
+    .calendar-item.priority-5 {
+        background-color: rgba(var(--bs-primary-rgb), 0.4);
+    }
+    
+    .calendar-item.status-published {
+        border-left: 3px solid var(--bs-success);
+    }
+    
+    .calendar-item.status-in_progress {
+        border-left: 3px solid var(--bs-warning);
+    }
+    
+    .calendar-item.status-planned {
+        border-left: 3px solid var(--bs-info);
+    }
+    
+    .calendar-item.status-cancelled {
+        border-left: 3px solid var(--bs-danger);
+        text-decoration: line-through;
+        opacity: 0.7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Kalendarz treści</h1>
+        <div>
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            </a>
+            <a href="{{ url_for('generate_content_plan') }}" class="btn btn-primary ms-2">
+                <i class="fas fa-magic me-1"></i> Zaplanuj treści
+            </a>
+            <a href="{{ url_for('add_calendar_entry') }}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-plus me-1"></i> Dodaj ręcznie
+            </a>
+        </div>
+    </div>
+    
+    <!-- Calendar Controls -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <a href="{{ url_for('content_calendar', year=prev_month.year, month=prev_month.month) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <h3 class="mb-0 mx-3">{{ current_date.strftime('%B %Y')|capitalize }}</h3>
+                        <a href="{{ url_for('content_calendar', year=next_month.year, month=next_month.month) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <form action="{{ url_for('content_calendar') }}" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <select class="form-select" id="blog_id" name="blog_id">
+                                <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
+                                {% for blog in blogs %}
+                                <option value="{{ blog.id }}" {% if selected_blog_id|int == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Wszystkie statusy</option>
+                                <option value="planned" {% if selected_status == 'planned' %}selected{% endif %}>Zaplanowane</option>
+                                <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>W trakcie</option>
+                                <option value="published" {% if selected_status == 'published' %}selected{% endif %}>Opublikowane</option>
+                                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Anulowane</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary flex-grow-1">Filtruj</button>
+                                <a href="{{ url_for('content_calendar') }}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar Grid -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Days of week header -->
+            <div class="row mb-2">
+                {% for day in ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'] %}
+                <div class="col text-center">
+                    <strong>{{ day }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Calendar grid -->
+            {% for week in calendar_weeks %}
+            <div class="row mb-2">
+                {% for day in week %}
+                {% if day.date %}
+                <div class="col calendar-day {% if day.current_month == false %}inactive{% endif %} {% if day.today %}today{% endif %} {% if day.weekday >= 5 %}weekend{% endif %}">
+                    <div class="calendar-day-header">{{ day.date.day }}</div>
+                    
+                    {% for entry in day.entries %}
+                    <div class="calendar-item priority-{{ entry.priority }} status-{{ entry.status }}" 
+                         data-bs-toggle="modal" data-bs-target="#entryDetailsModal" 
+                         data-entry-id="{{ entry.id }}" 
+                         data-entry-title="{{ entry.title }}" 
+                         data-entry-blog="{{ entry.blog_name }}" 
+                         data-entry-time="{{ entry.time }}" 
+                         data-entry-status="{{ entry.status }}" 
+                         data-entry-priority="{{ entry.priority }}" 
+                         data-entry-notes="{{ entry.notes|default('') }}">
+                        {% if entry.time %}{{ entry.time }} {% endif %}
+                        {{ entry.title }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="col"></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            <!-- Legend -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Status</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div>
+                            <span class="calendar-item status-planned">Przykład</span>
+                            <span class="ms-2">Zaplanowane</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item status-in_progress">Przykład</span>
+                            <span class="ms-2">W trakcie</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item status-published">Przykład</span>
+                            <span class="ms-2">Opublikowane</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item status-cancelled">Przykład</span>
+                            <span class="ms-2">Anulowane</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Priorytet</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div>
+                            <span class="calendar-item priority-1">Przykład</span>
+                            <span class="ms-2">Bardzo niski</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item priority-2">Przykład</span>
+                            <span class="ms-2">Niski</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item priority-3">Przykład</span>
+                            <span class="ms-2">Średni</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item priority-4">Przykład</span>
+                            <span class="ms-2">Wysoki</span>
+                        </div>
+                        <div>
+                            <span class="calendar-item priority-5">Przykład</span>
+                            <span class="ms-2">Bardzo wysoki</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Entry Details Modal -->
+<div class="modal fade" id="entryDetailsModal" tabindex="-1" aria-labelledby="entryDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="entryDetailsModalLabel">Szczegóły wpisu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4 id="entryTitle"></h4>
+                <p class="text-muted" id="entryBlog"></p>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Data i czas:</strong>
+                        <p id="entryDateTime"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <p id="entryStatus"></p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Priorytet:</strong>
+                    <div class="progress" style="height: 20px;">
+                        <div id="entryPriorityBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                
+                <div id="entryNotesContainer" class="mb-3">
+                    <strong>Notatki:</strong>
+                    <p id="entryNotes" class="border rounded p-2"></p>
+                </div>
+                
+                <input type="hidden" id="entryId">
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEntryModal">
+                        Usuń
+                    </button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                    <a href="#" id="editEntryLink" class="btn btn-primary">Edytuj</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteEntryModal" tabindex="-1" aria-labelledby="deleteEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteEntryModalLabel">Potwierdzenie usunięcia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz usunąć ten wpis z kalendarza treści?
+                <p class="text-danger mt-2">Tej operacji nie można cofnąć.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <form action="{{ url_for('delete_calendar_entry') }}" method="post">
+                    <input type="hidden" name="entry_id" id="entryIdToDelete">
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle entry details modal
+    var entryDetailsModal = document.getElementById('entryDetailsModal');
+    if (entryDetailsModal) {
+        entryDetailsModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var entryId = button.getAttribute('data-entry-id');
+            var entryTitle = button.getAttribute('data-entry-title');
+            var entryBlog = button.getAttribute('data-entry-blog');
+            var entryTime = button.getAttribute('data-entry-time');
+            var entryStatus = button.getAttribute('data-entry-status');
+            var entryPriority = button.getAttribute('data-entry-priority');
+            var entryNotes = button.getAttribute('data-entry-notes');
+            
+            // Update modal content
+            document.getElementById('entryId').value = entryId;
+            document.getElementById('entryTitle').textContent = entryTitle;
+            document.getElementById('entryBlog').textContent = 'Blog: ' + entryBlog;
+            
+            // Format date and time
+            var dateTimeStr = button.closest('.calendar-day').querySelector('.calendar-day-header').textContent;
+            if (entryTime) {
+                dateTimeStr += ', ' + entryTime;
+            }
+            document.getElementById('entryDateTime').textContent = dateTimeStr;
+            
+            // Format status
+            var statusText = '';
+            var statusClass = '';
+            switch (entryStatus) {
+                case 'planned':
+                    statusText = 'Zaplanowane';
+                    statusClass = 'text-info';
+                    break;
+                case 'in_progress':
+                    statusText = 'W trakcie';
+                    statusClass = 'text-warning';
+                    break;
+                case 'published':
+                    statusText = 'Opublikowane';
+                    statusClass = 'text-success';
+                    break;
+                case 'cancelled':
+                    statusText = 'Anulowane';
+                    statusClass = 'text-danger';
+                    break;
+                default:
+                    statusText = entryStatus;
+            }
+            var statusElement = document.getElementById('entryStatus');
+            statusElement.textContent = statusText;
+            statusElement.className = statusClass;
+            
+            // Update priority bar
+            var priorityBar = document.getElementById('entryPriorityBar');
+            var priorityPercent = (entryPriority / 5) * 100;
+            priorityBar.style.width = priorityPercent + '%';
+            priorityBar.setAttribute('aria-valuenow', priorityPercent);
+            
+            // Set priority bar color
+            priorityBar.className = 'progress-bar';
+            if (entryPriority <= 2) {
+                priorityBar.classList.add('bg-info');
+            } else if (entryPriority == 3) {
+                priorityBar.classList.add('bg-success');
+            } else if (entryPriority == 4) {
+                priorityBar.classList.add('bg-warning');
+            } else {
+                priorityBar.classList.add('bg-primary');
+            }
+            
+            // Update notes or hide if none
+            var notesContainer = document.getElementById('entryNotesContainer');
+            var notesElement = document.getElementById('entryNotes');
+            if (entryNotes && entryNotes.trim() !== '') {
+                notesElement.textContent = entryNotes;
+                notesContainer.style.display = 'block';
+            } else {
+                notesContainer.style.display = 'none';
+            }
+            
+            // Update edit link
+            document.getElementById('editEntryLink').href = "{{ url_for('edit_calendar_entry', entry_id='') }}" + entryId;
+            
+            // Update delete form
+            document.getElementById('entryIdToDelete').value = entryId;
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% endblock %}
