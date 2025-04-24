@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="BlogAutomationAgent - AI-powered content generation and management for WordPress blogs">
-    <title>{% block title %}BlogAutomationAgent{% endblock %}</title>
+    <meta name="description" content="BLOG AUTOMATION MASTER - AI-powered content generation and management for WordPress blogs">
+    <title>{% block title %}BLOG AUTOMATION MASTER{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -25,11 +25,8 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-                    <div class="brand-icon d-flex align-items-center justify-content-center rounded-circle bg-primary me-2" style="width: 36px; height: 36px;">
-                        <i class="fas fa-robot text-white"></i>
-                    </div>
-                    <span>BlogAutomationAgent</span>
-                    <span class="badge bg-info ms-2">ZYGA</span>
+                    <img src="{{ url_for('static', filename='img/master-icon.svg') }}" alt="BLOG AUTOMATION MASTER" width="36" height="36" class="me-2">
+                    <span>BLOG AUTOMATION MASTER</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -118,7 +115,7 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <span class="text-muted">BlogAutomationAgent ZYGA &copy; {{ now.year }}</span>
+                    <span class="text-muted">BLOG AUTOMATION MASTER &copy; {{ now.year }}</span>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <span class="text-muted">Powered by OpenRouter AI</span>
