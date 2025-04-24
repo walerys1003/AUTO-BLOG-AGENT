@@ -1,133 +1,125 @@
-"""
-Image Finder Module
-
-This module provides a unified interface for fetching images from multiple sources.
-"""
 import logging
-import os
-import json
-from typing import Dict, List, Any, Optional
+from typing import List, Dict, Any, Optional, Union
+import urllib.parse
 
-from . import unsplash
-from . import google
+from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
 
+# Setup logging
 logger = logging.getLogger(__name__)
 
-def find_images_for_topic(topic: str, keywords: List[str] = None, count: int = 5, 
-                         source: str = "unsplash", orientation: str = None) -> List[Dict[str, Any]]:
+def search_images(
+    query: str,
+    source: str = 'unsplash',
+    per_page: int = 20,
+    page: int = 1,
+    orientation: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    color: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
-    Find images for a given topic from specified source
+    Search for images from various sources
     
     Args:
-        topic (str): Main topic
-        keywords (list, optional): Additional keywords
-        count (int): Number of images to fetch
-        source (str): Source to use ('unsplash', 'google', 'all')
-        orientation (str, optional): Image orientation preference
+        query: Search query
+        source: Source to search (unsplash, google, all)
+        per_page: Number of results per page
+        page: Page number
+        orientation: Optional orientation filter (landscape, portrait, squarish)
+        tags: Optional list of tags to filter by
+        color: Optional color to filter by
         
     Returns:
-        list: List of image data dictionaries
+        List of image data dictionaries
     """
-    # Build a search query from the topic and keywords
-    query = topic
-    if keywords and len(keywords) > 0:
-        # Add up to 3 keywords to avoid over-specific queries
-        query = f"{topic} {' '.join(keywords[:3])}"
-    
-    logger.info(f"Searching for images with query: {query} from source: {source}")
-    
+    # Default empty results
     results = []
     
-    if source.lower() == "unsplash" or source.lower() == "all":
-        # Fetch from Unsplash
-        unsplash_images = unsplash.fetch_images(query, count=count, orientation=orientation)
-        for img in unsplash_images:
-            img['source'] = 'unsplash'
-        results.extend(unsplash_images)
+    # Log search
+    logger.info(f"Searching for images with query '{query}', source: {source}")
     
-    if source.lower() == "google" or source.lower() == "all":
-        # Fetch from Google Images
-        google_images = google.fetch_images(query, count=count)
-        for img in google_images:
-            img['source'] = 'google'
-        results.extend(google_images)
+    # Search based on source
+    if source == 'unsplash' or source == 'all':
+        try:
+            unsplash_results = search_unsplash_images(
+                query=query,
+                per_page=per_page,
+                page=page,
+                orientation=orientation
+            )
+            results.extend(unsplash_results)
+        except Exception as e:
+            logger.warning(f"Error searching Unsplash: {str(e)}")
     
-    # Return the top 'count' images
-    return results[:count]
+    if source == 'google' or source == 'all':
+        # TODO: Implement Google Images search
+        # Since there's no official API for Google Images, a custom solution would be needed
+        # Potentially using a library like serpapi or a custom scraper
+        # For now, only show a placeholder message
+        logger.warning("Google Images search not implemented yet")
+    
+    # Filter results by tags if provided
+    if tags and len(tags) > 0:
+        filtered_results = []
+        for image in results:
+            # For now, just do simple keyword matching in the description
+            description = image.get('description', '').lower()
+            if any(tag.lower() in description for tag in tags):
+                filtered_results.append(image)
+        
+        results = filtered_results
+    
+    return results
 
-
-def get_featured_image(topic: str, keywords: List[str] = None, 
-                      source: str = "unsplash", orientation: str = "landscape") -> Optional[Dict[str, Any]]:
+def get_image_details(image_id: str, source: str) -> Dict[str, Any]:
     """
-    Get a single featured image for an article
+    Get details for a specific image
     
     Args:
-        topic (str): Article topic
-        keywords (list, optional): Article keywords
-        source (str): Source to use ('unsplash', 'google')
-        orientation (str): Preferred orientation
+        image_id: Image ID
+        source: Source of the image (unsplash, google, upload)
         
     Returns:
-        dict: Image data or None if no suitable image is found
+        Image data dictionary
     """
-    # Try to get multiple images to choose the best one
-    images = find_images_for_topic(
-        topic=topic,
-        keywords=keywords,
-        count=3,  # Get a few options to choose from
-        source=source,
-        orientation=orientation
-    )
-    
-    if not images or len(images) == 0:
-        logger.warning(f"No images found for topic: {topic}")
-        
-        # Fall back to a random image from Unsplash if the query fails
-        if source.lower() == "unsplash":
-            return unsplash.get_random_image(orientation=orientation)
-            
-        return None
-    
-    # Return the first (usually best match) image
-    return images[0]
-
-
-def download_featured_image(image_data: Dict[str, Any], path: str) -> bool:
-    """
-    Download a featured image
-    
-    Args:
-        image_data (dict): Image data dictionary
-        path (str): Path to save the image
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    source = image_data.get('source', '').lower()
-    
     if source == 'unsplash':
-        image_id = image_data.get('id')
-        if image_id:
-            return unsplash.download_image(image_id, path)
+        return get_unsplash_photo(photo_id=image_id)
+    elif source == 'google':
+        # TODO: Implement Google Images detail retrieval
+        logger.warning("Google Images detail retrieval not implemented yet")
+        raise NotImplementedError("Google Images detail retrieval not implemented yet")
+    else:
+        raise ValueError(f"Unknown image source: {source}")
+
+def clean_image_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Clean and sanitize image metadata for storage
     
-    # For other sources or if no ID is available, download directly from URL
-    try:
-        import requests
-        url = image_data.get('url')
-        if not url:
-            logger.error("No URL found in image data")
-            return False
-            
-        response = requests.get(url)
-        if response.status_code != 200:
-            logger.error(f"Error downloading image: {response.status_code}")
-            return False
-            
-        with open(path, 'wb') as f:
-            f.write(response.content)
-            
-        return True
+    Args:
+        metadata: Raw image metadata
+        
+    Returns:
+        Cleaned metadata dictionary
+    """
+    # Basic fields to keep
+    cleaned = {
+        'url': metadata.get('url', ''),
+        'thumb_url': metadata.get('thumb_url', ''),
+        'width': metadata.get('width'),
+        'height': metadata.get('height'),
+        'description': metadata.get('description', ''),
+        'source': metadata.get('source', 'unknown'),
+        'source_id': metadata.get('id'),
+        'attribution_text': metadata.get('attribution_text', ''),
+        'attribution_url': metadata.get('attribution_url', '')
+    }
     
-    except Exception as e:
-        logger.error(f"Error downloading image: {str(e)}")
-        return False
+    # Add user data if available
+    user = metadata.get('user')
+    if user and isinstance(user, dict):
+        cleaned['user'] = {
+            'name': user.get('name', ''),
+            'username': user.get('username', ''),
+            'profile_url': user.get('profile_url', '')
+        }
+    
+    return cleaned

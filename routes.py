@@ -14,6 +14,7 @@ from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
 from routes_seo_inspiration import seo_inspiration_bp
 from routes_content_creator import content_creator_bp
+from routes_images import register_image_routes
 from newsletter import newsletter_bp
 import json
 from datetime import datetime, timedelta
@@ -913,6 +914,9 @@ def register_routes(app: Flask):
     
     # Register Content Creator blueprint
     app.register_blueprint(content_creator_bp)
+    
+    # Register Images routes
+    register_image_routes(app)
     
     # Register newsletter blueprint
     app.register_blueprint(newsletter_bp)

@@ -1,202 +1,144 @@
-"""
-Unsplash Image API Module
-
-This module handles fetching images from Unsplash using their API.
-"""
-import logging
 import os
 import requests
-import json
-from typing import Dict, List, Any, Optional
+import logging
+from typing import List, Dict, Any, Optional
 
+# Setup logging
 logger = logging.getLogger(__name__)
 
-# Get API credentials from environment
+# Get Unsplash API key from environment
 UNSPLASH_API_KEY = os.environ.get('UNSPLASH_API_KEY')
-UNSPLASH_SECRET_KEY = os.environ.get('UNSPLASH_SECRET_KEY')
+UNSPLASH_API_URL = 'https://api.unsplash.com'
 
-def fetch_images(query: str, count: int = 5, orientation: str = None) -> List[Dict[str, Any]]:
+def search_unsplash_images(
+    query: str,
+    per_page: int = 20,
+    page: int = 1,
+    orientation: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
-    Fetch images from Unsplash API based on search query
+    Search for images on Unsplash
     
     Args:
-        query (str): Search query (keywords)
-        count (int): Number of images to fetch (max 30)
-        orientation (str, optional): Filter by orientation (landscape, portrait, squarish)
+        query: Search query
+        per_page: Number of results per page
+        page: Page number
+        orientation: Optional orientation filter (landscape, portrait, squarish)
         
     Returns:
-        list: List of image data dictionaries with URLs, attribution, etc.
+        List of image data dictionaries
     """
     if not UNSPLASH_API_KEY:
-        logger.error("Unsplash API key not set")
-        return []
+        raise ValueError("UNSPLASH_API_KEY environment variable not set")
+    
+    # Build URL
+    url = f"{UNSPLASH_API_URL}/search/photos"
+    
+    # Build params
+    params = {
+        'query': query,
+        'per_page': per_page,
+        'page': page,
+        'client_id': UNSPLASH_API_KEY
+    }
+    
+    # Add orientation if provided
+    if orientation:
+        params['orientation'] = orientation
     
     try:
-        # Build the API request URL with parameters
-        url = "https://api.unsplash.com/search/photos"
-        params = {
-            "query": query,
-            "per_page": min(count, 30),  # API limit is 30 per request
-        }
+        # Make request
+        response = requests.get(url, params=params)
+        response.raise_for_status()
         
-        if orientation and orientation in ['landscape', 'portrait', 'squarish']:
-            params["orientation"] = orientation
-            
-        headers = {
-            "Authorization": f"Client-ID {UNSPLASH_API_KEY}"
-        }
-        
-        # Make the API request
-        response = requests.get(url, params=params, headers=headers)
-        
-        # Check if the request was successful
-        if response.status_code != 200:
-            logger.error(f"Unsplash API error: {response.status_code} - {response.text}")
-            return []
-        
-        # Parse the response JSON
+        # Parse response
         data = response.json()
+        results = data.get('results', [])
         
-        # Extract the relevant image data
+        # Transform results
         images = []
-        for image in data.get("results", []):
-            images.append({
-                "id": image.get("id"),
-                "url": image.get("urls", {}).get("regular"),
-                "small_url": image.get("urls", {}).get("small"),
-                "thumb_url": image.get("urls", {}).get("thumb"),
-                "download_url": image.get("links", {}).get("download"),
-                "width": image.get("width"),
-                "height": image.get("height"),
-                "color": image.get("color"),
-                "description": image.get("description") or image.get("alt_description"),
-                "user": {
-                    "name": image.get("user", {}).get("name"),
-                    "username": image.get("user", {}).get("username"),
-                    "profile_url": image.get("user", {}).get("links", {}).get("html")
+        for result in results:
+            user = result.get('user', {})
+            user_portfolio = user.get('portfolio_url') or user.get('links', {}).get('html', '')
+            
+            image = {
+                'id': result.get('id'),
+                'url': result.get('urls', {}).get('regular'),
+                'thumb_url': result.get('urls', {}).get('thumb'),
+                'width': result.get('width'),
+                'height': result.get('height'),
+                'description': result.get('description') or result.get('alt_description'),
+                'source': 'unsplash',
+                'user': {
+                    'id': user.get('id'),
+                    'name': user.get('name'),
+                    'username': user.get('username'),
+                    'profile_url': user.get('links', {}).get('html')
                 },
-                "attribution_text": f"Photo by {image.get('user', {}).get('name')} on Unsplash",
-                "attribution_url": image.get("links", {}).get("html")
-            })
-        
+                'attribution_text': f"Photo by {user.get('name')} on Unsplash",
+                'attribution_url': result.get('links', {}).get('html')
+            }
+            
+            images.append(image)
+            
         return images
-        
+    
     except Exception as e:
-        logger.error(f"Error fetching images from Unsplash: {str(e)}")
-        return []
+        logger.error(f"Error searching Unsplash: {str(e)}")
+        raise
 
-
-def get_random_image(query: str = None, orientation: str = None) -> Optional[Dict[str, Any]]:
+def get_unsplash_photo(photo_id: str) -> Dict[str, Any]:
     """
-    Get a random image from Unsplash
+    Get details for a specific Unsplash photo
     
     Args:
-        query (str, optional): Topic for the image
-        orientation (str, optional): Preferred orientation
+        photo_id: Unsplash photo ID
         
     Returns:
-        dict: Image data or None if error occurs
-    """
-    try:
-        # Build the API request URL
-        url = "https://api.unsplash.com/photos/random"
-        params = {}
-        
-        if query:
-            params["query"] = query
-            
-        if orientation and orientation in ['landscape', 'portrait', 'squarish']:
-            params["orientation"] = orientation
-            
-        headers = {
-            "Authorization": f"Client-ID {UNSPLASH_API_KEY}"
-        }
-        
-        # Make the API request
-        response = requests.get(url, params=params, headers=headers)
-        
-        # Check if the request was successful
-        if response.status_code != 200:
-            logger.error(f"Unsplash random image API error: {response.status_code} - {response.text}")
-            return None
-        
-        # Parse the response JSON
-        image = response.json()
-        
-        # Extract the relevant image data
-        return {
-            "id": image.get("id"),
-            "url": image.get("urls", {}).get("regular"),
-            "small_url": image.get("urls", {}).get("small"),
-            "thumb_url": image.get("urls", {}).get("thumb"),
-            "download_url": image.get("links", {}).get("download"),
-            "width": image.get("width"),
-            "height": image.get("height"),
-            "color": image.get("color"),
-            "description": image.get("description") or image.get("alt_description"),
-            "user": {
-                "name": image.get("user", {}).get("name"),
-                "username": image.get("user", {}).get("username"),
-                "profile_url": image.get("user", {}).get("links", {}).get("html")
-            },
-            "attribution_text": f"Photo by {image.get('user', {}).get('name')} on Unsplash",
-            "attribution_url": image.get("links", {}).get("html")
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching random image from Unsplash: {str(e)}")
-        return None
-
-
-def download_image(image_id: str, path: str) -> bool:
-    """
-    Download an image from Unsplash by ID
-    
-    Args:
-        image_id (str): The Unsplash image ID
-        path (str): The path to save the image
-        
-    Returns:
-        bool: True if successful, False otherwise
+        Photo data dictionary
     """
     if not UNSPLASH_API_KEY:
-        logger.error("Unsplash API key not set")
-        return False
+        raise ValueError("UNSPLASH_API_KEY environment variable not set")
+    
+    # Build URL
+    url = f"{UNSPLASH_API_URL}/photos/{photo_id}"
+    
+    # Build params
+    params = {
+        'client_id': UNSPLASH_API_KEY
+    }
     
     try:
-        # Build the API request URL
-        url = f"https://api.unsplash.com/photos/{image_id}/download"
-        headers = {
-            "Authorization": f"Client-ID {UNSPLASH_API_KEY}"
+        # Make request
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        
+        # Parse response
+        result = response.json()
+        
+        user = result.get('user', {})
+        
+        # Transform result
+        image = {
+            'id': result.get('id'),
+            'url': result.get('urls', {}).get('regular'),
+            'thumb_url': result.get('urls', {}).get('thumb'),
+            'width': result.get('width'),
+            'height': result.get('height'),
+            'description': result.get('description') or result.get('alt_description'),
+            'source': 'unsplash',
+            'user': {
+                'id': user.get('id'),
+                'name': user.get('name'),
+                'username': user.get('username'),
+                'profile_url': user.get('links', {}).get('html')
+            },
+            'attribution_text': f"Photo by {user.get('name')} on Unsplash",
+            'attribution_url': result.get('links', {}).get('html')
         }
         
-        # Get the download URL
-        response = requests.get(url, headers=headers)
-        
-        if response.status_code != 200:
-            logger.error(f"Unsplash download API error: {response.status_code} - {response.text}")
-            return False
-        
-        # Get the actual download URL from the response
-        download_url = response.json().get("url")
-        
-        if not download_url:
-            logger.error("No download URL found in Unsplash response")
-            return False
-        
-        # Download the image
-        img_response = requests.get(download_url)
-        
-        if img_response.status_code != 200:
-            logger.error(f"Error downloading image: {img_response.status_code}")
-            return False
-        
-        # Save the image to the specified path
-        with open(path, 'wb') as f:
-            f.write(img_response.content)
-            
-        return True
-        
+        return image
+    
     except Exception as e:
-        logger.error(f"Error downloading image from Unsplash: {str(e)}")
-        return False
+        logger.error(f"Error getting Unsplash photo: {str(e)}")
+        raise

@@ -1,309 +1,123 @@
-"""
-Image Management Routes
-
-This module handles the routes for image management.
-"""
 import os
 import json
-from flask import Blueprint, request, jsonify, render_template, current_app, flash, redirect, url_for
-from sqlalchemy import desc
-from werkzeug.utils import secure_filename
-
+import logging
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app import db
 from models import Blog, ContentLog, ImageLibrary
-from utils.images import finder, unsplash
+from werkzeug.utils import secure_filename
+from datetime import datetime
+from PIL import Image
+import requests
+from io import BytesIO
+import base64
+import uuid
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # Create blueprint
-images_bp = Blueprint('images', __name__)
+images_bp = Blueprint('images', __name__, url_prefix='/images')
 
-# Constants
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-UPLOAD_FOLDER = 'static/uploads/images'
+# Import utility functions
+from utils.images.unsplash import search_unsplash_images
+from utils.images.finder import search_images, get_image_details
 
-# Ensure upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+@images_bp.route('/')
+def index():
+    """Images dashboard"""
+    return redirect(url_for('images.image_library'))
 
-
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@images_bp.route('/images/search', methods=['GET', 'POST'])
+@images_bp.route('/search')
 def search_images():
-    """Search for images from external sources"""
-    # Default parameters
-    query = request.args.get('query', '') or request.form.get('query', '')
-    count = int(request.args.get('count', 10)) or int(request.form.get('count', 10))
-    source = request.args.get('source', 'unsplash') or request.form.get('source', 'unsplash')
-    orientation = request.args.get('orientation') or request.form.get('orientation')
+    """Search for images from various sources"""
+    query = request.args.get('query', '')
+    source = request.args.get('source', 'unsplash')
+    orientation = request.args.get('orientation', None)
     
-    if not query:
-        # No query provided, return empty results
-        if request.method == 'POST':
-            return jsonify({'success': False, 'message': 'No search query provided', 'images': []})
-        return render_template('images/search.html', images=[], query='', sources=['unsplash', 'google', 'all'])
+    images = []
+    error = None
+    sources = ['unsplash', 'google', 'all']
     
-    # Search for images
-    try:
-        images = finder.find_images_for_topic(
-            topic=query,
-            count=count,
-            source=source,
-            orientation=orientation
-        )
-        
-        # Return the results
-        if request.method == 'POST':
-            return jsonify({'success': True, 'images': images})
-        
-        return render_template(
-            'images/search.html', 
-            images=images, 
-            query=query,
-            sources=['unsplash', 'google', 'all'],
-            selected_source=source
-        )
-        
-    except Exception as e:
-        if request.method == 'POST':
-            return jsonify({'success': False, 'message': str(e), 'images': []})
-        
-        flash(f"Error searching for images: {str(e)}", 'danger')
-        return render_template('images/search.html', images=[], query=query, error=str(e))
+    if query:
+        try:
+            # Search for images
+            images = search_images(
+                query=query,
+                source=source,
+                orientation=orientation
+            )
+        except Exception as e:
+            logger.error(f"Error searching images: {str(e)}")
+            error = f"Error searching images: {str(e)}"
+    
+    return render_template(
+        'images/search.html',
+        images=images,
+        query=query,
+        selected_source=source,
+        sources=sources,
+        error=error
+    )
 
+@images_bp.route('/library')
+def image_library():
+    """View image library"""
+    selected_blog_id = request.args.get('blog_id', '')
+    
+    # Get all blogs for filter
+    blogs = Blog.query.all()
+    
+    # Build query
+    query = ImageLibrary.query
+    
+    # Filter by blog if selected
+    if selected_blog_id:
+        query = query.filter_by(blog_id=int(selected_blog_id))
+    
+    # Get images
+    images = query.order_by(ImageLibrary.created_at.desc()).all()
+    
+    return render_template(
+        'images/library.html',
+        images=images,
+        blogs=blogs,
+        selected_blog_id=selected_blog_id
+    )
 
-@images_bp.route('/images/preview/<content_id>', methods=['GET'])
-def preview_article_image(content_id):
-    """Preview the featured image for an article"""
-    try:
-        # Get the content log
-        content = ContentLog.query.get_or_404(content_id)
-        
-        # Get the featured image data
-        image_data = content.get_featured_image()
-        
-        if not image_data:
-            flash("No featured image found for this article", "warning")
-            return render_template('images/preview.html', content=content, image=None)
-        
-        return render_template('images/preview.html', content=content, image=image_data)
-        
-    except Exception as e:
-        flash(f"Error previewing image: {str(e)}", "danger")
-        return redirect(url_for('content.dashboard'))
-
-
-@images_bp.route('/images/change/<content_id>', methods=['GET', 'POST'])
-def change_article_image(content_id):
-    """Change the featured image for an article"""
-    try:
-        # Get the content log
-        content = ContentLog.query.get_or_404(content_id)
-        
-        if request.method == 'POST':
-            # Handle image selection or upload
-            image_type = request.form.get('image_type', 'search')
+@images_bp.route('/library/add', methods=['GET', 'POST'])
+def add_to_library():
+    """Add image to library"""
+    if request.method == 'POST':
+        try:
+            # Handle image source (search, upload)
+            source_type = request.form.get('source_type', 'search')
             
-            if image_type == 'search':
-                # Handle image from search
+            if source_type == 'search':
+                # Get image data from form
                 image_data = json.loads(request.form.get('image_data', '{}'))
                 
-                if not image_data:
-                    flash("No image selected", "warning")
-                    return redirect(request.url)
+                # Get blog ID - if not provided, use the first blog
+                blog_id = request.form.get('blog_id')
+                if not blog_id:
+                    blog = Blog.query.first()
+                    if blog:
+                        blog_id = blog.id
+                    else:
+                        flash('No blogs available. Please add a blog first.', 'danger')
+                        return redirect(url_for('images.add_to_library'))
                 
-                # Update the content log
-                content.set_featured_image(image_data)
-                db.session.commit()
-                
-                flash("Featured image updated successfully", "success")
-                return redirect(url_for('images.preview_article_image', content_id=content.id))
-                
-            elif image_type == 'upload':
-                # Handle image upload
-                if 'image_file' not in request.files:
-                    flash("No file part", "warning")
-                    return redirect(request.url)
-                
-                file = request.files['image_file']
-                
-                if file.filename == '':
-                    flash("No selected file", "warning")
-                    return redirect(request.url)
-                
-                if file and allowed_file(file.filename):
-                    # Save the file
-                    filename = secure_filename(file.filename)
-                    filepath = os.path.join(UPLOAD_FOLDER, filename)
-                    file.save(filepath)
-                    
-                    # Create image data
-                    image_data = {
-                        'url': f"/{filepath}",
-                        'source': 'upload',
-                        'attribution_text': 'Uploaded by user',
-                        'width': None,
-                        'height': None
-                    }
-                    
-                    # Update the content log
-                    content.set_featured_image(image_data)
-                    db.session.commit()
-                    
-                    flash("Featured image uploaded successfully", "success")
-                    return redirect(url_for('images.preview_article_image', content_id=content.id))
-                    
-                else:
-                    flash(f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
-                    return redirect(request.url)
-            
-            elif image_type == 'library':
-                # Handle image from library
-                image_id = request.form.get('image_id')
-                
-                if not image_id:
-                    flash("No image selected", "warning")
-                    return redirect(request.url)
-                
-                # Get the image from the library
-                image = ImageLibrary.query.get_or_404(image_id)
-                
-                # Create image data
-                image_data = {
-                    'url': image.url,
-                    'source': image.source,
-                    'attribution_text': image.attribution,
-                    'attribution_url': image.attribution_url,
-                    'width': image.width,
-                    'height': image.height
-                }
-                
-                # Update the content log
-                content.set_featured_image(image_data)
-                db.session.commit()
-                
-                flash("Featured image updated successfully", "success")
-                return redirect(url_for('images.preview_article_image', content_id=content.id))
-                
-        # GET request - show the change image form
-        # Get images from the library for this blog
-        library_images = ImageLibrary.query.filter_by(blog_id=content.blog_id).order_by(desc(ImageLibrary.created_at)).limit(20).all()
-        
-        return render_template(
-            'images/change.html', 
-            content=content, 
-            library_images=library_images
-        )
-        
-    except Exception as e:
-        flash(f"Error changing image: {str(e)}", "danger")
-        return redirect(url_for('content.dashboard'))
-
-
-@images_bp.route('/images/library', methods=['GET'])
-def image_library():
-    """Show the image library"""
-    # Get the blog ID filter if provided
-    blog_id = request.args.get('blog_id', None)
-    
-    try:
-        # Get all blogs for the filter dropdown
-        blogs = Blog.query.filter_by(active=True).all()
-        
-        # Query images
-        query = ImageLibrary.query
-        
-        if blog_id:
-            query = query.filter_by(blog_id=blog_id)
-            
-        # Get the images
-        images = query.order_by(desc(ImageLibrary.created_at)).all()
-        
-        return render_template('images/library.html', images=images, blogs=blogs, selected_blog_id=blog_id)
-        
-    except Exception as e:
-        flash(f"Error loading image library: {str(e)}", "danger")
-        return redirect(url_for('dashboard.index'))
-
-
-@images_bp.route('/images/library/add', methods=['GET', 'POST'])
-def add_to_library():
-    """Add an image to the library"""
-    if request.method == 'POST':
-        # Get form data
-        blog_id = request.form.get('blog_id')
-        
-        if not blog_id:
-            flash("Blog ID is required", "danger")
-            return redirect(request.url)
-        
-        # Check if blog exists
-        blog = Blog.query.get_or_404(blog_id)
-        
-        # Handle the image source
-        source_type = request.form.get('source_type', 'search')
-        
-        if source_type == 'search':
-            # Handle image from search
-            image_data = json.loads(request.form.get('image_data', '{}'))
-            
-            if not image_data:
-                flash("No image selected", "warning")
-                return redirect(request.url)
-            
-            # Create a new library image
-            image = ImageLibrary(
-                blog_id=blog_id,
-                title=request.form.get('title'),
-                url=image_data.get('url'),
-                thumbnail_url=image_data.get('thumb_url'),
-                width=image_data.get('width'),
-                height=image_data.get('height'),
-                source=image_data.get('source'),
-                source_id=image_data.get('id'),
-                attribution=image_data.get('attribution_text'),
-                attribution_url=image_data.get('attribution_url')
-            )
-            
-            # Set tags if provided
-            tags = request.form.get('tags', '')
-            if tags:
-                image.set_tags([tag.strip() for tag in tags.split(',')])
-            
-            db.session.add(image)
-            db.session.commit()
-            
-            flash("Image added to library successfully", "success")
-            return redirect(url_for('images.image_library'))
-            
-        elif source_type == 'upload':
-            # Handle image upload
-            if 'image_file' not in request.files:
-                flash("No file part", "warning")
-                return redirect(request.url)
-            
-            file = request.files['image_file']
-            
-            if file.filename == '':
-                flash("No selected file", "warning")
-                return redirect(request.url)
-            
-            if file and allowed_file(file.filename):
-                # Save the file
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                
-                # Create a new library image
+                # Create image library entry
                 image = ImageLibrary(
                     blog_id=blog_id,
-                    title=request.form.get('title'),
-                    url=f"/{filepath}",
-                    thumbnail_url=f"/{filepath}",
-                    source='upload',
-                    attribution='Uploaded by user'
+                    title=request.form.get('title', image_data.get('description', 'Unnamed Image')),
+                    url=image_data.get('url', ''),
+                    thumbnail_url=image_data.get('thumb_url', ''),
+                    width=image_data.get('width'),
+                    height=image_data.get('height'),
+                    source=image_data.get('source', 'unknown'),
+                    source_id=image_data.get('id'),
+                    attribution=image_data.get('attribution_text', ''),
+                    attribution_url=image_data.get('attribution_url', '')
                 )
                 
                 # Set tags if provided
@@ -314,39 +128,264 @@ def add_to_library():
                 db.session.add(image)
                 db.session.commit()
                 
-                flash("Image uploaded to library successfully", "success")
+                flash('Image added to library successfully', 'success')
                 return redirect(url_for('images.image_library'))
                 
-            else:
-                flash(f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
-                return redirect(request.url)
+            elif source_type == 'upload':
+                # Check if file was uploaded
+                if 'image_file' not in request.files:
+                    flash('No file uploaded', 'danger')
+                    return redirect(url_for('images.add_to_library'))
+                
+                image_file = request.files['image_file']
+                if not image_file.filename:
+                    flash('No file selected', 'danger')
+                    return redirect(url_for('images.add_to_library'))
+                
+                # Get blog ID
+                blog_id = request.form.get('blog_id')
+                if not blog_id:
+                    flash('Please select a blog', 'danger')
+                    return redirect(url_for('images.add_to_library'))
+                
+                # Process the uploaded image
+                try:
+                    # Read image
+                    img = Image.open(image_file)
+                    width, height = img.size
+                    
+                    # Generate a unique filename
+                    filename = secure_filename(image_file.filename)
+                    unique_id = str(uuid.uuid4())
+                    filename = f"{unique_id}_{filename}"
+                    
+                    # TODO: Implement proper storage for uploaded images
+                    # For now, we'll just get the raw data and save as URL
+                    image_file.seek(0)
+                    img_data = image_file.read()
+                    img_base64 = base64.b64encode(img_data).decode('utf-8')
+                    data_url = f"data:image/jpeg;base64,{img_base64}"
+                    
+                    # Create image library entry
+                    image = ImageLibrary(
+                        blog_id=blog_id,
+                        title=request.form.get('title', 'Uploaded Image'),
+                        url=data_url,
+                        thumbnail_url=data_url,  # Using same URL for thumbnail for now
+                        width=width,
+                        height=height,
+                        source='upload',
+                        source_id=unique_id
+                    )
+                    
+                    # Set tags if provided
+                    tags = request.form.get('tags', '')
+                    if tags:
+                        image.set_tags([tag.strip() for tag in tags.split(',')])
+                    
+                    db.session.add(image)
+                    db.session.commit()
+                    
+                    flash('Image uploaded and added to library successfully', 'success')
+                    return redirect(url_for('images.image_library'))
+                
+                except Exception as e:
+                    logger.error(f"Error processing uploaded image: {str(e)}")
+                    flash(f'Error processing uploaded image: {str(e)}', 'danger')
+                    return redirect(url_for('images.add_to_library'))
+        
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error adding image to library: {str(e)}")
+            flash(f'Error adding image to library: {str(e)}', 'danger')
+            return redirect(url_for('images.add_to_library'))
     
-    # GET request - show the add form
-    # Get all blogs for the dropdown
-    blogs = Blog.query.filter_by(active=True).all()
-    
+    # GET request - show form
+    blogs = Blog.query.all()
     return render_template('images/add_to_library.html', blogs=blogs)
 
-
-@images_bp.route('/images/library/delete/<image_id>', methods=['POST'])
+@images_bp.route('/library/delete/<int:image_id>', methods=['POST'])
 def delete_from_library(image_id):
-    """Delete an image from the library"""
+    """Delete image from library"""
+    image = ImageLibrary.query.get_or_404(image_id)
+    
     try:
-        # Get the image
-        image = ImageLibrary.query.get_or_404(image_id)
-        
-        # Delete the image
         db.session.delete(image)
         db.session.commit()
         
-        flash("Image deleted from library successfully", "success")
+        flash('Image deleted from library successfully', 'success')
+        return redirect(url_for('images.image_library'))
         
     except Exception as e:
-        flash(f"Error deleting image: {str(e)}", "danger")
+        db.session.rollback()
+        logger.error(f"Error deleting image from library: {str(e)}")
+        flash(f'Error deleting image: {str(e)}', 'danger')
+        return redirect(url_for('images.image_library'))
+
+@images_bp.route('/article/<int:content_id>')
+def preview_article_image(content_id):
+    """Preview article image"""
+    content = ContentLog.query.get_or_404(content_id)
     
-    return redirect(url_for('images.image_library'))
+    # Get image data from content if available
+    image = None
+    if content.featured_image_data:
+        try:
+            image = json.loads(content.featured_image_data)
+        except:
+            image = None
+    
+    return render_template('images/preview.html', content=content, image=image)
 
+@images_bp.route('/article/<int:content_id>/change', methods=['GET', 'POST'])
+def change_article_image(content_id):
+    """Change article image"""
+    content = ContentLog.query.get_or_404(content_id)
+    
+    if request.method == 'POST':
+        try:
+            image_type = request.form.get('image_type', 'search')
+            
+            if image_type == 'search':
+                # Get image data from form
+                image_data = json.loads(request.form.get('image_data', '{}'))
+                
+                # Save to content
+                content.featured_image_data = json.dumps(image_data)
+                
+                # Add to library if requested
+                if request.form.get('add_to_library', '') == 'yes':
+                    # Create image library entry
+                    image = ImageLibrary(
+                        blog_id=content.blog_id,
+                        title=request.form.get('title', image_data.get('description', 'Unnamed Image')),
+                        url=image_data.get('url', ''),
+                        thumbnail_url=image_data.get('thumb_url', ''),
+                        width=image_data.get('width'),
+                        height=image_data.get('height'),
+                        source=image_data.get('source', 'unknown'),
+                        source_id=image_data.get('id'),
+                        attribution=image_data.get('attribution_text', ''),
+                        attribution_url=image_data.get('attribution_url', '')
+                    )
+                    
+                    # Set tags if provided
+                    tags = request.form.get('tags', '')
+                    if tags:
+                        image.set_tags([tag.strip() for tag in tags.split(',')])
+                    
+                    db.session.add(image)
+            
+            elif image_type == 'library':
+                # Get image from library
+                image_id = request.form.get('image_id')
+                if not image_id:
+                    flash('No image selected', 'danger')
+                    return redirect(url_for('images.change_article_image', content_id=content_id))
+                
+                image = ImageLibrary.query.get_or_404(image_id)
+                
+                # Convert to dictionary for storage
+                image_data = {
+                    'url': image.url,
+                    'thumb_url': image.thumbnail_url,
+                    'width': image.width,
+                    'height': image.height,
+                    'source': image.source,
+                    'source_id': image.source_id,
+                    'attribution_text': image.attribution,
+                    'attribution_url': image.attribution_url,
+                    'description': image.title
+                }
+                
+                # Save to content
+                content.featured_image_data = json.dumps(image_data)
+                
+            elif image_type == 'upload':
+                # Check if file was uploaded
+                if 'image_file' not in request.files:
+                    flash('No file uploaded', 'danger')
+                    return redirect(url_for('images.change_article_image', content_id=content_id))
+                
+                image_file = request.files['image_file']
+                if not image_file.filename:
+                    flash('No file selected', 'danger')
+                    return redirect(url_for('images.change_article_image', content_id=content_id))
+                
+                # Process the uploaded image
+                try:
+                    # Read image
+                    img = Image.open(image_file)
+                    width, height = img.size
+                    
+                    # Generate a unique filename
+                    filename = secure_filename(image_file.filename)
+                    unique_id = str(uuid.uuid4())
+                    filename = f"{unique_id}_{filename}"
+                    
+                    # TODO: Implement proper storage for uploaded images
+                    # For now, we'll just get the raw data and save as URL
+                    image_file.seek(0)
+                    img_data = image_file.read()
+                    img_base64 = base64.b64encode(img_data).decode('utf-8')
+                    data_url = f"data:image/jpeg;base64,{img_base64}"
+                    
+                    # Create image data
+                    image_data = {
+                        'url': data_url,
+                        'thumb_url': data_url,
+                        'width': width,
+                        'height': height,
+                        'source': 'upload',
+                        'source_id': unique_id,
+                        'description': request.form.get('title', 'Uploaded Image')
+                    }
+                    
+                    # Save to content
+                    content.featured_image_data = json.dumps(image_data)
+                    
+                    # Add to library if requested
+                    if request.form.get('add_to_library', 'off') == 'on':
+                        # Create image library entry
+                        image = ImageLibrary(
+                            blog_id=content.blog_id,
+                            title=request.form.get('title', 'Uploaded Image'),
+                            url=data_url,
+                            thumbnail_url=data_url,
+                            width=width,
+                            height=height,
+                            source='upload',
+                            source_id=unique_id
+                        )
+                        
+                        # Set tags if provided
+                        tags = request.form.get('tags', '')
+                        if tags:
+                            image.set_tags([tag.strip() for tag in tags.split(',')])
+                        
+                        db.session.add(image)
+                
+                except Exception as e:
+                    logger.error(f"Error processing uploaded image: {str(e)}")
+                    flash(f'Error processing uploaded image: {str(e)}', 'danger')
+                    return redirect(url_for('images.change_article_image', content_id=content_id))
+            
+            db.session.commit()
+            
+            flash('Article image updated successfully', 'success')
+            return redirect(url_for('images.preview_article_image', content_id=content_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error changing article image: {str(e)}")
+            flash(f'Error changing article image: {str(e)}', 'danger')
+            return redirect(url_for('images.change_article_image', content_id=content_id))
+    
+    # GET request - show form
+    # Get images from library for this blog
+    library_images = ImageLibrary.query.filter_by(blog_id=content.blog_id).order_by(ImageLibrary.created_at.desc()).all()
+    
+    return render_template('images/change.html', content=content, library_images=library_images)
 
-def register_routes(app):
-    """Register the image routes with the Flask app"""
+def register_image_routes(app):
     app.register_blueprint(images_bp)

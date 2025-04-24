@@ -1,1 +1,1 @@
-# Images module initialization
+# Initialize the images package
