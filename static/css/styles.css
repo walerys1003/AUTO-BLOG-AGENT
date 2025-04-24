@@ -133,3 +133,36 @@ code {
 .alert i {
     margin-right: 0.5rem;
 }
+
+/* Social media platform text */
+.d-flex .rounded-circle + span {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Platform specific styles */
+.rounded-circle.bg-primary + span {
+    color: var(--bs-light);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.rounded-circle.bg-info + span {
+    color: var(--bs-light);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.rounded-circle.bg-success + span {
+    color: var(--bs-light);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.rounded-circle.bg-danger + span {
+    color: var(--bs-light);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.rounded-circle.bg-secondary + span {
+    color: var(--bs-light);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
