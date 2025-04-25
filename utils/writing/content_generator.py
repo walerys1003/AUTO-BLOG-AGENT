@@ -21,6 +21,98 @@ logger = logging.getLogger(__name__)
 openrouter_key = os.environ.get('OPENROUTER_API_KEY')
 has_openrouter = openrouter_key is not None and len(openrouter_key) > 0
 
+def generate_metadata(content):
+    """
+    Generate metadata from content using AI
+    
+    Args:
+        content (str): The article content
+        
+    Returns:
+        dict: Metadata including meta description, excerpt, and tags
+    """
+    logger.info("Generating metadata from content")
+    
+    # Default metadata if generation fails
+    default_metadata = {
+        'meta_description': '',
+        'excerpt': '',
+        'tags': []
+    }
+    
+    # If content is empty, return default metadata
+    if not content:
+        return default_metadata
+        
+    # Strip HTML tags for processing
+    content_text = re.sub(r'<[^>]+>', '', content)
+    
+    # Create prompt for metadata generation
+    user_prompt = f"""Generate metadata for the following article content:
+
+{content_text[:3000]}  # Limit to first 3000 chars to avoid token limits
+
+Please provide:
+1. A compelling meta description (150-160 characters)
+2. A brief excerpt/snippet (200-250 characters)
+3. 5-7 relevant tags/keywords (as a list)
+
+Format your response as a JSON object with the following structure:
+{{
+  "meta_description": "The meta description text...",
+  "excerpt": "The excerpt text...",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}}"""
+
+    # System prompt to guide AI behavior
+    system_prompt = """You are an expert SEO specialist and content editor.
+Your task is to create metadata that will improve search visibility and click-through rates.
+Respond ONLY with a valid JSON object in the exact format requested."""
+    
+    # Check if we have access to OpenRouter
+    if has_openrouter:
+        try:
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3.5-sonnet"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating metadata using model: {model}")
+            
+            # Use our direct OpenRouter client
+            result = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system=system_prompt,
+                max_tokens=1000,
+                temperature=0.7,
+                response_format={"type": "json_object"}
+            )
+            
+            # Parse the response
+            if result and result.get('choices') and len(result['choices']) > 0:
+                content = result['choices'][0]['message']['content']
+                try:
+                    metadata = json.loads(content)
+                    return {
+                        'meta_description': metadata.get('meta_description', ''),
+                        'excerpt': metadata.get('excerpt', ''),
+                        'tags': metadata.get('tags', [])
+                    }
+                except json.JSONDecodeError:
+                    logger.error("Failed to parse metadata JSON")
+                    return default_metadata
+            else:
+                logger.error("No valid response from API for metadata generation")
+                return default_metadata
+                
+        except Exception as e:
+            logger.error(f"Error generating metadata: {str(e)}")
+            return default_metadata
+    else:
+        logger.warning("OpenRouter key not available for metadata generation")
+        return default_metadata
+
+
 def _get_mock_content(topic, keywords, style, length):
     """
     Generate mock content when API is not available

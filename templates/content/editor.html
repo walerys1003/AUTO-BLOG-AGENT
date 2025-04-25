@@ -147,7 +147,7 @@
         
         <!-- Regeneration Form -->
         <form id="regenerateForm" action="{{ url_for('content_creator.regenerate_content', content_id=content_log.id) }}" method="post" style="display: none;">
-            <input type="hidden" name="topic_id" id="regenerateTopicId" value="{{ topic.id if topic else '' }}">
+            <input type="hidden" name="topic_id" id="regenerateTopicId" value="{{ topic_id if topic_id else (topic.id if topic else '') }}">
             <input type="hidden" name="style" id="regenerateStyle" value="{{ style }}">
             <input type="hidden" name="paragraph_count" id="regenerateParagraphCount" value="{{ paragraph_count }}">
         </form>
