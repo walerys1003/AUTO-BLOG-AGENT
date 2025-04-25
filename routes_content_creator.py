@@ -51,13 +51,6 @@ def content_generator_page():
                            title="Content Generator",
                            blogs=blogs)
     
-    # Get blog filter
-    blog_filter = request.args.get('blog_id', '')
-    try:
-        blog_filter = int(blog_filter) if blog_filter else None
-    except ValueError:
-        blog_filter = None
-    
     # Get all approved topics for the selected blogs
     query = ArticleTopic.query.filter(ArticleTopic.status == 'approved')
     
@@ -1085,3 +1078,121 @@ def generate_paragraph_existing():
     except Exception as e:
         logger.error(f"Error generating paragraph: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@content_creator_bp.route('/content-creator/api/dynamic-paragraph-v2', methods=['POST'])
+def generate_dynamic_paragraph_v2():
+    """Enhanced API endpoint for dynamic paragraph generation with real-time updates"""
+    try:
+        # Get request parameters
+        topic = request.form.get('topic')
+        paragraph_topic = request.form.get('paragraph_topic')
+        style = request.form.get('style', 'informative')
+        paragraph_index = int(request.form.get('paragraph_index', 0))
+        total_paragraphs = int(request.form.get('total_paragraphs', 4))
+        content_id = request.form.get('content_id')
+        
+        # Validate required parameters
+        if not topic:
+            return jsonify({'success': False, 'message': 'Topic is required'})
+        
+        if not paragraph_topic:
+            return jsonify({'success': False, 'message': 'Paragraph topic is required'})
+        
+        # Log parameters for debugging
+        logger.info(f"Generating paragraph: topic={topic}, paragraph_topic={paragraph_topic}, " +
+                   f"style={style}, index={paragraph_index}, total={total_paragraphs}")
+        
+        # Determine if this is introduction or conclusion
+        is_introduction = paragraph_index == 0
+        is_conclusion = paragraph_index == total_paragraphs - 1
+        
+        # Override title if needed
+        if is_introduction:
+            paragraph_topic = "Introduction"
+        elif is_conclusion:
+            paragraph_topic = "Conclusion"
+        
+        # Get content log if content_id is provided
+        content_log = None
+        if content_id:
+            content_log = ContentLog.query.get(content_id)
+            if not content_log:
+                logger.warning(f"Content log with ID {content_id} not found")
+        
+        # Generate the paragraph with improved error handling
+        try:
+            # Add additional logging for debugging
+            logger.info(f"Calling content generator for paragraph {paragraph_index+1}/{total_paragraphs}")
+            
+            # Generate the paragraph
+            paragraph_content = content_generator._generate_paragraph(
+                topic=topic,
+                paragraph_topic=paragraph_topic,
+                style=style,
+                is_introduction=is_introduction,
+                is_conclusion=is_conclusion,
+                keywords=[],  # No keywords for dynamic generation to reduce complexity
+                prev_content_summary=None
+            )
+            
+            logger.info(f"Successfully generated paragraph {paragraph_index+1}/{total_paragraphs}")
+            
+            # Update the content log if provided
+            if content_log:
+                try:
+                    # Load existing content data or create new
+                    content_data = {}
+                    if content_log.error_message:
+                        try:
+                            content_data = json.loads(content_log.error_message)
+                        except json.JSONDecodeError:
+                            logger.warning("Could not parse existing content data, creating new")
+                            content_data = {'content': '', 'paragraphs': {}}
+                    else:
+                        content_data = {'content': '', 'paragraphs': {}}
+                    
+                    # Update the paragraph data
+                    paragraphs = content_data.get('paragraphs', {})
+                    paragraphs[str(paragraph_index)] = paragraph_content
+                    content_data['paragraphs'] = paragraphs
+                    
+                    # Rebuild the full content
+                    full_content = []
+                    for i in range(total_paragraphs):
+                        if str(i) in paragraphs:
+                            full_content.append(paragraphs[str(i)])
+                    
+                    content_data['content'] = '<p>' + '</p><p>'.join(full_content) + '</p>'
+                    
+                    # Save back to content log
+                    content_log.error_message = json.dumps(content_data)
+                    db.session.commit()
+                    logger.info(f"Updated content log {content_id} with new paragraph {paragraph_index+1}")
+                except Exception as e:
+                    logger.error(f"Error updating content log: {str(e)}")
+            
+            return jsonify({
+                'success': True,
+                'content': paragraph_content,
+                'paragraph_index': paragraph_index,
+                'total_paragraphs': total_paragraphs,
+                'is_introduction': is_introduction,
+                'is_conclusion': is_conclusion
+            })
+            
+        except Exception as inner_e:
+            logger.error(f"Inner paragraph generation error: {str(inner_e)}")
+            raise inner_e
+        
+    except Exception as e:
+        logger.error(f"Error generating dynamic paragraph: {str(e)}")
+        # Return more detailed error information for debugging
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"Error details: {error_details}")
+        return jsonify({
+            'success': False, 
+            'message': f'Error generating paragraph: {str(e)}',
+            'details': error_details if app.debug else None
+        })
