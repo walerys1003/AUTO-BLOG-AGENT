@@ -27,8 +27,8 @@
                         <i class="fab fa-facebook-f text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title text-white fw-bold">Facebook</h5>
-                        <h6 class="mb-0 text-white">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-black fw-bold">Facebook</h5>
+                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
                     </div>
                 </div>
                 <div class="progress mt-3" style="height: 6px;">
@@ -50,8 +50,8 @@
                         <i class="fab fa-twitter text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title text-white fw-bold">Twitter</h5>
-                        <h6 class="mb-0 text-white">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-black fw-bold">Twitter</h5>
+                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
                     </div>
                 </div>
                 <div class="progress mt-3" style="height: 6px;">
@@ -73,8 +73,8 @@
                         <i class="fab fa-linkedin-in text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title text-white fw-bold">LinkedIn</h5>
-                        <h6 class="mb-0 text-white">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-black fw-bold">LinkedIn</h5>
+                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
                     </div>
                 </div>
                 <div class="progress mt-3" style="height: 6px;">
@@ -96,8 +96,8 @@
                         <i class="fab fa-instagram text-white"></i>
                     </div>
                     <div>
-                        <h5 class="card-title text-white fw-bold">Instagram</h5>
-                        <h6 class="mb-0 text-white">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
+                        <h5 class="card-title text-black fw-bold">Instagram</h5>
+                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
                     </div>
                 </div>
                 <div class="progress mt-3" style="height: 6px;">
@@ -140,27 +140,27 @@
                                 <div class="rounded-circle bg-primary p-2 me-2">
                                     <i class="fab fa-facebook-f text-white"></i>
                                 </div>
-                                <span class="text-white fw-bold">Facebook</span>
+                                <span class="text-black fw-bold">Facebook</span>
                                 {% elif account.platform == 'twitter' %}
                                 <div class="rounded-circle bg-info p-2 me-2">
                                     <i class="fab fa-twitter text-white"></i>
                                 </div>
-                                <span class="text-white fw-bold">Twitter</span>
+                                <span class="text-black fw-bold">Twitter</span>
                                 {% elif account.platform == 'linkedin' %}
                                 <div class="rounded-circle bg-success p-2 me-2">
                                     <i class="fab fa-linkedin-in text-white"></i>
                                 </div>
-                                <span class="text-white fw-bold">LinkedIn</span>
+                                <span class="text-black fw-bold">LinkedIn</span>
                                 {% elif account.platform == 'instagram' %}
                                 <div class="rounded-circle bg-danger p-2 me-2">
                                     <i class="fab fa-instagram text-white"></i>
                                 </div>
-                                <span class="text-white fw-bold">Instagram</span>
+                                <span class="text-black fw-bold">Instagram</span>
                                 {% else %}
                                 <div class="rounded-circle bg-secondary p-2 me-2">
                                     <i class="fas fa-share-alt text-white"></i>
                                 </div>
-                                <span class="text-white fw-bold">{{ account.platform|title }}</span>
+                                <span class="text-black fw-bold">{{ account.platform|title }}</span>
                                 {% endif %}
                             </div>
                         </td>
