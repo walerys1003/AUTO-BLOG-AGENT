@@ -35,6 +35,21 @@ def content_dashboard():
     
     # Get status filter
     status_filter = request.args.get('status', 'pending')
+
+@content_creator_bp.route('/content-generator')
+def content_generator_page():
+    """Content generator page with static topic selection and dynamic editor"""
+    # Get all blogs for dropdown
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    # Check if there are any blogs
+    if not blogs:
+        flash('No active blogs found. Please create a blog first.', 'warning')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    return render_template('content/generator.html', 
+                           title="Content Generator",
+                           blogs=blogs)
     
     # Get blog filter
     blog_filter = request.args.get('blog_id', '')
@@ -921,6 +936,48 @@ def get_blog_categories(blog_id):
         'success': True,
         'categories': categories
     })
+
+@content_creator_bp.route('/content-creator/api/topics')
+def get_all_topics():
+    """API endpoint to get approved topics for all blogs or a specific blog"""
+    blog_id = request.args.get('blog_id')
+    
+    try:
+        query = ArticleTopic.query.filter_by(status='approved')
+        
+        # Filter by blog_id if provided
+        if blog_id:
+            try:
+                blog_id = int(blog_id)
+                # Verify the blog exists
+                blog = Blog.query.get_or_404(blog_id)
+                query = query.filter_by(blog_id=blog_id)
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'message': 'Invalid blog ID'})
+        
+        # Get approved topics ordered by score
+        topics = query.order_by(desc(ArticleTopic.score)).all()
+        
+        # Convert to JSON format
+        topics_data = []
+        for topic in topics:
+            topics_data.append({
+                'id': topic.id,
+                'title': topic.title,
+                'score': topic.score,
+                'status': topic.status,
+                'blog_id': topic.blog_id,
+                'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'topics': topics_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting topics: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 
 @content_creator_bp.route('/content-creator/api/blog/<int:blog_id>/topics')
