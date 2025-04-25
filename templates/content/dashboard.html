@@ -271,13 +271,9 @@
                                         <button type="submit" class="btn btn-primary flex-grow-1">
                                             <i class="fas fa-magic me-2"></i> Generate Article
                                         </button>
-                                        <a href="{{ url_for('content_creator.edit_content', content_id=0, topic_id=topic.id, style='informative', paragraph_count=4, auto_generate=1) }}" 
-                                           class="btn btn-success flex-grow-1 dynamic-generation-btn" 
-                                           data-topic-id="{{ topic.id }}" 
-                                           data-style-selector="#style{{ topic.id }}" 
-                                           data-paragraph-selector="#paragraph_count{{ topic.id }}">
+                                        <button type="submit" name="auto_generate" value="1" class="btn btn-success flex-grow-1">
                                             <i class="fas fa-bolt me-2"></i> Generate Article (Dynamic)
-                                        </a>
+                                        </button>
                                     </div>
                                     <div class="form-text text-center mt-2">
                                         <small><i class="fas fa-info-circle me-1"></i> Dynamic generation creates content paragraph by paragraph with visual feedback</small>

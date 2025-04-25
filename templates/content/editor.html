@@ -441,7 +441,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (autoGenerate) {
         // Daj przeglądarce czas na załadowanie TinyMCE
         setTimeout(() => {
-            generateDynamicContent();
+            try {
+                // Upewnij się, że TinyMCE jest gotowy
+                if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
+                    console.log("Rozpoczynam dynamiczne generowanie treści...");
+                    generateContentDynamically(); // Użyj właściwej funkcji, która jest zdefiniowana poniżej
+                } else {
+                    console.log("TinyMCE nie jest jeszcze gotowe, próbuję ponownie za 1s...");
+                    setTimeout(() => {
+                        generateContentDynamically();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error("Błąd podczas uruchamiania dynamicznego generowania:", error);
+            }
         }, 1000);
     }
     

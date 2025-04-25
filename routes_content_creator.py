@@ -148,7 +148,7 @@ def edit_content(content_id):
     topic_id = request.args.get('topic_id')
     style = request.args.get('style', 'informative')
     paragraph_count = request.args.get('paragraph_count', 4)
-    auto_generate = request.args.get('auto_generate', 0)
+    auto_generate = request.args.get('auto_generate', '0') == '1'
     
     # Ensure paragraph_count is a valid integer between 3 and 6
     try:
