@@ -712,6 +712,8 @@ class AutomationRule(db.Model):
     # Content settings
     min_word_count = db.Column(db.Integer, default=1200)
     max_word_count = db.Column(db.Integer, default=1600)
+    paragraph_count = db.Column(db.Integer, default=4)  # Number of paragraphs for paragraph-based generation
+    use_paragraph_mode = db.Column(db.Boolean, default=False)  # Whether to use paragraph-based generation
     content_tone = db.Column(db.String(50), default="informative")  # Changed back to content_tone to match database schema
     topic_categories = db.Column(db.Text, nullable=True)  # JSON string of category IDs to focus on
     

@@ -2,6 +2,7 @@
 Content Generator Module
 
 This module handles the generation of article content using AI.
+It supports both word-count based generation and paragraph-based generation.
 """
 import logging
 import os
@@ -233,6 +234,499 @@ def _generate_tags_from_content(topic, keywords, content):
     # Limit to 5 tags maximum
     return tags[:5]
 
+
+def generate_article_by_paragraphs(topic, keywords=None, style="informative", paragraph_count=4):
+    """
+    Generate an article using AI with a paragraph-by-paragraph approach
+    
+    Args:
+        topic (str): The article topic or title
+        keywords (list, optional): List of keywords to include
+        style (str): Writing style (informative, conversational, professional, storytelling, persuasive)
+        paragraph_count (int): Number of paragraphs to generate (3-6)
+        
+    Returns:
+        dict: Generated content data including HTML, meta description, etc.
+    """
+    logger.info(f"Generating article content for topic: {topic} using paragraph-based approach")
+    
+    # Ensure paragraph count is within valid range
+    if paragraph_count < 3:
+        paragraph_count = 3
+    elif paragraph_count > 6:
+        paragraph_count = 6
+    
+    # First step: Generate a plan for the article with paragraph topics
+    plan = _generate_article_plan(topic, keywords, paragraph_count, style)
+    
+    if not plan or 'paragraph_topics' not in plan:
+        logger.error("Failed to generate article plan")
+        return _get_mock_content(topic, keywords, style, "medium")
+    
+    # Get the paragraph topics
+    paragraph_topics = plan.get('paragraph_topics', [])
+    
+    # Generate each paragraph in sequence
+    full_html = f"<h1>{topic}</h1>\n"
+    previous_paragraphs = ""
+    full_content = ""
+    
+    # Generate introduction
+    intro_paragraph = _generate_paragraph(
+        topic=topic,
+        paragraph_topic="Introduction",
+        previous_content="",
+        keywords=keywords,
+        style=style,
+        is_introduction=True
+    )
+    
+    if intro_paragraph:
+        full_html += intro_paragraph
+        previous_paragraphs += intro_paragraph
+        full_content += intro_paragraph
+    
+    # Generate each main paragraph
+    for i, paragraph_topic in enumerate(paragraph_topics):
+        logger.info(f"Generating paragraph {i+1} on topic: {paragraph_topic}")
+        
+        paragraph = _generate_paragraph(
+            topic=topic,
+            paragraph_topic=paragraph_topic,
+            previous_content=previous_paragraphs,
+            keywords=keywords,
+            style=style
+        )
+        
+        if paragraph:
+            header_tag = f"<h2>{paragraph_topic}</h2>\n"
+            full_html += header_tag + paragraph
+            previous_paragraphs += paragraph
+            full_content += header_tag + paragraph
+    
+    # Generate conclusion
+    conclusion_paragraph = _generate_paragraph(
+        topic=topic,
+        paragraph_topic="Conclusion",
+        previous_content=previous_paragraphs,
+        keywords=keywords,
+        style=style,
+        is_conclusion=True
+    )
+    
+    if conclusion_paragraph:
+        full_html += "<h2>Conclusion</h2>\n" + conclusion_paragraph
+        full_content += "<h2>Conclusion</h2>\n" + conclusion_paragraph
+    
+    # Generate metadata
+    metadata = _generate_article_metadata(topic, full_content, keywords)
+    
+    return {
+        "content": full_html,
+        "meta_description": metadata.get("meta_description", ""),
+        "excerpt": metadata.get("excerpt", ""),
+        "tags": metadata.get("tags", []),
+        "featured_image_url": ""
+    }
+
+def _generate_article_plan(topic, keywords, paragraph_count, style):
+    """
+    Generate a plan for the article with paragraph topics
+    
+    Args:
+        topic (str): The main article topic
+        keywords (list): List of keywords to include
+        paragraph_count (int): Number of paragraphs to generate
+        style (str): Writing style
+        
+    Returns:
+        dict: Plan with paragraph topics
+    """
+    # Create prompt for article plan generation
+    user_prompt = f"""Create a detailed plan for a blog article on the topic: "{topic}".
+
+The article will have {paragraph_count} main paragraphs (not including introduction and conclusion).
+For each paragraph, provide a specific sub-topic or aspect of the main topic to focus on.
+
+Guidelines:
+1. The sub-topics should progress logically and cover different aspects of the main topic
+2. Each sub-topic should be substantive enough for a full paragraph (150-200 words)
+3. The sub-topics should collectively provide comprehensive coverage of the main topic
+4. Include keywords where relevant: {', '.join(keywords) if keywords else 'No specific keywords required'}
+
+Please format your response as a JSON object with the following structure:
+{{
+  "article_title": "Suggested title",
+  "paragraph_topics": [
+    "Topic for paragraph 1",
+    "Topic for paragraph 2",
+    ...
+  ]
+}}"""
+
+    # System prompt to guide AI behavior
+    system_prompt = """You are an expert content strategist specializing in creating detailed content plans.
+Your task is to create a logical, well-structured plan for an article with distinct paragraph topics.
+Respond ONLY with a valid JSON object in the exact format requested."""
+
+    # Check if we have access to OpenRouter
+    if has_openrouter:
+        try:
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating article plan using model: {model}")
+            
+            # Use our direct OpenRouter client
+            result = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            if not result:
+                logger.error("Failed to get article plan from OpenRouter")
+                return None
+            
+            # Extract JSON from the response
+            try:
+                # Find JSON object in the response
+                json_start = result.find("{")
+                json_end = result.rfind("}") + 1
+                
+                if json_start != -1 and json_end != -1:
+                    json_str = result[json_start:json_end]
+                    plan = json.loads(json_str)
+                    return plan
+                else:
+                    logger.error("No valid JSON found in the article plan response")
+                    return None
+            except json.JSONDecodeError as e:
+                logger.error(f"Error parsing article plan JSON: {str(e)}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error generating article plan: {str(e)}")
+            return None
+    else:
+        # No API key, return basic plan
+        logger.warning("No OpenRouter API key available, returning basic article plan")
+        return {
+            "article_title": f"Guide to {topic}",
+            "paragraph_topics": [
+                f"Understanding {topic} Basics",
+                f"Key Benefits of {topic}",
+                f"Best Practices for {topic}",
+                f"Future Trends in {topic}"
+            ][:paragraph_count]
+        }
+
+def _generate_paragraph(topic, paragraph_topic, previous_content="", keywords=None, style="informative", is_introduction=False, is_conclusion=False):
+    """
+    Generate a single paragraph for the article
+    
+    Args:
+        topic (str): The main article topic
+        paragraph_topic (str): The specific topic for this paragraph
+        previous_content (str): Content generated so far (for context)
+        keywords (list): List of keywords to include
+        style (str): Writing style
+        is_introduction (bool): Whether this is the introduction paragraph
+        is_conclusion (bool): Whether this is the conclusion paragraph
+        
+    Returns:
+        str: Generated paragraph in HTML format
+    """
+    # Determine paragraph type for prompt
+    paragraph_type = "introduction" if is_introduction else "conclusion" if is_conclusion else "body"
+    
+    # Create previous content summary (shortened to avoid token issues)
+    prev_content_summary = ""
+    if previous_content:
+        # Remove HTML tags and get first 200 characters of each previous paragraph
+        clean_previous = re.sub(r'<[^>]*>', ' ', previous_content)
+        paragraphs = clean_previous.split('\n\n')
+        summaries = []
+        for p in paragraphs[:3]:  # Only include up to 3 previous paragraphs
+            if p.strip():
+                summaries.append(p[:200] + ("..." if len(p) > 200 else ""))
+        prev_content_summary = "\n".join(summaries)
+    
+    # Create prompt for paragraph generation
+    user_prompt = f"""Write a detailed paragraph for a blog article on "{topic}".
+
+This paragraph should focus on: "{paragraph_topic}"
+Paragraph type: {paragraph_type}
+Writing style: {style}
+Keywords to include if relevant: {', '.join(keywords) if keywords else 'No specific keywords required'}
+
+"""
+
+    if is_introduction:
+        user_prompt += """For this introduction paragraph:
+1. Start with an engaging hook to capture reader attention
+2. Briefly introduce the main topic and its importance
+3. Hint at what the article will cover
+4. Make it engaging and inviting to continue reading"""
+    elif is_conclusion:
+        user_prompt += """For this conclusion paragraph:
+1. Summarize the key points from the article
+2. Reinforce the main message or takeaway
+3. End with a thought-provoking statement or call to action"""
+    else:
+        user_prompt += f"""For this body paragraph:
+1. Focus specifically on the sub-topic: "{paragraph_topic}"
+2. Include specific examples, data, or evidence where appropriate
+3. Ensure the paragraph flows naturally with the rest of the content
+4. Make it informative and engaging, around 150-200 words"""
+
+    if prev_content_summary:
+        user_prompt += f"\n\nPrevious content for context:\n{prev_content_summary}"
+
+    user_prompt += "\n\nPlease write ONLY the paragraph content in proper HTML format with <p> tags. Do not include headings or any other HTML elements."
+
+    # System prompt to guide AI behavior
+    system_prompt = """You are an expert content writer specializing in creating engaging, well-structured blog content.
+Your task is to write a single detailed paragraph on the specified topic that flows naturally with the rest of the article.
+Provide ONLY the paragraph content in proper HTML format with <p> tags. Do not include any explanations or notes."""
+
+    # Check if we have access to OpenRouter
+    if has_openrouter:
+        try:
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating paragraph using model: {model}")
+            
+            # Use our direct OpenRouter client
+            content = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            if not content:
+                logger.error("Failed to get paragraph from OpenRouter")
+                return f"<p>This paragraph would discuss {paragraph_topic}.</p>"
+            
+            # Ensure content is wrapped in <p> tags if not already
+            content = content.strip()
+            if not content.startswith("<p>"):
+                content = f"<p>{content}"
+            if not content.endswith("</p>"):
+                content = f"{content}</p>"
+                
+            return content
+                
+        except Exception as e:
+            logger.error(f"Error generating paragraph: {str(e)}")
+            return f"<p>This paragraph would discuss {paragraph_topic}.</p>"
+    else:
+        # No API key
+        logger.warning("No OpenRouter API key available, returning placeholder paragraph")
+        return f"<p>This paragraph would discuss {paragraph_topic} in an {style} style.</p>"
+
+def _generate_article_metadata(topic, content, keywords=None):
+    """
+    Generate metadata for the article (meta description, excerpt, tags)
+    
+    Args:
+        topic (str): The article topic
+        content (str): The full article content
+        keywords (list): List of keywords
+        
+    Returns:
+        dict: Metadata including meta description, excerpt, and tags
+    """
+    # Create prompt for metadata generation
+    user_prompt = f"""Generate SEO metadata for a blog article on the topic: "{topic}"
+
+Below is a snippet from the article content (truncated):
+{content[:1000]}...
+
+Please provide:
+1. A compelling meta description under 160 characters
+2. A brief excerpt for social sharing (2-3 sentences)
+3. 3-5 relevant SEO tags (comma-separated)
+
+Keywords to include where relevant: {', '.join(keywords) if keywords else 'No specific keywords'}
+
+Format your response as a JSON object:
+{{
+  "meta_description": "your meta description here",
+  "excerpt": "your excerpt here",
+  "tags": ["tag1", "tag2", "tag3"]
+}}"""
+
+    # System prompt to guide AI behavior
+    system_prompt = """You are an SEO expert specializing in creating effective metadata for blog articles.
+Your task is to create a meta description, excerpt, and tags that will help the article perform well in search results.
+Respond ONLY with a valid JSON object in the format requested."""
+
+    # Check if we have access to OpenRouter
+    if has_openrouter:
+        try:
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating article metadata using model: {model}")
+            
+            # Use our direct OpenRouter client
+            result = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            if not result:
+                logger.error("Failed to get article metadata from OpenRouter")
+                return _create_default_metadata(topic, keywords)
+            
+            # Extract JSON from the response
+            try:
+                # Find JSON object in the response
+                json_start = result.find("{")
+                json_end = result.rfind("}") + 1
+                
+                if json_start != -1 and json_end != -1:
+                    json_str = result[json_start:json_end]
+                    metadata = json.loads(json_str)
+                    return metadata
+                else:
+                    logger.error("No valid JSON found in the metadata response")
+                    return _create_default_metadata(topic, keywords)
+            except json.JSONDecodeError as e:
+                logger.error(f"Error parsing metadata JSON: {str(e)}")
+                return _create_default_metadata(topic, keywords)
+                
+        except Exception as e:
+            logger.error(f"Error generating article metadata: {str(e)}")
+            return _create_default_metadata(topic, keywords)
+    else:
+        # No API key, return basic metadata
+        logger.warning("No OpenRouter API key available, returning basic metadata")
+        return _create_default_metadata(topic, keywords)
+
+def _create_default_metadata(topic, keywords=None):
+    """Create default metadata when AI generation fails"""
+    tags = list(keywords) if keywords else []
+    topic_words = topic.lower().split()
+    for word in topic_words:
+        if len(word) > 3 and word not in [t.lower() for t in tags]:
+            tags.append(word.capitalize())
+    
+    return {
+        "meta_description": f"Learn everything you need to know about {topic} in this comprehensive guide. We cover key concepts, best practices, and practical strategies.",
+        "excerpt": f"This article explores {topic} in detail, providing you with essential knowledge and practical tips for success.",
+        "tags": tags[:5]
+    }
+
+def _generate_article_metadata(topic, content, keywords=None):
+    """
+    Generate metadata for the article (meta description, excerpt, tags)
+    
+    Args:
+        topic (str): The article topic
+        content (str): The full article content
+        keywords (list): List of keywords
+        
+    Returns:
+        dict: Metadata including meta description, excerpt, and tags
+    """
+    # Create prompt for metadata generation
+    user_prompt = f"""Generate SEO metadata for a blog article on the topic: "{topic}"
+
+Below is a snippet from the article content (truncated):
+{content[:1000]}...
+
+Please provide:
+1. A compelling meta description under 160 characters
+2. A brief excerpt for social sharing (2-3 sentences)
+3. 3-5 relevant SEO tags (comma-separated)
+
+Keywords to include where relevant: {', '.join(keywords) if keywords else 'No specific keywords'}
+
+Format your response as a JSON object:
+{{
+  "meta_description": "your meta description here",
+  "excerpt": "your excerpt here",
+  "tags": ["tag1", "tag2", "tag3"]
+}}"""
+
+    # System prompt to guide AI behavior
+    system_prompt = """You are an SEO expert specializing in creating effective metadata for blog articles.
+Your task is to create a meta description, excerpt, and tags that will help the article perform well in search results.
+Respond ONLY with a valid JSON object in the format requested."""
+
+    # Check if we have access to OpenRouter
+    if has_openrouter:
+        try:
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating article metadata using model: {model}")
+            
+            # Use our direct OpenRouter client
+            result = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            if not result:
+                logger.error("Failed to get article metadata from OpenRouter")
+                return _create_default_metadata(topic, keywords)
+            
+            # Extract JSON from the response
+            try:
+                # Find JSON object in the response
+                json_start = result.find("{")
+                json_end = result.rfind("}") + 1
+                
+                if json_start != -1 and json_end != -1:
+                    json_str = result[json_start:json_end]
+                    metadata = json.loads(json_str)
+                    return metadata
+                else:
+                    logger.error("No valid JSON found in the metadata response")
+                    return _create_default_metadata(topic, keywords)
+            except json.JSONDecodeError as e:
+                logger.error(f"Error parsing metadata JSON: {str(e)}")
+                return _create_default_metadata(topic, keywords)
+                
+        except Exception as e:
+            logger.error(f"Error generating article metadata: {str(e)}")
+            return _create_default_metadata(topic, keywords)
+    else:
+        # No API key, return basic metadata
+        logger.warning("No OpenRouter API key available, returning basic metadata")
+        return _create_default_metadata(topic, keywords)
+
+def _create_default_metadata(topic, keywords=None):
+    """Create default metadata when AI generation fails"""
+    tags = list(keywords) if keywords else []
+    topic_words = topic.lower().split()
+    for word in topic_words:
+        if len(word) > 3 and word not in [t.lower() for t in tags]:
+            tags.append(word.capitalize())
+    
+    return {
+        "meta_description": f"Learn everything you need to know about {topic} in this comprehensive guide. We cover key concepts, best practices, and practical strategies.",
+        "excerpt": f"This article explores {topic} in detail, providing you with essential knowledge and practical tips for success.",
+        "tags": tags[:5]
+    }
 
 def _get_mock_content(topic, keywords, style, length):
     """

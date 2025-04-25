@@ -1,0 +1,61 @@
+📝 Prompt: Generowanie artykułów etapami w oparciu o tytuły i tematykę akapitów zamiast liczby słów
+Proszę opracuj sposób technicznego podejścia do generowania artykułów, w którym zamiast sztywnej liczby słów (np. 800, 1200, 1600), treść będzie tworzona w oparciu o etapy pisania – po 3, 4, 5 lub 6 akapitów, z których każdy odpowiada wielkości kontekstowego okna modelu AI.
+
+📌 Założenia prompta i idei wdrożenia:
+Struktura pisania:
+
+Artykuł ma być generowany w etapach, akapit po akapicie, gdzie:
+
+Każdy akapit odpowiada oddzielnemu „mini-kontextowi” modelu.
+
+Liczba akapitów (3–6) decyduje o długości artykułu, a nie liczba słów.
+
+Każdy akapit ma własny tytuł lub temat przewodni.
+
+Model AI musi zrozumieć całość koncepcji i spójnie połączyć akapity w jeden artykuł.
+
+Generowanie etapowe:
+
+Etap 1: Podaj modelowi temat artykułu oraz listę tytułów akapitów.
+
+Etap 2: Model generuje pierwszy akapit na podstawie tytułu 1.
+
+Etap 3: Model dostaje kontekst poprzednich akapitów + tytuł kolejnego i pisze następny.
+
+Proces powtarza się do osiągnięcia 3–6 akapitów.
+
+Spójność:
+
+Model musi pilnować logicznego ciągu – spójników, przejść między akapitami, zakończenia.
+
+Na końcu generuje krótkie podsumowanie artykułu (opcjonalne).
+
+⚙️ Techniczne szczegóły wdrożenia:
+Input dla AI:
+
+Temat artykułu.
+
+Lista tytułów lub tematów akapitów (np. 1. Wprowadzenie, 2. Główne zagadnienie, 3. Przykłady, 4. Wnioski).
+
+Kontekst wcześniej wygenerowanych fragmentów (przy kolejnych akapitach).
+
+Proces automatyzacji:
+
+Skrypt dzielący generację na pętle:
+
+Pętla for akapit in lista_akapity:
+
+Input: temat + poprzedni akapit + tytuł aktualnego akapitu.
+
+Output: tekst akapitu.
+
+Na końcu: łączenie wszystkich akapitów + wygenerowanie nagłówków, metaopisu.
+
+Zarządzanie kontekstem:
+
+Maksymalizacja efektywności przez dopasowanie treści akapitu do limitu tokenów modelu (np. 500–700 słów/akapit dla GPT-4).
+
+Możliwość pracy przy mniejszych modelach z ograniczonym kontekstem.
+
+💡 Cel prompta:
+Dostarcz kompletną, techniczną koncepcję generowania artykułów akapit po akapicie, opartą o zadane tytuły i tematykę, z zachowaniem spójności, bez sztywnego limitu słów. Artykuł ma powstawać etapowo, każdy fragment przemyślany i scalony w logiczną całość.

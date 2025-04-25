@@ -1,0 +1,97 @@
+Rozbudowany, analityczny prompt do wdrożenia generowania artykułów w oparciu o liczbę akapitów (zamiast liczby słów) w BlogAutomationMaster
+Proszę opracuj i wdroż koncepcję generowania artykułów na bloga w systemie BlogAutomationMaster, w której liczba akapitów (np. 3, 4, 5, 6) zastępuje sztywną kontrolę liczby słów (np. 800, 1200, 1600). Celem jest stworzenie technicznego i funkcjonalnego rozwiązania, które umożliwia generowanie spójnych, logicznych treści etapami, z zachowaniem kontekstu i wysokiej jakości tekstu. Każdy akapit jest traktowany jako osobny etap procesu pisania, ale całość artykułu musi być spójna i logicznie połączona.
+
+📌 Założenia główne:
+Struktura generowania:
+
+Artykuł tworzony jest w etapach – akapit po akapicie.
+
+Użytkownik wybiera liczbę akapitów: 3, 4, 5, 6.
+
+Każdy akapit zawiera rozwinięcie konkretnego aspektu tematu i ma własny tytuł lub temat przewodni.
+
+Artykuł kończy się krótkim podsumowaniem wygenerowanym przez model.
+
+Dlaczego akapity zamiast słów?
+
+Modele AI lepiej kontrolują strukturę treści niż precyzyjną liczbę słów.
+
+Generowanie w mniejszych „porcjach” zmniejsza ryzyko błędów i przekroczeń tokenów.
+
+Większa stabilność i możliwość lepszej optymalizacji jakości treści.
+
+⚙️ Techniczne szczegóły wdrożenia:
+1️⃣ UI/UX – Zmiany w interfejsie użytkownika:
+Usuń pole „Liczba słów”.
+
+Dodaj suwak lub pole wyboru: „Number of Paragraphs”.
+
+Zakres: 3 – 6 akapitów.
+
+Opcjonalnie: możliwość podania tytułów akapitów ręcznie lub automatyczne ich generowanie przez system.
+
+2️⃣ Logika generowania – proces automatyzacji:
+🔹 Etap 1: Generowanie planu artykułu
+Input: Tytuł artykułu + Liczba akapitów.
+
+Model generuje:
+
+Listę tytułów akapitów (np. Akapit 1: Wprowadzenie, Akapit 2: Kluczowy aspekt A, itd.).
+
+🔹 Etap 2: Generowanie treści akapitów – pętla krok po kroku
+Dla każdego akapitu:
+
+Input: Temat akapitu + Kontekst poprzednich akapitów.
+
+Model generuje treść danego akapitu (150–200 słów).
+
+Treść akapitu zostaje scalona z poprzednimi.
+
+🔹 Etap 3: Zakończenie artykułu
+Po ostatnim akapicie model generuje krótkie podsumowanie (opcjonalnie).
+
+3️⃣ Przykładowy prompt dla modelu AI (na każdy etap):
+„Napisz akapit do artykułu o tytule: [Tytuł Artykułu]. Ten akapit ma dotyczyć: [Tytuł Akapitu]. Uwzględnij, że poprzednia część artykułu brzmiała: [Poprzedni Akapit]. Zachowaj spójność i logiczny ciąg całej wypowiedz. Na stworzenie danego pojedynczego akapitu wykorzystaj wielkość całego okna kontekstowego i pisz dalej do wyczerpania wszystkich zleconych akapitów.”
+
+4️⃣ Integracja z OpenRouter (lub innym modelem AI):
+Dla każdego akapitu wysyłasz osobne zapytanie.
+
+Każde zapytanie uwzględnia:
+
+Tytuł akapitu.
+
+Kontekst wcześniej wygenerowanych akapitów (np. w skróconej wersji).
+
+Długość akapitu by utrzymać balans - na stworzenie danego pojedynczego akapitu wykorzystaj wielkość całego okna kontekstowego
+
+5️⃣ Skrypt automatyzujący (pseudokod):
+python
+for akapit in lista_akapity:
+    input_prompt = f"Generuj akapit na temat: {akapit}. Poprzednie: {poprzednie_akapity}."
+    wygenerowany_akap = zapytaj_model(input_prompt)
+    dodaj_do_artykulu(wygenerowany_akap)
+    poprzednie_akapity += wygenerowany_akap
+🧩 Dodatkowe funkcjonalności:
+Optymalizacja SEO: Po wygenerowaniu całości – automatyczne dodanie metaopisu, tagów, SEO-friendly titles.
+
+Obrazki: Dla każdego akapitu – propozycja grafiki (Google lub Unsplash Api ).
+
+Harmonogram: Każdy artykuł publikowany automatycznie po wygenerowaniu.
+
+💡 Cel i zalety tego podejścia:
+Stabilność: Generowanie mniejszych fragmentów tekstu zwiększa kontrolę nad jakością.
+
+Skalowalność: Możliwość dostosowania liczby akapitów do potrzeb (krótkie vs długie treści).
+
+Spójność: Każdy akapit logicznie wynika z poprzedniego, a całość tworzy przemyślaną strukturę.
+
+Uniknięcie problemów z tokenami w większych modelach.
+
+🎯 Finalny efekt:
+Pełnoprawny artykuł złożony z 3–6 akapitów.
+
+Każdy akapit rozwija inny aspekt tematu.
+
+Tekst kończy się spójnym podsumowaniem.
+
+Całość gotowa do publikacji z optymalizacją SEO i grafikami.
