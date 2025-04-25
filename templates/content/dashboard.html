@@ -63,9 +63,9 @@
             <div class="card-body">
                 <p>Create content from approved topics with customization and review before publishing.</p>
                 <div class="d-grid">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#topicSelectionModal">
-                        <i class="fas fa-magic me-2"></i> Standard Editor
-                    </button>
+                    <a href="{{ url_for('content_creator.standard_editor_page') }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i> Standard Editor
+                    </a>
                 </div>
             </div>
         </div>
@@ -219,9 +219,9 @@
             <p class="text-muted">
                 Start creating content to see your published articles here.
             </p>
-            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#topicSelectionModal">
-                <i class="fas fa-magic me-2"></i> Create First Article
-            </button>
+            <a href="{{ url_for('content_creator.standard_editor_page') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-edit me-2"></i> Create First Article
+            </a>
         </div>
         {% endif %}
     </div>

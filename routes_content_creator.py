@@ -95,6 +95,45 @@ def content_generator_page():
                           title="Content Generator",
                           blogs=blogs)
 
+@content_creator_bp.route('/standard-editor')
+def standard_editor_page():
+    """Standard editor page with WYSIWYG editor"""
+    # Get all blogs for dropdown
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    # Check if there are any blogs
+    if not blogs:
+        flash('No active blogs found. Please create a blog first.', 'warning')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    # Get topic ID if passed as query parameter
+    topic_id = request.args.get('topic_id')
+    topic = None
+    if topic_id:
+        try:
+            topic = ArticleTopic.query.get(int(topic_id))
+        except (ValueError, TypeError):
+            flash('Invalid topic ID', 'warning')
+    
+    # Create a blank content log for the editor
+    content_log = None
+    if topic:
+        content_log = ContentLog(
+            blog_id=topic.blog_id,
+            title=topic.title,
+            status='draft',
+            created_at=datetime.utcnow()
+        )
+        db.session.add(content_log)
+        db.session.commit()
+        logger.info(f"Created new draft for standard editor: {content_log.id}")
+    
+    return render_template('content/standard_editor.html', 
+                          title="Standard Editor",
+                          blogs=blogs,
+                          topic=topic,
+                          content_log=content_log)
+
 
 @content_creator_bp.route('/content-creator/generate', methods=['POST'])
 def generate_content():

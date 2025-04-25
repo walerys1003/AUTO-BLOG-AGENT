@@ -1,0 +1,291 @@
+📝 SPECYFIKACJA SYSTEMU Z CLAUDE SONNET 3.5 (OpenRouter AI)
+1️⃣ STANDARD EDITOR – Edytor Tekstowy (WYSIWYG)
+📋 Główne Funkcje:
+Edycja tekstu w trybie WYSIWYG.
+
+Podgląd HTML/Markdown.
+
+Zapis szkicu i publikacja treści.
+
+Autosave co 2 minuty (lub inny interwał).
+
+Wersjonowanie – zapis historii zmian.
+
+Analiza SEO: słowa kluczowe, długość, optymalizacja.
+
+⚙️ Backend – Flask (Python) – API dla Edytora:
+GET /editor-content/{id}
+
+POST /editor-content/save
+
+POST /editor-content/publish
+
+GET /editor-content/history/{id} – zwraca historię wersji.
+
+POST /editor-content/seo-analyze
+
+Input: { "content": "..." }
+
+Output: { "keywords": [...], "readability_score": ..., "length": ... }
+
+🛠️ Kod: Autosave + Wersjonowanie
+python
+Kopiuj
+Edytuj
+import datetime
+
+database = {}
+history = {}
+
+@app.route('/editor-content/autosave', methods=['POST'])
+def autosave_content():
+    data = request.get_json()
+    data['last_saved'] = datetime.datetime.now().isoformat()
+    database[data['id']] = data
+    
+    # Dodaj wersję do historii
+    history.setdefault(data['id'], []).append({
+        'timestamp': data['last_saved'],
+        'content': data['content']
+    })
+    
+    return jsonify({'success': True, 'message': 'Autosaved successfully'})
+
+@app.route('/editor-content/history/<string:content_id>', methods=['GET'])
+def get_history(content_id):
+    versions = history.get(content_id, [])
+    return jsonify({'history': versions})
+2️⃣ DYNAMIC GENERATION – Integracja z Claude Sonnet 3.5 (OpenRouter)
+📋 Funkcje:
+Generacja treści paragraf po paragrafie.
+
+Wybór stylu (blogowy, techniczny, kreatywny, formalny).
+
+Dynamiczne podpowiedzi AI (tytuły, śródtytuły).
+
+Automatyczna analiza spójności treści.
+
+⚙️ Backend – Flask + OpenRouter AI API (Claude Sonnet 3.5):
+Endpointy REST API:
+POST /generate/paragraph
+
+POST /generate/title-suggestions
+
+POST /generate/outline
+
+🧠 Przykład Integracji z OpenRouter API:
+python
+Kopiuj
+Edytuj
+import requests
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+openrouter_api_key = 'YOUR_OPENROUTER_API_KEY'
+
+headers = {
+    'Authorization': f'Bearer {openrouter_api_key}',
+    'Content-Type': 'application/json'
+}
+
+@app.route('/generate/paragraph', methods=['POST'])
+def generate_paragraph():
+    data = request.get_json()
+    topic = data['topic']
+    content = data['current_content']
+    style = data.get('style', 'neutral')
+
+    prompt = f"Topic: {topic}\nStyle: {style}\nContent so far:\n{content}\nContinue writing the next paragraph:"
+
+    payload = {
+        "model": "anthropic/claude-3-sonnet",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 200,
+        "temperature": 0.7
+    }
+
+    response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, json=payload)
+    response_data = response.json()
+    next_paragraph = response_data['choices'][0]['message']['content']
+
+    return jsonify({'next_paragraph': next_paragraph})
+
+@app.route('/generate/title-suggestions', methods=['POST'])
+def generate_titles():
+    data = request.get_json()
+    topic = data['topic']
+
+    prompt = f"Suggest 5 catchy titles for an article about: {topic}"
+
+    payload = {
+        "model": "anthropic/claude-3-sonnet",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 100,
+        "temperature": 0.8
+    }
+
+    response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, json=payload)
+    titles = response.json()['choices'][0]['message']['content']
+
+    return jsonify({'titles': titles.strip().split("\n")})
+3️⃣ Schemat Stron:
+/standard-editor
+Edytor WYSIWYG + HTML.
+
+Przycisk Zapisz, Opublikuj, Autosave info.
+
+Panel SEO: keywords, długość, czytelność.
+
+Historia wersji (lista zapisów).
+
+/content-generator
+Pole: Temat treści, wybór stylu (dropdown).
+
+Przycisk: Rozpocznij generację.
+
+Sekcja paragrafów: paragraf 1, paragraf 2... (dynamicznie).
+
+Przycisk Generuj dalej.
+
+Podpowiedzi AI: Śródtytuły, nagłówki, call to action.
+
+📊 Analiza SEO (Python + prosty algorytm):
+python
+Kopiuj
+Edytuj
+from flask import Flask, request, jsonify
+from collections import Counter
+import re
+
+@app.route('/editor-content/seo-analyze', methods=['POST'])
+def seo_analyze():
+    data = request.get_json()
+    content = data['content']
+    words = re.findall(r'\w+', content.lower())
+    total_words = len(words)
+    keywords = Counter(words).most_common(5)
+    return jsonify({
+        'keywords': keywords,
+        'length': total_words,
+        'readability_score': round(206.835 - 1.015 * (total_words/5) - 84.6 * (len(words)/total_words), 2)
+
+
+
+📝 Specyfikacja Komponentów Edytora i Logiki Generacji (Python)
+1️⃣ STANDARD EDITOR – Komponent Edytora Tekstowego
+📋 Funkcje:
+Edycja tekstu w trybie WYSIWYG (What You See Is What You Get).
+
+Możliwość zapisu szkicu i publikacji.
+
+Podgląd treści.
+
+Edytor HTML/Markdown opcjonalny.
+
+Funkcja automatycznego zapisu co X minut.
+
+⚙️ Backend – Python (Flask) – API dla Edytora:
+Endpointy REST API:
+GET /editor-content/{id}
+
+Opis: Pobiera treść szkicu/artykułu do edycji.
+
+Zwraca: JSON { "title": "...", "content": "...", "status": "draft/published" }
+
+POST /editor-content/save
+
+Opis: Zapisuje szkic lub aktualizuje istniejący.
+
+Input JSON: { "id": "...", "title": "...", "content": "...", "status": "draft" }
+
+Output: { "success": true, "message": "Saved successfully" }
+
+POST /editor-content/publish
+
+Opis: Publikuje treść.
+
+Input JSON: { "id": "...", "content": "...", "status": "published" }
+
+Output: { "success": true, "message": "Published successfully" }
+
+🛠️ Przykładowy kod – Flask (Python):
+python
+Kopiuj
+Edytuj
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+# Przykładowa baza danych w postaci słownika
+database = {}
+
+@app.route('/editor-content/<string:content_id>', methods=['GET'])
+def get_content(content_id):
+    content = database.get(content_id)
+    if content:
+        return jsonify(content)
+    else:
+        return jsonify({'error': 'Content not found'}), 404
+
+@app.route('/editor-content/save', methods=['POST'])
+def save_content():
+    data = request.get_json()
+    database[data['id']] = data
+    return jsonify({'success': True, 'message': 'Saved successfully'})
+
+@app.route('/editor-content/publish', methods=['POST'])
+def publish_content():
+    data = request.get_json()
+    data['status'] = 'published'
+    database[data['id']] = data
+    return jsonify({'success': True, 'message': 'Published successfully'})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+2️⃣ DYNAMIC GENERATION – Logika Generowania Treści Paragraf po Paragrafie
+📋 Funkcje:
+Interaktywne generowanie tekstu AI z podglądem na żywo.
+
+Każdy paragraf pojawia się po kliknięciu „Generuj dalej” lub automatycznie.
+
+Możliwość modyfikacji każdego paragrafu.
+
+🔄 Frontend – Logika Dynamicznej Interakcji:
+Użytkownik klika „Generuj pierwszy paragraf” → zapytanie do /generate/paragraph.
+
+Po otrzymaniu paragrafu → wyświetlenie go w edytorze.
+
+Przycisk „Generuj kolejny” powtarza zapytanie, zaktualizowany kontekst to cała dotychczasowa treść.
+
+Użytkownik może dowolnie edytować treść.
+
+3️⃣ Schemat Strony Edytora:
+/standard-editor
+Edytor WYSIWYG
+
+Podgląd HTML
+
+Przycisk „Zapisz”
+
+Przycisk „Opublikuj”
+
+4️⃣ Schemat Strony Dynamic Generator:
+/content-generator
+Pole „Temat treści”
+
+Przycisk „Rozpocznij generację”
+
+Sekcja generowanych paragrafów
+
+Przycisk „Generuj dalej”
+
+Przycisk „Zapisz treść”
+
+📈 Zaawansowane Funkcje do Rozważenia:
+Podpowiedzi AI: dynamiczne sugestie dla użytkownika (np. tytuły, śródtytuły).
+
+Stylizacja AI: generowanie treści w wybranym stylu (blog, techniczny, emocjonalny).
+
+Wersjonowanie treści: historia zmian i możliwość cofania.
+
+Analiza SEO: analiza treści pod kątem słów kluczowych, długości itp.
+    })

@@ -669,7 +669,7 @@
             if (!contentDraftId) return;
             
             // Redirect to edit page
-            window.location.href = '{{ url_for("content_creator.edit_content", content_id="__id__") }}'.replace('__id__', contentDraftId);
+            window.location.href = '{{ url_for("content_creator.edit_content", content_id=0) }}'.replace('/edit/0/', '/edit/' + contentDraftId + '/');
         });
         
         // Edit Metadata Button
@@ -685,7 +685,7 @@
             if (!contentDraftId) return;
             
             // Redirect to publish page
-            window.location.href = '{{ url_for("content_creator.publish_content", content_id="__id__") }}'.replace('__id__', contentDraftId);
+            window.location.href = '{{ url_for("content_creator.publish_content", content_id=0) }}'.replace('/publish/0/', '/publish/' + contentDraftId + '/');
         });
         
         // Search Input Event
