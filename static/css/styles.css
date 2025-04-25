@@ -252,6 +252,50 @@ body {
     margin-bottom: 0;
 }
 
+/* Navigation adjustments */
+.navbar {
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin: 0 0.1rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(40, 127, 113, 0.05);
+}
+
+.navbar-nav .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    border: 1px solid rgba(40, 127, 113, 0.2);
+}
+
+.dropdown-item {
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(40, 127, 113, 0.05);
+}
+
+.dropdown-item.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
 /* Platform guides in the social form */
 .platform-guide {
     margin-bottom: 1rem;

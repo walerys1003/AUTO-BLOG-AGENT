@@ -268,88 +268,88 @@
                             <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-share-alt me-1"></i> Social Media
                             </a>
-                            <ul class="dropdown-menu" style="background-color: var(--dark-color) !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
+                            <ul class="dropdown-menu" style="background-color: var(--card-bg) !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('social.social_accounts') %}active{% endif %}" href="{{ url_for('social.social_accounts') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('social.social_accounts') %}active{% endif %}" href="{{ url_for('social.social_accounts') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-users-cog me-1"></i> Manage Accounts
                                     </a>
                                 </li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}">
+                            <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-clipboard-list me-1"></i> Logs
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}">
+                            <a class="nav-link {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-search me-1"></i> SEO Tools
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}">
+                            <a class="nav-link {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-magic me-1"></i> SEO Inspirations
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/content-creator' in request.path %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}">
+                            <a class="nav-link {% if '/content-creator' in request.path %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-pen-fancy me-1"></i> Content Creator
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/images' in request.path %}active{% endif %}" href="{{ url_for('images.image_library') }}">
+                            <a class="nav-link {% if '/images' in request.path %}active{% endif %}" href="{{ url_for('images.image_library') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-images me-1"></i> Images
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-newspaper me-1"></i> WordPress Publishing
                             </a>
-                            <ul class="dropdown-menu" style="background-color: var(--dark-color) !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
+                            <ul class="dropdown-menu" style="background-color: var(--card-bg) !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-calendar-alt me-1"></i> Schedule
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-list-ul me-1"></i> Pending Articles
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-history me-1"></i> Publication History
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}">
+                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}" style="color: var(--dark-color) !important;">
                                         <i class="fas fa-cog me-1"></i> Settings
                                     </a>
                                 </li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}">
+                            <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-chart-line me-1"></i> Analytics
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}">
+                            <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-brain me-1"></i> AI Models
                             </a>
                         </li>
