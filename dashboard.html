@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BLOG AUTOMATION MASTER - AI-powered content generation and management for WordPress blogs">
+    <title>Dashboard - BlogAutomationAgent</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        /* Zmienne kolorów Consist UI */
+        :root {
+            --primary-color: #287F71;       /* Zielony - kolor główny */
+            --secondary-color: #EB862A;     /* Pomarańczowy - akcent */
+            --accent-color: #ABBDD3;        /* Jasny niebieski - akcent dodatkowy */
+            --neutral-color: #97A3B6;       /* Szaro-niebieski */
+            --dark-color: #111729;          /* Granatowy - tekst */
+            --bg-color: #f8f9fa;            /* Tło strony */
+            --card-bg: #FFFFFF;             /* Tło kart */
+            --text-color: #111729;          /* Kolor tekstu */
+        }
+        
+        /* Globalne style dla wszystkich funkcji agenta */
+        body {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+        }
+        
+        /* Wszystkie nagłówki w aplikacji */
+        h1, h2, h3, h4, h5, h6, 
+        .h1, .h2, .h3, .h4, .h5, .h6 {
+            color: var(--dark-color) !important;
+            font-weight: bold !important;
+        }
+        
+        /* Wszystkie karty i panele w aplikacji */
+        .card {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border: none !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        .card-header {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-bottom: 1px solid rgba(151, 163, 182, 0.2) !important;
+        }
+        
+        .card-body, .card-footer {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+        
+        /* Tytuły kart */
+        .card-header h1, .card-header h2, .card-header h3, 
+        .card-header h4, .card-header h5, .card-header h6,
+        .card-header .h1, .card-header .h2, .card-header .h3, 
+        .card-header .h4, .card-header .h5, .card-header .h6 {
+            color: var(--dark-color) !important;
+            font-weight: bold !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Elementy tekstowe w kartach */
+        .card p, .card li, .card div, .card span {
+            color: var(--text-color) !important;
+        }
+        
+        .card a:not(.btn) {
+            color: var(--primary-color) !important;
+        }
+        
+        /* Formularze */
+        .form-label, .form-check-label {
+            color: var(--text-color) !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Style przycisków */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-secondary {
+            background-color: var(--neutral-color) !important;
+            border-color: var(--neutral-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-success {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-danger {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+            color: #fff !important;
+        }
+        
+        .btn-info {
+            background-color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            color: var(--dark-color) !important;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        /* Kontrolki i pola formularzy */
+        input, select, textarea {
+            background-color: #fff !important;
+            color: var(--dark-color) !important;
+            border: 1px solid var(--neutral-color) !important;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 0.25rem rgba(40, 127, 113, 0.25) !important;
+        }
+        
+        /* Tabele */
+        .table {
+            color: var(--dark-color) !important;
+        }
+        
+        .table th {
+            color: var(--dark-color) !important;
+            font-weight: bold !important;
+            border-bottom-color: var(--primary-color) !important;
+        }
+        
+        .table td {
+            color: var(--dark-color) !important;
+            border-color: rgba(151, 163, 182, 0.2) !important;
+        }
+        
+        /* Dodatkowe style dla tabel */
+        .table-hover tbody tr:hover {
+            background-color: rgba(40, 127, 113, 0.05) !important;
+        }
+        
+        /* Szczególne style dla funkcji podglądu artykułów */
+        .preview-title, 
+        .preview-content,
+        .preview-article h1, 
+        .preview-article h2, 
+        .preview-article h3,
+        .preview-article h4, 
+        .preview-article h5, 
+        .preview-article h6,
+        .preview-article p, 
+        .preview-article ul, 
+        .preview-article ol,
+        .preview-article li, 
+        .preview-article span, 
+        .preview-article div,
+        .preview-article a, 
+        .preview-article blockquote,
+        .preview-article strong,
+        .preview-article em,
+        .preview-article td,
+        .preview-article th,
+        .preview-article small,
+        .preview-article code,
+        .preview-article pre,
+        .lead {
+            color: #000000 !important;
+        }
+        
+        .preview-article {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            padding: 2rem !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        }
+        
+        /* Globalne style dla funkcji podglądu w panelu edycji */
+        .preview-panel * {
+            color: #000000 !important;
+        }
+        
+        /* Style dla funkcji edycji artykułów */
+        .edit-form label {
+            color: #000000 !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Stylizacja elementów select/option */
+        select option {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        
+        /* Klasa dla wymuszenia białego pola z czarnym nagłówkiem */
+        .function-box {
+            background-color: #FFFFFF !important;
+            border: 1px solid #E0E0E0 !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            border-radius: 8px !important;
+        }
+
+        .function-title {
+            color: #000000 !important;
+            font-weight: bold !important;
+            font-size: 20px !important;
+            margin-bottom: 15px !important;
+        }
+    </style>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#212529">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <header>
+        <!-- Główne menu nawigacyjne -->
+        <nav class="navbar navbar-expand-lg navbar-light border-bottom shadow-sm" style="background-color: var(--card-bg) !important;">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/dashboard">
+                    <img src="/static/img/muscle-icon-36.png" alt="BLOG AUTOMATION MASTER" width="36" height="36" class="me-2">
+                    <span style="color: var(--dark-color) !important; font-weight: bold;">BLOG AUTOMATION MASTER</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/dashboard" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/blogs" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-blog me-1"></i> Blogs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/topics" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-lightbulb me-1"></i> Topics
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle " href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-share-alt me-1"></i> Social Media
+                            </a>
+                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
+                                <li>
+                                    <a class="dropdown-item " href="/social/dashboard" style="color: black !important;">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/social/accounts" style="color: black !important;">
+                                        <i class="fas fa-users-cog me-1"></i> Manage Accounts
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/logs" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-clipboard-list me-1"></i> Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/seo-tools" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-search me-1"></i> SEO Tools
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/seo-inspirations" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-magic me-1"></i> SEO Inspirations
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/content-creator" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-pen-fancy me-1"></i> Content Creator
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/images/library" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-images me-1"></i> Images
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle " href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-newspaper me-1"></i> Publishing
+                            </a>
+                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/" style="color: black !important;">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/schedule" style="color: black !important;">
+                                        <i class="fas fa-calendar-alt me-1"></i> Schedule
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/workload" style="color: black !important;">
+                                        <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/pending" style="color: black !important;">
+                                        <i class="fas fa-list-ul me-1"></i> Pending Articles
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/history" style="color: black !important;">
+                                        <i class="fas fa-history me-1"></i> Publication History
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item " href="/publishing/settings" style="color: black !important;">
+                                        <i class="fas fa-cog me-1"></i> Settings
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/analytics" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-chart-line me-1"></i> Analytics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/openrouter" style="color: var(--dark-color) !important;">
+                                <i class="fas fa-brain me-1"></i> AI Models
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow-1 py-4">
+        <div class="container">
+            <!-- Flash Messages -->
+            
+                
+            
+
+            <!-- Page Content -->
+            
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-4">Dashboard</h1>
+    </div>
+    <div class="col-md-4 text-end d-flex justify-content-end align-items-center">
+        <a href="/monitoring/metrics" class="btn btn-outline-success me-2">
+            <i class="fas fa-chart-line me-2"></i> Content Monitoring
+        </a>
+        <a href="/content-creator" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i> Content Creator
+        </a>
+    </div>
+</div>
+
+<!-- Quick Access Cards -->
+<div class="row mb-5">
+    <div class="col-md-12">
+        <div class="card-group mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-newspaper fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">WordPress Publishing</h5>
+                    <p class="card-text small">Manage your content publication schedule and monitor publishing status</p>
+                    <a href="/publishing/" class="btn btn-primary">
+                        <i class="fas fa-newspaper me-1"></i> Publishing Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Schedule Calendar</h5>
+                    <p class="card-text small">View and manage your publication schedule calendar</p>
+                    <a href="/publishing/schedule" class="btn btn-success">
+                        <i class="fas fa-calendar-alt me-1"></i> Publication Calendar
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Publishing Settings</h5>
+                    <p class="card-text small">Configure your publication settings and automation rules</p>
+                    <a href="/publishing/settings" class="btn btn-info">
+                        <i class="fas fa-cog me-1"></i> Publishing Settings
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x mb-3 text-warning"></i>
+                    <h5 class="card-title">Pending Articles</h5>
+                    <p class="card-text small">Review and manage articles waiting for publication</p>
+                    <a href="/publishing/pending" class="btn btn-warning">
+                        <i class="fas fa-clock me-1"></i> Pending Articles
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Blogs</h5>
+                <p class="card-text display-4">1</p>
+                <small class="text-white-50">1 active</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Published Articles</h5>
+                <p class="card-text display-4">0</p>
+                <small class="text-white-50">across all blogs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Pending Topics</h5>
+                <p class="card-text display-4">5</p>
+                <small class="text-white-50">ready for publishing</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Today's Schedule</h5>
+                <p class="card-text display-4">0</p>
+                <small class="text-dark-50">posts published today</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Analytics Overview</h5>
+                <a href="/analytics" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chart-line me-1"></i> Full Analytics
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <h6 class="text-muted">Page Views (30 days)</h6>
+                        <h3>0</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3 mb-md-0 border-start border-end">
+                        <h6 class="text-muted">Unique Visitors</h6>
+                        <h3>0</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">Engagement Rate</h6>
+                        <h3>0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Newsletter Summary -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Newsletter Management</h5>
+                <a href="/newsletter/" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-envelope me-1"></i> Manage Newsletters
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 text-center mb-3 mb-md-0">
+                        <h6 class="text-muted">Active Subscribers</h6>
+                        <h3>0</h3>
+                    </div>
+                    <div class="col-md-6 text-center border-start">
+                        <h6 class="text-muted">Recent Campaigns</h6>
+                        <h3>0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blog Status -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Blog Status</h5>
+                <a href="/blogs" class="btn btn-sm btn-outline-primary">Manage Blogs</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Blog Name</th>
+                                <th>URL</th>
+                                <th>Status</th>
+                                <th>Total Posts</th>
+                                <th>Today's Posts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>Test Blog</td>
+                                <td><a href="https://example.com/test-blog" target="_blank">https://example.com/test-blog</a></td>
+                                <td>
+                                    
+                                    <span class="badge bg-success">Active</span>
+                                    
+                                </td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary process-blog" data-blog-id="1">
+                                        <i class="fas fa-sync-alt"></i> Process
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Posts -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Posts</h5>
+                <a href="/logs" class="btn btn-sm btn-outline-primary">View All Logs</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Blog</th>
+                                <th>Status</th>
+                                <th>Published</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <p class="mb-0">No posts published yet.</p>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-3 mt-auto" style="background-color: var(--dark-color) !important;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <span style="color: var(--accent-color) !important;">BLOG AUTOMATION MASTER &copy; 2025</span>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <span style="color: var(--accent-color) !important;">Powered by <span style="color: var(--secondary-color) !important;">OpenRouter AI</span></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Tooltips Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="/static/js/dashboard.js"></script>
+    
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Process blog buttons
+    document.querySelectorAll('.process-blog').forEach(button => {
+        button.addEventListener('click', function() {
+            const blogId = this.getAttribute('data-blog-id');
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            this.disabled = true;
+            
+            fetch(`/api/process_blog/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.innerHTML = '<i class="fas fa-check"></i> Success';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-success');
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-primary');
+                        this.disabled = false;
+                    }, 3000);
+                } else {
+                    this.innerHTML = '<i class="fas fa-times"></i> Failed';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-danger');
+                    this.setAttribute('data-bs-toggle', 'tooltip');
+                    this.setAttribute('title', data.message);
+                    new bootstrap.Tooltip(this).show();
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-primary');
+                        this.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = '<i class="fas fa-times"></i> Error';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-danger');
+                this.disabled = false;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
