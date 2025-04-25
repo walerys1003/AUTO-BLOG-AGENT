@@ -10,31 +10,15 @@ import re
 import sys
 from typing import Dict, List, Any, Optional
 
-# Import libraries for AI content generation
-import anthropic
-from anthropic import Anthropic
+# Import our OpenRouter client
+from utils.openrouter import openrouter
+from config import Config
 
 logger = logging.getLogger(__name__)
 
-# Initialize the AI client
-anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
+# Determine if we have a valid API key
 openrouter_key = os.environ.get('OPENROUTER_API_KEY')
-
-# Try to use OpenRouter API key first, then fall back to Anthropic direct
-if openrouter_key:
-    # When using OpenRouter, we need to configure anthropic client with OpenRouter endpoint
-    client = Anthropic(
-        api_key=openrouter_key,
-        base_url="https://openrouter.ai/api",
-    )
-elif anthropic_key:
-    # Direct connection to Anthropic
-    client = Anthropic(
-        api_key=anthropic_key,
-    )
-else:
-    logger.warning("No API keys found for content generation. Using mock responses.")
-    client = None
+has_openrouter = openrouter_key is not None and len(openrouter_key) > 0
 
 def generate_article(topic, keywords=None, style="informative", length="medium"):
     """
@@ -58,47 +42,59 @@ def generate_article(topic, keywords=None, style="informative", length="medium")
         "long": 1600
     }.get(length, 1200)
     
-    # Create the prompt
-    system_prompt = f"""You are an expert content writer specializing in creating high-quality blog articles.
-Your task is to write a well-structured, engaging, and informative article on the provided topic.
+    # Create the prompt for article generation
+    user_prompt = f"""Write a complete blog article about '{topic}' with the following specifications:
 
-Article specifications:
-- Topic: {topic}
-- Style: {style}
-- Target length: EXACTLY {word_count} words - this is a strict requirement
-- Keywords to include: {', '.join(keywords) if keywords else 'No specific keywords required'}
+Topic: {topic}
+Style: {style}
+Target length: EXACTLY {word_count} words - this is a strict requirement
+Keywords to include: {', '.join(keywords) if keywords else 'No specific keywords required'}
 
-Please format the article with proper HTML structure including:
-1. An engaging headline (H1 tag)
-2. Introduction with a hook
-3. Well-organized sections with appropriate H2 and H3 subheadings
-4. Bullet points or numbered lists where appropriate
-5. A strong conclusion
-6. Include a meta description and excerpt for SEO purposes
+The article should be formatted with proper HTML structure including:
+- An engaging headline (H1 tag)
+- Introduction with a hook
+- Well-organized sections with appropriate H2 and H3 subheadings
+- Bullet points or numbered lists where appropriate
+- A strong conclusion
 
 Important guidelines:
 - The article MUST contain EXACTLY {word_count} words - not more, not less
 - Be comprehensive and add valuable content - don't use fluff or filler text
 - Add real examples, case studies, statistics, or research data as needed
 - The article should be factually accurate, well-researched, and provide real value to readers
-- Be creative but professional, and make the content readable and engaging for web audiences"""
+- Be creative but professional, and make the content readable and engaging for web audiences
 
-    user_prompt = f"Please write a complete blog article about '{topic}' following the specifications I've provided."
+After the article, please also include:
+- Meta description (under 160 characters)
+- Brief excerpt for social sharing (2-3 sentences)
+- 3-5 tags for the article (comma-separated)"""
 
-    # If we have a client, use it to generate content
-    if client:
+    # System prompt to guide the AI's behavior
+    system_prompt = """You are an expert content writer specializing in creating high-quality blog articles.
+Your task is to write a well-structured, engaging, and informative article following the exact specifications provided.
+Focus on accuracy, readability, and meeting the exact word count requirements."""
+
+    # Check if we have access to OpenRouter
+    if has_openrouter:
         try:
-            # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
-            response = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                system=system_prompt,
-                messages=[
-                    {"role": "user", "content": user_prompt}
-                ],
+            # Get default content model from config
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            
+            # Send request to OpenRouter
+            logger.info(f"Generating content using model: {model}")
+            
+            # Use our direct OpenRouter client
+            content = openrouter.generate_completion(
+                prompt=user_prompt,
+                model=model,
+                system_prompt=system_prompt,
+                temperature=0.7,
                 max_tokens=4000
             )
             
-            content = response.content[0].text
+            if not content:
+                logger.error("Failed to get content from OpenRouter")
+                return _get_mock_content(topic, keywords, style, length)
             
             # Extract content sections
             html_content = _extract_html_content(content)
@@ -121,6 +117,7 @@ Important guidelines:
             return _get_mock_content(topic, keywords, style, length)
     else:
         # No API key, return mock content
+        logger.warning("No OpenRouter API key available")
         return _get_mock_content(topic, keywords, style, length)
 
 
