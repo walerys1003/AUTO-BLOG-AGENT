@@ -9,8 +9,8 @@ from models import Blog, SocialAccount, ContentLog
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Register all routes
-register_routes(app)
+# Routes are now registered directly in app.py
+# register_routes(app)
 
 # Initialize the database function
 def initialize_database():

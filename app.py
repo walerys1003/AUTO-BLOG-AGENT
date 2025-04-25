@@ -30,4 +30,8 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the SQLAlchemy extension
 db.init_app(app)
 
-logger.info("Flask application initialized")
+# Register routes directly here to ensure they're loaded in all circumstances
+from routes import register_routes
+register_routes(app)
+
+logger.info("Flask application initialized with routes")
