@@ -1000,10 +1000,12 @@ def get_blog_categories(blog_id):
 @content_creator_bp.route('/content-creator/api/topics', endpoint='get_all_topics')
 def get_all_topics():
     """API endpoint to get approved topics for all blogs or a specific blog"""
+    logger.info("API endpoint get_all_topics called")
     blog_id = request.args.get('blog_id')
     
     try:
         query = ArticleTopic.query.filter_by(status='approved')
+        logger.info(f"Querying approved topics with blog_id filter: {blog_id}")
         
         # Filter by blog_id if provided
         if blog_id:
