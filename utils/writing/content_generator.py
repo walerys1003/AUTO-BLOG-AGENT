@@ -718,61 +718,62 @@ def _generate_paragraph(topic, paragraph_topic, previous_content="", keywords=No
                 summaries.append(p[:200] + ("..." if len(p) > 200 else ""))
         prev_content_summary = "\n".join(summaries)
     
-    # Create prompt for paragraph generation
-    user_prompt = f"""Write a comprehensive section for a professional blog article on "{topic}".
+    # Create prompt for paragraph generation - optimized for lower token usage
+    user_prompt = f"""Write a section for an article on "{topic}".
 
-This section should focus on: "{paragraph_topic}"
-Section type: {paragraph_type}
-Writing style: {style}
-Keywords to include if relevant: {', '.join(keywords) if keywords else 'No specific keywords required'}
+Focus: "{paragraph_topic}"
+Type: {paragraph_type}
+Style: {style}
+Keywords: {', '.join(keywords) if keywords else 'N/A'}
 
 """
 
     if is_introduction:
-        user_prompt += """For this introduction section:
-1. Start with an engaging hook to capture reader attention
-2. Clearly introduce the main topic and establish its importance and relevance
-3. Outline what the article will cover and why it matters to the reader
-4. Set the tone for the article and create anticipation for the content
-5. Make it compelling and inviting to continue reading
-6. Write at least 600-800 words with multiple paragraphs for readability
-7. Provide substantial background information to properly frame the topic
-8. Consider including relevant statistics or expert opinions to establish credibility"""
+        user_prompt += """For this introduction:
+1. Start with an engaging hook
+2. Introduce the topic and its importance
+3. Outline article content and relevance
+4. Set tone and create interest
+5. Make it compelling
+6. Write 600-800 words with multiple paragraphs
+7. Provide background context
+8. Include statistics/expert opinions where relevant"""
     elif is_conclusion:
-        user_prompt += """For this conclusion section:
-1. Thoroughly summarize the key points and insights from the article
-2. Reinforce the main message and central takeaway
-3. Provide actionable next steps or recommendations for readers
-4. End with a thought-provoking statement or powerful call to action
-5. Leave the reader with a lasting impression
-6. Write at least 600-800 words with multiple paragraphs for readability
-7. Include reflection on broader implications or future developments
-8. Address any potential counterarguments or limitations"""
+        user_prompt += """For this conclusion:
+1. Summarize key points
+2. Reinforce main message
+3. Provide actionable next steps
+4. End with call to action
+5. Create lasting impression
+6. Write 600-800 words with multiple paragraphs
+7. Include broader implications
+8. Address limitations if relevant"""
     else:
-        user_prompt += f"""For this main content section on "{paragraph_topic}":
-1. Start with a strong topic sentence that clearly introduces this specific aspect
-2. Thoroughly explore the topic with comprehensive explanations and in-depth analysis
-3. Include multiple specific examples, relevant data points, expert opinions, and evidence
-4. Address all potential questions readers might have about this aspect
-5. Provide detailed practical applications and real-world implications
-6. Add significant depth with nuanced perspectives and lesser-known information
-7. Ensure the section is comprehensive - MUST be at least 600-800 words minimum
-8. Format as multiple paragraphs for readability (at least 3-4 paragraphs in this section)
-9. Include at least one relevant analogy or case study to illustrate key points
-10. Anticipate and address common misconceptions or objections
-11. Make it extremely informative while maintaining reader engagement
-12. For complex aspects, include step-by-step explanations when appropriate"""
+        user_prompt += f"""For this main section on "{paragraph_topic}":
+1. Start with clear topic sentence
+2. Explore thoroughly with explanations and analysis
+3. Include examples, data points, expert opinions
+4. Address reader questions
+5. Provide practical applications
+6. Add depth with nuanced perspectives
+7. Write 600-800 words total
+8. Use multiple paragraphs (3-4 minimum)
+9. Include a relevant analogy or case study
+10. Address misconceptions
+11. Balance information with engagement
+12. Use step-by-step explanations where helpful"""
 
     if prev_content_summary:
         user_prompt += f"\n\nPrevious content for context:\n{prev_content_summary}"
 
     user_prompt += "\n\nPlease write the content in proper HTML format with <p> tags for paragraphs. Format as multiple paragraphs for readability. Do not include headings or any other HTML elements."
 
-    # System prompt to guide AI behavior
-    system_prompt = """You are an expert content writer specializing in creating extremely comprehensive, engaging, well-structured blog content with significant length and depth.
-Your task is to write a detailed section on the specified topic that flows naturally with the rest of the article.
-Use multiple <p> tags to create well-structured paragraphs for readability.
-Provide ONLY the content in proper HTML format with <p> tags. Do not include any explanations or notes. Write very long, detailed paragraphs with at least 600-800 words total per section."""
+    # System prompt to guide AI behavior - optimized for lower token usage
+    system_prompt = """You are an expert content writer.
+Write a detailed section that flows naturally with the article.
+Use <p> tags for paragraphs.
+Provide ONLY the content in HTML format.
+Write 600-800 words total per section."""
 
     # Check if we have access to OpenRouter
     if has_openrouter:
