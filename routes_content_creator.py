@@ -767,6 +767,8 @@ def generate_dynamic_paragraph():
             'message': str(e)
         })
 
+# Implementation moved to the existing generate_dynamic_paragraph_v2 method below
+
 # Automation routes
 
 @content_creator_bp.route('/content-creator/automation')
