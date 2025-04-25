@@ -83,7 +83,7 @@ Respond ONLY with a valid JSON object in the exact format requested."""
             result = openrouter.generate_completion(
                 prompt=user_prompt,
                 model=model,
-                system=system_prompt,
+                system_prompt=system_prompt,
                 max_tokens=1000,
                 temperature=0.7,
                 response_format={"type": "json_object"}
