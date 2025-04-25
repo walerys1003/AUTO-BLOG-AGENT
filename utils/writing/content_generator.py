@@ -457,7 +457,7 @@ Focus on accuracy, readability, and meeting the exact word count requirements.""
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=3000  # Balanced limit for longer paragraphs while maintaining stability
+                max_tokens=4000  # Zwiększony limit dla zapewnienia pełnych odpowiedzi
             )
             
             # Extract content from response object
@@ -508,11 +508,11 @@ def generate_article_by_paragraphs(topic, keywords=None, style="informative", pa
     """
     logger.info(f"Generating article content for topic: {topic} using paragraph-based approach")
     
-    # Ensure paragraph count is within valid range
+    # Ensure paragraph count is within valid range - bardziej zachowawcze limity
     if paragraph_count < 3:
         paragraph_count = 3
-    elif paragraph_count > 6:
-        paragraph_count = 6
+    elif paragraph_count > 4:  # Zmniejszamy maksymalną liczbę akapitów dla większej stabilności
+        paragraph_count = 4
     
     # First step: Generate a plan for the article with paragraph topics
     plan = _generate_article_plan(topic, keywords, paragraph_count, style)
@@ -642,7 +642,7 @@ Respond ONLY with a valid JSON object in the exact format requested."""
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=2000
+                max_tokens=2500
             )
             
             # Extract content from response object
@@ -791,7 +791,7 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=2000  # Further reduced for stability
+                max_tokens=3000  # Zwiększony limit dla pojedynczego akapitu
             )
             
             # Extract content from response object

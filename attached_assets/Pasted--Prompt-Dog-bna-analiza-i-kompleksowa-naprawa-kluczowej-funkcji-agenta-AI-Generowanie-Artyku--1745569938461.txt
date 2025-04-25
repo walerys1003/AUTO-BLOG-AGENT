@@ -1,0 +1,54 @@
+📝 Prompt – Dogłębna analiza i kompleksowa naprawa kluczowej funkcji agenta AI: Generowanie Artykułów
+Proszę dokonaj wieloaspektowej, dogłębnej analizy najważniejszej funkcji systemu agenta AI – czyli automatycznego generowania artykułów. Funkcja ta stanowi fundament działania całego systemu publikacji treści i bez niej agent jest całkowicie bezużyteczny. To na niej opiera się cały mechanizm automatycznego tworzenia, formatowania i publikacji treści na WordPressie. Jeżeli generowanie artykułów nie działa poprawnie, cały system przestaje mieć sens.
+
+📌 Zakres wymaganej analizy i naprawy:
+Ocena stabilności funkcji:
+
+Sprawdź, dlaczego proces generowania artykułów nie działa zgodnie z założeniami.
+
+Czy problem dotyczy złej obsługi tokenów, złej logiki promptowania, czy może błędnej komunikacji z modelem AI?
+
+Zidentyfikuj wąskie gardła w kodzie, które wpływają na niestabilność funkcji.
+
+Logika generowania:
+
+Oceń, czy obecna logika oparta o liczbę słów jest optymalna, czy powinna być zastąpiona bardziej stabilną metodą (np. liczba akapitów).
+
+Czy zapytania do modelu są zbyt rozbudowane, czy mieszczą się w limicie kontekstowym modelu AI?
+
+Zależności i struktura kodu:
+
+Przeanalizuj zależności między modułami odpowiedzialnymi za generowanie treści.
+
+Czy kod można uprościć lub zoptymalizować, aby zminimalizować ryzyko błędów?
+
+Sprawdź, czy nie ma zbędnych kroków, które można zautomatyzować lub zredukować.
+
+Integracja z API (np. OpenRouter, GPT, Claude):
+
+Oceń, czy połączenie z modelem działa poprawnie – czy są błędy po stronie API?
+
+Czy obsługa odpowiedzi modelu jest poprawna – np. analiza tokenów, struktura danych?
+
+Sprawdź logikę ponawiania zapytań w przypadku przekroczenia limitów.
+
+🛠️ Zakres naprawy:
+Kompleksowa rewizja kodu generującego artykuły:
+
+Uprość kod, jeśli obecna struktura jest zbyt złożona.
+
+Dodaj warstwy zabezpieczające przed przekroczeniem tokenów.
+
+Zoptymalizuj sposób tworzenia promptów – mogą być zbyt obciążające model.
+
+Wdrożenie alternatywnej metody generowania:
+
+Rozważ zastąpienie liczby słów – liczbą akapitów, co jest bardziej stabilne.
+
+Wprowadź dynamiczne generowanie etapowe – każdy akapit osobno z kontrolą kontekstu.
+
+Testy jednostkowe i integracyjne:
+
+Wykonaj serię testów na różnych konfiguracjach (różne modele, różna długość treści).
+
+Sprawdź, czy artykuły są generowane w całości i bez błędów logicznych.

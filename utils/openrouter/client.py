@@ -95,7 +95,7 @@ class OpenRouterClient:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "timeout": 40  # Zmniejszony timeout dla większej stabilności
+            "timeout": 90  # Zwiększony timeout dla dłuższych żądań
         }
         
         # Add system prompt if provided
@@ -119,7 +119,7 @@ class OpenRouterClient:
                     f"{self.api_base}/chat/completions",
                     headers=self._get_headers(),
                     json=data,
-                    timeout=25  # Shorter timeout for faster failure detection
+                    timeout=60  # Zwiększony timeout dla stabilniejszych odpowiedzi
                 )
                 response.raise_for_status()
                 # If successful, break out of retry loop
