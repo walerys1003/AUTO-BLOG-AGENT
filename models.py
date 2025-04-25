@@ -712,6 +712,7 @@ class AutomationRule(db.Model):
     # Content settings
     min_word_count = db.Column(db.Integer, default=1200)
     max_word_count = db.Column(db.Integer, default=1600)
+    content_length = db.Column(db.String(20), default="medium")  # short, medium, long
     paragraph_count = db.Column(db.Integer, default=4)  # Number of paragraphs for paragraph-based generation
     use_paragraph_mode = db.Column(db.Boolean, default=False)  # Whether to use paragraph-based generation
     content_tone = db.Column(db.String(50), default="informative")  # Changed back to content_tone to match database schema
@@ -769,3 +770,20 @@ class AutomationRule(db.Model):
     def set_days_list(self, days_list):
         """Sets days of week from a Python list of integers"""
         self.days_of_week = ','.join([str(day) for day in days_list])
+        
+    # Alias methods for template compatibility
+    def get_publishing_days(self):
+        """Alias for get_days_list, returns days of week as a Python list of integers"""
+        return self.get_days_list()
+        
+    def set_publishing_days(self, days_list):
+        """Alias for set_days_list, sets days of week from a Python list of integers"""
+        self.set_days_list(days_list)
+        
+    def get_categories(self):
+        """Alias for get_topic_categories, returns categories as a Python list"""
+        return self.get_topic_categories()
+        
+    def set_categories(self, categories_list):
+        """Alias for set_topic_categories, sets categories from a Python list"""
+        self.set_topic_categories(categories_list)
