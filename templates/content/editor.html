@@ -933,4 +933,12 @@ function selectTopic(topicId, topicTitle) {
         </div>
     </div>
 </div>
+
+<script>
+// Funkcja pomocnicza do zachowania zgodności z kodem korzystającym z generateDynamicContent
+function generateDynamicContent() {
+    console.log("Alias generateDynamicContent wywołany - przekierowuję do generateContentDynamically");
+    generateContentDynamically();
+}
+</script>
 {% endblock %}
