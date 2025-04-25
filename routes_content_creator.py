@@ -3,6 +3,7 @@ Content Creator Routes Module
 """
 import json
 import logging
+import re
 from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
@@ -16,6 +17,14 @@ from utils.automation import content_automation
 # Create Blueprint
 content_creator_bp = Blueprint('content_creator', __name__)
 logger = logging.getLogger(__name__)
+
+# Custom Jinja filters
+@content_creator_bp.app_template_filter('split')
+def split_filter(value, delimiter=' '):
+    """Split a string into a list based on delimiter"""
+    if not value:
+        return []
+    return value.split(delimiter)
 
 
 @content_creator_bp.route('/content-creator')

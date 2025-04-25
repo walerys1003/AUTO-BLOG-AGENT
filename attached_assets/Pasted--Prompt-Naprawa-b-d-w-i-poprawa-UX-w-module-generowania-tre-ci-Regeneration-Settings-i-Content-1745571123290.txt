@@ -1,0 +1,58 @@
+📝 Prompt – Naprawa błędów i poprawa UX w module generowania treści: Regeneration Settings i Content Preview
+Proszę dokonaj dokładnej analizy i naprawy funkcjonalności odpowiedzialnych za generowanie treści w systemie, szczególnie w module Regeneration Settings oraz Content Creation. Obecnie występują następujące krytyczne problemy:
+
+❗ Opis problemów:
+Regeneration Settings → Topics:
+
+Pole Topics pokazuje wartość N/A.
+
+Nie działa przypisywanie tematów do generowanych treści.
+
+Może być problem z pobieraniem listy tematów lub ich renderowaniem.
+
+Brak podglądu artykułu:
+
+Po kliknięciu GENERATE ARTICLE, nie pojawia się żadna wizualna informacja o postępie.
+
+Select a Topic for Content Creation – po naciśnięciu przycisku wywala błąd Internar Serwer Error 
+
+📌 Proponowane rozwiązania i poprawa UX:
+Naprawa logiki Topics:
+
+Sprawdź połączenie z bazą danych lub API, które dostarcza listę tematów.
+
+Napraw renderowanie listy – powinno dynamicznie ładować dostępne tematy.
+
+Dodaj fallback: jeśli brak tematów, pokaż komunikat zamiast N/A.
+
+Dynamiczny podgląd generowanej treści:
+
+Wprowadź system natychmiastowego wyświetlania generowanej treści w edytorze.
+
+Treść powinna przyrastać akapit po akapicie z animacją lub ikoną ładowania.
+
+Każdy akapit pojawia się po wygenerowaniu z modelem AI, z informacją np. „Akapit 2 z 4 – Generowanie...”.
+
+Stan oczekiwania (feedback wizualny):
+
+Dodaj ikonę oczekiwania lub pasek postępu, który pokazuje, że proces generowania trwa.
+
+Po zakończeniu wszystkich akapitów, wyświetl komunikat: „Artykuł wygenerowany pomyślnie”.
+
+Obsługa błędów:
+
+Jeśli generowanie się nie powiedzie – pokaż jasny komunikat z możliwością ponowienia.
+
+🛠️ Techniczne wymagania:
+Zaimplementuj dynamiczne renderowanie treści w edytorze.
+
+Obsłuż asynchroniczne zapytania do modelu AI, z aktualizacją UI po każdym akapicie.
+
+Popraw integrację Topics – napraw przepływ danych i dynamiczne załadowanie.
+
+🎯 Cel:
+Przywrócić pełną funkcjonalność generowania treści.
+
+Zapewnić ciągły podgląd postępu generacji, aby użytkownik miał pewność, że proces działa.
+
+Poprawić doświadczenie użytkownika (UX), eliminując niepewność i brak informacji o stanie systemu.
