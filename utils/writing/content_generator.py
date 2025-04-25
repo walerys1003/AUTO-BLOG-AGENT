@@ -25,7 +25,7 @@ if openrouter_key:
     # When using OpenRouter, we need to configure anthropic client with OpenRouter endpoint
     client = Anthropic(
         api_key=openrouter_key,
-        base_url="https://openrouter.ai/api/v1",
+        base_url="https://openrouter.ai/api",
     )
 elif anthropic_key:
     # Direct connection to Anthropic
@@ -53,9 +53,9 @@ def generate_article(topic, keywords=None, style="informative", length="medium")
     
     # Convert length to approximate word count
     word_count = {
-        "short": 600,
+        "short": 800,
         "medium": 1200,
-        "long": 1800
+        "long": 1600
     }.get(length, 1200)
     
     # Create the prompt
@@ -65,7 +65,7 @@ Your task is to write a well-structured, engaging, and informative article on th
 Article specifications:
 - Topic: {topic}
 - Style: {style}
-- Target length: Approximately {word_count} words
+- Target length: EXACTLY {word_count} words - this is a strict requirement
 - Keywords to include: {', '.join(keywords) if keywords else 'No specific keywords required'}
 
 Please format the article with proper HTML structure including:
@@ -76,8 +76,12 @@ Please format the article with proper HTML structure including:
 5. A strong conclusion
 6. Include a meta description and excerpt for SEO purposes
 
-The article should be factually accurate, well-researched, and provide real value to readers.
-Be creative but professional, and make the content readable and engaging for web audiences."""
+Important guidelines:
+- The article MUST contain EXACTLY {word_count} words - not more, not less
+- Be comprehensive and add valuable content - don't use fluff or filler text
+- Add real examples, case studies, statistics, or research data as needed
+- The article should be factually accurate, well-researched, and provide real value to readers
+- Be creative but professional, and make the content readable and engaging for web audiences"""
 
     user_prompt = f"Please write a complete blog article about '{topic}' following the specifications I've provided."
 
