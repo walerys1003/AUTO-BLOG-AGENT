@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Monitorowanie produkcyjne | Blog Automation Master{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Monitorowanie produkcyjne generowania treści</h1>
+  
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card bg-dark border-secondary mb-3">
+        <div class="card-header">
+          <h5 class="card-title">Średnie metryki z ostatnich {{ days }} dni</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Wskaźnik powodzenia</h6>
+                <p class="h4 mb-0 
+                  {% if avg_metrics.success_rate > 0.9 %}text-success
+                  {% elif avg_metrics.success_rate > 0.7 %}text-warning
+                  {% else %}text-danger{% endif %}">
+                  {{ (avg_metrics.success_rate * 100)|round(1) }}%
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Średni czas generowania</h6>
+                <p class="h4 mb-0 
+                  {% if avg_metrics.avg_duration_seconds < 60 %}text-success
+                  {% elif avg_metrics.avg_duration_seconds < 120 %}text-warning
+                  {% else %}text-danger{% endif %}">
+                  {{ avg_metrics.avg_duration_seconds|round(1) }} sek.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Średnia liczba słów</h6>
+                <p class="h4 mb-0 
+                  {% if avg_metrics.avg_content_length_words > 1200 %}text-success
+                  {% elif avg_metrics.avg_content_length_words > 800 %}text-warning
+                  {% else %}text-danger{% endif %}">
+                  {{ avg_metrics.avg_content_length_words|round(0)|int }}
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Średnia liczba akapitów</h6>
+                <p class="h4 mb-0">{{ avg_metrics.avg_paragraphs_count|round(1) }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Liczba generacji</h6>
+                <p class="h4 mb-0">{{ avg_metrics.total_generations }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <h6 class="text-secondary">Średnia liczba tokenów</h6>
+                <p class="h4 mb-0">{{ avg_metrics.avg_tokens_used|round(0)|int }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Filtry</h5>
+        </div>
+        <div class="card-body">
+          <form method="get" action="{{ url_for('monitoring.show_metrics') }}" class="row g-3">
+            <div class="col-md-6">
+              <label for="days" class="form-label">Liczba dni</label>
+              <select class="form-select bg-dark text-light" id="days" name="days" onchange="this.form.submit()">
+                <option value="1" {% if days == 1 %}selected{% endif %}>1 dzień</option>
+                <option value="3" {% if days == 3 %}selected{% endif %}>3 dni</option>
+                <option value="7" {% if days == 7 %}selected{% endif %}>7 dni</option>
+                <option value="14" {% if days == 14 %}selected{% endif %}>14 dni</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>30 dni</option>
+              </select>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            <h6 class="text-secondary">Podsumowanie statystyk</h6>
+            <div class="d-flex justify-content-between text-light mt-2">
+              <div>
+                <span class="d-block text-success">{{ avg_metrics.successful_generations }}</span>
+                <small class="text-secondary">Udanych</small>
+              </div>
+              <div>
+                <span class="d-block text-danger">{{ avg_metrics.failed_generations }}</span>
+                <small class="text-secondary">Nieudanych</small>
+              </div>
+              <div>
+                <span class="d-block text-light">{{ avg_metrics.total_generations }}</span>
+                <small class="text-secondary">Łącznie</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card bg-dark border-secondary">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Ostatnie generowanie treści</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Temat</th>
+              <th scope="col">Czas (s)</th>
+              <th scope="col">Słowa</th>
+              <th scope="col">Akapity</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for metric in recent_metrics %}
+            <tr>
+              <td>{{ metric.timestamp_start.split('T')[0] }} {{ metric.timestamp_start.split('T')[1][:8] }}</td>
+              <td>{{ metric.topic|truncate(40) }}</td>
+              <td>{{ metric.duration_seconds|round(1) }}</td>
+              <td>{{ metric.content_length_words }}</td>
+              <td>{{ metric.paragraphs_count }}</td>
+              <td>
+                {% if metric.success %}
+                <span class="badge bg-success">Sukces</span>
+                {% else %}
+                <span class="badge bg-danger">Błąd</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
