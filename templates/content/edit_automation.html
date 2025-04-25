@@ -58,28 +58,46 @@
                             <label for="writing_style" class="form-label">Writing Style</label>
                             <select class="form-select" id="writing_style" name="writing_style">
                                 <option value="informative" 
-                                        {% if rule and rule.writing_style == 'informative' %}selected{% endif %}>
+                                        {% if rule and rule.content_tone == 'informative' %}selected{% endif %}>
                                     Informative & Educational
                                 </option>
                                 <option value="conversational" 
-                                        {% if rule and rule.writing_style == 'conversational' %}selected{% endif %}>
+                                        {% if rule and rule.content_tone == 'conversational' %}selected{% endif %}>
                                     Conversational & Friendly
                                 </option>
                                 <option value="professional" 
-                                        {% if rule and rule.writing_style == 'professional' %}selected{% endif %}>
+                                        {% if rule and rule.content_tone == 'professional' %}selected{% endif %}>
                                     Professional & Technical
                                 </option>
                                 <option value="storytelling" 
-                                        {% if rule and rule.writing_style == 'storytelling' %}selected{% endif %}>
+                                        {% if rule and rule.content_tone == 'storytelling' %}selected{% endif %}>
                                     Storytelling & Narrative
                                 </option>
                                 <option value="persuasive" 
-                                        {% if rule and rule.writing_style == 'persuasive' %}selected{% endif %}>
+                                        {% if rule and rule.content_tone == 'persuasive' %}selected{% endif %}>
                                     Persuasive & Compelling
                                 </option>
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="use_paragraph_mode" 
+                                       name="use_paragraph_mode" 
+                                       {% if rule and rule.use_paragraph_mode %}checked{% endif %}
+                                       onchange="toggleContentMode(this.checked)">
+                                <label class="form-check-label" for="use_paragraph_mode">
+                                    <strong>Use Paragraph-Based Generation</strong>
+                                </label>
+                                <div class="form-text">
+                                    Generate articles based on a fixed number of paragraphs instead of word count
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mt-2">
+                        <!-- Word count mode options -->
+                        <div class="col-md-6" id="word_count_options" style="{% if rule and rule.use_paragraph_mode %}display: none;{% endif %}">
                             <label for="content_length" class="form-label">Content Length</label>
                             <select class="form-select" id="content_length" name="content_length">
                                 <option value="short" 
@@ -95,6 +113,29 @@
                                     Long (~1600 words)
                                 </option>
                             </select>
+                            <div class="form-text">Select the approximate length of generated articles</div>
+                        </div>
+                        
+                        <!-- Paragraph mode options -->
+                        <div class="col-md-6" id="paragraph_options" style="{% if not rule or not rule.use_paragraph_mode %}display: none;{% endif %}">
+                            <label for="paragraph_count" class="form-label">Number of Paragraphs</label>
+                            <select class="form-select" id="paragraph_count" name="paragraph_count">
+                                <option value="3" {% if rule and rule.paragraph_count == 3 %}selected{% endif %}>
+                                    3 paragraphs (short article)
+                                </option>
+                                <option value="4" {% if not rule or rule.paragraph_count == 4 %}selected{% endif %}>
+                                    4 paragraphs (recommended)
+                                </option>
+                                <option value="5" {% if rule and rule.paragraph_count == 5 %}selected{% endif %}>
+                                    5 paragraphs (medium article)
+                                </option>
+                                <option value="6" {% if rule and rule.paragraph_count == 6 %}selected{% endif %}>
+                                    6 paragraphs (long article)
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                Each paragraph will focus on a distinct aspect of the topic, plus introduction and conclusion
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -254,6 +295,20 @@
         document.getElementById('scoreValue').textContent = value;
     }
     
+    // Toggle between word count and paragraph based modes
+    function toggleContentMode(useParagraphMode) {
+        const wordCountOptions = document.getElementById('word_count_options');
+        const paragraphOptions = document.getElementById('paragraph_options');
+        
+        if (useParagraphMode) {
+            wordCountOptions.style.display = 'none';
+            paragraphOptions.style.display = 'block';
+        } else {
+            wordCountOptions.style.display = 'block';
+            paragraphOptions.style.display = 'none';
+        }
+    }
+    
     // When blog selection changes, load categories for that blog
     document.getElementById('blog_id').addEventListener('change', function() {
         const blogId = this.value;
@@ -273,6 +328,12 @@
                 });
             })
             .catch(error => console.error('Error loading categories:', error));
+    });
+    
+    // Initialize the content mode toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const useParagraphMode = document.getElementById('use_paragraph_mode').checked;
+        toggleContentMode(useParagraphMode);
     });
 </script>
 {% endblock %}

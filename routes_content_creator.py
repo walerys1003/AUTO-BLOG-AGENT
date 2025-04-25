@@ -474,6 +474,10 @@ def create_automation_rule():
         content_tone = request.form.get('writing_style', 'informative')  # Get from form as writing_style but use content_tone in db
         content_length = request.form.get('content_length', 'medium')
         
+        # Paragraph mode settings
+        use_paragraph_mode = 'use_paragraph_mode' in request.form
+        paragraph_count = int(request.form.get('paragraph_count', 4))
+        
         # Schedule settings
         publishing_days = request.form.getlist('publishing_days')
         publishing_time = request.form.get('publishing_time', '12:00')
@@ -493,6 +497,8 @@ def create_automation_rule():
             blog_id=blog_id,
             content_tone=content_tone,  # Use content_tone instead of writing_style to match database schema
             content_length=content_length,
+            use_paragraph_mode=use_paragraph_mode,
+            paragraph_count=paragraph_count,
             publishing_time=publishing_time,
             posts_per_day=posts_per_day,
             topic_min_score=topic_min_score,
@@ -536,6 +542,10 @@ def edit_automation_rule(rule_id):
             rule.topic_min_score = float(request.form.get('topic_min_score', rule.topic_min_score))
             rule.auto_enable_topics = 'auto_enable_topics' in request.form
             rule.auto_promote_content = 'auto_promote_content' in request.form
+            
+            # Paragraph mode settings
+            rule.use_paragraph_mode = 'use_paragraph_mode' in request.form
+            rule.paragraph_count = int(request.form.get('paragraph_count', 4))
             
             # Update publishing days
             publishing_days = request.form.getlist('publishing_days')
