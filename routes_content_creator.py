@@ -1028,6 +1028,15 @@ def get_all_topics():
                 if blog:
                     blog_name = blog.name
             
+            # Get keywords
+            keywords = None
+            try:
+                keywords = topic.get_keywords()
+                if keywords:
+                    keywords = ','.join(keywords)
+            except:
+                keywords = None
+            
             topics_data.append({
                 'id': topic.id,
                 'title': topic.title,
@@ -1035,6 +1044,7 @@ def get_all_topics():
                 'status': topic.status,
                 'blog_id': topic.blog_id,
                 'blog_name': blog_name,
+                'keywords': keywords,
                 'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
             })
         
@@ -1064,6 +1074,15 @@ def get_blog_topics(blog_id):
         # Convert to JSON format
         topics_data = []
         for topic in topics:
+            # Get keywords
+            keywords = None
+            try:
+                keywords = topic.get_keywords()
+                if keywords:
+                    keywords = ','.join(keywords)
+            except:
+                keywords = None
+                
             topics_data.append({
                 'id': topic.id,
                 'title': topic.title,
@@ -1071,6 +1090,7 @@ def get_blog_topics(blog_id):
                 'status': topic.status,
                 'blog_id': topic.blog_id,
                 'blog_name': blog.name,  # We already have the blog object from blog_id
+                'keywords': keywords,
                 'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
             })
         
