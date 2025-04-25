@@ -95,7 +95,7 @@
                     <div class="progress" style="height: 5px;">
                         <div class="progress-bar {{ 'bg-success' if meta_description|length <= 160 else 'bg-danger' }}" 
                              role="progressbar" 
-                             style="width: {{ (meta_description|length / 160 * 100)|min(100) }}%">
+                             style="width: {% if (meta_description|length / 160 * 100) > 100 %}100{% else %}{{ meta_description|length / 160 * 100 }}{% endif %}%">
                         </div>
                     </div>
                     <small class="text-{{ 'success' if meta_description|length <= 160 else 'danger' }}">
@@ -115,7 +115,7 @@
                     <div class="progress" style="height: 5px;">
                         <div class="progress-bar {{ 'bg-danger' if word_count < 800 else 'bg-warning' if word_count < 1200 else 'bg-success' if word_count <= 1600 else 'bg-info' }}" 
                              role="progressbar" 
-                             style="width: {{ (word_count / 1600 * 100)|min(100) }}%">
+                             style="width: {% if (word_count / 1600 * 100) > 100 %}100{% else %}{{ word_count / 1600 * 100 }}{% endif %}%">
                         </div>
                     </div>
                     <small>
