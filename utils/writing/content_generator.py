@@ -35,36 +35,37 @@ def generate_article(topic, keywords=None, style="informative", length="medium")
     """
     logger.info(f"Generating article content for topic: {topic}")
     
-    # Convert length to approximate word count
+    # Convert length to exact word count
     word_count = {
         "short": 800,
         "medium": 1200,
         "long": 1600
     }.get(length, 1200)
     
-    # Create the prompt for article generation
-    user_prompt = f"""Write a complete blog article about '{topic}' with the following specifications:
+    # Create the prompt for article generation with stronger emphasis on exact length
+    user_prompt = f"""Write a comprehensive blog article about '{topic}' with EXACTLY {word_count} words.
 
 Topic: {topic}
 Style: {style}
-Target length: EXACTLY {word_count} words - this is a strict requirement
+Word count: EXACTLY {word_count} words (this is a non-negotiable requirement)
 Keywords to include: {', '.join(keywords) if keywords else 'No specific keywords required'}
 
-The article should be formatted with proper HTML structure including:
+The article must be formatted with proper HTML structure including:
 - An engaging headline (H1 tag)
 - Introduction with a hook
 - Well-organized sections with appropriate H2 and H3 subheadings
 - Bullet points or numbered lists where appropriate
 - A strong conclusion
 
-Important guidelines:
-- The article MUST contain EXACTLY {word_count} words - not more, not less
-- Be comprehensive and add valuable content - don't use fluff or filler text
-- Add real examples, case studies, statistics, or research data as needed
-- The article should be factually accurate, well-researched, and provide real value to readers
-- Be creative but professional, and make the content readable and engaging for web audiences
+CRITICAL REQUIREMENTS:
+1. The article MUST contain EXACTLY {word_count} words - not more, not less. Count every word carefully.
+2. After completion, verify the word count before providing the final result.
+3. Do not include the word count in the article itself.
+4. Be comprehensive and add valuable content - avoid fluff or filler text.
+5. Include real examples, case studies, statistics, or research data as needed.
+6. The article should be factually accurate, well-researched, and provide real value to readers.
 
-After the article, please also include:
+After completing the article with EXACTLY {word_count} words, please also include:
 - Meta description (under 160 characters)
 - Brief excerpt for social sharing (2-3 sentences)
 - 3-5 tags for the article (comma-separated)"""
