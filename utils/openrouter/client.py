@@ -57,7 +57,7 @@ class OpenRouterClient:
         temperature: float = 0.7,
         max_tokens: int = 2000,  # Zwiększony limit tokenów dla dłuższych akapitów
         response_format: Optional[Dict[str, str]] = None
-    ) -> str:
+    ) -> Dict[str, Any]:
         """
         Generate a completion from the specified model
         
@@ -70,11 +70,19 @@ class OpenRouterClient:
             response_format: Optional response format specification
             
         Returns:
-            Generated text response
+            Response object with content in choices[0].message.content
         """
         if not self.api_key:
             logger.warning("OpenRouter API key not set")
-            return "API key not configured. Please set OPENROUTER_API_KEY in environment variables."
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": "API key not configured. Please set OPENROUTER_API_KEY in environment variables."
+                        }
+                    }
+                ]
+            }
         
         # Use default model if not specified
         if not model:
@@ -87,7 +95,7 @@ class OpenRouterClient:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "timeout": 60  # Zwiększony timeout dla dłuższych żądań
+            "timeout": 40  # Zmniejszony timeout dla większej stabilności
         }
         
         # Add system prompt if provided
@@ -111,7 +119,7 @@ class OpenRouterClient:
                     f"{self.api_base}/chat/completions",
                     headers=self._get_headers(),
                     json=data,
-                    timeout=30  # Lower timeout for faster failure detection
+                    timeout=25  # Shorter timeout for faster failure detection
                 )
                 response.raise_for_status()
                 # If successful, break out of retry loop
@@ -120,14 +128,30 @@ class OpenRouterClient:
                 retry_count += 1
                 if retry_count >= max_retries:
                     logger.error(f"Timeout error after {max_retries} attempts. Giving up.")
-                    return "Error: Request to AI service timed out. Please try again."
+                    return {
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": "Error: Request to AI service timed out. Please try again."
+                                }
+                            }
+                        ]
+                    }
                 logger.warning(f"Timeout error. Retrying in {backoff_factor * retry_count} seconds...")
                 time.sleep(backoff_factor * retry_count)
             except requests.exceptions.RequestException as e:
                 retry_count += 1
                 if retry_count >= max_retries:
                     logger.error(f"Request error after {max_retries} attempts: {str(e)}. Giving up.")
-                    return f"Error: Connection problem with AI service: {str(e)}"
+                    return {
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": f"Error: Connection problem with AI service: {str(e)}"
+                                }
+                            }
+                        ]
+                    }
                 logger.warning(f"Request error: {str(e)}. Retrying in {backoff_factor * retry_count} seconds...")
                 time.sleep(backoff_factor * retry_count)
                 
@@ -137,10 +161,18 @@ class OpenRouterClient:
                 result = response.json()
                 content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
                 logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
-                return content
+                return result
             except Exception as e:
                 logger.error(f"Error processing OpenRouter response: {str(e)}")
-                return f"Error processing API response: {str(e)}"
+                return {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": f"Error processing API response: {str(e)}"
+                            }
+                        }
+                    ]
+                }
                 
         # If we reached here with no successful response after retries
         logger.error("Failed to get response from OpenRouter after maximum retries")
@@ -154,7 +186,15 @@ class OpenRouterClient:
         except Exception as ex:
             error_message = f"Could not process response: {str(ex)}"
         
-        return f"Error: {error_message}"
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": f"Error: {error_message}"
+                    }
+                }
+            ]
+        }
     
     def generate_json_response(
         self,

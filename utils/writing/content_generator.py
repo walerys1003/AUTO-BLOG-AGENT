@@ -771,13 +771,18 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
             # Use our direct OpenRouter client
             
             # Try to get content from OpenRouter
-            content = openrouter.generate_completion(
+            response_obj = openrouter.generate_completion(
                 prompt=user_prompt,
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
                 max_tokens=2000  # Further reduced for stability
             )
+            
+            # Extract content from response object
+            content = ""
+            if response_obj and "choices" in response_obj and len(response_obj["choices"]) > 0:
+                content = response_obj["choices"][0].get("message", {}).get("content", "")
             
             # If content generation fails, use fallback
             if not content:
