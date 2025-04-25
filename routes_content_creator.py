@@ -1021,12 +1021,20 @@ def get_all_topics():
         # Convert to JSON format
         topics_data = []
         for topic in topics:
+            # Get blog name
+            blog_name = None
+            if topic.blog_id:
+                blog = Blog.query.get(topic.blog_id)
+                if blog:
+                    blog_name = blog.name
+            
             topics_data.append({
                 'id': topic.id,
                 'title': topic.title,
                 'score': topic.score,
                 'status': topic.status,
                 'blog_id': topic.blog_id,
+                'blog_name': blog_name,
                 'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
             })
         
@@ -1061,6 +1069,8 @@ def get_blog_topics(blog_id):
                 'title': topic.title,
                 'score': topic.score,
                 'status': topic.status,
+                'blog_id': topic.blog_id,
+                'blog_name': blog.name,  # We already have the blog object from blog_id
                 'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
             })
         

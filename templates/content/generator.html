@@ -394,14 +394,16 @@
             }
             
             topicsToRender.forEach(topic => {
-                const keywordsHtml = topic.keywords ? 
-                    topic.keywords.split(',').map(k => `<span class="badge bg-light text-dark me-1">${k.trim()}</span>`).join('') : '';
+                // Sprawdź, czy topic.keywords istnieje, jeśli nie, użyj pustego stringu
+                const keywords = topic.keywords || '';
+                const keywordsHtml = keywords ? 
+                    keywords.split(',').map(k => `<span class="badge bg-light text-dark me-1">${k.trim()}</span>`).join('') : '';
                 
                 let html = topicCardTemplate
                     .replace(/{{id}}/g, topic.id)
                     .replace(/{{title}}/g, topic.title)
                     .replace(/{{blog_name}}/g, topic.blog_name || 'Unknown Blog')
-                    .replace(/{{score}}/g, topic.score.toFixed(1))
+                    .replace(/{{score}}/g, (topic.score ? topic.score.toFixed(1) : '0.0'))
                     .replace(/{{keywords}}/g, keywordsHtml)
                     .replace(/{{created_at}}/g, topic.created_at || 'Unknown Date');
                 
