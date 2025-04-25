@@ -545,33 +545,51 @@ def generate_article_plan_api():
             'message': str(e)
         })
 
-@content_creator_bp.route('/content-creator/api/create-draft', methods=['POST'])
-def api_create_draft_content():
-    """API endpoint to create a draft content entry and return its ID"""
+@content_creator_bp.route('/content-creator/api/create-draft-content', methods=['POST'])
+def api_create_draft_content_v2():
+    """Enhanced API endpoint to create a draft content entry and return its ID"""
     try:
-        # Get data from request
-        data = request.get_json()
-        topic_id = data.get('topic_id')
+        # Get request parameters - supports both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+            title = data.get('title')
+            topic_id = data.get('topic_id')
+        else:
+            title = request.form.get('title')
+            topic_id = request.form.get('topic_id')
         
-        if not topic_id:
-            return jsonify({
-                'success': False,
-                'message': 'Topic ID is required'
-            })
+        # Validate required parameters
+        if not title and not topic_id:
+            return jsonify({'success': False, 'message': 'Either title or topic_id is required'})
         
-        # Get the topic
-        topic = ArticleTopic.query.get(topic_id)
+        # Get blog_id and title from topic_id if provided
+        blog_id = None
+        if topic_id:
+            try:
+                topic = ArticleTopic.query.get(topic_id)
+                if topic:
+                    blog_id = topic.blog_id
+                    # Use topic title if no title was provided
+                    if not title:
+                        title = topic.title
+                else:
+                    return jsonify({'success': False, 'message': 'Topic not found'})
+            except Exception as topic_error:
+                logger.warning(f"Error getting topic: {str(topic_error)}")
+                return jsonify({'success': False, 'message': f'Error getting topic: {str(topic_error)}'})
         
-        if not topic:
-            return jsonify({
-                'success': False,
-                'message': 'Topic not found'
-            })
+        # If we couldn't get blog_id from topic, use the first active blog
+        if not blog_id:
+            blog = Blog.query.filter_by(active=True).first()
+            if blog:
+                blog_id = blog.id
+            else:
+                return jsonify({'success': False, 'message': 'No active blogs found'})
         
         # Create a draft content log
         content_log = ContentLog(
-            blog_id=topic.blog_id,
-            title=topic.title,
+            blog_id=blog_id,
+            title=title,
             status='draft',
             created_at=datetime.utcnow()
         )
@@ -579,20 +597,20 @@ def api_create_draft_content():
         db.session.add(content_log)
         db.session.commit()
         
+        logger.info(f"Created draft content: ID={content_log.id}, Title='{title}'")
+        
         # Return the content ID
         return jsonify({
             'success': True,
             'content_id': content_log.id,
-            'topic_id': topic.id,
-            'title': topic.title
+            'title': title,
+            'blog_id': blog_id,
+            'topic_id': topic_id
         })
         
     except Exception as e:
         logger.error(f"Error creating draft content: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': f'Error: {str(e)}'
-        })
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 
 @content_creator_bp.route('/content-creator/api/paragraph', methods=['POST'])
@@ -1007,6 +1025,14 @@ def get_blog_topics(blog_id):
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 
+# Note: This endpoint is replaced by /content-creator/api/create-draft-content
+# But we're keeping it for backwards compatibility with a redirect
+@content_creator_bp.route('/content-creator/api/create-draft', methods=['POST'])
+def api_create_draft_content_legacy():
+    """Legacy API endpoint for compatibility"""
+    return redirect(url_for('content_creator.api_create_draft_content_v2'))
+
+
 @content_creator_bp.route('/content-creator/api/generate-plan', methods=['POST'])
 def generate_article_plan_existing():
     """API endpoint to generate an article plan with paragraph topics (existing endpoint)"""
@@ -1194,5 +1220,5 @@ def generate_dynamic_paragraph_v2():
         return jsonify({
             'success': False, 
             'message': f'Error generating paragraph: {str(e)}',
-            'details': error_details if app.debug else None
+            'details': error_details
         })

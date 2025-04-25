@@ -556,7 +556,7 @@
         
         // Create Draft Content Entry
         function createDraftContent(title, topicId) {
-            return fetch('{{ url_for("content_creator.api_create_draft_content") }}', {
+            return fetch('{{ url_for("content_creator.api_create_draft_content_v2") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
