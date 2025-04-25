@@ -253,12 +253,14 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="length{{ topic.id }}" class="form-label">Article Length</label>
-                                            <select class="form-select" id="length{{ topic.id }}" name="length">
-                                                <option value="short">Short (~800 words)</option>
-                                                <option value="medium" selected>Medium (~1200 words)</option>
-                                                <option value="long">Long (~1600 words)</option>
+                                            <label for="paragraph_count{{ topic.id }}" class="form-label">Number of Paragraphs</label>
+                                            <select class="form-select" id="paragraph_count{{ topic.id }}" name="paragraph_count">
+                                                <option value="3">3 paragraphs</option>
+                                                <option value="4" selected>4 paragraphs</option>
+                                                <option value="5">5 paragraphs</option>
+                                                <option value="6">6 paragraphs</option>
                                             </select>
+                                            <small class="form-text text-muted">Each paragraph covers a distinct aspect of the topic</small>
                                         </div>
                                     </div>
                                     

@@ -76,7 +76,17 @@ def generate_content():
     """Generate content from a topic"""
     topic_id = request.form.get('topic_id')
     style = request.form.get('style', 'informative')
-    length = request.form.get('length', 'medium')
+    paragraph_count = request.form.get('paragraph_count', '4')
+    
+    # Ensure paragraph_count is a valid integer between 3 and 6
+    try:
+        paragraph_count = int(paragraph_count)
+        if paragraph_count < 3:
+            paragraph_count = 3
+        elif paragraph_count > 6:
+            paragraph_count = 6
+    except (ValueError, TypeError):
+        paragraph_count = 4  # Default to 4 paragraphs if invalid
     
     if not topic_id:
         flash('Topic ID is required', 'danger')
@@ -102,7 +112,7 @@ def generate_content():
         db.session.commit()
         
         # Redirect to the content generation page
-        return redirect(url_for('content_creator.edit_content', content_id=content_log.id, topic_id=topic_id, style=style, length=length))
+        return redirect(url_for('content_creator.edit_content', content_id=content_log.id, topic_id=topic_id, style=style, paragraph_count=paragraph_count))
         
     except Exception as e:
         logger.error(f"Error starting content generation: {str(e)}")
@@ -116,7 +126,17 @@ def edit_content(content_id):
     content_log = ContentLog.query.get_or_404(content_id)
     topic_id = request.args.get('topic_id')
     style = request.args.get('style', 'informative')
-    length = request.args.get('length', 'medium')
+    paragraph_count = request.args.get('paragraph_count', 4)
+    
+    # Ensure paragraph_count is a valid integer between 3 and 6
+    try:
+        paragraph_count = int(paragraph_count)
+        if paragraph_count < 3:
+            paragraph_count = 3
+        elif paragraph_count > 6:
+            paragraph_count = 6
+    except (ValueError, TypeError):
+        paragraph_count = 4  # Default to 4 paragraphs if invalid
     
     # If this is a POST request, update the content and metadata
     if request.method == 'POST':
@@ -192,12 +212,12 @@ def edit_content(content_id):
             topic = ArticleTopic.query.get(topic_id)
             
             if topic:
-                # Generate content using the AI
-                generation_result = content_generator.generate_article(
+                # Generate content using the paragraph-based approach
+                generation_result = content_generator.generate_article_by_paragraphs(
                     topic=topic.title,
                     keywords=topic.get_keywords() if topic.get_keywords() else [],
                     style=style,
-                    length=length
+                    paragraph_count=paragraph_count
                 )
                 
                 content_html = generation_result.get('content', '')
@@ -242,7 +262,7 @@ def edit_content(content_id):
         tags=tags,
         featured_image_url=featured_image_url,
         style=style,
-        length=length
+        paragraph_count=paragraph_count
     )
 
 
@@ -372,7 +392,17 @@ def regenerate_content(content_id):
     
     topic_id = request.form.get('topic_id')
     style = request.form.get('style', 'informative')
-    length = request.form.get('length', 'medium')
+    paragraph_count = request.form.get('paragraph_count', '4')
+    
+    # Ensure paragraph_count is a valid integer between 3 and 6
+    try:
+        paragraph_count = int(paragraph_count)
+        if paragraph_count < 3:
+            paragraph_count = 3
+        elif paragraph_count > 6:
+            paragraph_count = 6
+    except (ValueError, TypeError):
+        paragraph_count = 4  # Default to 4 paragraphs if invalid
     
     if not topic_id:
         flash('Topic ID is required', 'danger')
@@ -391,7 +421,7 @@ def regenerate_content(content_id):
         db.session.commit()
         
         # Redirect to the content editor to trigger regeneration
-        return redirect(url_for('content_creator.edit_content', content_id=content_id, topic_id=topic_id, style=style, length=length))
+        return redirect(url_for('content_creator.edit_content', content_id=content_id, topic_id=topic_id, style=style, paragraph_count=paragraph_count))
         
     except Exception as e:
         logger.error(f"Error regenerating content: {str(e)}")
