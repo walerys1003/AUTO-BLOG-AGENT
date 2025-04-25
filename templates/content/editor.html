@@ -361,7 +361,7 @@ function generateArticlePlan(topic, paragraphCount, style) {
         formData.append('paragraph_count', paragraphCount);
         formData.append('style', style);
         
-        fetch("{{ url_for('content_creator.generate_article_plan_api') }}", {
+        fetch("{{ url_for('content_creator.generate_article_plan_existing') }}", {
             method: 'POST',
             body: formData
         })
