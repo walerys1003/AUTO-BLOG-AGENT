@@ -360,7 +360,7 @@ Focus on accuracy, readability, and meeting the exact word count requirements.""
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=4000
+                max_tokens=1000
             )
             
             if not content:
@@ -682,7 +682,7 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=4000
+                max_tokens=1000
             )
             
             if not content:
