@@ -1,295 +1,191 @@
 """
-Simplified Content Creator Module
+Simplified Content Creator Routes
+Independent Content Creation System
 """
-import json
+import os
 import logging
 from datetime import datetime
-
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
-from sqlalchemy import desc
-
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+from sqlalchemy import desc, asc
 from app import db
-from models import Blog, ArticleTopic, Content
-from utils.openrouter import openrouter
+from models import Blog, Content, ArticleTopic
 
-# Create Blueprint
-simplified_content_bp = Blueprint('simplified_content', __name__)
+# Setup logging
 logger = logging.getLogger(__name__)
 
+# Create blueprint
+simplified_content_bp = Blueprint('simplified_content', __name__, url_prefix='/simple-content')
 
-@simplified_content_bp.route('/content-creator')
+@simplified_content_bp.route('/')
 def content_creator():
-    """Main content creator view - simplified version"""
-    # Get all blogs for dropdown
-    blogs = Blog.query.filter_by(active=True).all()
-    
-    # Check if there are any blogs
-    if not blogs:
-        flash('No active blogs found. Please create a blog first.', 'warning')
-        return redirect(url_for('dashboard'))
-    
-    # Get all content items for display
-    contents = Content.query.order_by(desc(Content.created_at)).limit(20).all()
-    
-    return render_template(
-        'content/simplified_content.html',
-        title="Content Creator",
-        blogs=blogs,
-        contents=contents
-    )
+    """Main simplified content creator view"""
+    # Get all content with blogs joined
+    contents = Content.query.order_by(Content.created_at.desc()).all()
+    return render_template('content/simplified_content.html', contents=contents)
 
-
-@simplified_content_bp.route('/content-creator/topics')
+@simplified_content_bp.route('/topics')
 def topic_selector():
-    """Simple topic selector view"""
-    # Get all blogs for reference
+    """Select from available topics"""
+    # Filter by blog_id if provided
+    blog_id = request.args.get('blog_id', 'all')
+    
+    # Get approved topics
+    query = ArticleTopic.query.filter_by(status='approved')
+    
+    # Apply blog filter if provided
+    if blog_id != 'all':
+        query = query.filter_by(blog_id=blog_id)
+    
+    # Get topics with pagination
+    topics = query.order_by(ArticleTopic.created_at.desc()).all()
+    
+    # Get all blogs for filter
     blogs = Blog.query.filter_by(active=True).all()
     
-    if not blogs:
-        flash('No active blogs found. Please create a blog first.', 'warning')
-        return redirect(url_for('dashboard'))
+    return render_template('content/simple_topic_selector.html', 
+                          topics=topics, 
+                          blogs=blogs, 
+                          blog_id=blog_id)
+
+@simplified_content_bp.route('/topics/<int:topic_id>/use', methods=['POST'])
+def use_topic(topic_id):
+    """Use a topic for content creation"""
+    topic = ArticleTopic.query.get_or_404(topic_id)
     
-    return render_template(
-        'content/simple_topic_selector.html',
-        title="Select a Topic",
-        blogs=blogs
-    )
+    # Redirect to content editor with topic
+    return redirect(url_for('simplified_content.content_editor', topic_id=topic.id))
 
-
-@simplified_content_bp.route('/content-creator/editor', methods=['GET', 'POST'])
-def content_editor():
-    """Content editor view"""
-    # Get topic ID if provided
+@simplified_content_bp.route('/editor', methods=['GET', 'POST'])
+@simplified_content_bp.route('/editor/<int:content_id>', methods=['GET', 'POST'])
+def content_editor(content_id=None):
+    """Content editor view for creating and editing content"""
+    # Get active blogs
+    blogs = Blog.query.filter_by(active=True).all()
+    if not blogs:
+        flash('You need to add at least one active blog first', 'warning')
+        return redirect(url_for('blogs_list'))
+    
+    # Get topic_id from query params if present
     topic_id = request.args.get('topic_id')
-    content_id = request.args.get('content_id')
+    topic = None
+    if topic_id:
+        topic = ArticleTopic.query.get_or_404(topic_id)
+    
+    # Get blog_id from query params if present
     blog_id = request.args.get('blog_id')
     
-    # Get blogs for dropdown
-    blogs = Blog.query.filter_by(active=True).all()
-    
-    # Default variables
-    topic = None
+    # Get existing content if editing
     content = None
-    
-    # If we have a content_id, load existing content
     if content_id:
         content = Content.query.get_or_404(content_id)
-        blog_id = content.blog_id
     
-    # If we have a topic_id, load the topic for reference
-    if topic_id:
-        topic = ArticleTopic.query.get(topic_id)
-        if topic:
-            blog_id = topic.blog_id
-    
-    # Default to first blog if none provided
-    if not blog_id and blogs:
-        blog_id = blogs[0].id
-    
-    # Handle POST submission
+    # Handle POST request
     if request.method == 'POST':
-        title = request.form.get('title', '')
-        body = request.form.get('body', '')
-        blog_id = request.form.get('blog_id', blog_id)
-        topic_text = request.form.get('topic', '')
         action = request.form.get('action', 'save')
         
-        if not title:
-            flash('Title is required', 'danger')
-            return render_template(
-                'content/simplified_editor.html',
-                topic=topic,
-                content=content,
-                blogs=blogs,
-                blog_id=blog_id
-            )
+        # Get form data
+        title = request.form.get('title')
+        body = request.form.get('body')
+        blog_id = request.form.get('blog_id')
+        topic_text = request.form.get('topic')
         
-        # Create or update content
-        if content_id:
-            # Update existing content
-            content.title = title
-            content.body = body
-            if action == 'publish':
-                content.status = 'published'
+        if not all([title, body, blog_id]):
+            flash('Title, content, and blog are required', 'danger')
+            return render_template('content/simplified_editor.html', 
+                                  content=content, 
+                                  blogs=blogs, 
+                                  topic=topic,
+                                  blog_id=blog_id)
+        
+        # Determine status based on action
+        status = 'published' if action == 'publish' else 'draft'
+        
+        try:
+            # Update existing content or create new one
+            if content:
+                content.title = title
+                content.body = body
+                content.blog_id = blog_id
+                content.topic = topic_text
+                
+                # Update status if publishing
+                if status == 'published' and content.status != 'published':
+                    content.status = 'published'
+                    content.published_at = datetime.utcnow()
             else:
-                content.status = 'draft'
+                content = Content(
+                    title=title,
+                    body=body,
+                    blog_id=blog_id,
+                    status=status,
+                    topic=topic_text
+                )
+                
+                # Set published_at if publishing
+                if status == 'published':
+                    content.published_at = datetime.utcnow()
+                
+                db.session.add(content)
             
             db.session.commit()
             
-            flash('Content updated successfully', 'success')
-        else:
-            # Create new content
-            content = Content(
-                title=title,
-                body=body,
-                topic=topic_text if topic_text else (topic.title if topic else ""),
-                blog_id=blog_id,
-                status='published' if action == 'publish' else 'draft'
-            )
+            # Determine appropriate message
+            action_text = 'published' if status == 'published' else 'saved as draft'
+            flash(f'Content {action_text} successfully', 'success')
             
-            db.session.add(content)
-            db.session.commit()
-            
-            flash('Content created successfully', 'success')
-        
-        # Redirect based on action
-        if action == 'publish':
-            flash('Content published!', 'success')
-            return redirect(url_for('simplified_content.content_creator'))
-        else:
-            return redirect(url_for('simplified_content.content_editor', content_id=content.id))
+            # Redirect to content list or edit page based on action
+            if action == 'save_continue':
+                return redirect(url_for('simplified_content.content_editor', content_id=content.id))
+            else:
+                return redirect(url_for('simplified_content.content_creator'))
+                
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error saving content: {str(e)}")
+            flash(f'Error saving content: {str(e)}', 'danger')
     
-    # Handle GET request
-    return render_template(
-        'content/simplified_editor.html',
-        title="Content Editor",
-        topic=topic,
-        content=content,
-        blogs=blogs,
-        blog_id=blog_id
-    )
+    # Render the editor template
+    return render_template('content/simplified_editor.html', 
+                          content=content, 
+                          blogs=blogs, 
+                          topic=topic,
+                          blog_id=blog_id)
 
-
-@simplified_content_bp.route('/content-creator/generate', methods=['POST'])
-def generate_content():
-    """Generate content from a topic"""
-    topic_title = request.form.get('topic', '')
-    blog_id = request.form.get('blog_id')
+@simplified_content_bp.route('/content/<int:content_id>/publish', methods=['POST'])
+def publish_content(content_id):
+    """Publish a draft content"""
+    content = Content.query.get_or_404(content_id)
     
-    if not topic_title:
-        flash('Topic is required', 'danger')
-        return redirect(url_for('simplified_content.topic_selector'))
+    if content.status == 'published':
+        flash('Content is already published', 'info')
+        return redirect(url_for('simplified_content.content_creator'))
     
     try:
-        # Use the default blog if none provided
-        if not blog_id:
-            blog = Blog.query.filter_by(active=True).first()
-            if not blog:
-                flash('No active blog found', 'danger')
-                return redirect(url_for('dashboard'))
-            blog_id = blog.id
+        content.status = 'published'
+        content.published_at = datetime.utcnow()
+        db.session.commit()
         
-        # Generate content
-        prompt = f"""Wygeneruj dobrej jakości artykuł na temat: {topic_title}.
-        
-        Artykuł powinien mieć 5 akapitów, w tym wstęp i zakończenie.
-        
-        Zwróć artykuł w formacie HTML z tagami <p> dla każdego akapitu.
-        """
-        
-        model = "anthropic/claude-3.5-sonnet"
-        logger.info(f"Generating content for topic: {topic_title} using model: {model}")
-        
-        response = openrouter.generate_completion(
-            prompt=prompt,
-            model=model,
-            system_prompt="Jesteś pomocnym asystentem, który pisze profesjonalne artykuły na blog. Używaj paragrafów HTML.",
-            temperature=0.7
-        )
-        
-        if response and "choices" in response and len(response["choices"]) > 0:
-            generated_content = response["choices"][0]["message"]["content"]
-            
-            # Create a new content entry
-            content = Content(
-                title=topic_title,
-                body=generated_content,
-                topic=topic_title,
-                blog_id=blog_id,
-                status='draft'
-            )
-            
-            db.session.add(content)
-            db.session.commit()
-            
-            flash('Content generated successfully', 'success')
-            return redirect(url_for('simplified_content.content_editor', content_id=content.id))
-        else:
-            # Handle API error
-            flash('Failed to generate content. Please try again.', 'danger')
-            return redirect(url_for('simplified_content.topic_selector'))
-            
+        flash('Content published successfully', 'success')
     except Exception as e:
-        logger.error(f"Error generating content: {str(e)}")
-        flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('simplified_content.topic_selector'))
-
-
-@simplified_content_bp.route('/content-creator/api/topics')
-def get_all_topics():
-    """API endpoint to get approved topics for all blogs or a specific blog"""
-    logger.info("API endpoint get_all_topics called")
+        db.session.rollback()
+        logger.error(f"Error publishing content: {str(e)}")
+        flash(f'Error publishing content: {str(e)}', 'danger')
     
-    blog_id = request.args.get('blog_id')
-    
-    try:
-        # Build the query for approved topics
-        query = ArticleTopic.query.filter_by(status='approved')
-        
-        # Add blog_id filter if provided
-        if blog_id:
-            query = query.filter_by(blog_id=blog_id)
-        
-        logger.info(f"Querying approved topics with blog_id filter: {blog_id}")
-        
-        # Get all approved topics
-        topics = query.order_by(desc(ArticleTopic.score)).all()
-        
-        # Format the topics for the response
-        topics_data = []
-        for topic in topics:
-            # Convert keywords to a list if available
-            keywords = topic.get_keywords() if hasattr(topic, 'get_keywords') else []
-            
-            topics_data.append({
-                'id': topic.id,
-                'title': topic.title,
-                'blog_id': topic.blog_id,
-                'blog_name': topic.blog.name if topic.blog else None,
-                'status': topic.status,
-                'score': topic.score,
-                'keywords': keywords,
-                'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
-            })
-        
-        logger.info(f"Found {len(topics_data)} approved topics")
-        return jsonify({
-            'success': True,
-            'topics': topics_data
-        })
-        
-    except Exception as e:
-        logger.error(f"Error getting topics: {str(e)}")
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+    return redirect(url_for('simplified_content.content_creator'))
 
-
-@simplified_content_bp.route('/content-creator/delete/<int:content_id>', methods=['POST'])
+@simplified_content_bp.route('/content/<int:content_id>/delete', methods=['POST'])
 def delete_content(content_id):
-    """Delete content"""
+    """Delete a content"""
     content = Content.query.get_or_404(content_id)
     
     try:
         db.session.delete(content)
         db.session.commit()
+        
         flash('Content deleted successfully', 'success')
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error deleting content: {str(e)}")
         flash(f'Error deleting content: {str(e)}', 'danger')
-    
-    return redirect(url_for('simplified_content.content_creator'))
-
-
-@simplified_content_bp.route('/content-creator/publish/<int:content_id>', methods=['POST'])
-def publish_content(content_id):
-    """Publish content"""
-    content = Content.query.get_or_404(content_id)
-    
-    try:
-        content.status = 'published'
-        db.session.commit()
-        flash('Content published successfully', 'success')
-    except Exception as e:
-        logger.error(f"Error publishing content: {str(e)}")
-        flash(f'Error publishing content: {str(e)}', 'danger')
     
     return redirect(url_for('simplified_content.content_creator'))

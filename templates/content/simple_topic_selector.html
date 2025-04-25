@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Topic Selector{% endblock %}
+{% block title %}Select Content Topic{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,107 +9,124 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('content_creator.content_dashboard') }}">Content Creator</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Topic Selector</li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('simplified_content.content_creator') }}">Content Creator</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Select Topic</li>
                 </ol>
             </nav>
-            <h1 class="h2 mb-3">Choose a Topic</h1>
-            <p class="text-muted">Select a topic from the list below to create content.</p>
+            <h1 class="h2 mb-3">Select a Topic</h1>
+            <p class="text-muted">Choose from available topics or generate new ones.</p>
         </div>
     </div>
-    
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Available Topics</h5>
-        </div>
-        <div class="card-body">
-            <div id="loading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading topics...</span>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Available Topics</h5>
+                        <form method="get" action="{{ url_for('simplified_content.topic_selector') }}">
+                            <div class="d-flex">
+                                <select class="form-select form-select-sm me-2" name="blog_id">
+                                    <option value="all">All Blogs</option>
+                                    {% for blog in blogs %}
+                                        <option value="{{ blog.id }}" {% if blog_id|string == blog.id|string %}selected{% endif %}>
+                                            {{ blog.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <p class="mt-3">Loading available topics...</p>
+                <div class="card-body">
+                    {% if topics %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Blog</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in topics %}
+                                <tr>
+                                    <td>{{ topic.title }}</td>
+                                    <td>{{ topic.blog.name }}</td>
+                                    <td>{{ topic.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('simplified_content.use_topic', topic_id=topic.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-success">Use This Topic</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">No topics available. Generate new topics or select a different blog.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Generate New Topics</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('topics_generate') }}">
+                        <div class="mb-3">
+                            <label for="blog_id" class="form-label">Blog</label>
+                            <select class="form-select" id="blog_id" name="blog_id" required>
+                                {% for blog in blogs %}
+                                    <option value="{{ blog.id }}">{{ blog.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category (Optional)</label>
+                            <input type="text" class="form-control" id="category" name="category" placeholder="e.g. Technology, Health">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="count" class="form-label">Number of Topics</label>
+                            <select class="form-select" id="count" name="count">
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-magic me-2"></i> Generate Topics
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
             
-            <div id="topics-container" class="row g-3" style="display: none">
-                <!-- Topics will be loaded here -->
-            </div>
-            
-            <div id="no-topics" class="text-center py-4" style="display: none">
-                <p>No topics found. Try creating some new topics first.</p>
-                <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle me-2"></i> Create Topics
-                </a>
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Skip Topic Selection</h5>
+                    <p class="text-muted">Need to write content from scratch?</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('simplified_content.content_editor') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-pen me-2"></i> Create Without Topic
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loadingEl = document.getElementById('loading');
-    const topicsContainerEl = document.getElementById('topics-container');
-    const noTopicsEl = document.getElementById('no-topics');
-    
-    // Direct URL without using url_for
-    const url = '/content-creator/api/topics';
-    
-    // Fetch topics
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.topics && data.topics.length > 0) {
-                // Process topics
-                renderTopics(data.topics);
-                loadingEl.style.display = 'none';
-                topicsContainerEl.style.display = 'flex';
-            } else {
-                // No topics found
-                loadingEl.style.display = 'none';
-                noTopicsEl.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching topics:', error);
-            loadingEl.style.display = 'none';
-            noTopicsEl.style.display = 'block';
-        });
-    
-    function renderTopics(topics) {
-        // Sort topics by score (highest first)
-        topics.sort((a, b) => b.score - a.score);
-        
-        topics.forEach(topic => {
-            const topicEl = document.createElement('div');
-            topicEl.className = 'col-md-6 col-lg-4 mb-3';
-            
-            const score = topic.score ? parseFloat(topic.score).toFixed(1) : '0.0';
-            const blogName = topic.blog_name || 'Unknown Blog';
-            
-            topicEl.innerHTML = `
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">${topic.title}</h5>
-                        <p class="card-text text-muted small">Blog: ${blogName}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-primary">${score}</span>
-                            <a href="{{ url_for('content_creator.standard_editor_page') }}?topic_id=${topic.id}" class="btn btn-sm btn-success">
-                                <i class="fas fa-pen me-1"></i> Edit in Standard Editor
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            topicsContainerEl.appendChild(topicEl);
-        });
-    }
-});
-</script>
 {% endblock %}

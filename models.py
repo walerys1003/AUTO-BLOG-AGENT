@@ -541,19 +541,44 @@ class PerformanceReport(db.Model):
 class Content(db.Model):
     """Model for simple content storage and editing"""
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    topic = db.Column(db.String(255))
-    body = db.Column(db.Text)
-    status = db.Column(db.String(50))  # draft / published
+    title = db.Column(db.String(255), nullable=False)
+    topic = db.Column(db.String(255), nullable=True)
+    body = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(50), nullable=False, default='draft')  # draft / published
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)
+    featured_image_url = db.Column(db.String(500), nullable=True)
+    wordpress_post_id = db.Column(db.Integer, nullable=True)
     
     # Define relationship with Blog
     blog = db.relationship('Blog', backref=db.backref('contents', lazy=True))
     
     def __repr__(self):
         return f"<Content {self.title} - {self.status}>"
+    
+    def to_dict(self):
+        """Convert content to dictionary"""
+        return {
+            'id': self.id,
+            'blog_id': self.blog_id,
+            'title': self.title,
+            'topic': self.topic,
+            'body': self.body,
+            'status': self.status,
+            'featured_image_url': self.featured_image_url,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'published_at': self.published_at.isoformat() if self.published_at else None,
+            'wordpress_post_id': self.wordpress_post_id
+        }
+        
+    def publish(self):
+        """Mark content as published"""
+        self.status = 'published'
+        self.published_at = datetime.utcnow()
+        return True
 
 
 class ContentCalendar(db.Model):
