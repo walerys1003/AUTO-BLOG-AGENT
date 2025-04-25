@@ -1,0 +1,104 @@
+📝 Prompt – Wdrożenie dynamicznego generowania treści z natychmiastowym podglądem w edytorze
+Proszę opracuj szczegółowe rozwiązanie oraz wdrożenie mechanizmu, w którym po kliknięciu "Generate Article" w module Select a Topic for Content Creation, użytkownik jest automatycznie przenoszony do edytora treści, gdzie na bieżąco, dynamicznie wyświetlana jest generowana treść artykułu.
+
+📌 Wymagania funkcjonalne:
+Bezpośrednie przekierowanie:
+
+Po kliknięciu Generate Article:
+
+Użytkownik zostaje natychmiast przeniesiony do okna edytora treści.
+
+Rozpoczyna się proces generowania artykułu w czasie rzeczywistym.
+
+Dynamiczne wyświetlanie treści:
+
+Treść generowana akapit po akapicie zgodnie z wybraną specyfikacją:
+
+Styl pisania: do wyboru np. Informative & Educational.
+
+Liczba akapitów: np. 3 akapity.
+
+Każdy akapit pokrywa odrębny aspekt tematu.
+
+Każdy akapit pojawia się sekwencyjnie, wraz z ikoną ładowania lub informacją typu „Generowanie akapitu 1 z 3...”.
+
+Zachowanie specyfikacji:
+
+Podczas generowania, system automatycznie uwzględnia wybrane przez użytkownika parametry:
+
+Topic – temat artykułu.
+
+Number of Paragraphs – liczba akapitów.
+
+Writing Style – styl pisania.
+
+Tone – ton wypowiedzi (jeśli dostępny).
+
+Wszystkie te dane są przekazywane jako część promptu do modelu AI.
+
+⚙️ Techniczne wdrożenie – krok po kroku:
+Interfejs użytkownika (UI):
+
+Po kliknięciu Generate Article:
+
+Trigger: Funkcja JavaScript przekierowuje do edytora treści (scroll lub zmiana zakładki/panelu).
+
+Automatyczne rozpoczęcie funkcji generującej artykuł.
+
+Asynchroniczne generowanie treści:
+
+Wykorzystanie asynchronicznego API do komunikacji z modelem AI (np. OpenRouter, GPT).
+
+Skrypt:
+
+Wysyła zapytanie o pierwszy akapit, po otrzymaniu → natychmiast wyświetla w edytorze.
+
+Następnie kontynuuje dla kolejnych akapitów (pętla z kontrolą kontekstu).
+
+Po każdym akapicie aktualizuje UI np. „Akapit 2 z 3 generowany...”.
+
+Optymalizacja UX:
+
+Ikony ładowania lub pasek postępu dla każdego akapitu.
+
+Możliwość anulowania procesu w dowolnym momencie.
+
+Po zakończeniu – komunikat sukcesu i możliwość edycji tekstu.
+
+🛠️ Techniczne wymagania i przykładowa logika:
+Frontend:
+
+Event Listener na przycisk „Generate Article”.
+
+Funkcja przekierowująca do edytora.
+
+Dynamiczny edytor treści (np. oparty na React/Vue lub klasyczny HTML/JS).
+
+Backend/API:
+
+Endpoint przyjmujący: topic, number of paragraphs, writing style.
+
+Zwracający treść akapit po akapicie (można użyć streaming API jeśli dostępne).
+
+📊 Przykład schematu działania (logika pseudokod):
+javascript
+
+onGenerateArticleClick() {
+  redirectToEditor();
+  for (let i = 0; i < numberOfParagraphs; i++) {
+    displayLoadingIndicator(i);
+    fetchParagraph(topic, style, i, previousParagraphs)
+      .then(paragraph => {
+        appendToEditor(paragraph);
+        hideLoadingIndicator(i);
+      });
+  }
+}
+🎯 Cel:
+Natychmiastowa wizualizacja generowanej treści.
+
+Lepsze doświadczenie użytkownika – pełna kontrola i podgląd.
+
+Automatyczne przeniesienie do edytora i eliminacja niepewności co do postępu generacji.
+
+Proszę o wdrożenie powyższej funkcjonalności zgodnie z opisem oraz zapewnienie stabilności działania podczas generowania dynamicznego
