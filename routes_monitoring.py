@@ -7,6 +7,11 @@ from utils.monitoring.content_metrics import ContentMetricsTracker
 
 monitoring_bp = Blueprint('monitoring', __name__)
 
+@monitoring_bp.route('/', methods=['GET'])
+def metrics_dashboard():
+    """Główny panel monitorowania"""
+    return redirect(url_for('monitoring.show_metrics'))
+
 @monitoring_bp.route('/metrics', methods=['GET'])
 def show_metrics():
     """Wyświetla panel monitorowania z metrykami generowania treści"""

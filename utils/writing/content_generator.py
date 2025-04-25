@@ -732,17 +732,17 @@ def generate_article_plan(topic, paragraph_count=4, style="informative", keyword
     
     try:
         # Request paragraph topics from the model
-        response = openrouter.chat_completion(
+        response = openrouter.generate_completion(
+            prompt=prompt,
             model=Config.DEFAULT_TOPIC_MODEL,
-            messages=[
-                {"role": "system", "content": "You are an article planning assistant that creates outlines for informative articles."},
-                {"role": "user", "content": prompt}
-            ],
+            system_prompt="You are an article planning assistant that creates outlines for informative articles.",
             max_tokens=300
         )
         
         # Extract paragraph topics from the response
-        response_text = response.choices[0].message.content.strip()
+        response_text = ""
+        if response and "choices" in response and len(response["choices"]) > 0:
+            response_text = response["choices"][0].get("message", {}).get("content", "").strip()
         
         # Split the response into topics (expecting a list or bullet points)
         topics = []
