@@ -689,3 +689,37 @@ def get_blog_categories(blog_id):
         'success': True,
         'categories': categories
     })
+
+
+@content_creator_bp.route('/content-creator/api/blog/<int:blog_id>/topics')
+def get_blog_topics(blog_id):
+    """API endpoint to get approved topics for a blog"""
+    try:
+        # Verify the blog exists
+        blog = Blog.query.get_or_404(blog_id)
+        
+        # Get approved topics for this blog
+        topics = ArticleTopic.query.filter_by(
+            blog_id=blog_id,
+            status='approved'
+        ).order_by(desc(ArticleTopic.score)).all()
+        
+        # Convert to JSON format
+        topics_data = []
+        for topic in topics:
+            topics_data.append({
+                'id': topic.id,
+                'title': topic.title,
+                'score': topic.score,
+                'status': topic.status,
+                'created_at': topic.created_at.strftime('%Y-%m-%d') if topic.created_at else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'topics': topics_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting blog topics: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})

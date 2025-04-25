@@ -108,8 +108,14 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label for="topic_id" class="form-label">Topic</label>
-                            <input type="text" class="form-control" value="{{ topic.title if topic else 'N/A' }}" {% if not topic %}readonly{% endif %}>
+                            <label for="topic_display" class="form-label">Topic</label>
+                            <div class="input-group">
+                                <input type="text" id="topic_display" class="form-control" value="{{ topic.title if topic else 'No topic selected' }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#selectTopicModal">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Current topic for content generation.</div>
                             <input type="hidden" name="topic_id" id="topic_id" value="{{ topic_id if topic_id else (topic.id if topic else '') }}">
                         </div>
                         <div class="col-md-4">
@@ -186,6 +192,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 metaDescriptionCount.style.color = '';
             }
         });
+    }
+    
+    // Topic selection modal functionality
+    const selectTopicModal = document.getElementById('selectTopicModal');
+    if (selectTopicModal) {
+        // Load topics when modal is shown
+        selectTopicModal.addEventListener('show.bs.modal', function() {
+            loadTopics();
+        });
+        
+        // Search topics functionality
+        const topicSearchInput = document.getElementById('topicSearchInput');
+        if (topicSearchInput) {
+            topicSearchInput.addEventListener('input', function() {
+                const searchQuery = this.value.toLowerCase();
+                const topicItems = document.querySelectorAll('#topicsList .list-group-item');
+                
+                topicItems.forEach(item => {
+                    const topicTitle = item.dataset.title.toLowerCase();
+                    if (topicTitle.includes(searchQuery)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
     }
     
     // Generate metadata button
@@ -279,5 +312,131 @@ function confirmRegenerate() {
         document.getElementById('regenerateForm').submit();
     }
 }
+
+// Function to load topics for the modal
+function loadTopics() {
+    const topicsList = document.getElementById('topicsList');
+    const blogId = {{ content_log.blog_id }};
+    
+    // Show loading state
+    topicsList.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading topics...</span>
+            </div>
+            <p class="mt-2">Loading topics...</p>
+        </div>
+    `;
+    
+    // Fetch topics for the blog
+    fetch("{{ url_for('content_creator.get_blog_topics', blog_id=content_log.blog_id) }}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Create topic elements
+                if (data.topics && data.topics.length > 0) {
+                    let topicsHtml = '';
+                    
+                    data.topics.forEach(topic => {
+                        topicsHtml += `
+                            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                                data-id="${topic.id}" data-title="${topic.title}" onclick="selectTopic(${topic.id}, '${topic.title.replace(/'/g, "\\'")}')">
+                                <div>
+                                    <strong>${topic.title}</strong>
+                                    <div class="text-muted small">Score: ${topic.score.toFixed(2)}</div>
+                                </div>
+                                <span class="badge rounded-pill bg-primary">Select</span>
+                            </button>
+                        `;
+                    });
+                    
+                    topicsList.innerHTML = topicsHtml;
+                } else {
+                    // No topics found
+                    topicsList.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No approved topics found for this blog. Please approve topics in the Topics section first.
+                        </div>
+                    `;
+                }
+            } else {
+                // Error loading topics
+                topicsList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error loading topics: ${data.message || 'Unknown error'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            topicsList.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Error loading topics. Please try again later.
+                </div>
+            `;
+        });
+}
+
+// Function to select a topic
+function selectTopic(topicId, topicTitle) {
+    // Update hidden input and display field
+    document.getElementById('topic_id').value = topicId;
+    document.getElementById('topic_display').value = topicTitle;
+    document.getElementById('regenerateTopicId').value = topicId;
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('selectTopicModal')).hide();
+    
+    // Show confirmation message
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Topic updated to: <strong>${topicTitle}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const settingsCard = document.querySelector('.card-body');
+    settingsCard.insertBefore(alertDiv, settingsCard.firstChild);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        const bsAlert = new bootstrap.Alert(alertDiv);
+        bsAlert.close();
+    }, 3000);
+}
 </script>
+
+<!-- Topic Selection Modal -->
+<div class="modal fade" id="selectTopicModal" tabindex="-1" aria-labelledby="selectTopicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectTopicModalLabel">Select a Topic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="topicSearchInput" placeholder="Search for topics...">
+                </div>
+                <div id="topicsList" class="list-group">
+                    <!-- This will be populated dynamically with AJAX -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading topics...</span>
+                        </div>
+                        <p class="mt-2">Loading topics...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
