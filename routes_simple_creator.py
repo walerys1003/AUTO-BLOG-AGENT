@@ -60,7 +60,7 @@ def generate_simple_content():
         })
 
 @simple_creator_bp.route('/api/simple-save', methods=['POST'])
-def save_simple_content_endpoint():
+def save_simple_content():
     """Save simple content API endpoint - minimalistyczne API"""
     # Pobierz dane z formularza - prosty przepływ danych
     title = request.form.get('title', '')
@@ -75,8 +75,9 @@ def save_simple_content_endpoint():
             'message': 'Title is required'
         })
     
-    # Wywołaj modularną funkcję zapisu
-    success, content_id, message = save_simple_content(
+    # Wywołaj modularną funkcję zapisu z modułu utils.content
+    from utils.content.save_content import save_simple_content as save_content_util
+    success, content_id, message = save_content_util(
         title=title,
         content=content,
         status=status,
