@@ -4,8 +4,16 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col">
+    <div class="col-md-8">
         <h1 class="mb-4">Dashboard</h1>
+    </div>
+    <div class="col-md-4 text-end d-flex justify-content-end align-items-center">
+        <a href="{{ url_for('monitoring.show_metrics') }}" class="btn btn-outline-success me-2">
+            <i class="fas fa-chart-line me-2"></i> Content Monitoring
+        </a>
+        <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i> Content Creator
+        </a>
     </div>
 </div>
 
