@@ -15,6 +15,7 @@ from routes_analytics import register_analytics_routes
 from routes_seo_inspiration import seo_inspiration_bp
 from routes_content_creator import content_creator_bp
 from routes_simple_creator import simple_creator_bp
+from routes_simplified_content import simplified_content_bp
 from routes_images import register_image_routes
 from newsletter import newsletter_bp
 from routes_publishing import publishing_bp
@@ -921,6 +922,9 @@ def register_routes(app: Flask):
     
     # Register Simple Content Creator blueprint
     app.register_blueprint(simple_creator_bp)
+    
+    # Register Simplified Content Creator blueprint
+    app.register_blueprint(simplified_content_bp)
     
     # Register Images routes
     register_image_routes(app)
