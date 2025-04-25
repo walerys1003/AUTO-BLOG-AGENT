@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let url = this.getAttribute('href');
             
             // Najpierw utwórz draft content w bazie danych
-            fetch("{{ url_for('content_creator.api_create_draft_content', _external=True) }}", {
+            fetch("{{ url_for('content_creator.api_create_draft_content_v2', _external=True) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
