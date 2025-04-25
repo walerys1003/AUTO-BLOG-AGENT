@@ -628,7 +628,9 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
 3. Outline what the article will cover and why it matters to the reader
 4. Set the tone for the article and create anticipation for the content
 5. Make it compelling and inviting to continue reading
-6. Write at least 200-250 words with multiple paragraphs if needed"""
+6. Write at least 700-1000 words with multiple paragraphs for readability
+7. Provide substantial background information to properly frame the topic
+8. Consider including relevant statistics or expert opinions to establish credibility"""
     elif is_conclusion:
         user_prompt += """For this conclusion section:
 1. Thoroughly summarize the key points and insights from the article
@@ -636,18 +638,23 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
 3. Provide actionable next steps or recommendations for readers
 4. End with a thought-provoking statement or powerful call to action
 5. Leave the reader with a lasting impression
-6. Write at least 200-250 words with multiple paragraphs if needed"""
+6. Write at least 700-1000 words with multiple paragraphs for readability
+7. Include reflection on broader implications or future developments
+8. Address any potential counterarguments or limitations"""
     else:
         user_prompt += f"""For this main content section on "{paragraph_topic}":
 1. Start with a strong topic sentence that clearly introduces this specific aspect
-2. Thoroughly explore the topic with detailed explanations and analysis
-3. Include specific examples, relevant data, expert opinions, and evidence
-4. Address potential questions readers might have about this aspect
-5. Include practical applications or real-world implications
-6. Add depth with nuanced perspectives or lesser-known information
-7. Ensure the section is substantive - at least 250-350 words
-8. Format as multiple paragraphs if needed for readability
-9. Make it extremely informative while maintaining reader engagement"""
+2. Thoroughly explore the topic with comprehensive explanations and in-depth analysis
+3. Include multiple specific examples, relevant data points, expert opinions, and evidence
+4. Address all potential questions readers might have about this aspect
+5. Provide detailed practical applications and real-world implications
+6. Add significant depth with nuanced perspectives and lesser-known information
+7. Ensure the section is comprehensive - MUST be at least 700-1000 words minimum
+8. Format as multiple paragraphs for readability (at least 3-4 paragraphs in this section)
+9. Include at least one relevant analogy or case study to illustrate key points
+10. Anticipate and address common misconceptions or objections
+11. Make it extremely informative while maintaining reader engagement
+12. For complex aspects, include step-by-step explanations when appropriate"""
 
     if prev_content_summary:
         user_prompt += f"\n\nPrevious content for context:\n{prev_content_summary}"
@@ -675,7 +682,7 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=2000
+                max_tokens=4000
             )
             
             if not content:

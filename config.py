@@ -30,7 +30,7 @@ class Config:
     
     # Default models
     DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "anthropic/claude-3-haiku-20240307")
-    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-3-sonnet-20240229")
+    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-3-5-sonnet-20241022")
     DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "anthropic/claude-3-haiku-20240307")
     
     # Database Retention (days)
