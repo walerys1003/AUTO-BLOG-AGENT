@@ -997,7 +997,7 @@ def get_blog_categories(blog_id):
         'categories': categories
     })
 
-@content_creator_bp.route('/content-creator/api/topics')
+@content_creator_bp.route('/content-creator/api/topics', endpoint='get_all_topics')
 def get_all_topics():
     """API endpoint to get approved topics for all blogs or a specific blog"""
     blog_id = request.args.get('blog_id')
