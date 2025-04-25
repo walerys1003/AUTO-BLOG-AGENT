@@ -172,7 +172,7 @@
             }
             
             // Call the simplified API
-            fetch('{{ url_for("content_creator.generate_simple_content") }}', {
+            fetch('{{ url_for("simple_creator.generate_simple_content") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -221,7 +221,7 @@
             showLoading("Saving draft...");
             
             // Call the save API
-            fetch('{{ url_for("content_creator.save_simple_content") }}', {
+            fetch('{{ url_for("simple_creator.save_simple_content") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -264,7 +264,7 @@
             showLoading("Publishing article...");
             
             // Call the save API with published status
-            fetch('{{ url_for("content_creator.save_simple_content") }}', {
+            fetch('{{ url_for("simple_creator.save_simple_content") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -303,7 +303,7 @@
         if (loadContentId) {
             showLoading("Loading content...");
             
-            fetch(`{{ url_for("content_creator.get_content", content_id=0) }}`.replace('0', loadContentId))
+            fetch(`{{ url_for("simple_creator.get_content", content_id=0) }}`.replace('0', loadContentId))
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

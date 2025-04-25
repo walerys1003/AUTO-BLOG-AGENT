@@ -1,0 +1,1 @@
+# Moduł uproszczonego generatora treści
