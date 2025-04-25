@@ -462,6 +462,98 @@ def generate_metadata():
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 
+# Dynamic Content Generation API Endpoints
+
+@content_creator_bp.route('/content-creator/api/plan', methods=['POST'])
+def generate_article_plan_api():
+    """Generate article plan API endpoint for dynamic content generation"""
+    topic = request.form.get('topic', '')
+    paragraph_count = request.form.get('paragraph_count', '4')
+    style = request.form.get('style', 'informative')
+    
+    # Validate inputs
+    if not topic:
+        return jsonify({
+            'success': False,
+            'message': 'No topic provided'
+        })
+    
+    try:
+        paragraph_count = int(paragraph_count)
+        if paragraph_count < 3:
+            paragraph_count = 3
+        elif paragraph_count > 6:
+            paragraph_count = 6
+    except (ValueError, TypeError):
+        paragraph_count = 4
+    
+    try:
+        # Generate article plan
+        plan_result = content_generator.generate_article_plan(topic, paragraph_count, style)
+        
+        # Log the plan generation
+        logger.info(f"Generated article plan for '{topic}' with {paragraph_count} paragraphs")
+        
+        return jsonify({
+            'success': True,
+            'plan': plan_result.get('plan', [])
+        })
+    except Exception as e:
+        logger.error(f"Error generating article plan: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+
+@content_creator_bp.route('/content-creator/api/paragraph', methods=['POST'])
+def generate_single_paragraph_api():
+    """Generate single paragraph API endpoint for dynamic content generation"""
+    topic = request.form.get('topic', '')
+    paragraph_topic = request.form.get('paragraph_topic', '')
+    style = request.form.get('style', 'informative')
+    paragraph_index = request.form.get('paragraph_index', '0')
+    total_paragraphs = request.form.get('total_paragraphs', '4')
+    
+    # Validate inputs
+    if not topic or not paragraph_topic:
+        return jsonify({
+            'success': False,
+            'message': 'Topic and paragraph topic are required'
+        })
+    
+    try:
+        paragraph_index = int(paragraph_index)
+        total_paragraphs = int(total_paragraphs)
+        is_introduction = paragraph_index == 0
+        is_conclusion = paragraph_index == total_paragraphs - 1
+    except (ValueError, TypeError):
+        is_introduction = False
+        is_conclusion = False
+    
+    try:
+        # Generate paragraph
+        result = content_generator.generate_paragraph(
+            topic=topic,
+            paragraph_topic=paragraph_topic,
+            style=style,
+            is_introduction=is_introduction,
+            is_conclusion=is_conclusion
+        )
+        
+        # Log the paragraph generation
+        logger.info(f"Generated paragraph {paragraph_index+1}/{total_paragraphs} for '{topic}': {paragraph_topic}")
+        
+        return jsonify({
+            'success': True,
+            'content': result.get('content', '')
+        })
+    except Exception as e:
+        logger.error(f"Error generating paragraph: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+
 # Automation routes
 
 @content_creator_bp.route('/content-creator/automation')
@@ -726,8 +818,8 @@ def get_blog_topics(blog_id):
 
 
 @content_creator_bp.route('/content-creator/api/generate-plan', methods=['POST'])
-def generate_article_plan_api():
-    """API endpoint to generate an article plan with paragraph topics"""
+def generate_article_plan_existing():
+    """API endpoint to generate an article plan with paragraph topics (existing endpoint)"""
     try:
         # Get request parameters
         topic = request.form.get('topic')
@@ -754,8 +846,8 @@ def generate_article_plan_api():
 
 
 @content_creator_bp.route('/content-creator/api/generate-paragraph', methods=['POST'])
-def generate_paragraph_api():
-    """API endpoint to generate a single paragraph for dynamic content creation"""
+def generate_paragraph_existing():
+    """API endpoint to generate a single paragraph for dynamic content creation (existing endpoint)"""
     try:
         # Get request parameters
         topic = request.form.get('topic')
