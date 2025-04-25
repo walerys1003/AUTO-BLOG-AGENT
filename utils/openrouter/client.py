@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 import requests
 from typing import Dict, List, Any, Optional, Union
@@ -99,38 +100,61 @@ class OpenRouterClient:
         
         # Make the API request
         response = None
-        try:
-            logger.info(f"Sending request to OpenRouter with model: {model}")
-            response = requests.post(
-                f"{self.api_base}/chat/completions",
-                headers=self._get_headers(),
-                json=data,
-                timeout=60  # Zwiększony timeout dla żądania HTTP
-            )
-            response.raise_for_status()
-            
-            result = response.json()
-            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-            logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
-            return content
-        except requests.exceptions.Timeout:
-            logger.error("Request to OpenRouter timed out")
-            return "Error: Request to AI service timed out. Please try again."
-        except requests.exceptions.ConnectionError:
-            logger.error("Connection error when connecting to OpenRouter")
-            return "Error: Unable to connect to AI service. Please check your internet connection."
-        except Exception as e:
-            logger.error(f"Error generating completion from OpenRouter: {str(e)}")
-            # Try to extract error message from response
-            error_message = "Unknown error occurred"
+        retry_count = 0
+        max_retries = 3
+        backoff_factor = 2
+        
+        while retry_count < max_retries:
             try:
-                if response and hasattr(response, 'json'):
-                    error_data = response.json()
-                    error_message = error_data.get("error", {}).get("message", str(e))
-            except:
-                error_message = str(e)
-            
-            return f"Error: {error_message}"
+                logger.info(f"Sending request to OpenRouter with model: {model} (Attempt {retry_count + 1}/{max_retries})")
+                response = requests.post(
+                    f"{self.api_base}/chat/completions",
+                    headers=self._get_headers(),
+                    json=data,
+                    timeout=30  # Lower timeout for faster failure detection
+                )
+                response.raise_for_status()
+                # If successful, break out of retry loop
+                break
+            except requests.exceptions.Timeout:
+                retry_count += 1
+                if retry_count >= max_retries:
+                    logger.error(f"Timeout error after {max_retries} attempts. Giving up.")
+                    return "Error: Request to AI service timed out. Please try again."
+                logger.warning(f"Timeout error. Retrying in {backoff_factor * retry_count} seconds...")
+                time.sleep(backoff_factor * retry_count)
+            except requests.exceptions.RequestException as e:
+                retry_count += 1
+                if retry_count >= max_retries:
+                    logger.error(f"Request error after {max_retries} attempts: {str(e)}. Giving up.")
+                    return f"Error: Connection problem with AI service: {str(e)}"
+                logger.warning(f"Request error: {str(e)}. Retrying in {backoff_factor * retry_count} seconds...")
+                time.sleep(backoff_factor * retry_count)
+                
+        # Process successful response
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
+                return content
+            except Exception as e:
+                logger.error(f"Error processing OpenRouter response: {str(e)}")
+                return f"Error processing API response: {str(e)}"
+                
+        # If we reached here with no successful response after retries
+        logger.error("Failed to get response from OpenRouter after maximum retries")
+        
+        # Try to extract error message from response
+        error_message = "Unknown error occurred"
+        try:
+            if response and hasattr(response, 'json'):
+                error_data = response.json()
+                error_message = error_data.get("error", {}).get("message", "API error")
+        except Exception as ex:
+            error_message = f"Could not process response: {str(ex)}"
+        
+        return f"Error: {error_message}"
     
     def generate_json_response(
         self,
