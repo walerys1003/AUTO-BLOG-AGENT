@@ -432,10 +432,10 @@ def automation_dashboard():
     blogs = Blog.query.filter_by(active=True).all()
     
     # Get active automation rules
-    active_rules = AutomationRule.query.filter_by(active=True).all()
+    active_rules = AutomationRule.query.filter_by(is_active=True).all()
     
     # Get inactive automation rules
-    inactive_rules = AutomationRule.query.filter_by(active=False).all()
+    inactive_rules = AutomationRule.query.filter_by(is_active=False).all()
     
     # Get automation logs from the utility function
     logs = content_automation.get_automation_logs(limit=20)
@@ -498,7 +498,7 @@ def create_automation_rule():
             topic_min_score=topic_min_score,
             auto_enable_topics=auto_enable_topics,
             auto_promote_content=auto_promote_content,
-            active=True
+            is_active=True
         )
         
         # Set publishing days as JSON

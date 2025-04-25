@@ -31,7 +31,7 @@ def get_optimal_publish_time(blog_id: int) -> time:
             raise ValueError(f"Blog with ID {blog_id} not found")
         
         # Check if there's an automation rule for this blog
-        rule = AutomationRule.query.filter_by(blog_id=blog_id, active=True).first()
+        rule = AutomationRule.query.filter_by(blog_id=blog_id, is_active=True).first()
         # Check if there are time slots defined
         if rule and rule.get_time_slots():
             # Use the first time slot from the rule

@@ -701,7 +701,7 @@ class AutomationRule(db.Model):
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    active = db.Column(db.Boolean, default=True)  # Changed from is_active to active for consistency
+    is_active = db.Column(db.Boolean, default=True)  # Reverted back to is_active to match database schema
     
     # Schedule settings
     days_of_week = db.Column(db.String(20), default="0,1,2,3,4")  # Monday=0, Sunday=6
@@ -712,7 +712,7 @@ class AutomationRule(db.Model):
     # Content settings
     min_word_count = db.Column(db.Integer, default=1200)
     max_word_count = db.Column(db.Integer, default=1600)
-    writing_style = db.Column(db.String(50), default="informative")  # Renamed content_tone to writing_style
+    content_tone = db.Column(db.String(50), default="informative")  # Changed back to content_tone to match database schema
     topic_categories = db.Column(db.Text, nullable=True)  # JSON string of category IDs to focus on
     
     # Approval settings
@@ -732,7 +732,7 @@ class AutomationRule(db.Model):
     blog = db.relationship('Blog', backref=db.backref('automation_rules', lazy=True))
     
     def __repr__(self):
-        status = "active" if self.active else "inactive"
+        status = "active" if self.is_active else "inactive"
         return f"<AutomationRule {self.name} ({status})>"
     
     def get_time_slots(self):

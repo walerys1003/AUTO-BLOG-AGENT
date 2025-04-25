@@ -148,7 +148,7 @@ def publishing_schedule():
     for blog in blogs:
         active_rules = AutomationRule.query.filter_by(
             blog_id=blog.id, 
-            active=True
+            is_active=True
         ).count()
         
         automation_status[blog.id] = {
@@ -225,7 +225,7 @@ def toggle_automation():
         
         # Update status
         for rule in rules:
-            rule.active = status
+            rule.is_active = status
         
         # Save changes
         db.session.commit()
