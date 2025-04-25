@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Creator{% endblock %}
+
+{% block styles %}
+<style>
+    .content-card {
+        transition: all 0.2s ease;
+    }
+    
+    .content-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Content Creator</li>
+                </ol>
+            </nav>
+            <h1 class="h2 mb-3">Content Creator</h1>
+            <p class="text-muted">Create and manage content for your blogs.</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title">Create New Content</h5>
+                    <p class="card-text">Choose one of the options below to create new content.</p>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{{ url_for('simplified_content.topic_selector') }}" class="btn btn-primary">
+                            <i class="fas fa-magic me-2"></i> Select from Topics
+                        </a>
+                        <a href="{{ url_for('simplified_content.content_editor') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-pen me-2"></i> Write from Scratch
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center mt-3">
+                        <div class="col">
+                            <h2 class="h4">{{ contents|length }}</h2>
+                            <p class="text-muted">Total Content</p>
+                        </div>
+                        <div class="col">
+                            <h2 class="h4">{{ contents|selectattr('status', 'equalto', 'published')|list|length }}</h2>
+                            <p class="text-muted">Published</p>
+                        </div>
+                        <div class="col">
+                            <h2 class="h4">{{ contents|selectattr('status', 'equalto', 'draft')|list|length }}</h2>
+                            <p class="text-muted">Drafts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Recent Content</h5>
+        </div>
+        <div class="card-body">
+            {% if contents %}
+                <div class="row g-4">
+                    {% for content in contents %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 content-card position-relative">
+                                <div class="card-body">
+                                    {% if content.status == 'published' %}
+                                        <span class="badge bg-success status-badge">Published</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary status-badge">Draft</span>
+                                    {% endif %}
+                                    
+                                    <h5 class="card-title mb-3">{{ content.title }}</h5>
+                                    <p class="card-text text-muted small">
+                                        <i class="fas fa-clock me-1"></i> {{ content.created_at.strftime('%Y-%m-%d') }}
+                                        <br>
+                                        <i class="fas fa-folder me-1"></i> {{ content.blog.name }}
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <a href="{{ url_for('simplified_content.content_editor', content_id=content.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </a>
+                                        
+                                        {% if content.status == 'draft' %}
+                                            <form method="POST" action="{{ url_for('simplified_content.publish_content', content_id=content.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-paper-plane me-1"></i> Publish
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-circle me-1"></i> Published
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-file-alt fa-3x text-muted"></i>
+                    </div>
+                    <h4>No Content Yet</h4>
+                    <p class="text-muted">
+                        Get started by creating your first content.
+                    </p>
+                    <a href="{{ url_for('simplified_content.topic_selector') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus-circle me-2"></i> Create Content
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

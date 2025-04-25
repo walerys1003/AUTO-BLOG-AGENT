@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Editor{% endblock %}
+
+{% block styles %}
+<style>
+    .editor-container {
+        min-height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('simplified_content.content_creator') }}">Content Creator</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ 'Edit Content' if content else 'New Content' }}</li>
+                </ol>
+            </nav>
+            <h1 class="h2 mb-3">{{ 'Edit Content' if content else 'New Content' }}</h1>
+            <p class="text-muted">
+                {% if topic %}
+                Creating content for topic: <strong>{{ topic.title }}</strong>
+                {% else %}
+                Create or edit content for your blog.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('simplified_content.content_editor', content_id=content.id if content else None) }}">
+                <!-- Blog Selection -->
+                <div class="mb-3">
+                    <label for="blog_id" class="form-label">Blog</label>
+                    <select class="form-select" id="blog_id" name="blog_id" required>
+                        {% for blog in blogs %}
+                            <option value="{{ blog.id }}" {% if (content and content.blog_id == blog.id) or (blog_id and blog_id|int == blog.id) or (topic and topic.blog_id == blog.id) %}selected{% endif %}>
+                                {{ blog.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Title -->
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ content.title if content else (topic.title if topic else '') }}" required>
+                </div>
+                
+                <!-- Hidden Topic Field -->
+                {% if topic %}
+                <input type="hidden" name="topic" value="{{ topic.title }}">
+                {% endif %}
+                
+                <!-- Content Editor -->
+                <div class="mb-4">
+                    <label for="body" class="form-label">Content</label>
+                    <div class="editor-container">
+                        <textarea class="form-control" id="body" name="body" rows="15">{{ content.body if content else '' }}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('simplified_content.content_creator') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back
+                    </a>
+                    
+                    <div>
+                        <button type="submit" name="action" value="save" class="btn btn-primary me-2">
+                            <i class="fas fa-save me-2"></i> Save Draft
+                        </button>
+                        
+                        <button type="submit" name="action" value="publish" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i> Publish
+                        </button>
+                    </div>
+                </div>
+                
+                {% if content %}
+                <!-- Delete Button (for existing content) -->
+                <hr class="my-4">
+                <div class="text-end">
+                    <form method="POST" action="{{ url_for('simplified_content.delete_content', content_id=content.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this content?')">
+                            <i class="fas fa-trash me-2"></i> Delete Content
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ClassicEditor
+            .create(document.querySelector('#body'))
+            .catch(error => {
+                console.error('Error initializing editor:', error);
+            });
+    });
+</script>
+{% endblock %}

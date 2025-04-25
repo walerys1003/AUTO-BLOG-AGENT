@@ -538,6 +538,24 @@ class PerformanceReport(db.Model):
             return json.loads(self.recommendations)
         return []
 
+class Content(db.Model):
+    """Model for simple content storage and editing"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    topic = db.Column(db.String(255))
+    body = db.Column(db.Text)
+    status = db.Column(db.String(50))  # draft / published
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Define relationship with Blog
+    blog = db.relationship('Blog', backref=db.backref('contents', lazy=True))
+    
+    def __repr__(self):
+        return f"<Content {self.title} - {self.status}>"
+
+
 class ContentCalendar(db.Model):
     """Model for content planning and scheduling"""
     id = db.Column(db.Integer, primary_key=True)
