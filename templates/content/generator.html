@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-magic me-2"></i> Content Creation Panel</h4>
+                </div>
+                <div class="card-body">
+                    <form id="content-settings">
+                        <div class="mb-4">
+                            <label for="topic" class="form-label">Select Topic:</label>
+                            <select id="topic" class="form-select" required>
+                                <option value="">-- Loading topics... --</option>
+                            </select>
+                            <div class="form-text">Choose a topic for your article</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="writingStyle" class="form-label">Writing Style:</label>
+                            <select id="writingStyle" class="form-select">
+                                <option value="informative">Informative & Educational</option>
+                                <option value="narrative">Storytelling & Narrative</option>
+                                <option value="persuasive">Persuasive & Marketing</option>
+                                <option value="analytical">Analytical & Research</option>
+                                <option value="conversational">Conversational & Casual</option>
+                            </select>
+                            <div class="form-text">Choose the tone and style for your content</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="paragraphs" class="form-label">Number of Paragraphs:</label>
+                            <select id="paragraphs" class="form-select">
+                                <option value="3">3 paragraphs</option>
+                                <option value="4" selected>4 paragraphs</option>
+                                <option value="5">5 paragraphs</option>
+                                <option value="6">6 paragraphs</option>
+                            </select>
+                            <div class="form-text">More paragraphs create longer, more detailed content</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="button" id="generateArticleBtn" class="btn btn-primary btn-lg">
+                                <i class="fas fa-bolt me-2"></i> Generate Article
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="status-area" class="alert alert-info mt-4 d-none">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span id="status-message">Preparing to generate content...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Editor Section (hidden initially) -->
+<div id="editorSection" class="container mt-4 d-none">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i> Article Editor</h4>
+                    <div>
+                        <span id="generationBadge" class="badge bg-warning me-2">
+                            <i class="fas fa-sync fa-spin me-1"></i> Generating...
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="generationStatus" class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span>Initiating generation process...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="progressContainer" class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Generation Progress</span>
+                            <span id="progressText">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="articleEditor" class="border rounded p-3 mb-4" style="min-height: 400px;">
+                        <!-- Generated content will appear here -->
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button id="saveBtn" class="btn btn-outline-primary" disabled>
+                            <i class="fas fa-save me-1"></i> Save Draft
+                        </button>
+                        
+                        <div>
+                            <button id="regenerateBtn" class="btn btn-warning me-2" disabled>
+                                <i class="fas fa-sync-alt me-1"></i> Regenerate
+                            </button>
+                            <button id="publishBtn" class="btn btn-success" disabled>
+                                <i class="fas fa-paper-plane me-1"></i> Publish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Global variables
+let selectedTopicId = null;
+let selectedTopicTitle = null;
+let generationInProgress = false;
+let currentParagraphIndex = 0;
+let totalParagraphs = 0;
+let paragraphPlan = [];
+
+// Load topics when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadTopics();
+    setupEventListeners();
+});
+
+// Setup event listeners
+function setupEventListeners() {
+    // Generate article button click
+    document.getElementById('generateArticleBtn').addEventListener('click', function() {
+        if (validateForm()) {
+            startGeneration();
+        }
+    });
+    
+    // Save button click
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        saveDraft();
+    });
+    
+    // Regenerate button click
+    document.getElementById('regenerateBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to regenerate the article? This will replace the current content.')) {
+            startGeneration();
+        }
+    });
+    
+    // Publish button click
+    document.getElementById('publishBtn').addEventListener('click', function() {
+        publishArticle();
+    });
+}
+
+// Load topics from the server
+function loadTopics() {
+    const topicSelect = document.getElementById('topic');
+    topicSelect.innerHTML = '<option value="">-- Loading topics... --</option>';
+    
+    // Show loading state
+    fetch('/content-creator/api/topics')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.topics && data.topics.length > 0) {
+                // Clear loading option
+                topicSelect.innerHTML = '<option value="">-- Select a topic --</option>';
+                
+                // Add topics to dropdown
+                data.topics.forEach(topic => {
+                    const option = document.createElement('option');
+                    option.value = topic.id;
+                    option.textContent = `${topic.title} (Score: ${topic.score.toFixed(2)})`;
+                    option.dataset.title = topic.title;
+                    topicSelect.appendChild(option);
+                });
+            } else {
+                topicSelect.innerHTML = '<option value="">No topics available</option>';
+                showError('No approved topics found. Please approve topics in the Topics section first.');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading topics:', error);
+            topicSelect.innerHTML = '<option value="">Error loading topics</option>';
+            showError('Failed to load topics. Please try again later.');
+        });
+}
+
+// Validate the form before generation
+function validateForm() {
+    const topicSelect = document.getElementById('topic');
+    
+    if (!topicSelect.value) {
+        showError('Please select a topic before generating content.');
+        return false;
+    }
+    
+    // Store the selected topic information
+    selectedTopicId = topicSelect.value;
+    selectedTopicTitle = topicSelect.options[topicSelect.selectedIndex].dataset.title;
+    
+    return true;
+}
+
+// Show error message
+function showError(message) {
+    const statusArea = document.getElementById('status-area');
+    const statusMessage = document.getElementById('status-message');
+    
+    statusArea.classList.remove('d-none', 'alert-info', 'alert-success');
+    statusArea.classList.add('alert-danger');
+    statusMessage.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${message}`;
+    
+    // Hide after 5 seconds
+    setTimeout(() => {
+        statusArea.classList.add('d-none');
+    }, 5000);
+}
+
+// Show status message
+function showStatus(message, type = 'info') {
+    const statusArea = document.getElementById('status-area');
+    const statusMessage = document.getElementById('status-message');
+    
+    statusArea.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-danger');
+    statusArea.classList.add(`alert-${type}`);
+    
+    if (type === 'info') {
+        statusMessage.innerHTML = `<div class="spinner-border spinner-border-sm me-2" role="status"></div> ${message}`;
+    } else {
+        statusMessage.innerHTML = message;
+    }
+}
+
+// Start the generation process
+function startGeneration() {
+    if (generationInProgress) {
+        return;
+    }
+    
+    // Get values from form
+    const style = document.getElementById('writingStyle').value;
+    totalParagraphs = parseInt(document.getElementById('paragraphs').value);
+    
+    // Reset state
+    currentParagraphIndex = 0;
+    paragraphPlan = [];
+    generationInProgress = true;
+    
+    // Show editor section and update UI
+    document.getElementById('editorSection').classList.remove('d-none');
+    document.getElementById('articleEditor').innerHTML = '';
+    document.getElementById('generationStatus').innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span>Generating article plan...</span>
+        </div>
+    `;
+    
+    // Initialize progress bar
+    updateProgress(0);
+    
+    // Generate article plan
+    showStatus('Generating article plan...', 'info');
+    
+    const formData = new FormData();
+    formData.append('topic', selectedTopicTitle);
+    formData.append('paragraph_count', totalParagraphs);
+    formData.append('style', style);
+    
+    fetch('/content-creator/api/plan', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            paragraphPlan = data.plan;
+            showStatus('Article plan generated. Starting content generation...', 'info');
+            document.getElementById('generationStatus').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Article plan generated successfully! Generating content...
+                </div>
+            `;
+            
+            // Display the plan
+            displayArticlePlan();
+            
+            // Start generating paragraphs
+            generateNextParagraph();
+        } else {
+            generationInProgress = false;
+            showError(`Failed to generate article plan: ${data.message || 'Unknown error'}`);
+            document.getElementById('generationStatus').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Error:</strong> Failed to generate article plan.
+                    <button class="btn btn-sm btn-danger ms-3" onclick="startGeneration()">
+                        <i class="fas fa-sync-alt me-1"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error generating article plan:', error);
+        generationInProgress = false;
+        showError(`Error generating article plan: ${error.message}`);
+        document.getElementById('generationStatus').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Error:</strong> ${error.message}
+                <button class="btn btn-sm btn-danger ms-3" onclick="startGeneration()">
+                    <i class="fas fa-sync-alt me-1"></i> Retry
+                </button>
+            </div>
+        `;
+    });
+}
+
+// Display the article plan
+function displayArticlePlan() {
+    const editor = document.getElementById('articleEditor');
+    editor.innerHTML = `
+        <h1>${selectedTopicTitle}</h1>
+        <div class="generation-plan mb-4">
+            <h6 class="text-muted mb-2">Article Plan:</h6>
+            <ol>
+                ${paragraphPlan.map((topic, index) => {
+                    if (index === 0) {
+                        return `<li class="mb-1"><strong>Introduction:</strong> ${topic} <span class="badge bg-secondary ms-2">Generating...</span></li>`;
+                    } else if (index === paragraphPlan.length - 1) {
+                        return `<li class="mb-1"><strong>Conclusion:</strong> ${topic}</li>`;
+                    } else {
+                        return `<li class="mb-1">${topic}</li>`;
+                    }
+                }).join('')}
+            </ol>
+        </div>
+    `;
+}
+
+// Generate the next paragraph
+function generateNextParagraph() {
+    if (currentParagraphIndex >= totalParagraphs) {
+        // All paragraphs generated
+        finishGeneration();
+        return;
+    }
+    
+    // Update progress UI
+    const progressPercent = Math.round((currentParagraphIndex / totalParagraphs) * 100);
+    updateProgress(progressPercent);
+    
+    // Update generation status
+    document.getElementById('generationStatus').innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span>Generating paragraph ${currentParagraphIndex + 1} of ${totalParagraphs}...</span>
+        </div>
+    `;
+    
+    // Update plan badges
+    const planItems = document.querySelectorAll('.generation-plan li');
+    if (planItems.length > currentParagraphIndex) {
+        planItems.forEach((item, index) => {
+            const badge = item.querySelector('.badge');
+            if (badge) {
+                badge.remove();
+            }
+            
+            if (index === currentParagraphIndex) {
+                item.innerHTML += ' <span class="badge bg-warning ms-2">Generating...</span>';
+            } else if (index < currentParagraphIndex) {
+                item.innerHTML += ' <span class="badge bg-success ms-2">✓</span>';
+            }
+        });
+    }
+    
+    // Get the style from form
+    const style = document.getElementById('writingStyle').value;
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('topic', selectedTopicTitle);
+    formData.append('paragraph_topic', paragraphPlan[currentParagraphIndex]);
+    formData.append('style', style);
+    formData.append('paragraph_index', currentParagraphIndex);
+    formData.append('total_paragraphs', totalParagraphs);
+    
+    // Generate paragraph
+    fetch('/content-creator/api/paragraph', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error('Server error:', response.status, response.statusText);
+            throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Add paragraph to content
+            addParagraphToEditor(data.content);
+            
+            // Move to next paragraph
+            currentParagraphIndex++;
+            
+            // Continue with next paragraph after a short delay
+            setTimeout(() => {
+                generateNextParagraph();
+            }, 500);
+        } else {
+            handleGenerationError(`Failed to generate paragraph ${currentParagraphIndex + 1}: ${data.message || 'Unknown error'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error generating paragraph:', error);
+        handleGenerationError(`Network error while generating paragraph ${currentParagraphIndex + 1}: ${error.message}`);
+    });
+}
+
+// Add paragraph to editor
+function addParagraphToEditor(content) {
+    const editor = document.getElementById('articleEditor');
+    const currentContent = editor.innerHTML;
+    
+    // For first paragraph, add after plan
+    if (currentParagraphIndex === 0) {
+        // Add paragraph with heading
+        const paragraphHtml = `
+            <div class="paragraph-container mb-4" id="paragraph-${currentParagraphIndex}">
+                <h2>${paragraphPlan[currentParagraphIndex]}</h2>
+                ${content}
+            </div>
+        `;
+        
+        // Keep the plan at the top
+        const planSection = currentContent.match(/<div class="generation-plan mb-4">[\s\S]*?<\/div>/);
+        if (planSection) {
+            editor.innerHTML = currentContent.replace(
+                planSection[0],
+                `${planSection[0]}${paragraphHtml}`
+            );
+        } else {
+            editor.innerHTML += paragraphHtml;
+        }
+    } else {
+        // Add paragraph with heading
+        const paragraphHtml = `
+            <div class="paragraph-container mb-4" id="paragraph-${currentParagraphIndex}">
+                <h2>${paragraphPlan[currentParagraphIndex]}</h2>
+                ${content}
+            </div>
+        `;
+        
+        // Append to existing content
+        editor.innerHTML += paragraphHtml;
+    }
+    
+    // Scroll to the new paragraph
+    const newParagraph = document.getElementById(`paragraph-${currentParagraphIndex}`);
+    if (newParagraph) {
+        newParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// Update progress bar
+function updateProgress(percent) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressBar.style.width = `${percent}%`;
+    progressBar.setAttribute('aria-valuenow', percent);
+    progressText.textContent = `${percent}%`;
+}
+
+// Handle generation error
+function handleGenerationError(message) {
+    generationInProgress = false;
+    
+    // Update status
+    showError(message);
+    
+    // Update generation status
+    document.getElementById('generationStatus').innerHTML = `
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong> ${message}
+            <button class="btn btn-sm btn-danger ms-3" onclick="retryGeneration()">
+                <i class="fas fa-sync-alt me-1"></i> Retry
+            </button>
+        </div>
+    `;
+    
+    // Update plan badges
+    const planItems = document.querySelectorAll('.generation-plan li');
+    if (planItems.length > currentParagraphIndex) {
+        const badge = planItems[currentParagraphIndex].querySelector('.badge');
+        if (badge) {
+            badge.classList.remove('bg-warning');
+            badge.classList.add('bg-danger');
+            badge.textContent = 'Failed';
+        }
+    }
+    
+    // Update generation badge
+    document.getElementById('generationBadge').innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> Generation Failed';
+    document.getElementById('generationBadge').classList.remove('bg-warning');
+    document.getElementById('generationBadge').classList.add('bg-danger');
+    
+    // Enable buttons
+    document.getElementById('regenerateBtn').disabled = false;
+}
+
+// Retry generation from current paragraph
+function retryGeneration() {
+    if (!generationInProgress) {
+        generationInProgress = true;
+        
+        // Update UI
+        document.getElementById('generationStatus').innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                <span>Retrying paragraph ${currentParagraphIndex + 1} of ${totalParagraphs}...</span>
+            </div>
+        `;
+        
+        // Update generation badge
+        document.getElementById('generationBadge').innerHTML = '<i class="fas fa-sync fa-spin me-1"></i> Generating...';
+        document.getElementById('generationBadge').classList.remove('bg-danger');
+        document.getElementById('generationBadge').classList.add('bg-warning');
+        
+        // Update plan badges
+        const planItems = document.querySelectorAll('.generation-plan li');
+        if (planItems.length > currentParagraphIndex) {
+            const badge = planItems[currentParagraphIndex].querySelector('.badge');
+            if (badge) {
+                badge.classList.remove('bg-danger');
+                badge.classList.add('bg-warning');
+                badge.textContent = 'Generating...';
+            }
+        }
+        
+        // Disable buttons
+        document.getElementById('regenerateBtn').disabled = true;
+        
+        // Retry current paragraph
+        generateNextParagraph();
+    }
+}
+
+// Finish generation
+function finishGeneration() {
+    generationInProgress = false;
+    
+    // Update progress to 100%
+    updateProgress(100);
+    
+    // Update status
+    showStatus('Article generated successfully!', 'success');
+    
+    // Update generation status
+    document.getElementById('generationStatus').innerHTML = `
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Article generated successfully!
+        </div>
+    `;
+    
+    // Update generation badge
+    document.getElementById('generationBadge').innerHTML = '<i class="fas fa-check-circle me-1"></i> Generation Complete';
+    document.getElementById('generationBadge').classList.remove('bg-warning');
+    document.getElementById('generationBadge').classList.add('bg-success');
+    
+    // Enable buttons
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('regenerateBtn').disabled = false;
+    document.getElementById('publishBtn').disabled = false;
+}
+
+// Save draft
+function saveDraft() {
+    const editor = document.getElementById('articleEditor');
+    const content = editor.innerHTML;
+    
+    showStatus('Saving draft...', 'info');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('topic_id', selectedTopicId);
+    formData.append('content', content);
+    formData.append('status', 'draft');
+    
+    fetch('/content-creator/api/save-content', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus('Draft saved successfully!', 'success');
+            
+            // Offer to redirect to content dashboard
+            setTimeout(() => {
+                if (confirm('Draft saved successfully! Would you like to view your content dashboard?')) {
+                    window.location.href = '/content-creator/dashboard';
+                }
+            }, 1000);
+        } else {
+            showError(`Failed to save draft: ${data.message || 'Unknown error'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving draft:', error);
+        showError(`Error saving draft: ${error.message}`);
+    });
+}
+
+// Publish article
+function publishArticle() {
+    const editor = document.getElementById('articleEditor');
+    const content = editor.innerHTML;
+    
+    showStatus('Publishing article...', 'info');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('topic_id', selectedTopicId);
+    formData.append('content', content);
+    formData.append('status', 'published');
+    
+    fetch('/content-creator/api/save-content', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus('Article published successfully!', 'success');
+            
+            // Offer to redirect to content dashboard
+            setTimeout(() => {
+                if (confirm('Article published successfully! Would you like to view your content dashboard?')) {
+                    window.location.href = '/content-creator/dashboard';
+                }
+            }, 1000);
+        } else {
+            showError(`Failed to publish article: ${data.message || 'Unknown error'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error publishing article:', error);
+        showError(`Error publishing article: ${error.message}`);
+    });
+}
+</script>
+{% endblock %}

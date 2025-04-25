@@ -119,14 +119,18 @@ class OpenRouterClient:
                     f"{self.api_base}/chat/completions",
                     headers=self._get_headers(),
                     json=data,
-                    timeout=60  # Zwiększony timeout dla stabilniejszych odpowiedzi
+                    timeout=120  # Zwiększony timeout do 120 sekund dla dłuższych generacji
                 )
                 response.raise_for_status()
                 # If successful, break out of retry loop
                 break
             except requests.exceptions.Timeout:
                 retry_count += 1
-                if retry_count >= max_retries:
+                logger.warning(f"Timeout error on attempt {retry_count}/{max_retries}. Retrying with exponential backoff.")
+                if retry_count < max_retries:
+                    # Exponential backoff
+                    time.sleep(backoff_factor ** retry_count)
+                else:
                     logger.error(f"Timeout error after {max_retries} attempts. Giving up.")
                     return {
                         "choices": [
@@ -137,23 +141,33 @@ class OpenRouterClient:
                             }
                         ]
                     }
-                logger.warning(f"Timeout error. Retrying in {backoff_factor * retry_count} seconds...")
-                time.sleep(backoff_factor * retry_count)
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.ConnectionError:
                 retry_count += 1
-                if retry_count >= max_retries:
-                    logger.error(f"Request error after {max_retries} attempts: {str(e)}. Giving up.")
+                logger.warning(f"Connection error on attempt {retry_count}/{max_retries}. Retrying with exponential backoff.")
+                if retry_count < max_retries:
+                    time.sleep(backoff_factor ** retry_count)
+                else:
+                    logger.error(f"Connection error after {max_retries} attempts. Giving up.")
                     return {
                         "choices": [
                             {
                                 "message": {
-                                    "content": f"Error: Connection problem with AI service: {str(e)}"
+                                    "content": "Error: Connection to AI service failed. Please check your network and try again."
                                 }
                             }
                         ]
                     }
-                logger.warning(f"Request error: {str(e)}. Retrying in {backoff_factor * retry_count} seconds...")
-                time.sleep(backoff_factor * retry_count)
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}")
+                return {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": f"Error: Unexpected problem with AI service: {str(e)}"
+                            }
+                        }
+                    ]
+                }
                 
         # Process successful response
         if response and response.status_code == 200:
@@ -238,14 +252,14 @@ class OpenRouterClient:
         
         if not response_text:
             logger.error("Empty response from OpenRouter")
-            return None
+            return {}
             
         try:
             return json.loads(response_text)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {str(e)}")
             logger.error(f"Response text: {response_text}")
-            return None
+            return {}
     
     def get_topic_model(self) -> str:
         """Get the configured topic generation model"""

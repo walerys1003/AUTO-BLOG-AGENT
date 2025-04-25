@@ -1,0 +1,313 @@
+📜 Szczegółowy Techniczny Prompt: Przeniesienie „Select a Topic for Content Creation” na Statyczną Podstronę z Dynamicznym Edytorem
+🎯 Cel:
+Wyeliminowanie wyskakującego okna modalnego „Select a Topic for Content Creation” i zastąpienie go pełnoekranową statyczną podstroną, która zawiera:
+
+Wybór tematu i parametrów generowania.
+
+Dynamiczny edytor treści z widocznym procesem generowania akapitów przez AI.
+
+🔍 1. Obecny Problem:
+Modal (nakładka) ogranicza przestrzeń i UX.
+
+Brak płynnego przejścia do edytora → generowanie treści nieintuicyjne.
+
+Modal nie integruje się z backendem w sposób ciągły – powoduje błędy „Internal Server Error”.
+
+🛠️ 2. Proponowane Rozwiązanie – Przebudowa UX/UI:
+A. Struktura Nowej Statycznej Podstrony:
+URL: /content-generator
+
+Sekcje Strony:
+
+Wybór tematu i parametrów:
+
+Select Topic (dropdown).
+
+Writing Style.
+
+Number of Paragraphs.
+
+Przycisk Generate Article.
+
+Dynamiczny Edytor z procesem generacji:
+
+Wyświetlanie akapitów 1 po 1.
+
+Pasek postępu lub status generowania.
+
+⚙️ 3. Szczegółowy Prompt – Wdrożenie Statycznej Podstrony:
+Frontend – React/HTML (Statyczna Strona):
+Struktura UI:
+html
+Kopiuj
+Edytuj
+<!-- content-generator.html -->
+<div id="content-generator">
+  <h2>Content Creation Panel</h2>
+
+  <form id="content-settings">
+    <label for="topic">Select Topic:</label>
+    <select id="topic">
+      <!-- Dynamically populated -->
+    </select>
+
+    <label for="writingStyle">Writing Style:</label>
+    <select id="writingStyle">
+      <option value="Storytelling & Narrative">Storytelling & Narrative</option>
+      <option value="Informative & Educational">Informative & Educational</option>
+    </select>
+
+    <label for="paragraphs">Number of Paragraphs:</label>
+    <select id="paragraphs">
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+
+    <button type="button" id="generateArticle">Generate Article</button>
+  </form>
+
+  <div id="editorSection" style="display:none;">
+    <h3>Generated Article</h3>
+    <div id="generationStatus">Starting generation...</div>
+    <div id="articleEditor"></div>
+  </div>
+</div>
+JavaScript – Obsługa Interakcji i Dynamicznej Generacji:
+javascript
+Kopiuj
+Edytuj
+document.getElementById("generateArticle").addEventListener("click", async () => {
+  const topic = document.getElementById("topic").value;
+  const style = document.getElementById("writingStyle").value;
+  const paragraphs = parseInt(document.getElementById("paragraphs").value);
+
+  document.getElementById("editorSection").style.display = "block";
+  const status = document.getElementById("generationStatus");
+  const editor = document.getElementById("articleEditor");
+  editor.innerHTML = "";
+
+  for (let i = 1; i <= paragraphs; i++) {
+    status.innerText = `Generating paragraph ${i} of ${paragraphs}...`;
+
+    try {
+      const response = await fetch("/api/generateParagraph", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, style, paragraphIndex: i })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const p = document.createElement("p");
+        p.innerText = data.paragraph;
+        editor.appendChild(p);
+      } else {
+        throw new Error(data.message || "Error generating content");
+      }
+    } catch (error) {
+      status.innerText = "Generation failed: " + error.message;
+      break;
+    }
+  }
+
+  status.innerText = "Article generated successfully!";
+});
+🔗 4. Backend/API:
+Endpoint generujący akapit:
+
+javascript
+Kopiuj
+Edytuj
+app.post("/api/generateParagraph", async (req, res) => {
+  const { topic, style, paragraphIndex } = req.body;
+  if (!topic || !style || paragraphIndex === undefined) {
+    return res.status(400).json({ message: "Missing parameters" });
+  }
+
+  try {
+    const prompt = `Write paragraph ${paragraphIndex} about ${topic} in ${style} style.`;
+    const aiResponse = await openRouter.generate({ prompt });
+    const paragraph = aiResponse.data.content;
+    res.status(200).json({ paragraph });
+  } catch (err) {
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+});
+🛡️ 5. Weryfikacja Obszarów Problemowych:
+A. Modal → Zamienić na podstronę:
+Usuń modal (<div class="modal">).
+
+Stwórz trasę np. /content-generator w routerze frontend (React Router / Express Static).
+
+B. Weryfikacja danych Topics:
+Sprawdź, czy baza zwraca dane → jeśli nie, podmień na przykładowe dane.
+
+Frontend: popraw renderowanie dropdowna:
+
+javascript
+Kopiuj
+Edytuj
+fetch("/api/topics")
+  .then(res => res.json())
+  .then(topics => {
+    const select = document.getElementById("topic");
+    topics.forEach(t => {
+      const option = document.createElement("option");
+      option.value = t.name;
+      option.innerText = t.name;
+      select.appendChild(option);
+    });
+  });
+🧩 6. Finalny Flow:
+Użytkownik wchodzi na /content-generator.
+
+Wybiera temat, styl, liczbę akapitów.
+
+Kliknięcie Generate Article:
+
+Pokazuje się edytor.
+
+AI generuje i wyświetla treść na bieżąco.
+
+🎯 Korzyści:
+Lepsza kontrola UX – użytkownik cały czas widzi proces.
+
+Stały dostęp do edytora – bez przełączania i modali.
+
+Stabilność – eliminuje problemy modali i błędów 500 przez lepszy przepływ danych.
+
+🎯 Cel:
+Zamiast wyświetlania modalnego pop-upu (nakładki) z wyborem tematu („Select a Topic for Content Creation”), użytkownik ma być przekierowywany na dedykowaną stronę statyczną/dynamiczną (np. /editor/:topicId), gdzie natychmiast po kliknięciu Generate Article:
+
+Uruchamia się generowanie treści w czasie rzeczywistym.
+
+Wybrany temat, styl i liczba akapitów są automatycznie przekazywane.
+
+Edytor treści jest od razu widoczny, a akapity wpisywane są dynamicznie (z informacją np. „Akapit 2 z 4 – trwa generowanie…”).
+
+🔎 Obecny problem (UX & techniczny):
+Modalne okno (<div class="modal">) blokuje dalsze działania użytkownika.
+
+Generowanie treści odbywa się w tle lub w innym komponencie, a nie ma bezpośredniego podglądu wpisywanych akapitów.
+
+Brak odczucia „żywej” edycji – użytkownik czuje się odcięty od procesu.
+
+🛠️ Zalecane rozwiązanie – krok po kroku (Prompt do wdrożenia)
+🧱 1. Zamień modal na dedykowaną stronę (Routing + UI)
+🔧 Frontend (React / Vue / Vanilla JS z Routerem):
+Zamiast otwierania modala – przekierowanie do nowej strony editor z parametrami:
+
+js
+Kopiuj
+Edytuj
+// zamiast openModal()
+function handleGenerateClick(topicId, style, paragraphs) {
+  const queryParams = new URLSearchParams({
+    topicId,
+    style,
+    paragraphs
+  });
+  window.location.href = `/editor?${queryParams.toString()}`;
+}
+🧭 2. Utwórz dedykowaną stronę /editor
+Ta strona zawiera:
+
+Edytor tekstu (np. Quill, TinyMCE, CKEditor, textarea).
+
+Informacje o postępie generacji.
+
+Pasek postępu lub dynamiczne komunikaty o akapitach.
+
+Opcje „Zapisz szkic” i „Publikuj”.
+
+🔄 3. Automatyczne generowanie artykułu po załadowaniu strony /editor
+Przykład (React-like logic):
+js
+Kopiuj
+Edytuj
+const queryParams = new URLSearchParams(window.location.search);
+const topicId = queryParams.get('topicId');
+const style = queryParams.get('style');
+const paragraphs = parseInt(queryParams.get('paragraphs'));
+
+window.onload = async () => {
+  for (let i = 1; i <= paragraphs; i++) {
+    updateStatus(`Generowanie akapitu ${i} z ${paragraphs}...`);
+    const response = await fetch('/api/generate-paragraph', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicId, style, paragraphIndex: i })
+    });
+    const { paragraph } = await response.json();
+    appendToEditor(paragraph); // aktualizuje DOM edytora
+  }
+  updateStatus("Artykuł wygenerowany ✅");
+};
+📡 4. API Backend: generowanie akapitów z kontrolą kontekstu
+js
+Kopiuj
+Edytuj
+app.post("/api/generate-paragraph", async (req, res) => {
+  const { topicId, style, paragraphIndex } = req.body;
+  const topic = await db.getTopicById(topicId);
+  const prompt = `Napisz akapit nr ${paragraphIndex} na temat "${topic.title}" w stylu ${style}`;
+  
+  try {
+    const aiResponse = await openRouter.generate({ prompt });
+    res.json({ paragraph: aiResponse.data.content });
+  } catch (err) {
+    res.status(500).json({ message: "Błąd generowania treści" });
+  }
+});
+🎨 5. UX & UI – dynamiczny podgląd
+Po każdym akapicie – fade-in + ikona ✓ lub spinner:
+
+html
+Kopiuj
+Edytuj
+<div id="editorArea">
+  <p id="paragraph-1" class="loading">Akapit 1 z 3: trwa generowanie…</p>
+</div>
+Po otrzymaniu odpowiedzi:
+
+js
+Kopiuj
+Edytuj
+document.getElementById(`paragraph-${i}`).classList.remove("loading");
+document.getElementById(`paragraph-${i}`).innerText = paragraph;
+🧪 6. Diagnostyka błędów i fallbacki:
+Jeśli wygenerowanie akapitu się nie powiedzie:
+
+js
+Kopiuj
+Edytuj
+catch (error) {
+  appendToEditor(`❌ Błąd podczas generowania akapitu ${i}: ${error.message}`);
+  break;
+}
+Jeśli topicId nie istnieje:
+
+js
+Kopiuj
+Edytuj
+if (!topicId) {
+  window.location.href = '/topics?error=NoTopicSelected';
+}
+✅ Efekt końcowy – Co uzyskujemy?
+
+Funkcja	Obecna modalna wersja	Wersja po wdrożeniu prompta (nowa)
+Dedykowana strona /editor	❌ brak	✅ pełny routing, jasna architektura
+Podgląd generowania treści	❌ ukryty	✅ akapit po akapicie, z feedbackiem
+Bezpośrednie przekierowanie	❌ otwiera się modal	✅ użytkownik od razu trafia do edytora
+Użycie routera z parametrami	❌ brak	✅ editor?topicId=...&style=...
+UX – doświadczenie użytkownika	❌ niskie	✅ wysokie – AI generuje „na oczach”
+🔐 Opcjonalnie – zaawansowane rozszerzenia:
+Wersja z WebSocket lub Server Sent Events (SSE) → natychmiastowy streaming treści.
+
+Pasek postępu z procentem lub dynamicznym loading bar.
+
+Możliwość przerwania procesu generowania (przycisk Anuluj).
+
+
+
