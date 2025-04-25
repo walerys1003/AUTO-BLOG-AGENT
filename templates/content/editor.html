@@ -2,6 +2,36 @@
 
 {% block title %}Content Editor - BLOG AUTOMATION MASTER{% endblock %}
 
+{% block styles %}
+<style>
+.dynamic-content-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.dynamic-content-overlay .card {
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#paragraphsContainer {
+    max-height: 400px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col-lg-8">
@@ -168,6 +198,169 @@
 <script src="https://cdn.jsdelivr.net/npm/tinymce@6.4.2/tinymce.min.js"></script>
 
 <script>
+// Funkcja do dynamicznego generowania treści akapitów
+async function generateDynamicContent() {
+    const topicId = document.getElementById('topic_id').value;
+    const topicTitle = document.querySelector('input[name="title"]').value;
+    const style = document.getElementById('regenerateStyle').value || 'informative';
+    const paragraphCount = document.getElementById('regenerateParagraphCount').value || 4;
+    
+    if (!topicId || !topicTitle) {
+        alert('Topic information is missing');
+        return;
+    }
+    
+    // Pokaż loader
+    const dynamicContentContainer = document.createElement('div');
+    dynamicContentContainer.id = 'dynamicContentLoader';
+    dynamicContentContainer.classList.add('dynamic-content-overlay');
+    dynamicContentContainer.innerHTML = `
+        <div class="card border-0 shadow p-4 bg-white">
+            <h4 class="mb-3"><i class="fas fa-pen-fancy text-primary me-2"></i> Generating Your Article</h4>
+            <div id="generationProgress" class="mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Article plan</span>
+                    <span id="planStatus"><i class="fas fa-spinner fa-spin"></i></span>
+                </div>
+                <div class="progress mb-3" style="height: 10px;">
+                    <div id="planProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                </div>
+                <div id="paragraphsContainer">
+                    <!-- Paragraph progress items will be added here -->
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(dynamicContentContainer);
+    
+    try {
+        // Krok 1: Generuj plan artykułu
+        document.getElementById('planProgressBar').style.width = '10%';
+        
+        const planFormData = new FormData();
+        planFormData.append('topic', topicTitle);
+        planFormData.append('paragraph_count', paragraphCount);
+        planFormData.append('style', style);
+        
+        const planResponse = await fetch('/content-creator/api/plan', {
+            method: 'POST',
+            body: planFormData
+        });
+        
+        const planData = await planResponse.json();
+        
+        if (!planData.success) {
+            throw new Error(planData.message || 'Failed to generate article plan');
+        }
+        
+        document.getElementById('planStatus').innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+        document.getElementById('planProgressBar').style.width = '30%';
+        
+        const plan = planData.plan;
+        if (!plan || plan.length === 0) {
+            throw new Error('No plan items generated');
+        }
+        
+        // Przygotuj paragraf HTML do przechowywania wygenerowanej treści
+        let articleHtml = '';
+        
+        // Dodaj elementy postępu dla każdego akapitu
+        const paragraphsContainer = document.getElementById('paragraphsContainer');
+        plan.forEach((item, index) => {
+            const progressItem = document.createElement('div');
+            progressItem.classList.add('d-flex', 'justify-content-between', 'mb-2');
+            progressItem.innerHTML = `
+                <span>${index === 0 ? 'Introduction' : index === plan.length - 1 ? 'Conclusion' : `Paragraph ${index}`}: ${item}</span>
+                <span id="paragraph${index}Status"><i class="fas fa-spinner fa-spin"></i></span>
+            `;
+            paragraphsContainer.appendChild(progressItem);
+            
+            const progressBar = document.createElement('div');
+            progressBar.classList.add('progress', 'mb-3');
+            progressBar.style.height = '5px';
+            progressBar.innerHTML = `
+                <div id="paragraph${index}ProgressBar" class="progress-bar" style="width: 0%"></div>
+            `;
+            paragraphsContainer.appendChild(progressBar);
+        });
+        
+        // Krok 2: Generuj każdy akapit
+        for (let i = 0; i < plan.length; i++) {
+            const paragraphTopic = plan[i];
+            const isIntroduction = i === 0;
+            const isConclusion = i === plan.length - 1;
+            
+            const paragraphFormData = new FormData();
+            paragraphFormData.append('topic', topicTitle);
+            paragraphFormData.append('paragraph_topic', paragraphTopic);
+            paragraphFormData.append('style', style);
+            paragraphFormData.append('paragraph_index', i);
+            paragraphFormData.append('total_paragraphs', plan.length);
+            
+            // Aktualizuj paski postępu
+            document.getElementById(`paragraph${i}ProgressBar`).style.width = '30%';
+            document.getElementById('planProgressBar').style.width = `${30 + ((i + 1) / plan.length) * 60}%`;
+            
+            const paragraphResponse = await fetch('/content-creator/api/paragraph', {
+                method: 'POST',
+                body: paragraphFormData
+            });
+            
+            const paragraphData = await paragraphResponse.json();
+            
+            if (!paragraphData.success) {
+                document.getElementById(`paragraph${i}Status`).innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i>';
+                throw new Error(`Failed to generate paragraph ${i+1}: ${paragraphData.message}`);
+            }
+            
+            // Dodaj wygenerowany akapit do całej treści
+            articleHtml += paragraphData.content;
+            
+            // Aktualizuj paski postępu
+            document.getElementById(`paragraph${i}Status`).innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+            document.getElementById(`paragraph${i}ProgressBar`).style.width = '100%';
+        }
+        
+        document.getElementById('planProgressBar').style.width = '100%';
+        
+        // Krok 3: Zaktualizuj TinyMCE z wygenerowaną treścią
+        tinymce.get('content').setContent(articleHtml);
+        
+        // Wygeneruj metadane na podstawie całej treści
+        const metadataFormData = new FormData();
+        metadataFormData.append('content', articleHtml);
+        
+        const metadataResponse = await fetch('/content-creator/generate-metadata', {
+            method: 'POST',
+            body: metadataFormData
+        });
+        
+        const metadataData = await metadataResponse.json();
+        
+        if (metadataData.success) {
+            document.getElementById('meta_description').value = metadataData.meta_description;
+            document.getElementById('excerpt').value = metadataData.excerpt;
+            document.getElementById('tags').value = metadataData.tags.join(',');
+        }
+        
+        // Zapisz wygenerowaną treść automatycznie
+        setTimeout(() => {
+            document.getElementById('formAction').value = 'save';
+            document.getElementById('contentForm').submit();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error generating content:', error);
+        dynamicContentContainer.innerHTML = `
+            <div class="card border-0 shadow p-4 bg-white">
+                <h4 class="mb-3 text-danger"><i class="fas fa-exclamation-circle me-2"></i> Error</h4>
+                <p>${error.message || 'An error occurred while generating content.'}</p>
+                <button class="btn btn-primary" onclick="this.parentElement.parentElement.remove()">Close</button>
+            </div>
+        `;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize TinyMCE
     tinymce.init({
@@ -195,6 +388,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 metaDescriptionCount.style.color = '';
             }
         });
+    }
+    
+    // Funkcja do generowania treści dynamicznie
+    window.generateContentDynamically = function() {
+        // Najpierw aktualizujemy ukryte pola formularza regeneracji
+        document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
+        document.getElementById('regenerateStyle').value = document.getElementById('style').value;
+        document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+        
+        // Następnie uruchamiamy generowanie
+        generateDynamicContent();
+    };
+    
+    // Funkcja do potwierdzania regeneracji treści
+    window.confirmRegenerate = function() {
+        if (confirm('This will replace all existing content. Are you sure you want to continue?')) {
+            // Aktualizujemy ukryte pola formularza regeneracji
+            document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
+            document.getElementById('regenerateStyle').value = document.getElementById('style').value;
+            document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+            
+            // Wysyłamy formularz do regeneracji
+            document.getElementById('regenerateForm').submit();
+        }
+    };
+    
+    // Funkcja do potwierdzania publikacji
+    window.confirmPublish = function() {
+        if (confirm('Are you ready to mark this content as ready for publishing?')) {
+            document.getElementById('formAction').value = 'publish';
+            document.getElementById('contentForm').submit();
+        }
+    };
+    
+    // Automatycznie rozpocznij generowanie treści, jeśli flaga auto_generate jest ustawiona
+    const autoGenerate = {% if auto_generate %}true{% else %}false{% endif %};
+    if (autoGenerate) {
+        // Daj przeglądarce czas na załadowanie TinyMCE
+        setTimeout(() => {
+            generateDynamicContent();
+        }, 1000);
     }
     
     // Topic selection modal functionality

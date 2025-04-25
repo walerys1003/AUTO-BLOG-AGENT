@@ -120,8 +120,13 @@ def generate_content():
         db.session.add(content_log)
         db.session.commit()
         
-        # Redirect to the content generation page
-        return redirect(url_for('content_creator.edit_content', content_id=content_log.id, topic_id=topic_id, style=style, paragraph_count=paragraph_count))
+        # Redirect to the content generation page with auto_generate flag
+        return redirect(url_for('content_creator.edit_content', 
+                                content_id=content_log.id, 
+                                topic_id=topic_id, 
+                                style=style, 
+                                paragraph_count=paragraph_count,
+                                auto_generate=1))
         
     except Exception as e:
         logger.error(f"Error starting content generation: {str(e)}")
@@ -136,6 +141,7 @@ def edit_content(content_id):
     topic_id = request.args.get('topic_id')
     style = request.args.get('style', 'informative')
     paragraph_count = request.args.get('paragraph_count', 4)
+    auto_generate = request.args.get('auto_generate', 0)
     
     # Ensure paragraph_count is a valid integer between 3 and 6
     try:
@@ -271,7 +277,8 @@ def edit_content(content_id):
         tags=tags,
         featured_image_url=featured_image_url,
         style=style,
-        paragraph_count=paragraph_count
+        paragraph_count=paragraph_count,
+        auto_generate=auto_generate  # Przekazujemy flagę auto_generate do szablonu
     )
 
 
