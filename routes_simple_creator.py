@@ -39,11 +39,15 @@ def generate_simple_content():
         # Wywołaj modularną funkcję generowania treści
         content = generate_simple_article(topic)
         
-        # Prosta obsługa błędu
-        if not content:
+        # Rozszerzona obsługa błędów - zawsze zwracamy treść, nawet jeśli to komunikat o błędzie
+        if not content or content.startswith("<p>Error") or content.startswith("<p>Content generation failed"):
+            success = False
+            message = 'Failed to generate content. Please try again with a different topic.'
+            # Nadal zwracamy content, który w tym przypadku zawiera komunikat o błędzie
             return jsonify({
-                'success': False,
-                'message': 'Failed to generate content, please try again'
+                'success': success,
+                'content': content or "<p>Content generation service unavailable. Please try again later.</p>",
+                'message': message
             })
         
         # Jednoznaczny przepływ danych wyjściowych

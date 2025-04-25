@@ -183,15 +183,25 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                // Zawsze wyświetlamy zawartość - nawet jeśli to komunikat o błędzie
+                if (data.content) {
                     editor.innerHTML = data.content;
-                } else {
+                    
+                    // Jeśli nie jest to sukces, wyświetlamy dodatkowe informacje
+                    if (!data.success) {
+                        console.warn("Content generation partial success:", data.message);
+                    }
+                } else if (!data.success) {
+                    // Tylko w przypadku braku zawartości i błędu rzucamy wyjątek
                     throw new Error(data.message || 'Failed to generate content');
                 }
             })
             .catch(error => {
                 console.error('Error generating content:', error);
-                alert('Error generating content. Please try again.');
+                // Dodajemy informację o błędzie bezpośrednio w edytorze
+                editor.innerHTML = '<div class="alert alert-danger">Error generating content. Please try again with a different topic.</div>';
+                // Dodatkowo pokazujemy alert
+                alert('Error generating content. Please try again with a different topic.');
             })
             .finally(() => {
                 hideLoading();
