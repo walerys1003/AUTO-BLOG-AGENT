@@ -239,7 +239,7 @@ def _generate_article_metadata(topic, content, keywords=None):
         Tags: [tag1], [tag2], [tag3]"""
         
         # Use a simpler model for metadata generation
-        model = "anthropic/claude-3-haiku-20240307"
+        model = "anthropic/claude-3.5-haiku"
         
         logger.info(f"Generating article metadata using simpler model: {model}")
         
@@ -349,7 +349,7 @@ Focus on accuracy, readability, and meeting the exact word count requirements.""
     if has_openrouter:
         try:
             # Get default content model from config
-            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3.5-sonnet"
             
             # Send request to OpenRouter
             logger.info(f"Generating content using model: {model}")
@@ -529,7 +529,7 @@ Respond ONLY with a valid JSON object in the exact format requested."""
     if has_openrouter:
         try:
             # Get default content model from config
-            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3.5-sonnet"
             
             # Send request to OpenRouter
             logger.info(f"Generating article plan using model: {model}")
@@ -671,7 +671,7 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
     if has_openrouter:
         try:
             # Get default content model from config
-            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
+            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3.5-sonnet"
             
             # Send request to OpenRouter
             logger.info(f"Generating paragraph using model: {model}")
