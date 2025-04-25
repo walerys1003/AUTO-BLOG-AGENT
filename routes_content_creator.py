@@ -529,6 +529,56 @@ def generate_article_plan_api():
             'message': str(e)
         })
 
+@content_creator_bp.route('/content-creator/api/create-draft', methods=['POST'])
+def api_create_draft_content():
+    """API endpoint to create a draft content entry and return its ID"""
+    try:
+        # Get data from request
+        data = request.get_json()
+        topic_id = data.get('topic_id')
+        
+        if not topic_id:
+            return jsonify({
+                'success': False,
+                'message': 'Topic ID is required'
+            })
+        
+        # Get the topic
+        topic = ArticleTopic.query.get(topic_id)
+        
+        if not topic:
+            return jsonify({
+                'success': False,
+                'message': 'Topic not found'
+            })
+        
+        # Create a draft content log
+        content_log = ContentLog(
+            blog_id=topic.blog_id,
+            title=topic.title,
+            status='draft',
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(content_log)
+        db.session.commit()
+        
+        # Return the content ID
+        return jsonify({
+            'success': True,
+            'content_id': content_log.id,
+            'topic_id': topic.id,
+            'title': topic.title
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating draft content: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        })
+
+
 @content_creator_bp.route('/content-creator/api/paragraph', methods=['POST'])
 def generate_single_paragraph_api():
     """Generate single paragraph API endpoint for dynamic content generation"""

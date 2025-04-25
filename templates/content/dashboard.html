@@ -271,9 +271,13 @@
                                         <button type="submit" class="btn btn-primary flex-grow-1">
                                             <i class="fas fa-magic me-2"></i> Generate Article
                                         </button>
-                                        <button type="submit" class="btn btn-success flex-grow-1" name="auto_generate" value="1">
+                                        <a href="{{ url_for('content_creator.edit_content', content_id=0, topic_id=topic.id, style='informative', paragraph_count=4, auto_generate=1) }}" 
+                                           class="btn btn-success flex-grow-1 dynamic-generation-btn" 
+                                           data-topic-id="{{ topic.id }}" 
+                                           data-style-selector="#style{{ topic.id }}" 
+                                           data-paragraph-selector="#paragraph_count{{ topic.id }}">
                                             <i class="fas fa-bolt me-2"></i> Generate Article (Dynamic)
-                                        </button>
+                                        </a>
                                     </div>
                                     <div class="form-text text-center mt-2">
                                         <small><i class="fas fa-info-circle me-1"></i> Dynamic generation creates content paragraph by paragraph with visual feedback</small>
@@ -338,6 +342,81 @@ function deleteDraft(contentId) {
 // Duplicate content (not implemented yet)
 function duplicateContent(contentId) {
     alert('This feature is not yet implemented. It will allow you to create a new draft based on existing content.');
+}
+
+// Dynamiczny przycisk generowania artykułu
+document.addEventListener('DOMContentLoaded', function() {
+    // Znajdź wszystkie przyciski do dynamicznego generowania
+    const dynamicButtons = document.querySelectorAll('.dynamic-generation-btn');
+    
+    dynamicButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Zatrzymaj domyślne przekierowanie
+            e.preventDefault();
+            
+            // Pobierz dane z selektorów
+            const topicId = this.getAttribute('data-topic-id');
+            const styleSelector = this.getAttribute('data-style-selector');
+            const paragraphSelector = this.getAttribute('data-paragraph-selector');
+            
+            // Pobierz wartości z elementów select
+            const style = document.querySelector(styleSelector)?.value || 'informative';
+            const paragraphCount = document.querySelector(paragraphSelector)?.value || '4';
+            
+            // Generuj nowy URL z aktualnymi wartościami
+            let url = this.getAttribute('href');
+            
+            // Najpierw utwórz draft content w bazie danych
+            fetch("{{ url_for('content_creator.api_create_draft_content', _external=True) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    topic_id: topicId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Zastąp content_id w URL
+                    url = url.replace('/edit_content/0/', '/edit_content/' + data.content_id + '/');
+                    
+                    // Zaktualizuj parametry URL
+                    url = updateUrlParam(url, 'style', style);
+                    url = updateUrlParam(url, 'paragraph_count', paragraphCount);
+                    url = updateUrlParam(url, 'auto_generate', '1');
+                    
+                    // Przekieruj do edytora
+                    window.location.href = url;
+                } else {
+                    alert('Nie udało się utworzyć szkicu artykułu: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Wystąpił błąd podczas tworzenia szkicu artykułu.');
+            });
+        });
+    });
+});
+
+// Funkcja pomocnicza do aktualizacji parametrów URL
+function updateUrlParam(url, param, value) {
+    // Sprawdź, czy URL zawiera już parametry
+    const hasParams = url.includes('?');
+    const separator = hasParams ? '&' : '?';
+    
+    // Sprawdź, czy parametr już istnieje
+    const regex = new RegExp(`([?&])${param}=.*?(&|$)`, 'i');
+    
+    // Jeśli parametr już istnieje, zaktualizuj jego wartość
+    if (url.match(regex)) {
+        return url.replace(regex, `$1${param}=${value}$2`);
+    }
+    
+    // W przeciwnym razie dodaj nowy parametr
+    return `${url}${separator}${param}=${value}`;
 }
 </script>
 {% endblock %}
