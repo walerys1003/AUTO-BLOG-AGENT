@@ -553,6 +553,55 @@ def generate_single_paragraph_api():
             'success': False,
             'message': str(e)
         })
+    
+@content_creator_bp.route('/api/dynamic/paragraph', methods=['POST'])
+def generate_dynamic_paragraph():
+    """API endpoint for dynamic paragraph generation with real-time updates"""
+    topic = request.form.get('topic', '')
+    paragraph_topic = request.form.get('paragraph_topic', '')
+    style = request.form.get('style', 'informative')
+    paragraph_index = request.form.get('paragraph_index', '0')
+    total_paragraphs = request.form.get('total_paragraphs', '4')
+    
+    # Validate inputs
+    if not topic or not paragraph_topic:
+        return jsonify({
+            'success': False,
+            'message': 'Topic and paragraph topic are required'
+        })
+    
+    try:
+        paragraph_index = int(paragraph_index)
+        total_paragraphs = int(total_paragraphs)
+        is_introduction = paragraph_index == 0
+        is_conclusion = paragraph_index == total_paragraphs - 1
+    except (ValueError, TypeError):
+        is_introduction = False
+        is_conclusion = False
+    
+    try:
+        # Generate paragraph
+        result = content_generator.generate_paragraph(
+            topic=topic,
+            paragraph_topic=paragraph_topic,
+            style=style,
+            is_introduction=is_introduction,
+            is_conclusion=is_conclusion
+        )
+        
+        # Log the paragraph generation
+        logger.info(f"Generated paragraph {paragraph_index+1}/{total_paragraphs} for '{topic}': {paragraph_topic}")
+        
+        return jsonify({
+            'success': True,
+            'content': result.get('content', '')
+        })
+    except Exception as e:
+        logger.error(f"Error generating paragraph: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
 
 # Automation routes
 
