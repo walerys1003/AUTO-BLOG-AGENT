@@ -723,3 +723,76 @@ def get_blog_topics(blog_id):
     except Exception as e:
         logger.error(f"Error getting blog topics: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@content_creator_bp.route('/content-creator/api/generate-plan', methods=['POST'])
+def generate_article_plan_api():
+    """API endpoint to generate an article plan with paragraph topics"""
+    try:
+        # Get request parameters
+        topic = request.form.get('topic')
+        paragraph_count = int(request.form.get('paragraph_count', 4))
+        style = request.form.get('style', 'informative')
+        keywords = request.form.get('keywords', '').split(',') if request.form.get('keywords') else []
+        
+        # Generate article plan
+        plan = content_generator.generate_article_plan(
+            topic=topic,
+            paragraph_count=paragraph_count,
+            style=style,
+            keywords=keywords
+        )
+        
+        return jsonify({
+            'success': True,
+            'plan': plan
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating article plan: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@content_creator_bp.route('/content-creator/api/generate-paragraph', methods=['POST'])
+def generate_paragraph_api():
+    """API endpoint to generate a single paragraph for dynamic content creation"""
+    try:
+        # Get request parameters
+        topic = request.form.get('topic')
+        paragraph_topic = request.form.get('paragraph_topic')
+        style = request.form.get('style', 'informative')
+        paragraph_index = int(request.form.get('paragraph_index', 0))
+        total_paragraphs = int(request.form.get('total_paragraphs', 4))
+        keywords = request.form.get('keywords', '').split(',') if request.form.get('keywords') else []
+        is_introduction = paragraph_index == 0
+        is_conclusion = paragraph_index == total_paragraphs - 1
+        
+        # Generate the paragraph
+        if is_introduction:
+            paragraph_topic = "Introduction"
+        elif is_conclusion:
+            paragraph_topic = "Conclusion"
+            
+        # Generate the paragraph content
+        paragraph_content = content_generator._generate_paragraph(
+            topic=topic,
+            paragraph_topic=paragraph_topic,
+            style=style,
+            is_introduction=is_introduction,
+            is_conclusion=is_conclusion,
+            keywords=keywords,
+            prev_content_summary=None
+        )
+        
+        return jsonify({
+            'success': True,
+            'content': paragraph_content,
+            'paragraph_index': paragraph_index,
+            'total_paragraphs': total_paragraphs,
+            'is_introduction': is_introduction,
+            'is_conclusion': is_conclusion
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating paragraph: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
