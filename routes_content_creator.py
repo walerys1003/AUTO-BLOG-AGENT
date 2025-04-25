@@ -877,11 +877,11 @@ def generate_article_plan_existing():
         keywords = request.form.get('keywords', '').split(',') if request.form.get('keywords') else []
         
         # Generate article plan
+        # Generate plan without keywords
         plan = content_generator.generate_article_plan(
             topic=topic,
             paragraph_count=paragraph_count,
-            style=style,
-            keywords=keywords
+            style=style
         )
         
         return jsonify({
