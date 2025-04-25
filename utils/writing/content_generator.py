@@ -687,7 +687,97 @@ Respond ONLY with a valid JSON object in the exact format requested."""
             ][:paragraph_count]
         }
 
-def _generate_paragraph(topic, paragraph_topic, previous_content="", keywords=None, style="informative", is_introduction=False, is_conclusion=False):
+def generate_article_plan(topic, paragraph_count=4, style="informative", keywords=None):
+    """
+    Generate a plan for an article with specific paragraph topics
+    
+    Args:
+        topic (str): The main article topic
+        paragraph_count (int): Number of paragraphs to include
+        style (str): Writing style
+        keywords (list): List of keywords to include
+        
+    Returns:
+        list: List of paragraph topics
+    """
+    logger.info(f"Generating article plan for topic: {topic} with {paragraph_count} paragraphs")
+    
+    if not has_openrouter:
+        # Fallback for testing without API
+        logger.warning("No OpenRouter API key - using fallback plan generation")
+        return [
+            f"Understanding {topic} Basics",
+            f"Key Benefits of {topic}",
+            f"Best Practices for {topic}",
+            f"Future Trends in {topic}",
+            f"Case Studies of Successful {topic} Implementation",
+            f"Common Challenges with {topic} and Solutions"
+        ][:paragraph_count]
+    
+    # Create prompt for content plan generation
+    prompt = f"""
+    You are an expert content planner. Create a detailed outline for an article about "{topic}" that will have {paragraph_count} paragraphs.
+    
+    Writing style: {style}
+    
+    Your task is to generate ONLY the titles/topics for each paragraph in the article (not including introduction and conclusion).
+    Each paragraph should focus on a specific aspect of the main topic.
+    
+    Provide just a simple list of paragraph topics, with NO numbering, NO introduction text, and NO commentary.
+    """
+    
+    if keywords:
+        keyword_text = ", ".join(keywords)
+        prompt += f"\n\nMake sure to incorporate these keywords into the plan naturally: {keyword_text}"
+    
+    try:
+        # Request paragraph topics from the model
+        response = openrouter.chat_completion(
+            model=Config.DEFAULT_TOPIC_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an article planning assistant that creates outlines for informative articles."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300
+        )
+        
+        # Extract paragraph topics from the response
+        response_text = response.choices[0].message.content.strip()
+        
+        # Split the response into topics (expecting a list or bullet points)
+        topics = []
+        for line in response_text.split('\n'):
+            line = line.strip()
+            # Remove bullet points or numbers
+            line = re.sub(r'^[\d\-\*\•\.\s]+', '', line).strip()
+            if line and len(line) > 3:  # Ensure it's not an empty line or just symbols
+                topics.append(line)
+        
+        # Make sure we have the requested number of topics
+        if len(topics) > paragraph_count:
+            topics = topics[:paragraph_count]
+        
+        # If we got fewer topics than requested, add generic ones
+        while len(topics) < paragraph_count:
+            topics.append(f"Additional Insights on {topic}")
+        
+        logger.info(f"Generated article plan with {len(topics)} paragraph topics")
+        return topics
+        
+    except Exception as e:
+        logger.error(f"Error generating article plan: {str(e)}")
+        # Fallback topics if generation fails
+        return [
+            f"Key Aspects of {topic}",
+            f"Understanding {topic}",
+            f"Benefits of {topic}",
+            f"Strategies for {topic}",
+            f"Future of {topic}",
+            f"Examples of {topic}"
+        ][:paragraph_count]
+
+
+def _generate_paragraph(topic, paragraph_topic, previous_content="", keywords=None, style="informative", is_introduction=False, is_conclusion=False, prev_content_summary=None):
     """
     Generate a single paragraph for the article
     

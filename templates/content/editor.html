@@ -284,32 +284,262 @@ function confirmPublish() {
     }
 }
 
-function confirmRegenerate() {
-    if (confirm('Are you sure you want to regenerate the content? This will replace your current work.')) {
-        // Get current values
-        const style = document.getElementById('style').value;
-        const paragraphCount = document.getElementById('paragraph_count').value;
-        const topicId = document.getElementById('topic_id').value;
+// Real-time content generation variables
+let generationInProgress = false;
+let currentParagraphIndex = 0;
+let paragraphTopics = [];
+let totalParagraphs = 0;
+
+// Function to start dynamic content generation
+function generateContentDynamically() {
+    // Get form values
+    const topicId = document.getElementById('topic_id').value;
+    const topicTitle = document.getElementById('topic_display').value;
+    const style = document.getElementById('style').value;
+    const paragraphCount = parseInt(document.getElementById('paragraph_count').value);
+    
+    // Validation
+    if (!topicId || !topicTitle || topicTitle === 'No topic selected') {
+        alert('Proszę najpierw wybrać temat');
+        return;
+    }
+    
+    if (generationInProgress) {
+        alert('Generowanie treści jest już w toku');
+        return;
+    }
+    
+    // Confirm if there's existing content
+    const editor = tinymce.get('content');
+    if (editor.getContent().trim() && !confirm('To zastąpi aktualną treść. Kontynuować?')) {
+        return;
+    }
+    
+    // Setup generation state
+    generationInProgress = true;
+    currentParagraphIndex = 0;
+    totalParagraphs = paragraphCount;
+    paragraphTopics = [];
+    
+    // Clear editor and add loading state
+    editor.setContent(`
+        <div class="generation-status">
+            <div class="d-flex align-items-center mb-4">
+                <div class="spinner-border text-primary me-3" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+                <div>
+                    <h4 class="mb-1">Generowanie planu artykułu...</h4>
+                    <p class="text-muted mb-0">Proszę czekać na utworzenie struktury dla Twojego artykułu</p>
+                </div>
+            </div>
+        </div>
+    `);
+    
+    // First generate an article plan
+    generateArticlePlan(topicTitle, paragraphCount, style)
+        .then(plan => {
+            // Store paragraph topics
+            paragraphTopics = plan;
+            
+            // Start generating paragraphs one by one
+            generateNextParagraph(topicTitle, style);
+        })
+        .catch(error => {
+            console.error('Błąd generowania planu artykułu:', error);
+            showGenerationError('Nie udało się utworzyć planu artykułu. Spróbuj ponownie.');
+            generationInProgress = false;
+        });
+}
+
+// Function to generate article plan
+function generateArticlePlan(topic, paragraphCount, style) {
+    return new Promise((resolve, reject) => {
+        // Create form data
+        const formData = new FormData();
+        formData.append('topic', topic);
+        formData.append('paragraph_count', paragraphCount);
+        formData.append('style', style);
         
-        // Set values in regenerate form
-        document.getElementById('regenerateStyle').value = style;
-        document.getElementById('regenerateTopicId').value = topicId;
-        
-        // Update the hidden form to use paragraph_count instead of length
-        if (document.getElementById('regenerateParagraphCount')) {
-            document.getElementById('regenerateParagraphCount').value = paragraphCount;
+        fetch("{{ url_for('content_creator.generate_article_plan_api') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resolve(data.plan);
+            } else {
+                reject(new Error(data.message || 'Nie udało się wygenerować planu artykułu'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            reject(error);
+        });
+    });
+}
+
+// Function to generate next paragraph
+function generateNextParagraph(topic, style) {
+    if (currentParagraphIndex >= totalParagraphs) {
+        // All paragraphs generated
+        finishGeneration();
+        return;
+    }
+    
+    const editor = tinymce.get('content');
+    const currentContent = editor.getContent();
+    const isIntroduction = currentParagraphIndex === 0;
+    const isConclusion = currentParagraphIndex === totalParagraphs - 1;
+    
+    // Determine paragraph topic
+    let paragraphTopic = paragraphTopics[currentParagraphIndex] || `Sekcja ${currentParagraphIndex + 1}`;
+    if (isIntroduction) {
+        paragraphTopic = "Wprowadzenie";
+    } else if (isConclusion) {
+        paragraphTopic = "Podsumowanie";
+    }
+    
+    // Update editor with status
+    const statusHtml = `
+        <div class="generation-status">
+            <div class="d-flex align-items-center mb-4">
+                <div class="spinner-border text-primary me-3" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+                <div>
+                    <h4 class="mb-1">Generowanie akapitu ${currentParagraphIndex + 1} z ${totalParagraphs}</h4>
+                    <p class="text-muted mb-0">Temat: ${paragraphTopic}</p>
+                </div>
+            </div>
+            <div class="progress mb-3">
+                <div class="progress-bar" role="progressbar" style="width: ${(currentParagraphIndex / totalParagraphs) * 100}%" 
+                     aria-valuenow="${(currentParagraphIndex / totalParagraphs) * 100}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    `;
+    
+    // Keep existing paragraphs and add status at the end
+    let updatedContent = currentContent;
+    if (currentParagraphIndex === 0) {
+        // For first paragraph, replace everything with status
+        updatedContent = statusHtml;
+    } else {
+        // For subsequent paragraphs, replace only the status div
+        updatedContent = currentContent.replace(/<div class="generation-status">[\s\S]*?<\/div>/g, statusHtml);
+    }
+    editor.setContent(updatedContent);
+    
+    // Generate the paragraph content
+    const formData = new FormData();
+    formData.append('topic', topic);
+    formData.append('paragraph_topic', paragraphTopic);
+    formData.append('style', style);
+    formData.append('paragraph_index', currentParagraphIndex);
+    formData.append('total_paragraphs', totalParagraphs);
+    
+    fetch("{{ url_for('content_creator.generate_paragraph_api') }}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add paragraph to content
+            const paragraphHtml = `
+                <h2>${paragraphTopic}</h2>
+                ${data.content}
+            `;
+            
+            // Get current content without the status div
+            let contentWithoutStatus = currentContent.replace(/<div class="generation-status">[\s\S]*?<\/div>/g, '');
+            
+            // For first paragraph, contentWithoutStatus might be empty
+            if (currentParagraphIndex === 0) {
+                contentWithoutStatus = '';
+            }
+            
+            // Build new content with paragraph and updated status
+            editor.setContent(contentWithoutStatus + paragraphHtml);
+            
+            // Move to next paragraph
+            currentParagraphIndex++;
+            
+            // Continue with next paragraph after a short delay
+            setTimeout(() => {
+                generateNextParagraph(topic, style);
+            }, 500);
         } else {
-            // If the field doesn't exist yet, we need to create it
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.id = 'regenerateParagraphCount';
-            input.name = 'paragraph_count';
-            input.value = paragraphCount;
-            document.getElementById('regenerateForm').appendChild(input);
+            showGenerationError(`Nie udało się wygenerować akapitu ${currentParagraphIndex + 1}: ${data.message}`);
+            generationInProgress = false;
         }
-        
-        // Submit the regenerate form
-        document.getElementById('regenerateForm').submit();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showGenerationError(`Błąd sieciowy podczas generowania akapitu ${currentParagraphIndex + 1}`);
+        generationInProgress = false;
+    });
+}
+
+// Function to finish generation
+function finishGeneration() {
+    generationInProgress = false;
+    
+    const editor = tinymce.get('content');
+    let content = editor.getContent();
+    
+    // Remove any remaining status divs
+    content = content.replace(/<div class="generation-status">[\s\S]*?<\/div>/g, '');
+    
+    // Add success notification at the top
+    const successHtml = `
+        <div class="alert alert-success mb-4">
+            <i class="fas fa-check-circle me-2"></i>
+            Artykuł został pomyślnie wygenerowany z ${totalParagraphs} akapitami!
+        </div>
+    `;
+    
+    editor.setContent(successHtml + content);
+    
+    // Notify user
+    alert('Generowanie treści zakończone pomyślnie!');
+}
+
+// Function to show generation error
+function showGenerationError(message) {
+    const editor = tinymce.get('content');
+    let content = editor.getContent();
+    
+    // Remove any status divs
+    content = content.replace(/<div class="generation-status">[\s\S]*?<\/div>/g, '');
+    
+    // Add error notification
+    const errorHtml = `
+        <div class="alert alert-danger mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Błąd generowania:</strong> ${message}
+            <button type="button" class="btn btn-sm btn-danger ms-3" onclick="retryGeneration()">
+                <i class="fas fa-sync-alt me-1"></i> Spróbuj ponownie
+            </button>
+        </div>
+    `;
+    
+    editor.setContent(errorHtml + content);
+}
+
+// Function to retry generation
+function retryGeneration() {
+    if (!generationInProgress) {
+        generateContentDynamically();
+    }
+}
+
+// Original regenerate function (now uses dynamic generation)
+function confirmRegenerate() {
+    if (confirm('Czy na pewno chcesz zregenerować treść? To zastąpi Twoją obecną pracę.')) {
+        // Use dynamic generation instead of submitting form
+        generateContentDynamically();
     }
 }
 
