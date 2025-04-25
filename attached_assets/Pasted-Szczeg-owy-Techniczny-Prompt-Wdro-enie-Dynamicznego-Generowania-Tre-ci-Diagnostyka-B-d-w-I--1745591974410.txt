@@ -1,0 +1,176 @@
+Szczegółowy Techniczny Prompt: Wdrożenie Dynamicznego Generowania Treści + Diagnostyka Błędów
+🔍 I. Diagnostyka i Naprawa Błędów w Generowaniu Treści (Internal Server Error)
+1. Opis problemu:
+Internal Server Error (500) pojawia się po kliknięciu Generate Article w module Select a Topic for Content Creation.
+
+Brak dynamicznego wyświetlania treści w Content Editor – artykuł się nie generuje.
+
+
+🔧 II. Obszary do Weryfikacji i Możliwe Przyczyny:
+1. Backend/API – obsługa żądań generowania treści:
+Sprawdź logi serwera (Node.js/Express lub inne) pod kątem błędów 500 – możliwe przyczyny:
+
+Nieprawidłowe dane wejściowe (np. brakujące parametry: topic, paragraphs, style).
+
+Timeout API – zbyt długie przetwarzanie zapytania do AI.
+
+Błąd w module komunikacji z AI (np. OpenRouter/GPT).
+
+Niewłaściwa obsługa zwracanych danych (np. JSON.parse błędnego formatu).
+
+2. Frontend – błędy przekazywania danych:
+Błąd w przesyłaniu danych do API – niepoprawne parametry w funkcji fetch() lub axios.
+
+Sprawdź, czy poprawnie przekazywane są: topic, numberOfParagraphs, writingStyle.
+
+Brak walidacji – użytkownik może kliknąć „Generate” bez wyboru tematu/stylu.
+
+3. Baza danych / Tematy:
+Pole Topics = N/A:
+
+Sprawdź, czy zapytanie do bazy (np. MongoDB, PostgreSQL) zwraca poprawne dane.
+
+Sprawdź, czy dane są poprawnie mapowane do komponentu frontend.
+
+Brak danych w bazie – upewnij się, że kolekcja/tabela z tematami nie jest pusta.
+
+⚙️ III. Szczegółowy Plan Wdrożenia Dynamicznego Generowania Treści:
+1. UI/UX – Dynamiczne Przekierowanie i Renderowanie:
+Po kliknięciu „Generate Article”:
+
+Trigger w JS (lub React useEffect) → natychmiastowe przekierowanie do Content Editor:
+
+javascript
+Kopiuj
+Edytuj
+document.querySelector("#generateButton").addEventListener("click", () => {
+  window.location.href = "/content-creator/editor";
+});
+2. Dynamiczne Generowanie w Czasie Rzeczywistym:
+Pętla generująca akapity:
+
+javascript
+Kopiuj
+Edytuj
+async function generateArticle(topic, style, paragraphs) {
+  const editor = document.querySelector("#editor");
+  for (let i = 1; i <= paragraphs; i++) {
+    displayLoading(i, paragraphs);
+    try {
+      const response = await fetch("/api/generateParagraph", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, style, paragraphIndex: i })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        appendParagraph(editor, data.paragraph);
+      } else {
+        throw new Error(data.message || "Error generating content");
+      }
+    } catch (error) {
+      showError(error.message);
+      break;
+    }
+  }
+  showSuccess();
+}
+3. Backend/API – Obsługa Akapitów:
+Endpoint RESTful:
+
+javascript
+Kopiuj
+Edytuj
+app.post("/api/generateParagraph", async (req, res) => {
+  const { topic, style, paragraphIndex } = req.body;
+  if (!topic || !style || paragraphIndex === undefined) {
+    return res.status(400).json({ message: "Missing parameters" });
+  }
+
+  try {
+    const prompt = `Write paragraph ${paragraphIndex} about ${topic} in ${style} style.`;
+    const aiResponse = await openRouter.generate({ prompt });
+    const paragraph = aiResponse.data.content;
+    res.status(200).json({ paragraph });
+  } catch (err) {
+    console.error("AI Generation Error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+🖥️ IV. Regeneration Settings – Diagnostyka:
+1. Błąd N/A – Analiza:
+Sprawdź logikę wczytywania tematów:
+
+javascript
+Kopiuj
+Edytuj
+async function loadTopics() {
+  try {
+    const response = await fetch("/api/topics");
+    const topics = await response.json();
+    if (topics.length === 0) {
+      displayNoTopics();
+    } else {
+      populateTopicsDropdown(topics);
+    }
+  } catch (error) {
+    console.error("Error loading topics:", error);
+  }
+}
+2. Backend – Pobieranie tematów:
+javascript
+Kopiuj
+Edytuj
+app.get("/api/topics", async (req, res) => {
+  try {
+    const topics = await db.collection("topics").find({}).toArray();
+    res.status(200).json(topics);
+  } catch (err) {
+    console.error("Database Error:", err);
+    res.status(500).json({ message: "Failed to load topics" });
+  }
+});
+🎯 V. Poprawa UX i Obsługa Błędów:
+1. Wizualny Feedback:
+Ładowanie:
+
+html
+Kopiuj
+Edytuj
+<div id="loading-indicator">Generating paragraph <span id="current-paragraph">1</span> of <span id="total-paragraphs">3</span>...</div>
+Po zakończeniu:
+
+javascript
+Kopiuj
+Edytuj
+function showSuccess() {
+  document.querySelector("#loading-indicator").innerText = "Article generated successfully!";
+}
+2. Obsługa błędów:
+javascript
+Kopiuj
+Edytuj
+function showError(message) {
+  alert("Error: " + message);
+  document.querySelector("#loading-indicator").innerText = "Generation failed. Please try again.";
+}
+✅ VI. Podsumowanie – Plan Naprawczy:
+Sprawdź i napraw błędy API (500):
+
+Logi serwera → błędy AI / brak parametrów.
+
+Popraw integrację Topics:
+
+Sprawdzenie połączenia DB i dynamicznego renderowania.
+
+Zaimplementuj dynamiczne generowanie treści:
+
+UI + asynchroniczne API + kontrola postępu.
+
+UX Feedback:
+
+Dynamiczny loading, błędy, sukces.
+
+Testowanie stabilności:
+
+Sprawdź różne kombinacje tematów i stylów pisania.
