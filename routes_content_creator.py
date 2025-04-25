@@ -91,7 +91,7 @@ def content_generator_page():
         flash('No active blogs found. Please create a blog first.', 'warning')
         return redirect(url_for('content_creator.content_dashboard'))
     
-    return render_template('content/generator.html', 
+    return render_template('content/simple_topic_selector.html', 
                           title="Content Generator",
                           blogs=blogs)
 
