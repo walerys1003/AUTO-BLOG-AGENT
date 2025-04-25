@@ -209,77 +209,86 @@ def _generate_article_metadata(topic, content, keywords=None):
     Returns:
         dict: Metadata including meta description, excerpt, and tags
     """
-    # Create prompt for metadata generation
-    user_prompt = f"""Generate SEO metadata for a blog article on the topic: "{topic}"
-
-Below is a snippet from the article content (truncated):
-{content[:1000]}...
-
-Please provide:
-1. A compelling meta description under 160 characters
-2. A brief excerpt for social sharing (2-3 sentences)
-3. 3-5 relevant SEO tags (comma-separated)
-
-Keywords to include where relevant: {', '.join(keywords) if keywords else 'No specific keywords'}
-
-Format your response as a JSON object:
-{{
-  "meta_description": "your meta description here",
-  "excerpt": "your excerpt here",
-  "tags": ["tag1", "tag2", "tag3"]
-}}"""
-
-    # System prompt to guide AI behavior
-    system_prompt = """You are an SEO expert specializing in creating effective metadata for blog articles.
-Your task is to create a meta description, excerpt, and tags that will help the article perform well in search results.
-Respond ONLY with a valid JSON object in the format requested."""
-
-    # Check if we have access to OpenRouter
-    if has_openrouter:
-        try:
-            # Get default content model from config
-            model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-sonnet-20240229"
-            
-            # Send request to OpenRouter
-            logger.info(f"Generating article metadata using model: {model}")
-            
-            # Use our direct OpenRouter client
-            result = openrouter.generate_completion(
-                prompt=user_prompt,
-                model=model,
-                system_prompt=system_prompt,
-                temperature=0.7,
-                max_tokens=1000
-            )
-            
-            if not result:
-                logger.error("Failed to get article metadata from OpenRouter")
-                return _create_default_metadata(topic, keywords)
-            
-            # Extract JSON from the response
-            try:
-                # Find JSON object in the response
-                json_start = result.find("{")
-                json_end = result.rfind("}") + 1
-                
-                if json_start != -1 and json_end != -1:
-                    json_str = result[json_start:json_end]
-                    metadata = json.loads(json_str)
-                    return metadata
-                else:
-                    logger.error("No valid JSON found in the metadata response")
-                    return _create_default_metadata(topic, keywords)
-            except json.JSONDecodeError as e:
-                logger.error(f"Error parsing metadata JSON: {str(e)}")
-                return _create_default_metadata(topic, keywords)
-                
-        except Exception as e:
-            logger.error(f"Error generating article metadata: {str(e)}")
-            return _create_default_metadata(topic, keywords)
-    else:
-        # No API key, return basic metadata
+    # For paragraph-based generation, start with sensible defaults first
+    # This ensures we always have something valid to return
+    default_metadata = _create_default_metadata(topic, keywords)
+    
+    # Only attempt AI generation if OpenRouter is available
+    if not has_openrouter:
         logger.warning("No OpenRouter API key available, returning basic metadata")
-        return _create_default_metadata(topic, keywords)
+        return default_metadata
+        
+    # Create a simpler prompt for more reliable metadata generation
+    try:
+        # Create prompt for metadata generation - simplified for reliability
+        user_prompt = f"""Generate SEO metadata for a blog article titled: "{topic}"
+        
+        Please provide:
+        1. A compelling meta description under 160 characters
+        2. A brief excerpt for social sharing (2-3 sentences)
+        3. 3-5 relevant SEO tags as a comma-separated list
+        
+        Keywords to include where relevant: {', '.join(keywords) if keywords else 'No specific keywords'}"""
+        
+        # System prompt to guide AI behavior - simpler format for reliability
+        system_prompt = """You are an SEO expert. Create metadata that will help the article perform well in search results.
+        Format your response as:
+        
+        Meta Description: [your meta description here]
+        Excerpt: [your excerpt here]
+        Tags: [tag1], [tag2], [tag3]"""
+        
+        # Use a simpler model for metadata generation
+        model = "anthropic/claude-3-haiku-20240307"
+        
+        logger.info(f"Generating article metadata using simpler model: {model}")
+        
+        # Try with a shorter max_tokens to improve reliability
+        result = openrouter.generate_completion(
+            prompt=user_prompt,
+            model=model,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=500  # Reduced for more reliability
+        )
+        
+        if not result:
+            logger.warning("Empty result from OpenRouter, using default metadata")
+            return default_metadata
+        
+        # Parse the structured format instead of JSON for better reliability
+        metadata = {}
+        
+        # Extract meta description
+        meta_desc_match = re.search(r"Meta Description:\s*(.+?)(?:\n|$)", result)
+        if meta_desc_match:
+            metadata["meta_description"] = meta_desc_match.group(1).strip()
+        else:
+            metadata["meta_description"] = default_metadata["meta_description"]
+        
+        # Extract excerpt
+        excerpt_match = re.search(r"Excerpt:\s*(.+?)(?:\n|Tags:|$)", result, re.DOTALL)
+        if excerpt_match:
+            metadata["excerpt"] = excerpt_match.group(1).strip()
+        else:
+            metadata["excerpt"] = default_metadata["excerpt"]
+        
+        # Extract tags
+        tags_match = re.search(r"Tags:\s*(.+?)(?:\n|$)", result)
+        if tags_match:
+            tags_str = tags_match.group(1).strip()
+            metadata["tags"] = [tag.strip() for tag in tags_str.split(",")]
+        else:
+            metadata["tags"] = default_metadata["tags"]
+        
+        # If we got here with valid metadata, return it
+        return metadata
+        
+    except Exception as e:
+        # Catch-all exception handler
+        logger.error(f"Error in metadata generation: {str(e)}")
+        # Ensure we always return valid metadata
+        return default_metadata
 
 def generate_article(topic, keywords=None, style="informative", length="medium"):
     """
