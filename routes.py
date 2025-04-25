@@ -919,6 +919,9 @@ def register_routes(app: Flask):
     # Register Content Creator blueprint
     app.register_blueprint(content_creator_bp)
     
+    # Register Simple Content Creator blueprint
+    app.register_blueprint(simple_creator_bp)
+    
     # Register Images routes
     register_image_routes(app)
     
