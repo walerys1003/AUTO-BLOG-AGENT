@@ -360,7 +360,7 @@ Focus on accuracy, readability, and meeting the exact word count requirements.""
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=8000  # Drastically increased for much longer paragraphs
+                max_tokens=3000  # Balanced limit for longer paragraphs while maintaining stability
             )
             
             if not content:
@@ -628,7 +628,7 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
 3. Outline what the article will cover and why it matters to the reader
 4. Set the tone for the article and create anticipation for the content
 5. Make it compelling and inviting to continue reading
-6. Write at least 1500-2000 words with multiple paragraphs for readability
+6. Write at least 800-1200 words with multiple paragraphs for readability
 7. Provide substantial background information to properly frame the topic
 8. Consider including relevant statistics or expert opinions to establish credibility"""
     elif is_conclusion:
@@ -638,7 +638,7 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
 3. Provide actionable next steps or recommendations for readers
 4. End with a thought-provoking statement or powerful call to action
 5. Leave the reader with a lasting impression
-6. Write at least 1500-2000 words with multiple paragraphs for readability
+6. Write at least 800-1200 words with multiple paragraphs for readability
 7. Include reflection on broader implications or future developments
 8. Address any potential counterarguments or limitations"""
     else:
@@ -649,7 +649,7 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
 4. Address all potential questions readers might have about this aspect
 5. Provide detailed practical applications and real-world implications
 6. Add significant depth with nuanced perspectives and lesser-known information
-7. Ensure the section is comprehensive - MUST be at least 1500-2000 words minimum
+7. Ensure the section is comprehensive - MUST be at least 800-1200 words minimum
 8. Format as multiple paragraphs for readability (at least 3-4 paragraphs in this section)
 9. Include at least one relevant analogy or case study to illustrate key points
 10. Anticipate and address common misconceptions or objections
@@ -665,7 +665,7 @@ Keywords to include if relevant: {', '.join(keywords) if keywords else 'No speci
     system_prompt = """You are an expert content writer specializing in creating extremely comprehensive, engaging, well-structured blog content with significant length and depth.
 Your task is to write a detailed section on the specified topic that flows naturally with the rest of the article.
 Use multiple <p> tags to create well-structured paragraphs for readability.
-Provide ONLY the content in proper HTML format with <p> tags. Do not include any explanations or notes. Write very long, detailed paragraphs with at least 1500-2000 words total per section."""
+Provide ONLY the content in proper HTML format with <p> tags. Do not include any explanations or notes. Write very long, detailed paragraphs with at least 800-1200 words total per section."""
 
     # Check if we have access to OpenRouter
     if has_openrouter:
@@ -682,7 +682,7 @@ Provide ONLY the content in proper HTML format with <p> tags. Do not include any
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
-                max_tokens=8000  # Drastically increased for much longer paragraphs
+                max_tokens=3000  # Balanced limit for longer paragraphs while maintaining stability
             )
             
             if not content:
