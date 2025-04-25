@@ -313,12 +313,23 @@ def _create_content_from_topic(rule, topic):
         db.session.commit()
         
         # Generate content using the topic and rule settings
-        generation_result = content_generator.generate_article(
-            topic=topic.title,
-            keywords=topic.get_keywords() if topic.get_keywords() else [],
-            style=rule.content_tone,  # Use content_tone instead of writing_style to match database schema
-            length=rule.content_length
-        )
+        # Determine whether to use paragraph-based or word count-based generation
+        if rule.use_paragraph_mode and rule.paragraph_count > 0:
+            # Use paragraph-based approach
+            generation_result = content_generator.generate_article_by_paragraphs(
+                topic=topic.title,
+                keywords=topic.get_keywords() if topic.get_keywords() else [],
+                style=rule.content_tone,
+                paragraph_count=rule.paragraph_count
+            )
+        else:
+            # Use traditional word count-based approach
+            generation_result = content_generator.generate_article(
+                topic=topic.title,
+                keywords=topic.get_keywords() if topic.get_keywords() else [],
+                style=rule.content_tone,
+                length=rule.content_length
+            )
         
         # Extract the content data
         content_html = generation_result.get('content', '')
