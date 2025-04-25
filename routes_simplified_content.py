@@ -4,14 +4,92 @@ Independent Content Creation System
 """
 import os
 import logging
+import json
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from sqlalchemy import desc, asc
 from app import db
 from models import Blog, Content, ArticleTopic
+from config import Config
+import requests
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+# Writing styles for AI content generation
+WRITING_STYLES = {
+    'professional': 'professional and formal',
+    'conversational': 'friendly and conversational',
+    'persuasive': 'persuasive and compelling',
+    'educational': 'educational and informative',
+    'creative': 'creative and engaging',
+    'humorous': 'light-hearted and humorous'
+}
+
+def generate_article_with_ai(title, paragraphs, style):
+    """
+    Generate an article using OpenRouter AI API
+    
+    Args:
+        title (str): Article title
+        paragraphs (int): Number of paragraphs to generate
+        style (str): Writing style from WRITING_STYLES
+    
+    Returns:
+        str: Generated article content or error message
+    """
+    try:
+        api_key = Config.OPENROUTER_API_KEY
+        if not api_key:
+            return "OpenRouter API key is missing. Please configure it in your environment variables."
+        
+        style_description = WRITING_STYLES.get(style, 'professional and formal')
+        
+        prompt = f"""Write a detailed, well-structured article titled "{title}".
+        
+The article should be:
+- Written in a {style_description} tone
+- Consist of exactly {paragraphs} paragraphs
+- Include a compelling introduction, well-developed body, and clear conclusion
+- Be factually accurate and well-researched
+- Use proper headings and subheadings where appropriate
+- Be easy to read with good flow between paragraphs
+- Be comprehensive and self-contained
+
+Format the article with proper Markdown formatting.
+"""
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": Config.DEFAULT_CONTENT_MODEL,
+            "messages": [
+                {"role": "system", "content": "You are a professional content writer who creates high-quality, engaging articles."},
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            data=json.dumps(data),
+            timeout=60  # Increased timeout for longer content generation
+        )
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            generated_content = response_data['choices'][0]['message']['content']
+            return generated_content
+        else:
+            logger.error(f"API Error: {response.status_code} - {response.text}")
+            return f"Error: API returned status code {response.status_code}"
+            
+    except Exception as e:
+        logger.error(f"Error generating content with AI: {str(e)}")
+        return f"Error generating content: {str(e)}"
 
 # Create blueprint
 simplified_content_bp = Blueprint('simplified_content', __name__, url_prefix='/simple-content')
@@ -189,3 +267,34 @@ def delete_content(content_id):
         flash(f'Error deleting content: {str(e)}', 'danger')
     
     return redirect(url_for('simplified_content.content_creator'))
+
+@simplified_content_bp.route('/generate-content', methods=['POST'])
+def generate_content():
+    """Generate content using AI"""
+    try:
+        # Get form data
+        title = request.form.get('title')
+        paragraphs = int(request.form.get('paragraphs', 5))
+        style = request.form.get('style', 'professional')
+        
+        # Validate input
+        if not title:
+            return jsonify({'success': False, 'error': 'Title is required'})
+        
+        # Limit paragraph count for reasonable response times
+        if paragraphs < 3:
+            paragraphs = 3
+        elif paragraphs > 15:
+            paragraphs = 15
+            
+        # Generate content with AI
+        generated_content = generate_article_with_ai(title, paragraphs, style)
+        
+        # Return response
+        return jsonify({
+            'success': True,
+            'content': generated_content
+        })
+    except Exception as e:
+        logger.error(f"Error in generate_content: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})

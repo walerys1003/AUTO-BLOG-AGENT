@@ -58,6 +58,51 @@
                 <input type="hidden" name="topic" value="{{ topic.title }}">
                 {% endif %}
                 
+                <!-- AI Content Generation Options -->
+                <div class="card mb-4 border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-robot me-2"></i> AI Content Generation
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="writing_style" class="form-label">Writing Style</label>
+                                <select class="form-select" id="writing_style">
+                                    <option value="professional" selected>Professional</option>
+                                    <option value="conversational">Conversational</option>
+                                    <option value="persuasive">Persuasive</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="creative">Creative</option>
+                                    <option value="humorous">Humorous</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="paragraphs" class="form-label">Number of Paragraphs</label>
+                                <select class="form-select" id="paragraphs">
+                                    <option value="3">3 paragraphs (Short)</option>
+                                    <option value="5" selected>5 paragraphs (Medium)</option>
+                                    <option value="8">8 paragraphs (Long)</option>
+                                    <option value="12">12 paragraphs (Very Long)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="button" id="generate_content" class="btn btn-primary">
+                                <i class="fas fa-magic me-2"></i> Generate with AI
+                            </button>
+                        </div>
+                        <div id="generation_status" class="mt-3 d-none">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Generating content... This may take up to 30 seconds for high-quality articles.</span>
+                            </div>
+                        </div>
+                        <div id="generation_error" class="mt-3 alert alert-danger d-none"></div>
+                    </div>
+                </div>
+                
                 <!-- Content Editor -->
                 <div class="mb-4">
                     <label for="body" class="form-label">Content</label>
@@ -104,11 +149,86 @@
 <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize CKEditor
+        let editor;
+        
         ClassicEditor
             .create(document.querySelector('#body'))
+            .then(newEditor => {
+                editor = newEditor;
+            })
             .catch(error => {
                 console.error('Error initializing editor:', error);
             });
+        
+        // AI Content Generation
+        const generateButton = document.getElementById('generate_content');
+        const generationStatus = document.getElementById('generation_status');
+        const generationError = document.getElementById('generation_error');
+        const titleInput = document.getElementById('title');
+        const styleSelect = document.getElementById('writing_style');
+        const paragraphsSelect = document.getElementById('paragraphs');
+        
+        generateButton.addEventListener('click', function() {
+            // Get values
+            const title = titleInput.value.trim();
+            const style = styleSelect.value;
+            const paragraphs = paragraphsSelect.value;
+            
+            // Validate title
+            if (!title) {
+                generationError.textContent = 'Please enter a title for your content.';
+                generationError.classList.remove('d-none');
+                return;
+            }
+            
+            // Hide error message if previously shown
+            generationError.classList.add('d-none');
+            
+            // Show loading indicator
+            generationStatus.classList.remove('d-none');
+            generateButton.disabled = true;
+            
+            // Make API call to generate content
+            fetch('{{ url_for("simplified_content.generate_content") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'title': title,
+                    'style': style,
+                    'paragraphs': paragraphs
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                generationStatus.classList.add('d-none');
+                generateButton.disabled = false;
+                
+                if (data.success) {
+                    // Set content in editor
+                    if (editor) {
+                        editor.setData(data.content);
+                    }
+                } else {
+                    // Show error
+                    generationError.textContent = data.error || 'An error occurred while generating content.';
+                    generationError.classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                // Hide loading indicator
+                generationStatus.classList.add('d-none');
+                generateButton.disabled = false;
+                
+                // Show error
+                generationError.textContent = 'Network error: ' + error.message;
+                generationError.classList.remove('d-none');
+                console.error('Error:', error);
+            });
+        });
     });
 </script>
 {% endblock %}
