@@ -617,7 +617,7 @@
             
             updateGenerationProgress(currentParagraphIndex, totalParagraphs);
             
-            return fetch('{{ url_for("content_creator.generate_dynamic_paragraph") }}', {
+            return fetch('{{ url_for("content_creator.generate_dynamic_paragraph_v2") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
