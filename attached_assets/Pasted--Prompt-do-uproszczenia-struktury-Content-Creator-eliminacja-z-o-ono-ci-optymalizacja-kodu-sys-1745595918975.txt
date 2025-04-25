@@ -1,0 +1,84 @@
+🔧 Prompt do uproszczenia struktury Content Creator – eliminacja złożoności, optymalizacja kodu, systematyzacja modułów:
+
+🎯 Cel techniczny:
+Uprościć i zrefaktoryzować wszystkie zagnieżdżone funkcje, zależności i złożone struktury kodu odpowiedzialne za działanie Content Creator. Nadać mu modułowy, komplementarny charakter, tak aby mógł łatwo integrować się z innymi komponentami strony, nie obciążając całości projektu.
+
+🛠️ Prompt:
+Proszę usunąć wszystkie zbędne warunki, zagnieżdżone logiki, wielowarstwowe funkcje i niepotrzebne rozgałęzienia kodu w module Content Creator. Kod musi zostać maksymalnie uproszczony i ustandaryzowany. Struktura powinna być podzielona na łatwe do zarządzania, niezależne moduły, które komunikują się między sobą jasno określonymi metodami.
+
+Funkcja Content Creator jest funkcją poboczną – dlatego ma być lekka, szybka i niekolidująca z główną architekturą strony. Proszę uprościć całość logiki i zachować pełną kompatybilność z resztą systemu.
+
+🔍 Wytyczne szczegółowe:
+Modularność:
+
+Każdy element Content Creator (generacja, zapis, publikacja) jako osobny moduł/funkcja.
+
+Brak zależności pomiędzy komponentami frontendowymi i backendowymi poza standardowym API.
+
+Prosta struktura kodu:
+
+Maksymalnie 2 poziomy warunków logicznych.
+
+Jedna główna funkcja obsługująca generację, bez dodatkowych warstw analizy.
+
+Usunięcie dynamicznych podziałów:
+
+Zlikwidować warunki dla różnych trybów (standard/dynamiczny).
+
+Jeden uniwersalny tryb pracy.
+
+Systematyzacja:
+
+Każdy plik kodu odpowiada jednej funkcji.
+
+Nazewnictwo zgodne z konwencją: generate_content.py, save_content.py, publish_content.py.
+
+Brak zagnieżdżeń i głębokich pętli:
+
+Funkcje nie mogą zawierać zagnieżdżonych pętli ani warunków w warunkach.
+
+Przetwarzanie danych liniowe i przewidywalne.
+
+Komplementarność:
+
+Content Creator wywoływany tylko na żądanie użytkownika.
+
+Nie wpływa na żaden inny moduł strony (żadne globalne zmienne, brak blokowania zasobów).
+
+📋 Struktura kodu – Minimalny schemat:
+plaintext
+Kopiuj
+Edytuj
+/content-creator/
+│
+├── generate_content.py   # Obsługa generacji AI (Claude)
+├── save_content.py       # Obsługa zapisu szkiców
+├── publish_content.py    # Obsługa publikacji
+├── routes.py             # Proste endpointy API
+├── frontend_component.js # Pojedynczy, lekki komponent frontendowy
+│
+└── templates/
+    └── content_creator.html  # Jeden widok, jedna ścieżka, jeden cel
+🔧 Kierunki uproszczenia logiki:
+Zamiast: if mode == 'standard' and user.is_premium and user.prefers_dynamic:
+Ma być: Brak trybów, jeden typ obsługi.
+
+Zamiast: content_generator.generate_with_conditions(topic, style, context, past_history)
+Ma być: generate_content(topic)
+
+Zamiast: Warunkowe ładowanie modułów.
+Ma być: Stały, zawsze aktywny, ale prosty zestaw funkcji.
+
+✨ Efekt końcowy:
+Kod czytelny, modularny, łatwy w utrzymaniu.
+
+Funkcja Content Creator działa jako niezależny dodatek, bez wpływu na resztę strony.
+
+Zero błędów wynikających z nadmiernych zależności.
+
+Kod gotowy do łatwego skalowania w przyszłości.
+
+📢 Hasło do refaktoryzacji:
+"Minimalizm to nie brak. To perfekcyjna ilość." – Jon Franklin.
+
+Zastosuj pełne uproszczenie. Każda linijka kodu musi mieć sens. Usuń wszystko, co zbędne. Ma być lekko, prosto, pięknie.

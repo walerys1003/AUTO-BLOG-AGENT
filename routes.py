@@ -14,6 +14,7 @@ from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
 from routes_seo_inspiration import seo_inspiration_bp
 from routes_content_creator import content_creator_bp
+from routes_simple_creator import simple_creator_bp
 from routes_images import register_image_routes
 from newsletter import newsletter_bp
 from routes_publishing import publishing_bp

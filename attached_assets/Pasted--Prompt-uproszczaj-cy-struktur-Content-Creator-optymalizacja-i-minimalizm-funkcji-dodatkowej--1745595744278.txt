@@ -1,0 +1,82 @@
+💡 Prompt uproszczający strukturę Content Creator – optymalizacja i minimalizm funkcji dodatkowej:
+
+🎯 Cel:
+Uprościć i zoptymalizować funkcjonalność Content Creator, aby stała się lekka, czytelna i niezawodna, służąca jako dodatkowe narzędzie wspierające, a nie rozbudowany moduł główny. Usunąć zbędne warstwy złożoności, które powodują błędy i uniemożliwiają płynną generację treści.
+
+🛠️ Prompt:
+Proszę uprościć strukturę Content Creator do formy minimalistycznej i funkcjonalnej. Skoncentruj się na zapewnieniu prostoty obsługi, szybkości działania i bezbłędnej integracji z resztą systemu. Content Creator ma być funkcją dodatkową, nieobciążającą, dostępną w razie potrzeby, lecz nie dominującą. Usuń zbędne funkcje, które wprowadzają chaos i zakłócają działanie głównej aplikacji.
+
+Kluczowe założenia uproszczonego Content Creator:
+
+Jedno okno edycji treści.
+
+Prosty edytor tekstowy (WYSIWYG lub czysty tekst z podglądem).
+
+Bez podziału na tryby (Standard / Dynamic).
+
+Minimalna liczba przycisków:
+
+"Generuj treść AI"
+
+"Zapisz jako szkic"
+
+"Opublikuj"
+
+Jedna metoda generowania AI:
+
+Pole tematu + przycisk "Wygeneruj".
+
+Cała treść generowana od razu, bez dynamicznych paragrafów.
+
+Brak stron przejściowych, brak modalnych okien:
+
+Content Creator działa na jednej, stałej podstronie.
+
+Brak potrzeby otwierania dodatkowych widoków.
+
+Bez wersjonowania, bez SEO, bez podpowiedzi stylu – tylko treść.
+
+Możliwość edycji wygenerowanej treści ręcznie.
+
+Bez zbędnych analiz i złożonych integracji.
+
+Prosta integracja z Claude Sonnet 3.5 przez OpenRouter API:
+
+Stały, jednolity prompt.
+
+Brak zmiennych stylów, brak analizy kontekstu.
+
+🧠 Przykład nowej uproszczonej struktury Content Creator:
+Pole tekstowe: "Podaj temat artykułu:"
+
+Przycisk: "Generuj treść AI"
+
+Obszar treści: Wygenerowany artykuł (do ręcznej edycji).
+
+Przycisk: "Zapisz szkic"
+
+Przycisk: "Opublikuj"
+
+🧩 Backend API uproszczony:
+POST /generate/simple
+
+Input: { "topic": "..." }
+
+Output: { "content": "Wygenerowana treść..." }
+
+POST /content/save
+
+Input: { "title": "...", "content": "...", "status": "draft" }
+
+POST /content/publish
+
+Input: { "title": "...", "content": "...", "status": "published" }
+
+✨ Intencja:
+Niech Content Creator stanie się przyjaznym, szybkim narzędziem, które można uruchomić w dowolnej chwili, bez opóźnień, bez błędów, bez nadmiaru funkcji. Treść – szybko, prosto, skutecznie.
+
+Proszę uprościć cały mechanizm do powyższej formy i usunąć wszystkie złożone zależności, które prowadziły do błędów. Ma działać intuicyjnie i niezawodnie, bez obciążania użytkownika.
+
+✨ Twoje motto przy przebudowie: "Prostota jest szczytem wyrafinowania." – Leonardo da Vinci.
+
+Działaj! 🚀

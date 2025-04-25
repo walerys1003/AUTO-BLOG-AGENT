@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Simple Content Editor{% endblock %}
+
+{% block styles %}
+<style>
+    .editor-container {
+        min-height: 500px;
+    }
+    
+    .editor-area {
+        min-height: 400px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        padding: 1rem;
+    }
+    
+    .actions-bar {
+        position: sticky;
+        bottom: 0;
+        background: var(--bs-body-bg);
+        border-top: 1px solid #eee;
+        padding: 1rem 0;
+        z-index: 100;
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        border-radius: 4px;
+    }
+    
+    .loading-message {
+        color: white;
+        background: rgba(0,0,0,0.7);
+        padding: 1rem 2rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('content_creator.content_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Simple Content Editor</li>
+                </ol>
+            </nav>
+            <h1 class="h2 mb-3">Simple Content Editor</h1>
+            <p class="text-muted">Create and edit content in a simplified interface.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Article Details</h5>
+                </div>
+                <div class="card-body">
+                    <form id="article-form">
+                        <div class="mb-3">
+                            <label for="article-title" class="form-label">Article Title</label>
+                            <input type="text" class="form-control" id="article-title" name="title" placeholder="Enter article title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="article-topic" class="form-label">Topic (for AI generation)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="article-topic" name="topic" placeholder="Enter a topic to generate content">
+                                <button class="btn btn-primary" type="button" id="generate-btn">Generate Content</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Content</h5>
+                </div>
+                <div class="card-body editor-container position-relative">
+                    <!-- Editor goes here -->
+                    <div id="editor" class="editor-area" contenteditable="true">
+                        <p>Start writing your article here, or generate content using AI.</p>
+                    </div>
+                    
+                    <!-- Loading overlay (initially hidden) -->
+                    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+                        <div class="loading-message">
+                            <div class="spinner-border text-light me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span id="loading-text">Generating content...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white actions-bar">
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-outline-secondary" id="reset-btn">Reset</button>
+                        <div>
+                            <button class="btn btn-secondary me-2" id="save-draft-btn">Save as Draft</button>
+                            <button class="btn btn-primary" id="publish-btn">Publish</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const articleTitleInput = document.getElementById('article-title');
+        const articleTopicInput = document.getElementById('article-topic');
+        const editor = document.getElementById('editor');
+        const generateBtn = document.getElementById('generate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const saveDraftBtn = document.getElementById('save-draft-btn');
+        const publishBtn = document.getElementById('publish-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        
+        // Current content ID for saving
+        let contentId = null;
+        
+        // Show loading state
+        function showLoading(message = "Generating content...") {
+            loadingText.textContent = message;
+            loadingOverlay.style.display = "flex";
+        }
+        
+        // Hide loading state
+        function hideLoading() {
+            loadingOverlay.style.display = "none";
+        }
+        
+        // Generate content
+        generateBtn.addEventListener('click', function() {
+            const topic = articleTopicInput.value.trim();
+            
+            if (!topic) {
+                alert("Please enter a topic to generate content");
+                return;
+            }
+            
+            showLoading();
+            
+            // Set title if empty
+            if (!articleTitleInput.value.trim()) {
+                articleTitleInput.value = topic;
+            }
+            
+            // Call the simplified API
+            fetch('{{ url_for("content_creator.generate_simple_content") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'topic': topic
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    editor.innerHTML = data.content;
+                } else {
+                    throw new Error(data.message || 'Failed to generate content');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating content:', error);
+                alert('Error generating content. Please try again.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+        
+        // Reset editor
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset the editor? All unsaved content will be lost.')) {
+                editor.innerHTML = '<p>Start writing your article here, or generate content using AI.</p>';
+                articleTitleInput.value = '';
+                articleTopicInput.value = '';
+                contentId = null;
+            }
+        });
+        
+        // Save content as draft
+        saveDraftBtn.addEventListener('click', function() {
+            const title = articleTitleInput.value.trim();
+            const content = editor.innerHTML;
+            
+            if (!title) {
+                alert("Please enter a title for your article");
+                return;
+            }
+            
+            showLoading("Saving draft...");
+            
+            // Call the save API
+            fetch('{{ url_for("content_creator.save_simple_content") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'title': title,
+                    'content': content,
+                    'content_id': contentId || '',
+                    'status': 'draft'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    contentId = data.content_id;
+                    alert('Draft saved successfully!');
+                } else {
+                    throw new Error(data.message || 'Failed to save draft');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving draft:', error);
+                alert('Error saving draft. Please try again.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+        
+        // Publish content
+        publishBtn.addEventListener('click', function() {
+            const title = articleTitleInput.value.trim();
+            const content = editor.innerHTML;
+            
+            if (!title) {
+                alert("Please enter a title for your article");
+                return;
+            }
+            
+            showLoading("Publishing article...");
+            
+            // Call the save API with published status
+            fetch('{{ url_for("content_creator.save_simple_content") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'title': title,
+                    'content': content,
+                    'content_id': contentId || '',
+                    'status': 'ready_to_publish'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    contentId = data.content_id;
+                    alert('Article published successfully!');
+                    // Redirect to dashboard
+                    window.location.href = '{{ url_for("content_creator.content_dashboard") }}';
+                } else {
+                    throw new Error(data.message || 'Failed to publish article');
+                }
+            })
+            .catch(error => {
+                console.error('Error publishing article:', error);
+                alert('Error publishing article. Please try again.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+        
+        // Load content if ID provided in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const loadContentId = urlParams.get('content_id');
+        
+        if (loadContentId) {
+            showLoading("Loading content...");
+            
+            fetch(`{{ url_for("content_creator.get_content", content_id=0) }}`.replace('0', loadContentId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        contentId = loadContentId;
+                        articleTitleInput.value = data.title || '';
+                        editor.innerHTML = data.content || '';
+                    } else {
+                        throw new Error(data.message || 'Failed to load content');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    alert('Error loading content. Please try again.');
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+    });
+</script>
+{% endblock %}
