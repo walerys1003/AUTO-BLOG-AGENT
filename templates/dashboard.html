@@ -11,8 +11,11 @@
         <a href="{{ url_for('monitoring.show_metrics') }}" class="btn btn-outline-success me-2">
             <i class="fas fa-chart-line me-2"></i> Content Monitoring
         </a>
+        <a href="{{ url_for('simple_creator.simple_editor') }}" class="btn btn-primary me-2">
+            <i class="fas fa-edit me-2"></i> Simple Editor
+        </a>
         <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-primary">
-            <i class="fas fa-edit me-2"></i> Content Creator
+            <i class="fas fa-cogs me-2"></i> Advanced Creator
         </a>
     </div>
 </div>
@@ -43,11 +46,11 @@
             </div>
             <div class="card">
                 <div class="card-body text-center">
-                    <i class="fas fa-cog fa-3x mb-3 text-info"></i>
-                    <h5 class="card-title">Publishing Settings</h5>
-                    <p class="card-text small">Configure your publication settings and automation rules</p>
-                    <a href="{{ url_for('publishing.publishing_settings') }}" class="btn btn-info">
-                        <i class="fas fa-cog me-1"></i> Publishing Settings
+                    <i class="fas fa-edit fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Simple Content Creator</h5>
+                    <p class="card-text small">Create content quickly with our simplified editor</p>
+                    <a href="{{ url_for('simple_creator.simple_editor') }}" class="btn btn-info">
+                        <i class="fas fa-edit me-1"></i> Simple Editor
                     </a>
                 </div>
             </div>
