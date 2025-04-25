@@ -201,7 +201,7 @@
 // Funkcja do dynamicznego generowania treści akapitów
 async function generateDynamicContent() {
     const topicId = document.getElementById('topic_id').value;
-    const topicTitle = document.querySelector('input[name="title"]').value;
+    const topicTitle = document.getElementById('topic_display').value;
     const style = document.getElementById('regenerateStyle').value || 'informative';
     const paragraphCount = document.getElementById('regenerateParagraphCount').value || 4;
     
@@ -393,9 +393,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funkcja do generowania treści dynamicznie
     window.generateContentDynamically = function() {
         // Najpierw aktualizujemy ukryte pola formularza regeneracji
-        document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
-        document.getElementById('regenerateStyle').value = document.getElementById('style').value;
-        document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+        if (document.getElementById('regenerateTopicId')) {
+            document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
+        }
+        if (document.getElementById('regenerateStyle')) {
+            document.getElementById('regenerateStyle').value = document.getElementById('style').value;
+        }
+        if (document.getElementById('regenerateParagraphCount')) {
+            document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+        }
         
         // Następnie uruchamiamy generowanie
         generateDynamicContent();
@@ -405,12 +411,20 @@ document.addEventListener('DOMContentLoaded', function() {
     window.confirmRegenerate = function() {
         if (confirm('This will replace all existing content. Are you sure you want to continue?')) {
             // Aktualizujemy ukryte pola formularza regeneracji
-            document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
-            document.getElementById('regenerateStyle').value = document.getElementById('style').value;
-            document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+            if (document.getElementById('regenerateTopicId')) {
+                document.getElementById('regenerateTopicId').value = document.getElementById('topic_id').value;
+            }
+            if (document.getElementById('regenerateStyle')) {
+                document.getElementById('regenerateStyle').value = document.getElementById('style').value;
+            }
+            if (document.getElementById('regenerateParagraphCount')) {
+                document.getElementById('regenerateParagraphCount').value = document.getElementById('paragraph_count').value;
+            }
             
             // Wysyłamy formularz do regeneracji
-            document.getElementById('regenerateForm').submit();
+            if (document.getElementById('regenerateForm')) {
+                document.getElementById('regenerateForm').submit();
+            }
         }
     };
     
