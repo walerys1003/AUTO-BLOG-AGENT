@@ -924,27 +924,45 @@ def update_settings():
     try:
         # Get form data
         data = request.form
+        form_type = data.get('form_type')
         
-        # Process each blog's settings
-        for key, value in data.items():
-            if key.startswith('approval_required_'):
-                # Extract blog_id
-                blog_id = int(key.split('_')[-1])
-                
-                # Get blog
-                blog = Blog.query.get_or_404(blog_id)
-                
-                # Update approval setting
-                blog.approval_required = value == 'on'
+        if form_type == 'global_settings':
+            # Update global settings
+            default_status = data.get('default_status', 'draft')
+            default_time = data.get('default_time', '10:00')
+            auto_promote = 'auto_promote' in data
+            
+            # Save to database
+            SystemSettings.set('default_publication_status', default_status, 
+                              'Default status for newly created content')
+            SystemSettings.set('default_publication_time', default_time, 
+                              'Default time for scheduling publications')
+            SystemSettings.set('auto_promote_social_media', auto_promote, 
+                              'Automatically promote content on social media')
+            
+            db.session.commit()
+            flash('Globalne ustawienia publikacji zaktualizowane pomyślnie', 'success')
+        else:
+            # Process each blog's settings
+            for key, value in data.items():
+                if key.startswith('approval_required_'):
+                    # Extract blog_id
+                    blog_id = int(key.split('_')[-1])
+                    
+                    # Get blog
+                    blog = Blog.query.get_or_404(blog_id)
+                    
+                    # Update approval setting
+                    blog.approval_required = value == 'on'
+            
+            # Save changes
+            db.session.commit()
+            flash('Ustawienia zatwierdzania publikacji zaktualizowane pomyślnie', 'success')
         
-        # Save changes
-        db.session.commit()
-        
-        flash('Publication settings updated successfully', 'success')
         return redirect(url_for('publishing.publishing_settings'))
     
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error updating publication settings: {str(e)}")
-        flash(f'Error updating settings: {str(e)}', 'danger')
+        flash(f'Błąd podczas aktualizacji ustawień: {str(e)}', 'danger')
         return redirect(url_for('publishing.publishing_settings'))
