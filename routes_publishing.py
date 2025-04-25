@@ -904,10 +904,18 @@ def publishing_settings():
         rules = AutomationRule.query.filter_by(blog_id=blog.id).all()
         automation_rules[blog.id] = rules
     
+    # Get global settings
+    global_settings = {
+        'default_status': SystemSettings.get('default_publication_status', 'draft'),
+        'default_time': SystemSettings.get('default_publication_time', '10:00'),
+        'auto_promote': SystemSettings.get('auto_promote_social_media', True)
+    }
+    
     return render_template(
         'publishing/settings.html',
         blogs=blogs,
-        automation_rules=automation_rules
+        automation_rules=automation_rules,
+        global_settings=global_settings
     )
 
 @publishing_bp.route('/settings/update', methods=['POST'])

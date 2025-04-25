@@ -162,26 +162,30 @@
                 <div class="card-body">
                     <p>Domyślne ustawienia publikacji dotyczą wszystkich artykułów generowanych przez system.</p>
                     
-                    <div class="mb-3">
-                        <label class="form-label">Domyślny status publikacji</label>
-                        <select class="form-select" disabled>
-                            <option selected>Szkic</option>
-                            <option>Zaplanowany</option>
-                            <option>Opublikowany</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Domyślny czas publikacji</label>
-                        <input type="time" class="form-control" value="10:00" disabled>
-                    </div>
-                    
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" role="switch" id="auto_promote" checked disabled>
-                        <label class="form-check-label" for="auto_promote">Automatycznie promuj w mediach społecznościowych</label>
-                    </div>
-                    
-                    <p class="text-muted small">Te ustawienia można zmienić w panelu administracyjnym.</p>
+                    <form method="POST" action="{{ url_for('publishing.update_settings') }}">
+                        <input type="hidden" name="form_type" value="global_settings">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Domyślny status publikacji</label>
+                            <select class="form-select" name="default_status">
+                                <option value="draft" {% if global_settings.default_status == 'draft' %}selected{% endif %}>Szkic</option>
+                                <option value="scheduled" {% if global_settings.default_status == 'scheduled' %}selected{% endif %}>Zaplanowany</option>
+                                <option value="published" {% if global_settings.default_status == 'published' %}selected{% endif %}>Opublikowany</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Domyślny czas publikacji</label>
+                            <input type="time" class="form-control" name="default_time" value="{{ global_settings.default_time|default('10:00') }}">
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="auto_promote" name="auto_promote" {% if global_settings.auto_promote %}checked{% endif %}>
+                            <label class="form-check-label" for="auto_promote">Automatycznie promuj w mediach społecznościowych</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Zapisz ustawienia globalne</button>
+                    </form>
                 </div>
             </div>
         </div>
