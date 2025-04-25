@@ -35,21 +35,14 @@ def content_dashboard():
     
     # Get status filter
     status_filter = request.args.get('status', 'pending')
-
-@content_creator_bp.route('/content-generator')
-def content_generator_page():
-    """Content generator page with static topic selection and dynamic editor"""
-    # Get all blogs for dropdown
-    blogs = Blog.query.filter_by(active=True).all()
     
-    # Check if there are any blogs
-    if not blogs:
-        flash('No active blogs found. Please create a blog first.', 'warning')
-        return redirect(url_for('content_creator.content_dashboard'))
-    
-    return render_template('content/generator.html', 
-                           title="Content Generator",
-                           blogs=blogs)
+    # Get blog filter (optional)
+    blog_filter = request.args.get('blog_id')
+    if blog_filter:
+        try:
+            blog_filter = int(blog_filter)
+        except (ValueError, TypeError):
+            blog_filter = None
     
     # Get all approved topics for the selected blogs
     query = ArticleTopic.query.filter(ArticleTopic.status == 'approved')
@@ -86,6 +79,21 @@ def content_generator_page():
         active_blog=blog_filter,
         title="Content Creator"
     )
+
+@content_creator_bp.route('/content-generator')
+def content_generator_page():
+    """Content generator page with static topic selection and dynamic editor"""
+    # Get all blogs for dropdown
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    # Check if there are any blogs
+    if not blogs:
+        flash('No active blogs found. Please create a blog first.', 'warning')
+        return redirect(url_for('content_creator.content_dashboard'))
+    
+    return render_template('content/generator.html', 
+                          title="Content Generator",
+                          blogs=blogs)
 
 
 @content_creator_bp.route('/content-creator/generate', methods=['POST'])
