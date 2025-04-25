@@ -109,8 +109,8 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label for="topic_id" class="form-label">Topic</label>
-                            <input type="text" class="form-control" value="{{ topic.title if topic else 'N/A' }}" readonly>
-                            <input type="hidden" name="topic_id" id="topic_id" value="{{ topic.id if topic else '' }}">
+                            <input type="text" class="form-control" value="{{ topic.title if topic else 'N/A' }}" {% if not topic %}readonly{% endif %}>
+                            <input type="hidden" name="topic_id" id="topic_id" value="{{ topic_id if topic_id else (topic.id if topic else '') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="style" class="form-label">Writing Style</label>

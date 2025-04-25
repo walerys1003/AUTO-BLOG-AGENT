@@ -130,7 +130,8 @@ def edit_content(content_id):
                 'meta_description': request.form.get('meta_description', ''),
                 'excerpt': request.form.get('excerpt', ''),
                 'tags': request.form.get('tags', '').split(','),
-                'featured_image_url': request.form.get('featured_image_url', '')
+                'featured_image_url': request.form.get('featured_image_url', ''),
+                'topic_id': request.form.get('topic_id', topic_id)  # Zapisujemy topic_id w danych artykułu
             }
             
             content_log.error_message = json.dumps(content_data)
@@ -150,7 +151,9 @@ def edit_content(content_id):
             if action == 'publish':
                 return redirect(url_for('content_creator.content_dashboard'))
             else:
-                return redirect(url_for('content_creator.edit_content', content_id=content_id))
+                # Przekazujemy również topic_id przy przekierowaniu, aby nie zniknął
+                stored_topic_id = content_data.get('topic_id')
+                return redirect(url_for('content_creator.edit_content', content_id=content_id, topic_id=stored_topic_id))
                 
         except Exception as e:
             logger.error(f"Error saving content: {str(e)}")
@@ -164,6 +167,7 @@ def edit_content(content_id):
     excerpt = ''
     tags = []
     featured_image_url = ''
+    stored_topic_id = None
     
     # Load content from the content_log if it exists
     if content_log.error_message:
@@ -174,9 +178,13 @@ def edit_content(content_id):
             excerpt = content_data.get('excerpt', '')
             tags = content_data.get('tags', [])
             featured_image_url = content_data.get('featured_image_url', '')
+            stored_topic_id = content_data.get('topic_id')  # Wczytujemy zapisany topic_id
         except json.JSONDecodeError:
             # If the JSON is invalid, we'll just use the defaults
             pass
+    
+    # Używamy zapisanego topic_id jeśli dostępny, w przeciwnym razie użyj z parametrów URL
+    topic_id = topic_id or stored_topic_id
     
     # If the content is empty and we have a topic, generate content
     if not content_html and topic_id:
@@ -204,7 +212,8 @@ def edit_content(content_id):
                     'meta_description': meta_description,
                     'excerpt': excerpt,
                     'tags': tags,
-                    'featured_image_url': featured_image_url
+                    'featured_image_url': featured_image_url,
+                    'topic_id': topic_id  # Zapisujemy topic_id w danych artykułu
                 }
                 
                 content_log.error_message = json.dumps(content_data)
@@ -226,6 +235,7 @@ def edit_content(content_id):
         content_log=content_log,
         topic=topic,
         blog=blog,
+        topic_id=topic_id,  # Przekazujemy topic_id do szablonu
         content_html=content_html,
         meta_description=meta_description,
         excerpt=excerpt,
