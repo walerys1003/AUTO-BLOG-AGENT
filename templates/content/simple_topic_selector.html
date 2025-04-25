@@ -99,15 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="card-text text-muted small">Blog: ${blogName}</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="badge bg-primary">${score}</span>
-                            <form method="POST" action="{{ url_for('content_creator.generate_content') }}" style="display: inline;">
-                                <input type="hidden" name="topic_id" value="${topic.id}">
-                                <input type="hidden" name="style" value="informative">
-                                <input type="hidden" name="paragraph_count" value="4">
-                                <input type="hidden" name="auto_generate" value="1">
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="fas fa-pen me-1"></i> Create Content
-                                </button>
-                            </form>
+                            <a href="{{ url_for('content_creator.standard_editor_page') }}?topic_id=${topic.id}" class="btn btn-sm btn-success">
+                                <i class="fas fa-pen me-1"></i> Edit in Standard Editor
+                            </a>
                         </div>
                     </div>
                 </div>

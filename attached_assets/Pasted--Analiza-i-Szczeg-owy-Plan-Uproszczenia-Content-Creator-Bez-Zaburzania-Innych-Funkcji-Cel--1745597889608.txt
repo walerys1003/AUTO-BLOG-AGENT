@@ -1,0 +1,215 @@
+🔍 Analiza i Szczegółowy Plan Uproszczenia Content Creator – Bez Zaburzania Innych Funkcji:
+
+🎯 Cel operacyjny:
+Uproszczenie istniejącego systemu Content Creator, zachowując integralność i kompatybilność z resztą systemu.
+
+Zminimalizowanie logiki wewnętrznej Content Creator bez wpływu na inne moduły, takie jak:
+
+Blogi, Baza tematów (ArticleTopic), Automatyzacje (AutomationRule).
+
+Skupienie się na uproszczeniu przepływu: Temat → Generacja → Edycja → Publikacja.
+
+🧠 Kluczowe Obszary Do Uproszczenia (w kontekście kodu):
+1️⃣ Widoki / Routing:
+Obecnie:
+
+Kilka widoków: /content-generator, /standard-editor, /content-creator/edit/..., /preview/..., automatyzacje.
+
+Złożone warunki wyboru bloga, statusu, dynamiczne generowanie.
+
+Do zmiany:
+
+Zlikwidować:
+
+Widok /content-generator → niepotrzebny tryb.
+
+Widok /standard-editor → zastąpić jednym edytorem.
+
+Całą obsługę automatyki w Content Creator (pozostawić ją osobno, jeśli konieczna).
+
+Zachować:
+
+Jeden uproszczony widok: /content-creator
+
+Przenieść całą funkcję edycji i generacji do jednej strony.
+
+2️⃣ Model danych – ContentLog & ArticleTopic:
+Obecnie:
+
+ContentLog z error_message jako magazyn JSON.
+
+Powiązania z ArticleTopic (status, keywords, score, blog_id).
+
+Drafty, statusy, wersjonowanie.
+
+Do zmiany:
+
+ContentLog:
+
+Zastąpić nowym modelem Content:
+
+python
+Kopiuj
+Edytuj
+class Content(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    topic = db.Column(db.String(255))
+    body = db.Column(db.Text)
+    status = db.Column(db.String(50))  # draft / published
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+Przenieść dane z error_message do jasnych kolumn: title, body.
+
+ArticleTopic:
+
+Uprościć: pobierać tylko tytuł i score – bez powiązanej logiki.
+
+Zachować status = 'approved' jako filtr.
+
+3️⃣ Funkcja Generowania:
+Obecnie:
+
+Dynamiczna generacja paragrafów z obsługą statusów, stylów, liczby akapitów.
+
+Podział na dynamiczne i standardowe tryby.
+
+Do zmiany:
+
+Usunąć dynamiczne generowanie akapitów.
+
+Jedno proste zapytanie do Claude Sonnet API:
+
+python
+Kopiuj
+Edytuj
+POST /generate-content
+Input: { "topic": "...", "style": "...", "paragraphs": 5 }
+Output: { "content": "..." }
+Stały prompt:
+
+"Wygeneruj artykuł o temacie: {topic}, styl: {style}, długość: {paragraphs} akapitów."
+
+Zlikwidować: obsługę regeneracji, indeksowania akapitów, dynamicznych flag.
+
+4️⃣ Edycja i Publikacja:
+Obecnie:
+
+Wiele etapów zapisów, drafty, JSON, przekazywanie statusów.
+
+Obsługa meta description, excerpt, featured image.
+
+Do zmiany:
+
+Prosty formularz edycji:
+
+Tytuł.
+
+Treść HTML.
+
+Przycisk Zapisz → status = "draft".
+
+Przycisk Publikuj → status = "published".
+
+Usunąć:
+
+Pola: meta description, excerpt, featured image.
+
+Funkcję automatycznego zapisu.
+
+🛠️ Szczegółowy Plan Zmian w Kodzie:
+🔹 1. Pliki do uproszczenia i scalania:
+Scal pliki:
+
+standard_editor.html + generator.html → nowy content_creator.html.
+
+🔹 2. Routing (Blueprint):
+Usuń:
+
+/standard-editor
+
+/content-generator
+
+/content-creator/edit/...
+
+Wszystkie automation routes.
+
+Dodaj i uprość:
+
+python
+Kopiuj
+Edytuj
+@content_creator_bp.route('/content-creator', methods=['GET', 'POST'])
+def content_creator():
+    if request.method == 'POST':
+        title = request.form['title']
+        topic = request.form['topic']
+        content = generate_content_from_topic(topic)
+        
+        new_content = Content(title=title, topic=topic, body=content, status='draft')
+        db.session.add(new_content)
+        db.session.commit()
+        
+        flash('Treść wygenerowana i zapisana jako szkic.', 'success')
+        return redirect(url_for('content_creator.content_creator'))
+    
+    return render_template('content/content_creator.html', title="Content Creator")
+🔹 3. Funkcja generowania treści:
+Uproszczona funkcja:
+
+python
+Kopiuj
+Edytuj
+def generate_content_from_topic(topic):
+    prompt = f"Wygeneruj artykuł o temacie: {topic}, styl: informacyjny, długość: 5 akapitów."
+    response = openrouter_api.generate(prompt=prompt)
+    return response['content']
+🔹 4. Edycja i publikacja:
+Dodaj:
+
+python
+Kopiuj
+Edytuj
+@content_creator_bp.route('/publish-content/<int:content_id>', methods=['POST'])
+def publish_content(content_id):
+    content = Content.query.get_or_404(content_id)
+    content.status = 'published'
+    db.session.commit()
+    flash('Treść została opublikowana.', 'success')
+    return redirect(url_for('content_creator.content_creator'))
+📈 Bezpieczeństwo i Integralność Systemu:
+Nie ingeruj w tabele i funkcje związane z:
+
+Blog, AutomationRule.
+
+One pozostają niezmienione.
+
+ArticleTopic:
+
+Tylko odczyt – status = 'approved', score.
+
+Nie aktualizuj statusów tematów.
+
+✅ Podsumowanie:
+Skasuj:
+
+Dynamiczne generowanie.
+
+Wiele widoków i statusów.
+
+Złożone API (v2, dynamiczne endpointy, automation).
+
+Zostaw:
+
+Proste generowanie i zapis w nowej tabeli Content.
+
+Jeden widok do wszystkiego.
+
+Minimalne połączenia z istniejącą bazą (tylko pobieranie tematów).
+
+Zysk:
+
+Stabilność.
+
+Prędkość działania.
+
+Brak błędów wynikających z nadmiarowej logiki.
