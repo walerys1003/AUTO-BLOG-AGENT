@@ -287,16 +287,26 @@ def preview_content(content_id):
     featured_image_url = ''
     
     # Load content from the content_log if it exists
+    logger.info(f"Preview content for content_log.id={content_id}, status={content_log.status}")
+    logger.info(f"Content log error_message length: {len(content_log.error_message) if content_log.error_message else 0}")
+    
     if content_log.error_message:
         try:
             content_data = json.loads(content_log.error_message)
+            logger.info(f"Content data keys: {list(content_data.keys())}")
+            
             content_html = content_data.get('content', '')
             meta_description = content_data.get('meta_description', '')
             excerpt = content_data.get('excerpt', '')
             tags = content_data.get('tags', [])
             featured_image_url = content_data.get('featured_image_url', '')
-        except json.JSONDecodeError:
+            
+            logger.info(f"Content HTML length: {len(content_html)}")
+            logger.info(f"Meta description: {meta_description[:50]}...")
+            logger.info(f"Excerpt: {excerpt[:50]}...")
+        except json.JSONDecodeError as e:
             # If the JSON is invalid, we'll just use the defaults
+            logger.error(f"JSONDecodeError in preview: {str(e)}")
             pass
     
     # Get the blog
