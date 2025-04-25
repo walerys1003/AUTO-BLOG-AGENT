@@ -29,9 +29,9 @@ class Config:
     PUBLISHING_TIMES = os.environ.get("PUBLISHING_TIMES", "08:00,12:00,16:00,20:00").split(",")
     
     # Default models
-    DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "anthropic/claude-3-haiku-20240307")
-    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-3-5-sonnet-20241022")
-    DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "anthropic/claude-3-haiku-20240307")
+    DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "anthropic/claude-3.5-haiku")
+    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-3.5-sonnet")
+    DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "anthropic/claude-3.5-haiku")
     
     # Database Retention (days)
     LOG_RETENTION_DAYS = int(os.environ.get("LOG_RETENTION_DAYS", 30))

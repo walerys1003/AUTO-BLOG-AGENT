@@ -15,10 +15,10 @@ class OpenRouterClient:
         """Initialize the OpenRouter client"""
         self.api_key = Config.OPENROUTER_API_KEY
         self.api_base = "https://openrouter.ai/api/v1"
-        self.fallback_model = "anthropic/claude-3-5-sonnet-20241022"
-        self.default_topic_model = Config.DEFAULT_TOPIC_MODEL or "anthropic/claude-3-haiku-20240307"
-        self.default_content_model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3-5-sonnet-20241022"
-        self.default_social_model = Config.DEFAULT_SOCIAL_MODEL or "anthropic/claude-3-haiku-20240307"
+        self.fallback_model = "anthropic/claude-3.5-sonnet"
+        self.default_topic_model = Config.DEFAULT_TOPIC_MODEL or "anthropic/claude-3.5-haiku"
+        self.default_content_model = Config.DEFAULT_CONTENT_MODEL or "anthropic/claude-3.5-sonnet"
+        self.default_social_model = Config.DEFAULT_SOCIAL_MODEL or "anthropic/claude-3.5-haiku"
 
     def _get_headers(self) -> Dict[str, str]:
         """Get the headers for API requests"""
