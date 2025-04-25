@@ -18,6 +18,7 @@ from routes_images import register_image_routes
 from newsletter import newsletter_bp
 from routes_publishing import publishing_bp
 from routes_social import social_bp
+from routes_monitoring import monitoring_bp
 import json
 from datetime import datetime, timedelta
 
@@ -928,3 +929,6 @@ def register_routes(app: Flask):
     
     # Register social media blueprint
     app.register_blueprint(social_bp)
+    
+    # Register monitoring blueprint
+    app.register_blueprint(monitoring_bp, url_prefix='/monitoring')
