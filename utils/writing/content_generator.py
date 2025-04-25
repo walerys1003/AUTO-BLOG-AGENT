@@ -612,42 +612,53 @@ def _generate_paragraph(topic, paragraph_topic, previous_content="", keywords=No
         prev_content_summary = "\n".join(summaries)
     
     # Create prompt for paragraph generation
-    user_prompt = f"""Write a detailed paragraph for a blog article on "{topic}".
+    user_prompt = f"""Write a comprehensive section for a professional blog article on "{topic}".
 
-This paragraph should focus on: "{paragraph_topic}"
-Paragraph type: {paragraph_type}
+This section should focus on: "{paragraph_topic}"
+Section type: {paragraph_type}
 Writing style: {style}
 Keywords to include if relevant: {', '.join(keywords) if keywords else 'No specific keywords required'}
 
 """
 
     if is_introduction:
-        user_prompt += """For this introduction paragraph:
+        user_prompt += """For this introduction section:
 1. Start with an engaging hook to capture reader attention
-2. Briefly introduce the main topic and its importance
-3. Hint at what the article will cover
-4. Make it engaging and inviting to continue reading"""
+2. Clearly introduce the main topic and establish its importance and relevance
+3. Outline what the article will cover and why it matters to the reader
+4. Set the tone for the article and create anticipation for the content
+5. Make it compelling and inviting to continue reading
+6. Write at least 200-250 words with multiple paragraphs if needed"""
     elif is_conclusion:
-        user_prompt += """For this conclusion paragraph:
-1. Summarize the key points from the article
-2. Reinforce the main message or takeaway
-3. End with a thought-provoking statement or call to action"""
+        user_prompt += """For this conclusion section:
+1. Thoroughly summarize the key points and insights from the article
+2. Reinforce the main message and central takeaway
+3. Provide actionable next steps or recommendations for readers
+4. End with a thought-provoking statement or powerful call to action
+5. Leave the reader with a lasting impression
+6. Write at least 200-250 words with multiple paragraphs if needed"""
     else:
-        user_prompt += f"""For this body paragraph:
-1. Focus specifically on the sub-topic: "{paragraph_topic}"
-2. Include specific examples, data, or evidence where appropriate
-3. Ensure the paragraph flows naturally with the rest of the content
-4. Make it informative and engaging, around 150-200 words"""
+        user_prompt += f"""For this main content section on "{paragraph_topic}":
+1. Start with a strong topic sentence that clearly introduces this specific aspect
+2. Thoroughly explore the topic with detailed explanations and analysis
+3. Include specific examples, relevant data, expert opinions, and evidence
+4. Address potential questions readers might have about this aspect
+5. Include practical applications or real-world implications
+6. Add depth with nuanced perspectives or lesser-known information
+7. Ensure the section is substantive - at least 250-350 words
+8. Format as multiple paragraphs if needed for readability
+9. Make it extremely informative while maintaining reader engagement"""
 
     if prev_content_summary:
         user_prompt += f"\n\nPrevious content for context:\n{prev_content_summary}"
 
-    user_prompt += "\n\nPlease write ONLY the paragraph content in proper HTML format with <p> tags. Do not include headings or any other HTML elements."
+    user_prompt += "\n\nPlease write the content in proper HTML format with <p> tags for paragraphs. Format as multiple paragraphs for readability. Do not include headings or any other HTML elements."
 
     # System prompt to guide AI behavior
-    system_prompt = """You are an expert content writer specializing in creating engaging, well-structured blog content.
-Your task is to write a single detailed paragraph on the specified topic that flows naturally with the rest of the article.
-Provide ONLY the paragraph content in proper HTML format with <p> tags. Do not include any explanations or notes."""
+    system_prompt = """You are an expert content writer specializing in creating comprehensive, engaging, well-structured blog content.
+Your task is to write a detailed section on the specified topic that flows naturally with the rest of the article.
+Use multiple <p> tags to create well-structured paragraphs for readability.
+Provide ONLY the content in proper HTML format with <p> tags. Do not include any explanations or notes."""
 
     # Check if we have access to OpenRouter
     if has_openrouter:
