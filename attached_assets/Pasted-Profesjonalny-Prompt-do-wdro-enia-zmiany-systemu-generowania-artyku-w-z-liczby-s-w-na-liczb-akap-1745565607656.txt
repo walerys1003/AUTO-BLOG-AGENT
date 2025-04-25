@@ -1,0 +1,56 @@
+Profesjonalny Prompt do wdrożenia zmiany systemu generowania artykułów: z liczby słów na liczbę akapitów
+Proszę opracuj oraz wdroż techniczne i funkcjonalne zmiany w systemie generowania treści, polegające na całkowitym usunięciu opcji wyboru liczby słów i zastąpieniu jej mechanizmem wyboru liczby akapitów. Każdy moduł, funkcja oraz odniesienie do liczby słów ma zostać zastąpione nowym podejściem, w którym liczba akapitów definiuje strukturę i długość artykułu.
+
+📌 Założenia i cele wdrożenia:
+Usuń wszelkie odwołania do liczby słów (np. 800, 1200, 1600 słów) w interfejsie, kodzie i logice działania systemu.
+
+Zastąp je opcją wyboru liczby akapitów, która będzie decydować o długości generowanego artykułu.
+
+Domyślna liczba akapitów: 4, dostosowana do pełnego okna kontekstowego modelu AI.
+
+Wprowadź możliwość ręcznej regulacji liczby akapitów przez użytkownika – zakres od 3 do 6 akapitów.
+
+Każdy akapit powinien:
+
+Rozwijać odrębny, spójny aspekt tematu.
+
+Być generowany z uwzględnieniem kontekstu wcześniejszych akapitów.
+
+Mieć długość optymalną dla modelu AI (~150–200 słów).
+
+Artykuł kończy się opcjonalnym podsumowaniem generowanym automatycznie.
+
+⚙️ Techniczne założenia:
+UI/UX:
+
+Zmień pola wyboru „Number of Words” na „Number of Paragraphs”.
+
+Domyślnie ustaw suwak lub pole z wartością 4 akapity, edytowalne przez użytkownika.
+
+Logika kodu:
+
+Aktualizuj backend, aby:
+
+Generował plan artykułu oparty o liczbę akapitów.
+
+Każdy akapit był tworzony etapowo (z osobnym zapytaniem, jeśli to konieczne).
+
+Łączył wszystkie akapity w spójny tekst końcowy.
+
+Model AI:
+
+Wysyłaj prompt dla każdego akapitu, uwzględniając tytuł i kontekst wcześniejszych części.
+
+Kontroluj długość tekstu na poziomie liczby akapitów, nie słów.
+
+🛠️ Przykład nowego prompta do generowania artykułu:
+„Na podstawie tytułu: [Tytuł Artykułu], wygeneruj artykuł składający się z [Liczba Akapitów] akapitów. Każdy akapit powinien rozwijać osobny aspekt tematu i mieć długość optymalną dla modelu AI (pełne okno kontekstowe). Zachowaj spójność i logiczne przejścia między akapitami. Na końcu dodaj krótkie podsumowanie.”
+
+🎯 Cel zmiany:
+Zwiększenie stabilności i przewidywalności generowania treści.
+
+Lepsza kontrola nad strukturą i jakością artykułów.
+
+Zgodność z ograniczeniami kontekstowymi modeli AI.
+
+Większa elastyczność dla użytkownika w definiowaniu długości artykułu.
