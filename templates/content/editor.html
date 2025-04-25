@@ -703,11 +703,18 @@ function generateNextParagraph(topic, style) {
     formData.append('paragraph_index', currentParagraphIndex);
     formData.append('total_paragraphs', totalParagraphs);
     
+    console.log('Sending paragraph generation request for:', paragraphTopic);
     fetch("{{ url_for('content_creator.generate_single_paragraph_api') }}", {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            console.error('Server error:', response.status, response.statusText);
+            throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Add paragraph to content

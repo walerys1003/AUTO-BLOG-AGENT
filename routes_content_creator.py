@@ -491,9 +491,17 @@ def generate_metadata():
 @content_creator_bp.route('/content-creator/api/plan', methods=['POST'])
 def generate_article_plan_api():
     """Generate article plan API endpoint for dynamic content generation"""
+    logger.info("Article plan generation API called")
+    
+    # Log all form data
+    logger.info("Form data: %s", dict(request.form))
+    
     topic = request.form.get('topic', '')
     paragraph_count = request.form.get('paragraph_count', '4')
     style = request.form.get('style', 'informative')
+    
+    logger.info("Generating plan for topic: %s, paragraph_count: %s, style: %s", 
+               topic, paragraph_count, style)
     
     # Validate inputs
     if not topic:
@@ -582,11 +590,20 @@ def api_create_draft_content():
 @content_creator_bp.route('/content-creator/api/paragraph', methods=['POST'])
 def generate_single_paragraph_api():
     """Generate single paragraph API endpoint for dynamic content generation"""
+    logger.info("Paragraph generation API called")
+    
+    # Log all form data
+    logger.info("Form data: %s", dict(request.form))
+    
     topic = request.form.get('topic', '')
     paragraph_topic = request.form.get('paragraph_topic', '')
     style = request.form.get('style', 'informative')
     paragraph_index = request.form.get('paragraph_index', '0')
     total_paragraphs = request.form.get('total_paragraphs', '4')
+    
+    # Log parsed values
+    logger.info("Generating paragraph for topic: %s, paragraph_topic: %s, style: %s, index: %s/%s", 
+               topic, paragraph_topic, style, paragraph_index, total_paragraphs)
     
     # Validate inputs
     if not topic or not paragraph_topic:
