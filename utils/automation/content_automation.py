@@ -27,7 +27,7 @@ def run_content_automation():
     logger.info("Running content automation...")
     
     # Get all active automation rules
-    active_rules = AutomationRule.query.filter_by(active=True).all()
+    active_rules = AutomationRule.query.filter_by(is_active=True).all()
     
     for rule in active_rules:
         # Check if the rule should run today
@@ -316,7 +316,7 @@ def _create_content_from_topic(rule, topic):
         generation_result = content_generator.generate_article(
             topic=topic.title,
             keywords=topic.get_keywords() if topic.get_keywords() else [],
-            style=rule.writing_style,
+            style=rule.content_tone,  # Use content_tone instead of writing_style to match database schema
             length=rule.content_length
         )
         

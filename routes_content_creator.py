@@ -471,7 +471,7 @@ def create_automation_rule():
         blog_id = request.form.get('blog_id')
         
         # Content settings
-        writing_style = request.form.get('writing_style', 'informative')
+        content_tone = request.form.get('writing_style', 'informative')  # Get from form as writing_style but use content_tone in db
         content_length = request.form.get('content_length', 'medium')
         
         # Schedule settings
@@ -491,7 +491,7 @@ def create_automation_rule():
         new_rule = AutomationRule(
             name=name,
             blog_id=blog_id,
-            writing_style=writing_style,
+            content_tone=content_tone,  # Use content_tone instead of writing_style to match database schema
             content_length=content_length,
             publishing_time=publishing_time,
             posts_per_day=posts_per_day,
@@ -529,7 +529,7 @@ def edit_automation_rule(rule_id):
         try:
             # Update rule data
             rule.name = request.form.get('name', rule.name)
-            rule.writing_style = request.form.get('writing_style', rule.writing_style)
+            rule.content_tone = request.form.get('writing_style', rule.content_tone)  # Form uses writing_style but db uses content_tone
             rule.content_length = request.form.get('content_length', rule.content_length)
             rule.publishing_time = request.form.get('publishing_time', rule.publishing_time)
             rule.posts_per_day = int(request.form.get('posts_per_day', rule.posts_per_day))
@@ -574,7 +574,7 @@ def toggle_automation_rule(rule_id):
     
     try:
         active = request.form.get('active', 'false').lower() == 'true'
-        rule.active = active
+        rule.is_active = active  # Use is_active to match database schema
         
         db.session.commit()
         
