@@ -54,7 +54,7 @@ class OpenRouterClient:
         model: Optional[str] = None,
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 1000,
+        max_tokens: int = 2000,  # Zwiększony limit tokenów dla dłuższych akapitów
         response_format: Optional[Dict[str, str]] = None
     ) -> str:
         """
@@ -62,7 +62,7 @@ class OpenRouterClient:
         
         Args:
             prompt: The user prompt to send
-            model: Model ID (e.g., "anthropic/claude-3-sonnet")
+            model: Model ID (e.g., "anthropic/claude-3.5-sonnet")
             system_prompt: Optional system prompt
             temperature: Temperature setting (0.0 to 1.0)
             max_tokens: Maximum tokens to generate
@@ -85,7 +85,8 @@ class OpenRouterClient:
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
-            "max_tokens": max_tokens
+            "max_tokens": max_tokens,
+            "timeout": 120  # Zwiększony timeout dla dłuższych żądań
         }
         
         # Add system prompt if provided
@@ -97,16 +98,27 @@ class OpenRouterClient:
             data["response_format"] = response_format
         
         # Make the API request
+        response = None
         try:
+            logger.info(f"Sending request to OpenRouter with model: {model}")
             response = requests.post(
                 f"{self.api_base}/chat/completions",
                 headers=self._get_headers(),
-                json=data
+                json=data,
+                timeout=120  # Zwiększony timeout dla żądania HTTP
             )
             response.raise_for_status()
             
             result = response.json()
-            return result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
+            return content
+        except requests.exceptions.Timeout:
+            logger.error("Request to OpenRouter timed out")
+            return "Error: Request to AI service timed out. Please try again."
+        except requests.exceptions.ConnectionError:
+            logger.error("Connection error when connecting to OpenRouter")
+            return "Error: Unable to connect to AI service. Please check your internet connection."
         except Exception as e:
             logger.error(f"Error generating completion from OpenRouter: {str(e)}")
             # Try to extract error message from response
