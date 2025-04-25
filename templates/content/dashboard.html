@@ -267,10 +267,16 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="d-grid mt-3">
-                                        <button type="submit" class="btn btn-primary">
+                                    <div class="d-flex gap-2 mt-3">
+                                        <button type="submit" class="btn btn-primary flex-grow-1">
                                             <i class="fas fa-magic me-2"></i> Generate Article
                                         </button>
+                                        <button type="submit" class="btn btn-success flex-grow-1" name="auto_generate" value="1">
+                                            <i class="fas fa-bolt me-2"></i> Generate Article (Dynamic)
+                                        </button>
+                                    </div>
+                                    <div class="form-text text-center mt-2">
+                                        <small><i class="fas fa-info-circle me-1"></i> Dynamic generation creates content paragraph by paragraph with visual feedback</small>
                                     </div>
                                 </form>
                             </div>

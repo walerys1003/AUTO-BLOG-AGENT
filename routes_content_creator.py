@@ -86,6 +86,7 @@ def generate_content():
     topic_id = request.form.get('topic_id')
     style = request.form.get('style', 'informative')
     paragraph_count = request.form.get('paragraph_count', '4')
+    auto_generate = request.form.get('auto_generate', '0')
     
     # Ensure paragraph_count is a valid integer between 3 and 6
     try:
@@ -96,6 +97,12 @@ def generate_content():
             paragraph_count = 6
     except (ValueError, TypeError):
         paragraph_count = 4  # Default to 4 paragraphs if invalid
+    
+    # Convert auto_generate to integer
+    try:
+        auto_generate = int(auto_generate)
+    except (ValueError, TypeError):
+        auto_generate = 0
     
     if not topic_id:
         flash('Topic ID is required', 'danger')
@@ -126,7 +133,7 @@ def generate_content():
                                 topic_id=topic_id, 
                                 style=style, 
                                 paragraph_count=paragraph_count,
-                                auto_generate=1))
+                                auto_generate=auto_generate))
         
     except Exception as e:
         logger.error(f"Error starting content generation: {str(e)}")

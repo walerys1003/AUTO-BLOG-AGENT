@@ -598,7 +598,7 @@ function generateArticlePlan(topic, paragraphCount, style) {
         formData.append('paragraph_count', paragraphCount);
         formData.append('style', style);
         
-        fetch("{{ url_for('content_creator.generate_article_plan_existing') }}", {
+        fetch("{{ url_for('content_creator.generate_article_plan_api') }}", {
             method: 'POST',
             body: formData
         })
@@ -676,7 +676,7 @@ function generateNextParagraph(topic, style) {
     formData.append('paragraph_index', currentParagraphIndex);
     formData.append('total_paragraphs', totalParagraphs);
     
-    fetch("{{ url_for('content_creator.generate_dynamic_paragraph') }}", {
+    fetch("{{ url_for('content_creator.generate_single_paragraph_api') }}", {
         method: 'POST',
         body: formData
     })
