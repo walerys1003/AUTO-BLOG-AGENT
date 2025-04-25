@@ -580,7 +580,10 @@
         
         // Generate Article Plan
         function generateArticlePlan(topic, paragraphCount, style) {
-            return fetch('{{ url_for("content_creator.generate_article_plan_api") }}', {
+            const url = '{{ url_for("content_creator.generate_article_plan_api") }}';
+            console.log("Calling API at URL:", url);
+            
+            return fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -619,19 +622,26 @@
             
             updateGenerationProgress(currentParagraphIndex, totalParagraphs);
             
-            return fetch('{{ url_for("content_creator.generate_dynamic_paragraph_v2") }}', {
+            const paragraphUrl = '{{ url_for("content_creator.generate_dynamic_paragraph_v2") }}';
+            const paragraphParams = {
+                'topic': selectedTopic.title,
+                'paragraph_topic': paragraphData.title,
+                'style': writingStyle.value,
+                'paragraph_index': currentParagraphIndex,
+                'total_paragraphs': totalParagraphs,
+                'content_id': contentDraftId
+            };
+            
+            console.log("Generating paragraph:", currentParagraphIndex + 1, "of", totalParagraphs);
+            console.log("API URL:", paragraphUrl);
+            console.log("Params:", paragraphParams);
+            
+            return fetch(paragraphUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams({
-                    'topic': selectedTopic.title,
-                    'paragraph_topic': paragraphData.title,
-                    'style': writingStyle.value,
-                    'paragraph_index': currentParagraphIndex,
-                    'total_paragraphs': totalParagraphs,
-                    'content_id': contentDraftId
-                })
+                body: new URLSearchParams(paragraphParams)
             })
             .then(response => response.json())
             .then(data => {
