@@ -305,7 +305,23 @@ def edit_article(content_id):
         meta_description = ''
     
     # Get tags string
-    tags_str = ', '.join([tag.name for tag in content.tags]) if content.tags else ''
+    if content.tags:
+        if isinstance(content.tags, list):
+            if all(isinstance(tag, str) for tag in content.tags):
+                # Obsługa tagów jako stringów
+                tags_str = ', '.join(content.tags)
+            else:
+                # Obsługa tagów jako obiektów z atrybutem name
+                try:
+                    tags_str = ', '.join([tag.name for tag in content.tags])
+                except AttributeError:
+                    # Fallback, gdyby tagi miały inną strukturę
+                    tags_str = ', '.join([str(tag) for tag in content.tags])
+        else:
+            # Jeśli content.tags nie jest listą, ale pojedynczą wartością
+            tags_str = str(content.tags)
+    else:
+        tags_str = ''
     
     # Add tags and other metadata to content object for template access
     content.tags_str = tags_str
