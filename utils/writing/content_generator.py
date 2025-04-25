@@ -336,13 +336,18 @@ def _generate_article_metadata(topic, content, keywords=None):
         logger.info(f"Generating article metadata using simpler model: {model}")
         
         # Try with a shorter max_tokens to improve reliability
-        result = openrouter.generate_completion(
+        response_obj = openrouter.generate_completion(
             prompt=user_prompt,
             model=model,
             system_prompt=system_prompt,
             temperature=0.7,
             max_tokens=500  # Reduced for more reliability
         )
+        
+        # Extract content from response object
+        result = ""
+        if response_obj and "choices" in response_obj and len(response_obj["choices"]) > 0:
+            result = response_obj["choices"][0].get("message", {}).get("content", "")
         
         if not result:
             logger.warning("Empty result from OpenRouter, using default metadata")
@@ -447,13 +452,18 @@ Focus on accuracy, readability, and meeting the exact word count requirements.""
             logger.info(f"Generating content using model: {model}")
             
             # Use our direct OpenRouter client
-            content = openrouter.generate_completion(
+            response_obj = openrouter.generate_completion(
                 prompt=user_prompt,
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
                 max_tokens=3000  # Balanced limit for longer paragraphs while maintaining stability
             )
+            
+            # Extract content from response object
+            content = ""
+            if response_obj and "choices" in response_obj and len(response_obj["choices"]) > 0:
+                content = response_obj["choices"][0].get("message", {}).get("content", "")
             
             if not content:
                 logger.error("Failed to get content from OpenRouter")
@@ -627,13 +637,18 @@ Respond ONLY with a valid JSON object in the exact format requested."""
             logger.info(f"Generating article plan using model: {model}")
             
             # Use our direct OpenRouter client
-            result = openrouter.generate_completion(
+            response_obj = openrouter.generate_completion(
                 prompt=user_prompt,
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.7,
                 max_tokens=2000
             )
+            
+            # Extract content from response object
+            result = ""
+            if response_obj and "choices" in response_obj and len(response_obj["choices"]) > 0:
+                result = response_obj["choices"][0].get("message", {}).get("content", "")
             
             if not result:
                 logger.error("Failed to get article plan from OpenRouter")

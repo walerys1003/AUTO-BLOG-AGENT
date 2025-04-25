@@ -223,7 +223,7 @@ class OpenRouterClient:
         
         response_format = {"type": "json_object"}
         
-        response_text = self.generate_completion(
+        response_obj = self.generate_completion(
             prompt=prompt,
             model=model,
             system_prompt=system_prompt,
@@ -231,6 +231,15 @@ class OpenRouterClient:
             response_format=response_format
         )
         
+        # Extract content from response
+        response_text = ""
+        if response_obj and "choices" in response_obj and len(response_obj["choices"]) > 0:
+            response_text = response_obj["choices"][0].get("message", {}).get("content", "")
+        
+        if not response_text:
+            logger.error("Empty response from OpenRouter")
+            return None
+            
         try:
             return json.loads(response_text)
         except json.JSONDecodeError as e:
