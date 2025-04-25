@@ -318,7 +318,26 @@ def edit_content(content_id):
                 
         except Exception as e:
             logger.error(f"Error generating content: {str(e)}")
-            flash(f'Error generating content: {str(e)}', 'danger')
+            error_message = str(e)
+            # Sprawdź, czy błąd jest związany z API OpenRouter
+            if "openrouter" in error_message.lower() or "ai service" in error_message.lower():
+                error_message = "Problem z połączeniem z usługą AI. Spróbuj ponownie za chwilę."
+            elif "timeout" in error_message.lower():
+                error_message = "Przekroczono czas oczekiwania na odpowiedź z usługi AI. Spróbuj ponownie."
+            flash(f'Błąd generowania treści: {error_message}', 'danger')
+            
+            # Zapisz informację o błędzie w content_log
+            content_data = {
+                'content': '<p>Nie udało się wygenerować treści. Spróbuj ponownie.</p>',
+                'meta_description': '',
+                'excerpt': '',
+                'tags': [],
+                'featured_image_url': '',
+                'topic_id': topic_id,
+                'generation_error': error_message
+            }
+            content_log.error_message = json.dumps(content_data)
+            db.session.commit()
     
     # If we don't have a topic object yet but we have a topic_id, get it
     if not topic and topic_id:

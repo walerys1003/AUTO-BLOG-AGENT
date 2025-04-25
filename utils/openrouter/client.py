@@ -115,11 +115,12 @@ class OpenRouterClient:
         while retry_count < max_retries:
             try:
                 logger.info(f"Sending request to OpenRouter with model: {model} (Attempt {retry_count + 1}/{max_retries})")
+                logger.debug(f"Request data: {json.dumps(data)}")
                 response = requests.post(
                     f"{self.api_base}/chat/completions",
                     headers=self._get_headers(),
                     json=data,
-                    timeout=120  # Zwiększony timeout do 120 sekund dla dłuższych generacji
+                    timeout=60  # Zmniejszony timeout do 60 sekund dla szybszego wykrywania błędów
                 )
                 response.raise_for_status()
                 # If successful, break out of retry loop
