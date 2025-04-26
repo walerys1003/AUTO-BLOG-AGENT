@@ -190,6 +190,20 @@ def register_routes(app: Flask):
         blog = Blog.query.get_or_404(blog_id)
         
         try:
+            # First, explicitly delete all related article topics to avoid FK constraint violation
+            ArticleTopic.query.filter_by(blog_id=blog_id).delete()
+            
+            # Delete other related items with foreign key constraints
+            ContentLog.query.filter_by(blog_id=blog_id).delete()
+            Category.query.filter_by(blog_id=blog_id).delete()
+            Tag.query.filter_by(blog_id=blog_id).delete()
+            SocialAccount.query.filter_by(blog_id=blog_id).delete()
+            Notification.query.filter_by(blog_id=blog_id).delete()
+            PublishingSchedule.query.filter_by(blog_id=blog_id).delete()
+            ContentMetrics.query.filter_by(blog_id=blog_id).delete()
+            ImageLibrary.query.filter_by(blog_id=blog_id).delete()
+            
+            # Finally delete the blog itself
             db.session.delete(blog)
             db.session.commit()
             
