@@ -1,7 +1,10 @@
 import logging
 import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-from models import Blog, SocialAccount, ContentLog, ArticleTopic
+from models import (
+    Blog, SocialAccount, ContentLog, ArticleTopic, Category, Tag,
+    Notification, PublishingSchedule, ContentMetrics, ImageLibrary
+)
 from app import db
 from utils.scheduler import start_scheduler, process_content_generation
 from generator.seo import generate_article_topics
