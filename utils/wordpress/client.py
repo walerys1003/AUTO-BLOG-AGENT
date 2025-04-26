@@ -409,8 +409,14 @@ def upload_media_to_wordpress(
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/media"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/media"
     auth = (username, token)
+    
+    logger.info(f"Uploading media to: {url}")
     
     try:
         # Download the image
@@ -461,8 +467,14 @@ def delete_wordpress_post(blog_id: int, post_id: int) -> bool:
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/posts/{post_id}"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/posts/{post_id}"
     auth = (username, token)
+    
+    logger.info(f"Deleting post from: {url}")
     
     try:
         response = requests.delete(url, auth=auth, params={"force": True})

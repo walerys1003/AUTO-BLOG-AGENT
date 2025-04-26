@@ -314,20 +314,36 @@
         const blogId = this.value;
         if (!blogId) return;
         
+        console.log(`Loading categories for blog ID: ${blogId}`);
+        
+        // Show loading indicator
+        const categoriesSelect = document.getElementById('categories');
+        categoriesSelect.innerHTML = '<option value="">Loading categories...</option>';
+        
         fetch(`/api/blogs/${blogId}/categories`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('Categories API response:', response.status);
+                return response.json();
+            })
             .then(data => {
-                const categoriesSelect = document.getElementById('categories');
+                console.log('Categories data:', data);
                 categoriesSelect.innerHTML = '';
                 
-                data.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categoriesSelect.appendChild(option);
-                });
+                if (data.success && data.categories && data.categories.length > 0) {
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categoriesSelect.appendChild(option);
+                    });
+                } else {
+                    categoriesSelect.innerHTML = '<option value="">No categories found</option>';
+                }
             })
-            .catch(error => console.error('Error loading categories:', error));
+            .catch(error => {
+                console.error('Error loading categories:', error);
+                categoriesSelect.innerHTML = '<option value="">Error loading categories</option>';
+            });
     });
     
     // Initialize the content mode toggle
