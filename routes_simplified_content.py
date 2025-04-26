@@ -10,6 +10,9 @@ from flask import Blueprint, jsonify, request, render_template, flash, redirect,
 from models import Article, Blog, db
 from utils.content.ai_adapter import get_default_ai_service
 from utils.content.long_paragraph_generator import generate_long_paragraph_content
+from utils.images.google import search_google_images
+from utils.images.unsplash import search_unsplash_images
+from utils.images.auto_image_finder import prepare_image_metadata, find_and_associate_images
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -142,4 +145,85 @@ def save_simplified_content():
         return jsonify({
             "success": False,
             "error": f"Błąd zapisywania treści: {str(e)}"
+        }), 500
+        
+@simplified_content_bp.route("/api/find_images", methods=["POST"])
+def find_images_api():
+    """Find images for a given query using Google Images API"""
+    try:
+        # Get parameters from request
+        data = request.json
+        query = data.get("query")
+        count = int(data.get("count", 4))
+        
+        if not query:
+            return jsonify({"success": False, "error": "Zapytanie jest wymagane"}), 400
+        
+        # First try Google Images (preferred source)
+        try:
+            logger.info(f"Searching for images via Google for query: {query}")
+            google_images = search_google_images(query, count)
+            
+            if google_images and len(google_images) > 0:
+                # Process images to return standardized format
+                processed_images = []
+                for img in google_images:
+                    processed = prepare_image_metadata(
+                        url=img.get("link", ""),
+                        thumbnail_url=img.get("image", {}).get("thumbnailLink", ""),
+                        source="Google Images",
+                        title=img.get("title", ""),
+                        attribution=img.get("displayLink", "")
+                    )
+                    processed_images.append(processed)
+                
+                return jsonify({
+                    "success": True,
+                    "images": processed_images,
+                    "source": "google"
+                })
+        except Exception as google_err:
+            logger.error(f"Error searching Google Images: {str(google_err)}")
+            # Continue to fallback source
+            
+        # If Google fails or returns no results, try Unsplash as fallback
+        try:
+            logger.info(f"Falling back to Unsplash for query: {query}")
+            unsplash_images = search_unsplash_images(query, count)
+            
+            if unsplash_images and len(unsplash_images) > 0:
+                # Process images to return standardized format
+                processed_images = []
+                for img in unsplash_images:
+                    processed = prepare_image_metadata(
+                        url=img.get("urls", {}).get("regular", ""),
+                        thumbnail_url=img.get("urls", {}).get("small", ""),
+                        source="Unsplash",
+                        title=img.get("description", "Image from Unsplash"),
+                        attribution=f"Photo by {img.get('user', {}).get('name', 'Unknown')} on Unsplash"
+                    )
+                    processed_images.append(processed)
+                
+                return jsonify({
+                    "success": True,
+                    "images": processed_images,
+                    "source": "unsplash"
+                })
+        except Exception as unsplash_err:
+            logger.error(f"Error searching Unsplash: {str(unsplash_err)}")
+        
+        # If both methods fail or return no results
+        return jsonify({
+            "success": False,
+            "error": "Nie znaleziono pasujących obrazów",
+            "images": []
+        })
+        
+    except Exception as e:
+        logger.error(f"Error finding images: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            "success": False,
+            "error": f"Błąd wyszukiwania obrazów: {str(e)}",
+            "images": []
         }), 500

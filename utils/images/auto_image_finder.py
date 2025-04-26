@@ -12,9 +12,49 @@ import re
 from models import Article, ImageLibrary, db
 from utils.images.finder import search_images, clean_image_metadata
 from sqlalchemy.exc import SQLAlchemyError
+import uuid
+from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+def prepare_image_metadata(
+    url: str, 
+    thumbnail_url: str = None, 
+    source: str = "unknown", 
+    title: str = "", 
+    attribution: str = ""
+) -> Dict[str, Any]:
+    """
+    Prepare standardized image metadata for use in the application.
+    
+    Args:
+        url: The main image URL
+        thumbnail_url: URL for the thumbnail version, if available
+        source: Source of the image (e.g., 'Google Images', 'Unsplash')
+        title: Title or description of the image
+        attribution: Attribution text (photographer, website, etc.)
+        
+    Returns:
+        Dictionary with standardized image metadata
+    """
+    # Generate a unique ID for the image
+    image_id = str(uuid.uuid4())
+    
+    # Use the main URL as thumbnail if none provided
+    if not thumbnail_url:
+        thumbnail_url = url
+        
+    # Standardize the metadata format
+    return {
+        "id": image_id,
+        "url": url,
+        "thumbnail_url": thumbnail_url,
+        "source": source,
+        "title": title or f"Image from {source}",
+        "attribution": attribution,
+        "date_added": datetime.now().isoformat()
+    }
 
 def extract_keywords_from_title(title: str) -> List[str]:
     """

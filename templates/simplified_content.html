@@ -42,6 +42,17 @@
                         </div>
                     </div>
                     
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="autoFindImagesSwitch" checked>
+                                <label class="form-check-label" for="autoFindImagesSwitch">
+                                    <i class="fas fa-images me-1"></i> Automatycznie wyszukaj obrazy z Google
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <button id="generateButton" class="btn btn-primary w-100">
@@ -221,6 +232,13 @@
                     
                     // Show result container
                     resultContainer.classList.remove('d-none');
+                    
+                    // Auto find images if checked
+                    const autoFindImages = document.querySelector('#autoFindImagesSwitch').checked;
+                    if (autoFindImages) {
+                        showImagesContainer();
+                        findImagesForArticle(topic);
+                    }
                 } else {
                     showError(data.error || 'Błąd generowania treści.');
                 }
@@ -387,6 +405,58 @@
         function showError(message) {
             errorMessage.innerText = message;
             generationError.classList.remove('d-none');
+        }
+        
+        // Helper to show images container
+        function showImagesContainer() {
+            imagesContainer.classList.remove('d-none');
+            featuredImageStatus.classList.remove('d-none');
+            imagesGrid.innerHTML = ''; // Clear any previous images
+        }
+        
+        // Helper to find images for the article
+        async function findImagesForArticle(topic) {
+            try {
+                const response = await fetch('/api/find_images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: topic,
+                        count: 4
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide the loading status
+                featuredImageStatus.classList.add('d-none');
+                
+                if (data.success && data.images && data.images.length > 0) {
+                    // Add image cards to the grid
+                    data.images.forEach(image => {
+                        const imageCard = createImageCard(image);
+                        imagesGrid.appendChild(imageCard);
+                    });
+                } else {
+                    // If no images found
+                    featuredImageStatus.innerHTML = `
+                        <div class="alert alert-warning mb-0 p-2">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Nie znaleziono pasujących obrazów.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error finding images:', error);
+                featuredImageStatus.innerHTML = `
+                    <div class="alert alert-danger mb-0 p-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Błąd podczas wyszukiwania obrazów.
+                    </div>
+                `;
+            }
         }
     });
 </script>
