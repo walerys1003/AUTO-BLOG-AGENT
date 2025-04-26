@@ -5,11 +5,66 @@ import requests
 import logging
 import json
 import os
+import re
 from datetime import datetime
 from typing import Tuple, Dict, Any, List, Optional, Union
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+def normalize_wp_api_url(api_url: str) -> str:
+    """
+    Normalize a WordPress API URL to ensure consistent formatting
+    
+    Args:
+        api_url: The API URL to normalize
+        
+    Returns:
+        Normalized API URL
+    """
+    # Remove trailing slashes
+    api_url = api_url.rstrip('/')
+    
+    # Replace multiple consecutive slashes with a single slash
+    api_url = re.sub(r'([^:])//+', r'\1/', api_url)
+    
+    return api_url
+
+def build_wp_api_url(api_url: str, endpoint: str) -> str:
+    """
+    Build a WordPress API URL for a specific endpoint
+    
+    Args:
+        api_url: The base API URL
+        endpoint: The API endpoint (e.g., 'categories', 'posts')
+        
+    Returns:
+        Full WordPress API URL
+    """
+    # First normalize the base URL
+    api_url = normalize_wp_api_url(api_url)
+    
+    # Determine if the URL already has wp-json/wp/v2
+    if '/wp-json/wp/v2' in api_url:
+        # URL already has the full path
+        base_url = api_url
+    elif '/wp-json' in api_url:
+        # URL has wp-json but needs wp/v2
+        base_url = f"{api_url}/wp/v2"
+    else:
+        # URL needs the full path
+        base_url = f"{api_url}/wp-json/wp/v2"
+    
+    # Remove any leading slash from the endpoint
+    endpoint = endpoint.lstrip('/')
+    
+    # Construct the final URL
+    url = f"{base_url}/{endpoint}"
+    
+    # Log the URL for debugging
+    logger.info(f"WordPress API URL: {url} (from base: {api_url})")
+    
+    return url
 
 def get_wordpress_client(blog_id: int) -> Tuple[str, str, str, str]:
     """
@@ -40,38 +95,13 @@ def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
     Returns:
         List of categories
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly
+    url = build_wp_api_url(api_url, "categories")
     
-    # Remove any duplicate slashes in the URL path
-    if base_url.endswith('/'):
-        url = f"{base_url}categories"
-    else:
-        url = f"{base_url}/categories"
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
+    logger.info(f"Fetching WordPress categories for blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Fetching categories from: {url}")
     
     try:
         response = requests.get(url, auth=auth, params={"per_page": 100})
@@ -117,38 +147,13 @@ def get_wordpress_tags(blog_id: int) -> List[Dict[str, Any]]:
     Returns:
         List of tags
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly
+    url = build_wp_api_url(api_url, "tags")
     
-    # Remove any duplicate slashes in the URL path
-    if base_url.endswith('/'):
-        url = f"{base_url}tags"
-    else:
-        url = f"{base_url}/tags"
+    logger.info(f"Fetching WordPress tags for blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Fetching tags from: {url}")
     
     try:
         response = requests.get(url, auth=auth, params={"per_page": 100})
@@ -193,34 +198,13 @@ def get_wordpress_post(blog_id: int, post_id: int) -> Dict[str, Any]:
     Returns:
         Post data
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly with the post ID
+    url = build_wp_api_url(api_url, f"posts/{post_id}")
     
-    url = f"{base_url}/posts/{post_id}"
+    logger.info(f"Fetching WordPress post (ID: {post_id}) from blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Fetching post from: {url}")
     
     try:
         response = requests.get(url, auth=auth)
@@ -258,34 +242,13 @@ def create_wordpress_post(
     Returns:
         Tuple of (success, post_id, error_message)
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly
+    url = build_wp_api_url(api_url, "posts")
     
-    url = f"{base_url}/posts"
+    logger.info(f"Creating WordPress post titled '{title}' on blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Creating post on: {url}")
     
     # Prepare post data
     post_data = {
@@ -346,34 +309,13 @@ def update_wordpress_post(
     Returns:
         Tuple of (success, post_id, error_message)
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly with the post ID
+    url = build_wp_api_url(api_url, f"posts/{post_id}")
     
-    url = f"{base_url}/posts/{post_id}"
+    logger.info(f"Updating WordPress post (ID: {post_id}) on blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Updating post on: {url}")
     
     # Prepare post data
     post_data = {}
@@ -505,34 +447,13 @@ def upload_media_to_wordpress(
     Returns:
         Tuple of (success, media_id, error_message)
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly
+    url = build_wp_api_url(api_url, "media")
     
-    url = f"{base_url}/media"
+    logger.info(f"Uploading media '{image_name}' to blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Uploading media to: {url}")
     
     try:
         # Download the image
@@ -556,11 +477,13 @@ def upload_media_to_wordpress(
         
         # Set alt text if provided
         if alt_text:
-            update_url = f"{api_url}/media/{media['id']}"
+            # Use our helper function to build the URL correctly for the media update
+            update_url = build_wp_api_url(api_url, f"media/{media['id']}")
             update_data = {
                 "alt_text": alt_text
             }
             
+            logger.info(f"Setting alt text for media ID {media['id']}")
             update_response = requests.post(update_url, auth=auth, json=update_data)
             update_response.raise_for_status()
         
@@ -581,34 +504,13 @@ def delete_wordpress_post(blog_id: int, post_id: int) -> bool:
     Returns:
         Success status
     """
-    api_url, username, token, _ = get_wordpress_client(blog_id)
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
     
-    # Upewnij się, że api_url zawiera właściwy format
-    # Sprawdźmy czy URL ma już prefiks wp/v2 czy musimy go dodać
-    if '/wp-json/wp/v2' in api_url:
-        # URL już zawiera prefiks
-        base_url = api_url
-    elif '/wp-json' in api_url:
-        # URL zawiera tylko wp-json, dodajmy /wp/v2
-        if api_url.endswith('/wp-json/'):
-            base_url = f"{api_url}wp/v2"
-        elif api_url.endswith('/wp-json'):
-            base_url = f"{api_url}/wp/v2"
-        else:
-            base_url = api_url
-    else:
-        # Brakuje prefiksu, użyjmy standardowego formatu
-        if api_url.endswith('/'):
-            base_url = f"{api_url}wp-json/wp/v2"
-        else:
-            base_url = f"{api_url}/wp-json/wp/v2"
+    # Use our helper function to build the URL correctly with the post ID
+    url = build_wp_api_url(api_url, f"posts/{post_id}")
     
-    url = f"{base_url}/posts/{post_id}"
+    logger.info(f"Deleting WordPress post (ID: {post_id}) from blog '{blog_name}' (ID: {blog_id})")
     auth = (username, token)
-    
-    logger.info(f"Checking API URL format: {api_url} -> {base_url}")
-    
-    logger.info(f"Deleting post from: {url}")
     
     try:
         response = requests.delete(url, auth=auth, params={"force": True})
