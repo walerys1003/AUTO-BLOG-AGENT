@@ -27,6 +27,7 @@ def get_daily_trends(country="pl"):
     
     try:
         # Initialize pytrends with updated parameters
+        # Avoid using deprecated parameters by removing them completely
         pytrends = TrendReq(hl=f'{country}-{country.upper()}', timeout=(10, 25), 
                           retries=2, backoff_factor=0.1,
                           requests_args={'verify': True})
