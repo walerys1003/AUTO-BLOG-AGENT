@@ -17,7 +17,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('simplified_content.content_creator') }}">Content Creator</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('simplified_content.simplified_content_page') }}">Generator Długich Treści</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ 'Edit Content' if content else 'New Content' }}</li>
                 </ol>
             </nav>
@@ -113,7 +113,7 @@
                 
                 <!-- Action Buttons -->
                 <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('simplified_content.content_creator') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('simplified_content.simplified_content_page') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-2"></i> Back
                     </a>
                     
