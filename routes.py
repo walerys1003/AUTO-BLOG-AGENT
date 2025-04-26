@@ -27,6 +27,7 @@ from routes_publishing import publishing_bp
 from routes_social import social_bp
 from routes_monitoring import monitoring_bp
 from routes_seo import seo_bp
+from routes_ai_content import ai_content, register_routes as register_ai_content_routes
 import json
 from datetime import datetime, timedelta
 
@@ -970,3 +971,6 @@ def register_routes(app: Flask):
     
     # Register SEO blueprint
     app.register_blueprint(seo_bp)
+    
+    # Register AI Content blueprint
+    register_ai_content_routes(app)

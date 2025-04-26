@@ -1,316 +1,269 @@
 """
-Long Paragraph Generator
+Long Paragraph Generator Module
 
-This module provides functionality for generating and validating longer paragraphs
-in content generation. It ensures each paragraph meets the minimum token requirements
-and automatically extends paragraphs that are too short.
+This module provides functions to generate longer paragraphs for articles,
+with a target token count and verification functionality.
 """
-
+import json
 import logging
+import re
+import time
+from typing import Dict, List, Optional, Any
+
 import tiktoken
-from typing import List, Dict, Any, Tuple, Optional
-import os
-from datetime import datetime
+from config import Config
+from utils.content.ai_adapter import get_ai_completion
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Constants for paragraph generation
-MIN_PARAGRAPH_TOKENS = 1000  # Minimum tokens per paragraph
-MIN_INTRO_TOKENS = 500       # Minimum tokens for introduction
-MIN_CONCLUSION_TOKENS = 500  # Minimum tokens for conclusion
-TARGET_PARAGRAPHS = 4        # Default number of paragraphs
+# Initialize tiktoken encoder
+try:
+    encoder = tiktoken.get_encoding("cl100k_base")  # Claude/OpenAI compatible encoding
+except Exception as e:
+    logger.warning(f"Could not initialize tiktoken encoder: {str(e)}")
+    encoder = None
 
-# Initialize tokenizer
-def get_tokenizer(model_name="gpt-4"):
-    """Get the appropriate tokenizer for the model."""
+def count_tokens(text: str) -> int:
+    """
+    Count the number of tokens in a text string.
+    
+    Args:
+        text: Text to count tokens for
+        
+    Returns:
+        Number of tokens
+    """
+    if encoder is None:
+        # Fallback: rough approximation (4 chars per token)
+        return len(text) // 4
+        
     try:
-        return tiktoken.encoding_for_model(model_name)
-    except KeyError:
-        # Fallback to cl100k_base, which is used by GPT-4, GPT-3.5-Turbo, etc.
-        return tiktoken.get_encoding("cl100k_base")
+        return len(encoder.encode(text))
+    except Exception as e:
+        logger.warning(f"Error counting tokens: {str(e)}")
+        # Fallback: rough approximation (4 chars per token)
+        return len(text) // 4
 
-def count_tokens(text: str, model_name="gpt-4") -> int:
-    """Count the number of tokens in a text string."""
-    enc = get_tokenizer(model_name)
-    return len(enc.encode(text))
-
-def create_article_generation_prompt(topic: str, num_paragraphs: int = TARGET_PARAGRAPHS) -> str:
+def generate_long_paragraph(
+    title: str,
+    topic: str,
+    section_title: str,
+    target_tokens: int = 1000,
+    index: int = 1,
+    max_attempts: int = 3
+) -> str:
     """
-    Create a prompt for generating an article with long paragraphs.
+    Generate a long paragraph with a target token count.
     
     Args:
-        topic: The topic of the article
-        num_paragraphs: Number of paragraphs to generate (default: 4)
+        title: The article title
+        topic: The specific topic
+        section_title: The section title
+        target_tokens: Target number of tokens (default: 1000)
+        index: The paragraph index (for context)
+        max_attempts: Maximum attempts to reach target length
         
     Returns:
-        A formatted prompt string
+        Generated paragraph text
     """
-    return f"""
-Napisz artykuł na temat: {topic}, który będzie zawierał dokładnie {num_paragraphs} bardzo rozbudowane akapity.
-
-Każdy akapit ma mieć długość minimum {MIN_PARAGRAPH_TOKENS} tokenów (około 750 słów). 
-- Akapity muszą być szczegółowe, analityczne, pełne danych, przykładów i przemyśleń.
-- Każdy kolejny akapit rozwija poprzedni – zachowaj logiczny ciąg przyczynowo-skutkowy.
-- Nie używaj krótkich zdań ani ogólników.
-- Utrzymaj wysoki poziom merytoryczny i stylistyczny.
-
-Struktura artykułu:
-1. Wprowadzenie (min. {MIN_INTRO_TOKENS} tokenów) – kontekst, znaczenie tematu.
-{chr(10).join([f"{i+2}. Akapit {i+1} – " + (
-    "pierwszy aspekt tematu, szczegółowy opis." if i==0 else
-    "logiczne rozwinięcie, analiza kolejnego aspektu." if i==1 else
-    "kontynuacja, nowe dane, perspektywy." if i==2 else
-    "rozszerzenie tematu, zamknięcie analizy."
-) for i in range(num_paragraphs)])}
-{num_paragraphs+2}. Podsumowanie (min. {MIN_CONCLUSION_TOKENS} tokenów) – wnioski, przemyślenia, konkluzje.
-
-Jeśli którykolwiek akapit ma mniej niż {MIN_PARAGRAPH_TOKENS} tokenów, rozwiń go automatycznie, dodając nowe informacje, przykłady, dane, tak by spełniał wymóg długości.
-"""
-
-def create_paragraph_extension_prompt(paragraph: str, topic: str) -> str:
-    """
-    Create a prompt to extend a paragraph that is too short.
+    system_prompt = f"""Jesteś ekspertem w pisaniu długich, szczegółowych akapitów do artykułów.
+    Twoim zadaniem jest wygenerowanie jednego długiego akapitu na temat '{topic}' dla sekcji '{section_title}'.
     
-    Args:
-        paragraph: The paragraph that needs extension
-        topic: The topic of the article
+    Zasady:
+    1. Akapit powinien mieć około {target_tokens} tokenów (około {target_tokens*4} znaków)
+    2. Akapit powinien zawierać szczegółowe, wartościowe informacje
+    3. Unikaj powtarzania tych samych myśli i zwrotów
+    4. Używaj różnorodnego, ale naturalnego języka
+    5. Akapit powinien być spójny i logiczny
+    6. Pisz w języku polskim, przyjaznym tonem eksperta
+    7. Format: zwróć tekst w paragrafach HTML (<p>treść</p>)
+    8. Możesz użyć pogrubień (<strong>) i kursywy (<em>) dla ważnych pojęć
+    
+    Jest to akapit numer {index} w artykule, więc zadbaj o spójność z resztą treści.
+    """
+    
+    user_prompt = f"""Tytuł artykułu: {title}
+    Temat: {topic}
+    Tytuł sekcji: {section_title}
+    
+    Wygeneruj szczegółowy akapit dla tej sekcji artykułu.
+    """
+    
+    attempts = 0
+    while attempts < max_attempts:
+        attempts += 1
         
-    Returns:
-        A formatted prompt string
-    """
-    current_tokens = count_tokens(paragraph)
-    additional_tokens_needed = max(0, MIN_PARAGRAPH_TOKENS - current_tokens)
+        try:
+            # Generate paragraph
+            paragraph = get_ai_completion(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=Config.DEFAULT_CONTENT_MODEL,
+                max_tokens=target_tokens + 200,  # Allow some extra tokens
+                temperature=0.7
+            )
+            
+            # Clean up paragraph (remove unnecessary line breaks, etc.)
+            paragraph = re.sub(r'\n\s*\n', '\n\n', paragraph)
+            
+            # Check token count
+            token_count = count_tokens(paragraph)
+            
+            if token_count >= target_tokens * 0.8:  # At least 80% of target
+                # Successfully generated a paragraph of appropriate length
+                return paragraph
+                
+            logger.warning(f"Generated paragraph too short: {token_count} tokens (target: {target_tokens})")
+            
+            if attempts < max_attempts:
+                # Update prompt to request longer paragraph
+                system_prompt = f"""Jesteś ekspertem w pisaniu bardzo długich, szczegółowych akapitów do artykułów.
+                Poprzednia próba była zbyt krótka. Potrzebuję znacznie dłuższego i bardziej szczegółowego akapitu.
+                
+                Twoim zadaniem jest wygenerowanie jednego bardzo długiego akapitu na temat '{topic}' dla sekcji '{section_title}'.
+                
+                Zasady:
+                1. Akapit MUSI mieć przynajmniej {target_tokens} tokenów (około {target_tokens*4} znaków)
+                2. Akapit powinien zawierać wyczerpujące, wartościowe informacje
+                3. Podaj wiele przykładów, szczegółów i wyjaśnień
+                4. Unikaj powtarzania tych samych myśli i zwrotów
+                5. Używaj różnorodnego, ale naturalnego języka
+                6. Pisz w języku polskim, przyjaznym tonem eksperta
+                7. Format: zwróć tekst w paragrafach HTML (<p>treść</p>)
+                8. Możesz użyć pogrubień (<strong>) i kursywy (<em>) dla ważnych pojęć
+                
+                Jest to akapit numer {index} w artykule, więc zadbaj o spójność z resztą treści.
+                """
+                
+                # Wait a bit before retrying
+                time.sleep(1)
+                continue
+                
+        except Exception as e:
+            logger.error(f"Error generating long paragraph: {str(e)}")
+            # Return simple fallback paragraph in case of failure
+            return f"<p>W kontekście {topic}, {section_title} stanowi istotny element, który warto dokładnie przeanalizować. Eksperci w tej dziedzinie wielokrotnie podkreślają jego znaczenie dla całościowego zrozumienia omawianej tematyki.</p>"
     
-    return f"""
-Poniższy akapit na temat "{topic}" jest za krótki (ma tylko {current_tokens} tokenów, a potrzebujemy minimum {MIN_PARAGRAPH_TOKENS}).
+    # If all attempts failed, return the last generated paragraph (even if too short)
+    return paragraph
 
-AKAPIT DO ROZSZERZENIA:
-{paragraph}
-
-Proszę rozszerzyć powyższy akapit, dodając co najmniej {additional_tokens_needed} tokenów nowej treści. Dodaj więcej:
-- Szczegółowych informacji i danych
-- Konkretnych przykładów
-- Perspektyw i argumentów
-- Wyjaśnień i kontekstu
-
-Zachowaj styl, ton i logiczny ciąg myślowy. Tekst musi być spójny i płynnie przechodzić z istniejącej treści do nowej. Nie powtarzaj już przedstawionych informacji, tylko dodawaj nowe, wartościowe treści.
-"""
-
-def validate_paragraph_length(paragraph: str, 
-                             min_tokens: int = MIN_PARAGRAPH_TOKENS, 
-                             model_name: str = "gpt-4") -> Tuple[bool, int]:
-    """
-    Validate if a paragraph meets the minimum token length.
-    
-    Args:
-        paragraph: The paragraph text to validate
-        min_tokens: Minimum required tokens
-        model_name: The model name for tokenization
-        
-    Returns:
-        Tuple of (meets_requirement, actual_token_count)
-    """
-    token_count = count_tokens(paragraph, model_name)
-    return (token_count >= min_tokens, token_count)
-
-def split_article_into_sections(article_text: str) -> Dict[str, Any]:
-    """
-    Split an article into introduction, body paragraphs, and conclusion.
-    
-    This function uses heuristics to identify sections in the text.
-    
-    Args:
-        article_text: The full article text
-        
-    Returns:
-        Dictionary with 'intro', 'paragraphs' (list), and 'conclusion' keys
-    """
-    # Simple splitting based on double newlines
-    chunks = [chunk.strip() for chunk in article_text.split("\n\n") if chunk.strip()]
-    
-    # Filter out section headers and short lines
-    content_chunks = [chunk for chunk in chunks if len(chunk) > 100 and not chunk.startswith('#')]
-    
-    if len(content_chunks) < 3:
-        # If we can't identify enough chunks, return the whole text as one paragraph
-        return {
-            'intro': content_chunks[0] if content_chunks else "",
-            'paragraphs': content_chunks[1:-1] if len(content_chunks) > 2 else [],
-            'conclusion': content_chunks[-1] if len(content_chunks) > 1 else ""
-        }
-    
-    # Assume first chunk is intro, last is conclusion, rest are body paragraphs
-    return {
-        'intro': content_chunks[0],
-        'paragraphs': content_chunks[1:-1],
-        'conclusion': content_chunks[-1]
-    }
-
-def generate_article_metrics(article_text: str, model_name: str = "gpt-4") -> Dict[str, Any]:
-    """
-    Generate metrics for an article, including token counts for each section.
-    
-    Args:
-        article_text: The full article text
-        model_name: The model name for tokenization
-        
-    Returns:
-        Dictionary with article metrics
-    """
-    sections = split_article_into_sections(article_text)
-    
-    # Count tokens in each section
-    intro_tokens = count_tokens(sections['intro'], model_name)
-    conclusion_tokens = count_tokens(sections['conclusion'], model_name)
-    
-    paragraph_metrics = []
-    for i, para in enumerate(sections['paragraphs']):
-        tokens = count_tokens(para, model_name)
-        paragraph_metrics.append({
-            'paragraph_number': i + 1,
-            'tokens': tokens,
-            'meets_requirement': tokens >= MIN_PARAGRAPH_TOKENS
-        })
-    
-    total_tokens = count_tokens(article_text, model_name)
-    
-    return {
-        'total_tokens': total_tokens,
-        'intro': {
-            'tokens': intro_tokens,
-            'meets_requirement': intro_tokens >= MIN_INTRO_TOKENS
-        },
-        'conclusion': {
-            'tokens': conclusion_tokens,
-            'meets_requirement': conclusion_tokens >= MIN_CONCLUSION_TOKENS
-        },
-        'paragraphs': paragraph_metrics,
-        'all_requirements_met': (
-            intro_tokens >= MIN_INTRO_TOKENS and
-            conclusion_tokens >= MIN_CONCLUSION_TOKENS and
-            all(p['meets_requirement'] for p in paragraph_metrics)
-        )
-    }
-
-def format_metrics_report(metrics: Dict[str, Any]) -> str:
-    """
-    Format article metrics into a human-readable report.
-    
-    Args:
-        metrics: The metrics dictionary from generate_article_metrics
-        
-    Returns:
-        Formatted report as a string
-    """
-    report = [
-        "RAPORT ANALIZY DŁUGOŚCI ARTYKUŁU",
-        "=" * 40,
-        f"Łączna liczba tokenów: {metrics['total_tokens']}",
-        "",
-        f"WSTĘP: {metrics['intro']['tokens']} tokenów " +
-        ("✅" if metrics['intro']['meets_requirement'] else "❌"),
-        ""
-    ]
-    
-    for p in metrics['paragraphs']:
-        report.append(
-            f"AKAPIT {p['paragraph_number']}: {p['tokens']} tokenów " +
-            ("✅" if p['meets_requirement'] else "❌")
-        )
-    
-    report.extend([
-        "",
-        f"ZAKOŃCZENIE: {metrics['conclusion']['tokens']} tokenów " +
-        ("✅" if metrics['conclusion']['meets_requirement'] else "❌"),
-        "",
-        "PODSUMOWANIE: " + 
-        ("✅ Wszystkie sekcje spełniają wymagania długości" 
-         if metrics['all_requirements_met'] 
-         else "❌ Niektóre sekcje nie spełniają wymagań długości")
-    ])
-    
-    return "\n".join(report)
-
-# Main function to generate content with long paragraphs
-def generate_long_paragraph_content(topic: str, 
-                                   num_paragraphs: int = TARGET_PARAGRAPHS,
-                                   ai_service=None) -> Dict[str, Any]:
+def generate_long_paragraph_content(
+    topic: str,
+    num_paragraphs: int = 4,
+    ai_service: Optional[Any] = None
+) -> Dict:
     """
     Generate article content with long paragraphs.
     
     Args:
         topic: The article topic
         num_paragraphs: Number of paragraphs to generate
-        ai_service: The AI service to use for generation (needs a generate method)
+        ai_service: Optional AI service to use
         
     Returns:
-        Dictionary with the generated content and metrics
+        Dictionary with 'content', 'metrics', and 'report' keys
     """
-    if ai_service is None:
-        raise ValueError("AI service must be provided")
+    start_time = time.time()
+    logger.info(f"Generating content with {num_paragraphs} paragraphs on topic: {topic}")
     
-    # Create the generation prompt
-    prompt = create_article_generation_prompt(topic, num_paragraphs)
+    # Generate a title and section titles
+    title_prompt = f"""Wygeneruj chwytliwy tytuł artykułu oraz {num_paragraphs} tytułów sekcji dla tematu: {topic}.
+    Tytuł powinien być w języku polskim, przejrzysty i profesjonalny.
+    Tytuły sekcji powinny pokrywać różne aspekty tematu. 
+    Zwróć odpowiedź w formacie JSON: {{"title": "Tytuł artykułu", "sections": ["Tytuł sekcji 1", "Tytuł sekcji 2", ...]}}
+    """
     
-    # Generate the initial content
-    logger.info(f"Generating article with {num_paragraphs} long paragraphs on topic: {topic}")
-    article_text = ai_service.generate(prompt)
+    system_prompt = """Jesteś ekspertem w tworzeniu planów artykułów. Generuj tytuł artykułu i tytuły sekcji w języku polskim."""
     
-    # Analyze the generated content
-    metrics = generate_article_metrics(article_text)
-    
-    # If all requirements are met, return the content
-    if metrics['all_requirements_met']:
-        logger.info(f"Article meets all length requirements: {metrics['total_tokens']} tokens")
-        return {
-            'content': article_text,
-            'metrics': metrics,
-            'report': format_metrics_report(metrics)
-        }
-    
-    # Otherwise, fix any sections that are too short
-    logger.info("Some sections do not meet length requirements. Extending...")
-    sections = split_article_into_sections(article_text)
-    
-    # Fix introduction if needed
-    if not metrics['intro']['meets_requirement']:
-        extension_prompt = create_paragraph_extension_prompt(
-            sections['intro'], 
-            f"Wprowadzenie do artykułu o {topic}"
-        )
-        sections['intro'] = ai_service.generate(extension_prompt)
-    
-    # Fix each paragraph if needed
-    for i, para_metric in enumerate(metrics['paragraphs']):
-        if not para_metric['meets_requirement']:
-            extension_prompt = create_paragraph_extension_prompt(
-                sections['paragraphs'][i], 
-                f"Akapit {i+1} artykułu o {topic}"
+    try:
+        if ai_service:
+            plan_data = ai_service.complete_json(
+                prompt=title_prompt,
+                system_prompt=system_prompt
             )
-            sections['paragraphs'][i] = ai_service.generate(extension_prompt)
+        else:
+            # Fallback to direct API call
+            plan_response = get_ai_completion(
+                system_prompt=system_prompt,
+                user_prompt=title_prompt,
+                model=Config.DEFAULT_CONTENT_MODEL,
+                response_format={"type": "json_object"}
+            )
+            plan_data = json.loads(plan_response)
+            
+        title = plan_data.get("title", f"Kompletny przewodnik: {topic}")
+        sections = plan_data.get("sections", [])
+        
+        # Ensure we have enough sections
+        while len(sections) < num_paragraphs:
+            sections.append(f"Część {len(sections) + 1}: Dodatkowe informacje o {topic}")
+            
+    except Exception as e:
+        logger.error(f"Error generating title and sections: {str(e)}")
+        # Fallback to simple title and sections
+        title = f"Kompletny przewodnik: {topic}"
+        sections = [f"Część {i+1}: {topic}" for i in range(num_paragraphs)]
     
-    # Fix conclusion if needed
-    if not metrics['conclusion']['meets_requirement']:
-        extension_prompt = create_paragraph_extension_prompt(
-            sections['conclusion'], 
-            f"Podsumowanie artykułu o {topic}"
-        )
-        sections['conclusion'] = ai_service.generate(extension_prompt)
+    # Generate paragraphs
+    paragraphs = []
+    total_tokens = 0
+    token_counts = []
     
-    # Reassemble the article
-    improved_article = (
-        sections['intro'] + "\n\n" + 
-        "\n\n".join(sections['paragraphs']) + "\n\n" + 
-        sections['conclusion']
-    )
+    for i, section in enumerate(sections[:num_paragraphs]):
+        try:
+            # Generate a long paragraph for this section
+            paragraph = generate_long_paragraph(
+                title=title,
+                topic=topic,
+                section_title=section,
+                target_tokens=1000,
+                index=i+1
+            )
+            
+            # Count tokens
+            token_count = count_tokens(paragraph)
+            total_tokens += token_count
+            token_counts.append(token_count)
+            
+            # Add section title and paragraph to content
+            paragraphs.append(f"<h2>{section}</h2>\n\n{paragraph}")
+            
+        except Exception as e:
+            logger.error(f"Error generating paragraph {i+1}: {str(e)}")
+            # Add a fallback paragraph
+            fallback = f"<p>To jest sekcja o temacie {section}. Tutaj powinna znajdować się szczegółowa treść na ten temat.</p>"
+            paragraphs.append(f"<h2>{section}</h2>\n\n{fallback}")
+            token_counts.append(0)
     
-    # Re-analyze the improved content
-    final_metrics = generate_article_metrics(improved_article)
+    # Combine everything
+    content = f"<h1>{title}</h1>\n\n" + "\n\n".join(paragraphs)
     
-    logger.info(f"Article extended to {final_metrics['total_tokens']} tokens")
+    # Calculate metrics
+    end_time = time.time()
+    generation_time = end_time - start_time
+    avg_tokens_per_paragraph = total_tokens / num_paragraphs if num_paragraphs > 0 else 0
+    
+    metrics = {
+        "total_tokens": total_tokens,
+        "paragraph_count": num_paragraphs,
+        "avg_tokens_per_paragraph": avg_tokens_per_paragraph,
+        "generation_time_seconds": generation_time,
+        "token_counts": token_counts
+    }
+    
+    # Generate report
+    report = f"""
+    Wygenerowano artykuł na temat: **{topic}**
+    - Tytuł: **{title}**
+    - Liczba paragrafów: **{num_paragraphs}**
+    - Całkowita liczba tokenów: **{total_tokens}**
+    - Średnia liczba tokenów na paragraf: **{avg_tokens_per_paragraph:.1f}**
+    - Czas generowania: **{generation_time:.2f}** sekund
+    """
+    
     return {
-        'content': improved_article,
-        'metrics': final_metrics,
-        'report': format_metrics_report(final_metrics)
+        "content": content,
+        "metrics": metrics,
+        "report": report
     }

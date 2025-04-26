@@ -1,242 +1,243 @@
 """
-AI-Driven Content Strategy - Article Generator
+AI Article Generator
 
-This module provides functionality for generating articles based on AI-generated topics
-using Claude 3.5 via OpenRouter.
+This module provides functions to generate article content for a given category and topic
+using AI models (Claude 3.5 Sonnet via OpenRouter API), with paragraph-based approach.
 """
-
-import os
 import logging
+import os
 import json
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
+from typing import Dict, List, Optional
 
-# Import the OpenRouter integration
-from .topic_generator import openrouter_call, get_openrouter_api_key
+from config import Config
+from utils.content.ai_adapter import get_ai_completion, MockAdapter
+from utils.content.long_paragraph_generator import generate_long_paragraph
 
-# Setup logging
+# Configure logging
 logger = logging.getLogger(__name__)
 
-def generate_article(topic: str, category: str, min_paragraph_tokens: int = 1000, num_paragraphs: int = 4) -> Dict[str, str]:
+def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     """
-    Generate a complete article for a given topic and category using Claude 3.5
+    Generate a full article for a given category and topic using AI.
     
     Args:
-        topic: The article topic
-        category: The article category
-        min_paragraph_tokens: Minimum tokens per paragraph (default: 1000)
-        num_paragraphs: Number of paragraphs in the article (default: 4)
+        category: The category for which to generate content
+        topic: The specific topic to create content for
         
     Returns:
-        Dictionary containing article parts (title, introduction, paragraphs, conclusion, meta)
+        Dictionary with 'title' and 'content' keys
     """
+    logger.info(f"Generating article for topic '{topic}' in category '{category}'")
+    
+    # First, generate an article title and plan
+    title, plan = generate_article_title_and_plan(category, topic)
+    
+    # Then generate paragraphs based on the plan
+    paragraphs = []
     try:
-        # Generate article structure with detailed paragraphs
-        prompt = f"""
-        Napisz ekspercki, rozbudowany artykuł na temat: "{topic}" dla bloga z kategorii: "{category}".
+        # Generate an introduction
+        intro = generate_article_intro(title, topic, category, plan)
+        paragraphs.append(intro)
         
-        Artykuł powinien zawierać następujące części:
-        1. Tytuł (kreatywny i przyciągający uwagę)
-        2. Wstęp (min. 500 słów)
-        3. {num_paragraphs} bardzo rozbudowane akapity (minimum {min_paragraph_tokens} tokenów każdy)
-        4. Podsumowanie (min. 500 słów)
-        
-        Wymogi dotyczące akapitów:
-        - Każdy akapit musi zawierać konkretną, głęboką analizę tematu.
-        - Akapity muszą logicznie wynikać jeden z drugiego.
-        - Każdy akapit powinien dotyczyć innego aspektu tematu.
-        - Zadbaj o przykłady, dane i szczegóły w każdym akapicie.
-        
-        Sformatuj artykuł używając znaczników HTML dla struktury:
-        - <h1>Tytuł</h1>
-        - <h2>Podtytuły sekcji</h2>
-        - <p>Paragrafy</p>
-        
-        Dodatkowo, na samym końcu dodaj sekcję META_DATA w formacie:
-        
-        --- META_DATA ---
-        Tytuł SEO: [krótki tytuł z słowami kluczowymi]
-        Opis: [meta description 150-160 znaków]
-        Słowa kluczowe: [5-7 słów kluczowych oddzielonych przecinkami]
-        --- END META_DATA ---
-        """
-        
-        # Get response from Claude 3.5 via OpenRouter
-        response = openrouter_call(prompt, model="anthropic/claude-3-5-sonnet-20241022", max_tokens=8000)
-        
-        # Parse the article and extract its components
-        article_parts = parse_article(response)
-        
-        # Add metadata
-        article_parts['generated_at'] = datetime.now().isoformat()
-        article_parts['topic'] = topic
-        article_parts['category'] = category
-        
-        return article_parts
-        
-    except Exception as e:
-        logger.error(f"Error generating article for topic '{topic}': {str(e)}")
-        # Return a basic structure with error information
-        return {
-            'title': f"Article about {topic}",
-            'content': f"<p>Error generating content: {str(e)}</p>",
-            'meta_title': topic,
-            'meta_description': f"Article about {topic} in the {category} category",
-            'keywords': [category, topic],
-            'error': str(e)
-        }
-
-def parse_article(content: str) -> Dict[str, Any]:
-    """
-    Parse the generated article and extract its components
-    
-    Args:
-        content: The raw content from Claude
-        
-    Returns:
-        Dictionary with article components
-    """
-    result = {
-        'title': "",
-        'content': content,  # Store the full content by default
-        'meta_title': "",
-        'meta_description': "",
-        'keywords': []
-    }
-    
-    # Extract META_DATA section if present
-    if "--- META_DATA ---" in content and "--- END META_DATA ---" in content:
-        meta_start = content.find("--- META_DATA ---")
-        meta_end = content.find("--- END META_DATA ---") + len("--- END META_DATA ---")
-        
-        meta_section = content[meta_start:meta_end]
-        content_without_meta = content[:meta_start].strip()
-        
-        # Update the content without metadata
-        result['content'] = content_without_meta
-        
-        # Extract meta title
-        if "Tytuł SEO:" in meta_section:
-            title_start = meta_section.find("Tytuł SEO:") + len("Tytuł SEO:")
-            title_end = meta_section.find("\n", title_start)
-            result['meta_title'] = meta_section[title_start:title_end].strip()
-        
-        # Extract meta description
-        if "Opis:" in meta_section:
-            desc_start = meta_section.find("Opis:") + len("Opis:")
-            desc_end = meta_section.find("\n", desc_start)
-            result['meta_description'] = meta_section[desc_start:desc_end].strip()
-        
-        # Extract keywords
-        if "Słowa kluczowe:" in meta_section:
-            kw_start = meta_section.find("Słowa kluczowe:") + len("Słowa kluczowe:")
-            kw_end = meta_section.find("\n", kw_start)
-            if kw_end == -1:  # If it's the last line
-                kw_end = len(meta_section)
-            keywords_str = meta_section[kw_start:kw_end].strip()
-            result['keywords'] = [k.strip() for k in keywords_str.split(',')]
-    
-    # Try to extract title from H1 tag
-    import re
-    h1_match = re.search(r'<h1>(.*?)</h1>', content, re.IGNORECASE | re.DOTALL)
-    if h1_match:
-        result['title'] = h1_match.group(1).strip()
-    else:
-        # Fallback to first line if no H1 tag
-        first_line = content.strip().split('\n')[0]
-        if first_line.startswith('#'):
-            result['title'] = first_line.lstrip('#').strip()
+        # Generate main content paragraphs
+        if plan and len(plan) > 0:
+            for i, section in enumerate(plan[:3]):  # Limit to 3 sections for now
+                paragraph = generate_long_paragraph(
+                    title=title,
+                    topic=topic,
+                    section_title=section,
+                    target_tokens=1000,
+                    index=i+1
+                )
+                paragraphs.append(f"<h2>{section}</h2>\n\n{paragraph}")
         else:
-            # Just use the first line as is
-            result['title'] = first_line.strip()
+            # Fallback: generate general paragraphs if no plan is available
+            for i in range(3):
+                paragraph = generate_long_paragraph(
+                    title=title,
+                    topic=topic,
+                    section_title=f"Część {i+1}",
+                    target_tokens=1000,
+                    index=i+1
+                )
+                paragraphs.append(paragraph)
+        
+        # Generate a conclusion
+        conclusion = generate_article_conclusion(title, topic, category, plan, paragraphs)
+        paragraphs.append("<h2>Podsumowanie</h2>\n\n" + conclusion)
+        
+    except Exception as e:
+        logger.error(f"Error generating article paragraphs: {str(e)}")
+        # Add fallback paragraphs if needed
+        if len(paragraphs) < 4:
+            missing = 4 - len(paragraphs)
+            for i in range(missing):
+                paragraphs.append(f"<p>To jest przykładowy akapit {i+1} dla artykułu na temat {topic}.</p>")
     
-    # If no meta title was found, use the article title
-    if not result['meta_title']:
-        result['meta_title'] = result['title']
+    # Combine everything into the full article
+    content = "\n\n".join(paragraphs)
     
-    return result
+    return {
+        'title': title,
+        'content': content,
+        'sections': plan
+    }
 
-def save_article(article_data: Dict[str, Any], filepath: Optional[str] = None) -> str:
+
+def generate_article_title_and_plan(category: str, topic: str) -> tuple:
     """
-    Save the generated article to a JSON file
+    Generate an engaging article title and content plan based on the topic.
     
     Args:
-        article_data: The article data
-        filepath: Path to save the article (if None, one will be generated)
+        category: The category for which to generate the title
+        topic: The specific topic to create a title for
         
     Returns:
-        Path to the saved article file
+        Tuple of (title, plan) where plan is a list of section titles
     """
-    if filepath is None:
-        # Generate a filename based on title and date
-        title_slug = article_data['title'].lower().replace(' ', '-')[:30]
-        date_str = datetime.now().strftime('%Y%m%d')
-        filepath = f"data/articles/{date_str}-{title_slug}.json"
+    system_prompt = """Jesteś ekspertem w tworzeniu planów artykułów na blog. 
+    Twoim zadaniem jest wygenerowanie chwytliwego tytułu i planu artykułu (3-5 sekcji).
+    
+    Zasady:
+    1. Tytuł powinien być chwytliwy, ale nie clickbaitowy
+    2. Tytuł powinien być w języku polskim i zawierać 50-80 znaków
+    3. Plan powinien zawierać 3-5 sekcji
+    4. Sekcje powinny być logicznie powiązane i prowadzić czytelnika przez temat
+    5. Zwróć odpowiedź w formacie JSON: {"title": "Tytuł artykułu", "plan": ["Sekcja 1", "Sekcja 2", "Sekcja 3"]}
+    
+    Generujesz tytuł i plan dla artykułu w kategorii i temacie które podam.
+    """
+    
+    user_prompt = f"Kategoria: {category}\nTemat: {topic}\n\nWygeneruj chwytliwy tytuł i plan artykułu na ten temat."
     
     try:
-        # Create directory if needed
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        response = get_ai_completion(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=1000,
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
         
-        # Save article data as JSON
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(article_data, f, ensure_ascii=False, indent=2)
+        try:
+            result = json.loads(response)
+            title = result.get("title", f"{topic} - kompletny przewodnik")
+            plan = result.get("plan", [])
             
-        logger.info(f"Article saved to {filepath}")
-        return filepath
-        
+            if not plan or len(plan) < 3:
+                # Generate a default plan if needed
+                plan = [
+                    f"Wprowadzenie do {topic}",
+                    f"Najważniejsze aspekty {topic}",
+                    f"Praktyczne zastosowania {topic}",
+                    f"Podsumowanie i wnioski"
+                ]
+            
+            return title, plan
+            
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to parse AI response for title and plan: {response[:200]}...")
+            return topic, []
+            
     except Exception as e:
-        logger.error(f"Error saving article: {str(e)}")
-        return ""
+        logger.error(f"Error generating article title and plan: {str(e)}")
+        return topic, []
 
-def get_random_topic_for_category(category: str, topics_filepath: str = "data/ai_topics.json") -> Optional[str]:
+
+def generate_article_intro(title: str, topic: str, category: str, plan: List[str]) -> str:
     """
-    Get a random unused topic for a category
+    Generate an engaging introduction for the article.
     
     Args:
-        category: The category to get a topic for
-        topics_filepath: Path to the topics JSON file
+        title: The article title
+        topic: The specific topic
+        category: The category
+        plan: The article content plan (list of section titles)
         
     Returns:
-        A random topic string or None if no topics are available
+        Introduction text as a string
     """
+    system_prompt = """Jesteś ekspertem w pisaniu wstępów do artykułów na blog.
+    Twoim zadaniem jest napisanie wciągającego wstępu do artykułu o podanym tytule i temacie.
+    
+    Zasady:
+    1. Wstęp powinien mieć 800-1000 znaków
+    2. Wstęp powinien przyciągać uwagę czytelnika
+    3. Wstęp powinien nakreślać zawartość artykułu
+    4. Nie używaj zwrotów typu "w tym artykule", "w poniższym tekście" itp.
+    5. Unikaj clickbaitu i przesadnych obietnic
+    6. Pisz w języku polskim, przyjaznym tonem eksperta
+    7. Wstęp nie powinien mieć śródtytułów
+    8. Wstęp powinien kończyć się zapowiedzią zawartości artykułu
+    
+    Generujesz wstęp dla artykułu o podanym tytule, temacie i planie.
+    """
+    
+    plan_text = "\n".join([f"- {section}" for section in plan]) if plan else ""
+    user_prompt = f"Tytuł: {title}\nTemat: {topic}\nKategoria: {category}\n\nPlan artykułu:\n{plan_text}\n\nNapisz wciągający wstęp do tego artykułu."
+    
     try:
-        # Load all topics
-        topics_data = {}
-        if os.path.exists(topics_filepath):
-            with open(topics_filepath, 'r', encoding='utf-8') as f:
-                topics_data = json.load(f)
+        intro = get_ai_completion(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=1000,
+            temperature=0.7
+        )
         
-        # Check if category exists in topics data
-        if category not in topics_data or not topics_data[category]:
-            logger.warning(f"No topics found for category '{category}'")
-            return None
-        
-        # Load list of already used topics
-        used_topics = []
-        used_topics_path = "data/used_topics.json"
-        if os.path.exists(used_topics_path):
-            with open(used_topics_path, 'r', encoding='utf-8') as f:
-                used_topics = json.load(f)
-        
-        # Filter out used topics
-        available_topics = [t for t in topics_data[category] if t not in used_topics]
-        
-        if not available_topics:
-            logger.warning(f"All topics for category '{category}' have been used")
-            return None
-        
-        # Select a random topic
-        import random
-        topic = random.choice(available_topics)
-        
-        # Mark topic as used
-        used_topics.append(topic)
-        os.makedirs(os.path.dirname(used_topics_path), exist_ok=True)
-        with open(used_topics_path, 'w', encoding='utf-8') as f:
-            json.dump(used_topics, f, ensure_ascii=False, indent=2)
-        
-        return topic
+        return intro
         
     except Exception as e:
-        logger.error(f"Error getting random topic for category '{category}': {str(e)}")
-        return None
+        logger.error(f"Error generating article introduction: {str(e)}")
+        # Return a fallback introduction
+        return f"<p>Witaj w naszym przewodniku na temat {topic}. W tym artykule omówimy najważniejsze aspekty tego zagadnienia i podzielimy się praktycznymi wskazówkami.</p>"
+
+
+def generate_article_conclusion(title: str, topic: str, category: str, plan: List[str], paragraphs: List[str]) -> str:
+    """
+    Generate a strong conclusion for the article.
+    
+    Args:
+        title: The article title
+        topic: The specific topic
+        category: The category
+        plan: The article content plan
+        paragraphs: The article paragraphs
+        
+    Returns:
+        Conclusion text as a string
+    """
+    system_prompt = """Jesteś ekspertem w pisaniu zakończeń artykułów na blog.
+    Twoim zadaniem jest napisanie mocnego zakończenia artykułu, które podsumuje główne punkty i zachęci czytelnika do działania.
+    
+    Zasady:
+    1. Zakończenie powinno mieć 700-900 znaków
+    2. Zakończenie powinno podsumować najważniejsze punkty z artykułu
+    3. Zakończenie powinno zawierać call-to-action - zachętę do podjęcia działania
+    4. Unikaj rozpoczynania od zwrotów "podsumowując", "na koniec" itp.
+    5. Pisz w języku polskim, przyjaznym tonem eksperta
+    6. Zakończenie nie powinno wprowadzać nowych informacji
+    7. Zakończenie powinno dawać czytelnikowi poczucie, że otrzymał kompletną i wartościową wiedzę
+    
+    Generujesz zakończenie dla artykułu o podanym tytule, temacie i planie.
+    """
+    
+    plan_text = "\n".join([f"- {section}" for section in plan]) if plan else ""
+    user_prompt = f"Tytuł: {title}\nTemat: {topic}\nKategoria: {category}\n\nPlan artykułu:\n{plan_text}\n\nNapisz mocne zakończenie do tego artykułu."
+    
+    try:
+        conclusion = get_ai_completion(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=800,
+            temperature=0.7
+        )
+        
+        return conclusion
+        
+    except Exception as e:
+        logger.error(f"Error generating article conclusion: {str(e)}")
+        # Return a fallback conclusion
+        return f"<p>To najważniejsze informacje na temat {topic}. Mamy nadzieję, że ten artykuł był pomocny i zachęcamy do wykorzystania zdobytej wiedzy w praktyce.</p>"

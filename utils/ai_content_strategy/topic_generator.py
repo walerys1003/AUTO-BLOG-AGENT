@@ -1,239 +1,156 @@
 """
-AI-Driven Content Strategy - Topic Generator
+AI Topic Generator
 
-This module provides functionality for generating blog post topics for categories
-using Claude 3.5 via OpenRouter.
+This module provides functions to generate relevant topics for a given category
+using AI models (Claude 3.5 Sonnet via OpenRouter API).
 """
-
-import os
 import json
 import logging
-import requests
-from datetime import datetime
-from typing import List, Dict, Optional, Any
+import random
+import time
+from typing import List, Dict, Any, Optional
 
-# Setup logging
+from config import Config
+from utils.content.ai_adapter import get_ai_completion, get_default_ai_service
+
+# Configure logging
 logger = logging.getLogger(__name__)
 
-def get_openrouter_api_key() -> str:
-    """Get OpenRouter API key from environment"""
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        logger.error("OpenRouter API key not found in environment variables")
-        raise EnvironmentError("OpenRouter API key not found in environment variables")
-    return api_key
-
-def generate_topics_for_category(category_name: str, count: int = 40) -> List[str]:
+def generate_ai_topics_for_category(category: str, count: int = 20) -> List[str]:
     """
-    Generate blog post topics for a specific category using Claude 3.5 via OpenRouter.
+    Generate topic ideas for a given category using AI.
     
     Args:
-        category_name: The category name to generate topics for
-        count: Number of topics to generate (default: 40)
+        category: The category for which to generate topics
+        count: Number of topics to generate (default: 20)
         
     Returns:
-        List of generated topic strings
+        List of generated topic ideas as strings
     """
-    try:
-        # Prepare prompt for topic generation
-        prompt = f"""
-        Wygeneruj {count} unikalnych, kreatywnych i wartościowych tematów artykułów blogowych dla kategorii: "{category_name}". 
-        Tematy mają być interesujące, zróżnicowane, przydatne dla czytelników bloga. Każdy temat w jednym zdaniu.
-        
-        Odpowiedź sformatuj jako listę ponumerowaną od 1 do {count}, każdy temat w nowej linii.
-        """
-        
-        # Call OpenRouter API with Claude 3.5
-        response = openrouter_call(prompt, model="anthropic/claude-3-5-sonnet-20241022")
-        
-        # Parse the topics from the response
-        topics = parse_topics(response)
-        
-        # Validate that we have the correct number of topics
-        if len(topics) < count:
-            logger.warning(f"Only generated {len(topics)} topics for category '{category_name}', expected {count}")
-            
-        return topics
-        
-    except Exception as e:
-        logger.error(f"Error generating topics for category '{category_name}': {str(e)}")
-        # Return a smaller list of basic topics as fallback
-        return [f"Article about {category_name} - Part {i+1}" for i in range(min(5, count))]
-
-def openrouter_call(prompt: str, model: str = "anthropic/claude-3-5-sonnet-20241022", max_tokens: int = 4000) -> str:
+    logger.info(f"Generating {count} AI topics for category: {category}")
+    
+    system_prompt = """Jesteś ekspertem w tworzeniu pomysłów na artykuły blogowe.
+    Twoim zadaniem jest wygenerowanie listy interesujących tematów na artykuły dla podanej kategorii.
+    
+    Zasady:
+    1. Tematy powinny być w języku polskim
+    2. Każdy temat powinien być konkretny i szczegółowy
+    3. Tematy powinny być zróżnicowane i obejmować różne aspekty kategorii
+    4. Unikaj ogólnych i zbyt szerokich tematów
+    5. Każdy temat powinien mieć potencjał na artykuł o długości 1200-1600 słów
+    6. Zwróć odpowiedź jako tablicę JSON zawierającą listę tematów
+    
+    Wygeneruj dokładnie tyle tematów, ile zostało określone w zapytaniu.
     """
-    Call OpenRouter API with the given prompt
     
-    Args:
-        prompt: The prompt to send to the AI
-        model: The model to use (default: claude-3-5-sonnet)
-        max_tokens: Maximum tokens in the response
-        
-    Returns:
-        The text response from the API
-    """
-    # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
-    api_key = get_openrouter_api_key()
-    
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://blog.automationmaster.ai"  # Your site URL
-    }
-    
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": max_tokens
-    }
+    user_prompt = f"Wygeneruj {count} interesujących i szczegółowych tematów na artykuły blogowe dla kategorii: {category}"
     
     try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers=headers,
-            json=payload
+        # Try to get topics using OpenRouter API
+        response = get_ai_completion(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=Config.DEFAULT_TOPIC_MODEL,
+            max_tokens=2000,
+            temperature=0.8,
+            response_format={"type": "json_object"}
         )
         
-        # Check if the request was successful
-        response.raise_for_status()
-        
-        # Parse the JSON response
-        data = response.json()
-        
-        # Extract the AI's response
-        if 'choices' in data and len(data['choices']) > 0:
-            return data['choices'][0]['message']['content']
-        else:
-            logger.error(f"Unexpected response format from OpenRouter: {data}")
-            return ""
+        try:
+            # Try to parse the response as JSON
+            result = json.loads(response)
             
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error calling OpenRouter API: {str(e)}")
-        if hasattr(e, 'response') and e.response is not None:
-            logger.error(f"Response content: {e.response.text}")
-        raise
-        
-def parse_topics(response: str) -> List[str]:
-    """
-    Parse topics from the AI response
-    
-    Args:
-        response: The text response from OpenRouter
-        
-    Returns:
-        List of parsed topics
-    """
-    # Initialize list for topics
-    topics = []
-    
-    # Split the response by lines
-    lines = response.strip().split('\n')
-    
-    # Pattern recognition for numbered lists: "1. Topic", "1) Topic", "1 - Topic", etc.
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
+            # Extract topics from the response (handle different response formats)
+            if isinstance(result, list):
+                topics = result
+            elif isinstance(result, dict) and "topics" in result:
+                topics = result["topics"]
+            elif isinstance(result, dict) and "results" in result:
+                topics = result["results"]
+            elif isinstance(result, dict) and "ideas" in result:
+                topics = result["ideas"]
+            else:
+                # If the structure is unknown, try to extract any list with at least 10 items
+                for key, value in result.items():
+                    if isinstance(value, list) and len(value) >= 10:
+                        topics = value
+                        break
+                else:
+                    # If no suitable list found, create dummy list
+                    topics = [f"Temat {i+1} dla kategorii {category}" for i in range(count)]
             
-        # Try to detect if it's a numbered list item
-        if (line[0].isdigit() or 
-           (len(line) > 2 and line[:2].isdigit()) or
-           (len(line) > 3 and line[:3].isdigit())):
+            # Ensure we have exactly the requested number of topics
+            if len(topics) < count:
+                # If we have too few topics, add some simple ones to reach the count
+                for i in range(len(topics), count):
+                    topics.append(f"Dodatkowy temat {i+1} dla kategorii {category}")
+            elif len(topics) > count:
+                # If we have too many topics, truncate the list
+                topics = topics[:count]
             
-            # Remove the numbering and potential formatting
-            # This handles formats like "1. ", "1) ", "1 - ", "1: ", etc.
-            parts = line.split('.', 1)
-            if len(parts) > 1:
-                topic = parts[1].strip()
-                topics.append(topic)
-                continue
-                
-            parts = line.split(')', 1)
-            if len(parts) > 1:
-                topic = parts[1].strip()
-                topics.append(topic)
-                continue
-                
-            parts = line.split(' - ', 1)
-            if len(parts) > 1:
-                topic = parts[1].strip()
-                topics.append(topic)
-                continue
-                
-            parts = line.split(':', 1)
-            if len(parts) > 1:
-                topic = parts[1].strip()
-                topics.append(topic)
-                continue
-        
-        # If we couldn't parse it as a numbered item but it's not empty,
-        # it might be a plain topic without numbering
-        if len(topics) == 0 or line.lower() not in [t.lower() for t in topics]:
-            topics.append(line)
-    
-    return topics
-
-def save_topics_to_json(topics_data: Dict[str, List[str]], filepath: str = "data/ai_topics.json") -> bool:
-    """
-    Save generated topics to a JSON file
-    
-    Args:
-        topics_data: Dictionary with categories as keys and lists of topics as values
-        filepath: Path to save the JSON file
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    try:
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        # Read existing data if file exists
-        existing_data = {}
-        if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as f:
-                existing_data = json.load(f)
-        
-        # Merge new data with existing data
-        merged_data = {**existing_data, **topics_data}
-        
-        # Add timestamp for tracking
-        merged_data['_last_updated'] = datetime.now().isoformat()
-        
-        # Write back to file
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(merged_data, f, ensure_ascii=False, indent=2)
+            return topics
             
-        logger.info(f"Successfully saved topics to {filepath}")
-        return True
-        
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to parse AI response as JSON: {response[:100]}...")
+            # Fallback to demo topics
+            return _generate_demo_topics(category, count)
+            
     except Exception as e:
-        logger.error(f"Error saving topics to JSON: {str(e)}")
-        return False
+        logger.error(f"Error generating AI topics: {str(e)}")
+        # Fallback to demo topics
+        return _generate_demo_topics(category, count)
 
-def load_topics_from_json(filepath: str = "data/ai_topics.json") -> Dict[str, List[str]]:
-    """
-    Load topics from a JSON file
+def _generate_demo_topics(category: str, count: int) -> List[str]:
+    """Generate demo topics for a category when AI generation fails"""
+    logger.info(f"Generating {count} demo topics for category: {category}")
     
-    Args:
-        filepath: Path to the JSON file
-        
-    Returns:
-        Dictionary with categories as keys and lists of topics as values
-    """
-    try:
-        if not os.path.exists(filepath):
-            logger.info(f"Topics file not found at {filepath}, returning empty dict")
-            return {}
-            
-        with open(filepath, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            
-        # Remove metadata keys that start with underscore
-        return {k: v for k, v in data.items() if not k.startswith('_')}
-        
-    except Exception as e:
-        logger.error(f"Error loading topics from JSON: {str(e)}")
-        return {}
+    # Create base templates for topics
+    templates = [
+        f"Najlepsze praktyki w {category}",
+        f"Przewodnik po {category} dla początkujących",
+        f"Jak rozwiązać najczęstsze problemy w {category}",
+        f"Historia rozwoju {category} na przestrzeni lat",
+        f"Przyszłość {category} - trendy i prognozy",
+        f"5 mitów na temat {category}, w które wciąż wierzymy",
+        f"Jak {category} zmienia się w 2025 roku",
+        f"Profesjonalne wskazówki dotyczące {category}",
+        f"Porównanie różnych podejść do {category}",
+        f"Narzędzia i technologie usprawniające {category}",
+        f"Wpływ sztucznej inteligencji na {category}",
+        f"Jak zacząć przygodę z {category} - poradnik krok po kroku",
+        f"Case study: Sukces w {category}",
+        f"{category} dla zaawansowanych - techniki mistrzów",
+        f"Analiza rynku {category} w Polsce",
+        f"Najczęstsze błędy popełniane w {category}",
+        f"Jak przekonać klienta do {category}",
+        f"ROI z {category} - jak mierzyć efektywność",
+        f"Najlepsze książki o {category}",
+        f"Wywiady z ekspertami {category}",
+        f"Psychologiczne aspekty {category}",
+        f"Etyka w {category}",
+        f"Prawne aspekty {category}",
+        f"Jak {category} wpływa na naszą codzienność",
+        f"Międzynarodowe standardy w {category}",
+        f"Przegląd badań naukowych na temat {category}",
+        f"Jak uczyć dzieci {category}",
+        f"Kariera w {category} - ścieżki rozwoju",
+        f"Jak {category} łączy się z innymi dziedzinami",
+        f"Wyzwania w {category} na rok 2025"
+    ]
+    
+    # Generate variations
+    variations = []
+    for template in templates:
+        variations.append(template)
+        variations.append(f"{template} - część 1")
+        variations.append(f"Wszystko co musisz wiedzieć o {template.lower()}")
+        variations.append(f"Jak skutecznie wykorzystać {template.lower()}")
+        variations.append(f"Przewodnik eksperta: {template}")
+    
+    # Ensure we have enough variations
+    while len(variations) < count * 2:
+        variations.extend(templates)
+    
+    # Shuffle and select the requested number of topics
+    random.shuffle(variations)
+    return variations[:count]
