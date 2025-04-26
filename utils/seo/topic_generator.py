@@ -90,7 +90,7 @@ def generate_topics_from_trends(trends, categories=None, blog_id=None, limit=5):
 
 def generate_topic_variations(trend, serp_analysis, categories=None):
     """
-    Generate topic variations based on a trend and SERP analysis.
+    Generate article topics in Polish based on a trend and SERP analysis.
     
     Args:
         trend: The trend term
@@ -98,49 +98,59 @@ def generate_topic_variations(trend, serp_analysis, categories=None):
         categories: List of categories to filter by
         
     Returns:
-        List of generated topic variations
+        List of generated topic variations in Polish
     """
     variations = []
     
     # Determine the best category for the topic
     best_category = get_best_category(trend, categories)
+    current_year = datetime.now().year
     
-    # Generate primary topic from the trend
+    # Generate primary topic from the trend - in Polish
     primary_topic = {
-        'title': f"{trend.capitalize()}: Complete Guide",
-        'description': f"A comprehensive guide to {trend.lower()}, covering everything you need to know.",
-        'keywords': [trend, f"{trend} guide", f"{trend} complete guide", f"about {trend}"],
+        'title': f"{trend.capitalize()}: Kompletny Przewodnik",
+        'description': f"Kompleksowy przewodnik na temat {trend.lower()}, zawierający wszystko, co musisz wiedzieć.",
+        'keywords': [trend, f"{trend} poradnik", f"{trend} kompletny przewodnik", f"o {trend}"],
         'category': best_category
     }
     variations.append(primary_topic)
     
-    # Generate "how to" variation
+    # Generate "how to" variation - in Polish
     how_to_topic = {
-        'title': f"How to {trend.capitalize()} Step by Step",
-        'description': f"Learn how to {trend.lower()} with this detailed step-by-step guide.",
-        'keywords': [trend, f"how to {trend}", f"{trend} steps", f"{trend} guide"],
+        'title': f"Jak {trend.capitalize()} Krok po Kroku",
+        'description': f"Dowiedz się, jak {trend.lower()} dzięki temu szczegółowemu poradnikowi krok po kroku.",
+        'keywords': [trend, f"jak {trend}", f"{trend} kroki", f"{trend} poradnik"],
         'category': best_category
     }
     variations.append(how_to_topic)
     
-    # Generate "X tips" variation
+    # Generate "X tips" variation - in Polish
     tips_count = random.choice([5, 7, 10, 12, 15])
     tips_topic = {
-        'title': f"Top {tips_count} Tips for {trend.capitalize()}",
-        'description': f"Discover the top {tips_count} tips for {trend.lower()} that will help you succeed.",
-        'keywords': [trend, f"{trend} tips", f"best {trend} tips", f"{trend} advice"],
+        'title': f"Top {tips_count} Porad dla {trend.capitalize()}",
+        'description': f"Odkryj {tips_count} najlepszych porad dotyczących {trend.lower()}, które pomogą Ci osiągnąć sukces.",
+        'keywords': [trend, f"{trend} porady", f"najlepsze {trend} wskazówki", f"{trend} poradnik"],
         'category': best_category
     }
     variations.append(tips_topic)
     
-    # Generate "Ultimate guide" variation
+    # Generate "Ultimate guide" variation - in Polish
     ultimate_topic = {
-        'title': f"The Ultimate Guide to {trend.capitalize()} in {datetime.now().year}",
-        'description': f"The most comprehensive guide to {trend.lower()} updated for {datetime.now().year}.",
-        'keywords': [trend, f"{trend} guide", f"{trend} {datetime.now().year}", f"ultimate {trend} guide"],
+        'title': f"Najpełniejszy Przewodnik po {trend.capitalize()} w {current_year} roku",
+        'description': f"Najbardziej kompleksowy przewodnik po {trend.lower()} zaktualizowany na rok {current_year}.",
+        'keywords': [trend, f"{trend} przewodnik", f"{trend} {current_year}", f"najlepszy {trend} poradnik"],
         'category': best_category
     }
     variations.append(ultimate_topic)
+    
+    # Add Polish-specific variations
+    pl_specific_topic = {
+        'title': f"{trend.capitalize()} - Wszystko Co Musisz Wiedzieć w {current_year}",
+        'description': f"Praktyczny przewodnik na temat {trend.lower()} zawierający najnowsze informacje na rok {current_year}.",
+        'keywords': [trend, f"{trend} praktyczne informacje", f"{trend} aktualności", f"wiedza o {trend}"],
+        'category': best_category
+    }
+    variations.append(pl_specific_topic)
     
     return variations
 

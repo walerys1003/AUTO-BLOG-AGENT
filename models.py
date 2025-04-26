@@ -285,6 +285,7 @@ class ArticleTopic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)  # Added description field
     keywords = db.Column(db.Text, nullable=True)  # JSON string of keywords
     category = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(50), default="pending")  # pending, approved, rejected, used
