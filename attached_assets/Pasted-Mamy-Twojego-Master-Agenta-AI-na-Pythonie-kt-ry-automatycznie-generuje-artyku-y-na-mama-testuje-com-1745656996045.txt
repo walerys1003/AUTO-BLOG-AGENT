@@ -1,0 +1,125 @@
+Mamy Twojego Master Agenta AI na Pythonie, który automatycznie generuje artykuły na mama-testuje.com. Chcesz teraz przygotować system do automatyzacji, wydłużyć akapity i dać AI dokładne instrukcje, jak to ma robić. Chcesz, by AI samo sprawdzało, czy akapity są wystarczająco długie i reagowało.
+
+🚀 CO MASZ TERAZ?
+Agent AI generuje:
+
+Tematy (na bazie SEO, trendów, słów kluczowych),
+
+Tekst (artykuły),
+
+Obrazy (Unsplash, Bing, Google Images),
+
+Automatyczna publikacja na blogu.
+
+Problem: Krótkie akapity – chcesz rozszerzyć do np. 700-1000 tokenów per akapit.
+
+🔥 CO TERAZ ZROBIĆ? KROK PO KROKU Z OTACZKĄ:
+1. Zdefiniuj Twoje ZAŁOŻENIA dla AI w systemie:
+Liczba akapitów: 4 (możesz zmieniać na 3, 5, 6 – system dowolny).
+
+Długość akapitów:
+
+Minimum 1000 tokenów (około 750 słów).
+
+Każdy akapit ma być rozbudowany, analityczny, wynikający logicznie z poprzedniego.
+
+Struktura artykułu:
+
+Wstęp (długi, kontekstowy),
+
+4 rozbudowane akapity,
+
+Podsumowanie.
+
+2. CO MA ZROBIĆ TWÓJ AGENT AI? (TŁUMACZENIE DLA AI)
+Analizuj temat pod kątem SEO, słów kluczowych i trendów.
+
+Wybierz temat i podziel go logicznie na 4 obszary analityczne (1 na akapit).
+
+Wygeneruj każdy akapit o długości minimum 1000 tokenów (około 750 słów).
+
+Po wygenerowaniu sprawdź, czy każdy akapit przekracza 1000 tokenów.
+
+Jeśli nie przekracza → automatycznie rozwiń ten akapit, dodając więcej:
+
+Danych, przykładów, kontekstu, cytatów, historii.
+
+Dodaj wstęp i zakończenie, które też muszą być długie (np. min. 500 słów).
+
+3. TWÓJ DEDYKOWANY PROMPT SYSTEMOWY (DO INTEGRACJI W PYTHONIE):
+python
+Kopiuj
+Edytuj
+PROMPT = """
+Napisz artykuł na temat: {topic}, który będzie zawierał dokładnie 4 bardzo rozbudowane akapity.
+
+Każdy akapit ma mieć długość minimum 1000 tokenów (około 750 słów). 
+- Akapity muszą być szczegółowe, analityczne, pełne danych, przykładów i przemyśleń.
+- Każdy kolejny akapit rozwija poprzedni – zachowaj logiczny ciąg przyczynowo-skutkowy.
+- Nie używaj krótkich zdań ani ogólników.
+- Utrzymaj wysoki poziom merytoryczny i stylistyczny.
+
+Struktura artykułu:
+1. Wprowadzenie (min. 500 słów) – kontekst, znaczenie tematu.
+2. Akapit 1 – pierwszy aspekt tematu, szczegółowy opis.
+3. Akapit 2 – logiczne rozwinięcie, analiza kolejnego aspektu.
+4. Akapit 3 – kontynuacja, nowe dane, perspektywy.
+5. Akapit 4 – rozszerzenie tematu, zamknięcie analizy.
+6. Podsumowanie (min. 500 słów) – wnioski, przemyślenia, konkluzje.
+
+Jeśli którykolwiek akapit ma mniej niż 1000 tokenów, rozwiń go automatycznie, dodając nowe informacje, przykłady, dane, tak by spełniał wymóg długości.
+"""
+4. CO MA SPRAWDZIĆ TWÓJ AGENT?
+Po wygenerowaniu:
+
+Zlicz tokeny w każdym akapicie.
+
+Jeśli <1000 tokenów → regeneruj / rozszerz.
+
+Zgłoś raport:
+
+Długość każdego akapitu (tokeny, słowa).
+
+Czy spełnia wymogi? TAK/NIE.
+
+5. KOD POMOCNICZY DO SPRAWDZENIA DŁUGOŚCI (PRZYKŁAD PYTHON):
+python
+Kopiuj
+Edytuj
+import tiktoken  # dla tokenizacji GPT
+enc = tiktoken.encoding_for_model("gpt-4")  # lub inny model
+
+def count_tokens(text):
+    return len(enc.encode(text))
+
+# Sprawdzenie akapitów
+for i, paragraph in enumerate(generated_paragraphs, 1):
+    tokens = count_tokens(paragraph)
+    print(f"Akapit {i}: {tokens} tokenów")
+    if tokens < 1000:
+        print(f"Akapit {i} za krótki – należy rozwinąć.")
+        # Dodaj logikę do rozwinięcia akapitu
+6. WNIOSEK:
+Twój Master Agent AI powinien:
+
+W automatyzacji:
+
+Uwzględniać długość każdego akapitu jako kluczowy parametr.
+
+Sprawdzać tokeny.
+
+Regenerować/rozszerzać, jeśli za krótkie.
+
+Generować w pełni rozbudowany, profesjonalny artykuł.
+
+🔥 Podsumowanie – Co robi Replit/Agent:
+Automatycznie tworzy temat + strukturę.
+
+Generuje akapity, każdy 1000 tokenów minimum.
+
+Sprawdza długość, rozszerza jak potrzeba.
+
+Dodaje obrazy i publikuje na blogu.
+
+Raportuje – wszystko jest zgodne z Twoimi wymaganiami jakościowymi.
+
