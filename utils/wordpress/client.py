@@ -113,6 +113,8 @@ def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
         from app import db
         from models import Category
         
+        # First pass - create categories without parent relationships
+        # to avoid foreign key violations
         for cat in categories:
             existing = Category.query.filter_by(
                 blog_id=blog_id, 
@@ -124,11 +126,36 @@ def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
                     blog_id=blog_id,
                     name=cat['name'],
                     wordpress_id=cat['id'],
-                    parent_id=None if cat['parent'] == 0 else cat['parent'],
+                    parent_id=None,  # Initially set to None to avoid FK constraint issues
                     description=cat.get('description', '')
                 )
                 db.session.add(new_cat)
         
+        # First commit to ensure all categories exist
+        db.session.commit()
+        
+        # Second pass - update parent relationships now that all categories exist
+        for cat in categories:
+            if cat['parent'] != 0:  # If this category has a parent
+                child_cat = Category.query.filter_by(
+                    blog_id=blog_id, 
+                    wordpress_id=cat['id']
+                ).first()
+                
+                if child_cat:
+                    # Find the parent category by WordPress ID
+                    parent_cat = Category.query.filter_by(
+                        blog_id=blog_id, 
+                        wordpress_id=cat['parent']
+                    ).first()
+                    
+                    if parent_cat:
+                        # Update the parent_id with the actual database ID (not WordPress ID)
+                        child_cat.parent_id = parent_cat.id
+                    else:
+                        logger.warning(f"Parent category with WordPress ID {cat['parent']} not found for category {cat['name']}")
+        
+        # Second commit to update parent relationships
         db.session.commit()
         
         return categories

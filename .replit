@@ -1,8 +1,8 @@
-modules = ["python-3.11", "postgresql-16"]
+modules = ["python-3.11", "postgresql-16", "python3"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["freetype", "imagemagick", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "postgresql", "potrace", "tcl", "tk", "wget", "zlib"]
+packages = ["cargo", "freetype", "imagemagick", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "postgresql", "potrace", "rustc", "tcl", "tk", "wget", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
