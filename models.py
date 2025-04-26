@@ -748,6 +748,7 @@ class AutomationRule(db.Model):
     
     # Schedule settings
     days_of_week = db.Column(db.String(20), default="0,1,2,3,4")  # Monday=0, Sunday=6
+    publishing_time = db.Column(db.String(5), default="12:00")  # Default publishing time in format HH:MM
     time_slots = db.Column(db.Text, nullable=True)  # JSON string of time slots
     posts_per_day = db.Column(db.Integer, default=1)
     min_interval_hours = db.Column(db.Integer, default=4)  # Minimum hours between posts
@@ -760,6 +761,7 @@ class AutomationRule(db.Model):
     use_paragraph_mode = db.Column(db.Boolean, default=False)  # Whether to use paragraph-based generation
     content_tone = db.Column(db.String(50), default="informative")  # Changed back to content_tone to match database schema
     topic_categories = db.Column(db.Text, nullable=True)  # JSON string of category IDs to focus on
+    topic_min_score = db.Column(db.Float, default=0.7)  # Minimum score for auto-enabling topics
     
     # Approval settings
     require_approval = db.Column(db.Boolean, default=False)
@@ -767,6 +769,8 @@ class AutomationRule(db.Model):
     # Publication settings
     publish_immediately = db.Column(db.Boolean, default=False)
     apply_featured_image = db.Column(db.Boolean, default=True)
+    auto_enable_topics = db.Column(db.Boolean, default=True)  # Automatically enable topics that meet minimum score
+    auto_promote_content = db.Column(db.Boolean, default=False)  # Automatically promote content to social media
     
     # Priority (higher number = higher priority)
     priority = db.Column(db.Integer, default=10)
