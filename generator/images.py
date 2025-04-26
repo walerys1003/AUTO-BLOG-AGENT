@@ -32,10 +32,34 @@ def get_featured_image_for_article(title, keywords=None):
         # Use title as search term (cleaning it up a bit)
         search_query = " ".join(title.split()[:3])
     
-    # Try Google Images first (with SerpAPI), then Unsplash as fallback
+    # Try Bing Images first (1000 free/month), then Google Images (SerpAPI) and Unsplash as fallbacks
+    try:
+        # Search Bing Images API
+        logger.info(f"Auto-searching for images with query '{search_query}' from Bing Image Search")
+        images = search_images(
+            query=search_query,
+            source='bing',  # Use Bing as primary source
+            per_page=5,     # Get a few options to choose from
+            orientation='landscape'  # Prefer landscape for featured images
+        )
+        
+        # If we found any images, use the first one
+        if images and len(images) > 0:
+            # Get the first image
+            image = images[0]
+            
+            # Clean and return the image data
+            cleaned_data = clean_image_metadata(image)
+            logger.info(f"Found image from Bing for article '{title}'")
+            return cleaned_data
+            
+    except Exception as e:
+        logger.warning(f"Error searching for images on Bing: {str(e)}")
+    
+    # Try Google Images as fallback (100 free queries/month with SerpAPI)
     try:
         # Search Google Images via SerpAPI
-        logger.info(f"Auto-searching for images with query '{search_query}' from Google (SerpAPI)")
+        logger.info(f"Auto-searching for images with query '{search_query}' from Google (SerpAPI, fallback 1)")
         images = search_images(
             query=search_query,
             source='google',
@@ -51,16 +75,16 @@ def get_featured_image_for_article(title, keywords=None):
             
             # Clean and return the image data
             cleaned_data = clean_image_metadata(image)
-            logger.info(f"Found image from Google for article '{title}'")
+            logger.info(f"Found fallback image from Google for article '{title}'")
             return cleaned_data
             
     except Exception as e:
         logger.warning(f"Error searching for images on Google: {str(e)}")
     
-    # Try Unsplash as fallback
+    # Try Unsplash as final fallback
     try:
         # Search for images on Unsplash
-        logger.info(f"Auto-searching for images with query '{search_query}' from Unsplash (fallback)")
+        logger.info(f"Auto-searching for images with query '{search_query}' from Unsplash (fallback 2)")
         images = search_images(
             query=search_query,
             source='unsplash',

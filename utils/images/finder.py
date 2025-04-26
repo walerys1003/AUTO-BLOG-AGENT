@@ -5,13 +5,14 @@ import urllib.parse
 from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
 from utils.images.google import search_google_images, get_google_image_details
 from utils.images.serpapi import search_google_images_serpapi
+from utils.images.bing import search_bing_images, get_bing_image_details
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
 def search_images(
     query: str,
-    source: str = 'google',  # Changed default to Google per user request
+    source: str = 'bing',  # Changed default to Bing as main source
     per_page: int = 20,
     page: int = 1,
     orientation: Optional[str] = None,
@@ -24,7 +25,7 @@ def search_images(
     
     Args:
         query: Search query
-        source: Source to search (google, unsplash, all)
+        source: Source to search (bing, google, unsplash, all)
         per_page: Number of results per page
         page: Page number
         orientation: Optional orientation filter (landscape, portrait, squarish)
@@ -41,8 +42,31 @@ def search_images(
     # Log search
     logger.info(f"Searching for images with query '{query}', source: {source}")
     
-    # Search based on source, with Google as first priority
-    if source == 'google' or source == 'all':
+    # Search based on source, with Bing as first priority
+    if source == 'bing' or source == 'all':
+        try:
+            # Try Bing Image Search API first
+            bing_results = search_bing_images(
+                query=query,
+                per_page=per_page,
+                page=page,
+                orientation=orientation,
+                safe_search="Moderate"
+            )
+            
+            results.extend(bing_results)
+            
+            # If we got results from Bing, return them immediately
+            if results and len(results) > 0:
+                logger.info(f"Found {len(results)} images from Bing for '{query}'")
+                # Skip other sources if we have results
+                if source != 'all':
+                    return results
+        except Exception as e:
+            logger.warning(f"Error searching Bing Images: {str(e)}")
+    
+    # Search Google if requested or as fallback
+    if (source == 'google' or source == 'all') and (len(results) == 0 or source == 'google'):
         try:
             # Use SerpAPI for Google Images by default (better results)
             if use_serpapi:
@@ -65,16 +89,15 @@ def search_images(
             
             results.extend(google_results)
             
-            # If we got results from Google, return them immediately
+            # If we got results from Google, and specifically requested Google only
             if results and len(results) > 0:
                 logger.info(f"Found {len(results)} images from Google for '{query}'")
-                # Skip other sources if we have results
-                if source != 'all':
+                if source == 'google':
                     return results
         except Exception as e:
             logger.warning(f"Error searching Google Images: {str(e)}")
     
-    # Only search Unsplash if specifically requested or if 'all' and no Google results
+    # Only search Unsplash if specifically requested or as final fallback
     if (source == 'unsplash' or source == 'all') and (len(results) == 0 or source == 'unsplash'):
         try:
             unsplash_results = search_unsplash_images(
@@ -107,12 +130,28 @@ def get_image_details(image_id: str, source: str) -> Dict[str, Any]:
     
     Args:
         image_id: Image ID
-        source: Source of the image (unsplash, google, upload)
+        source: Source of the image (bing, unsplash, google, upload)
         
     Returns:
         Image data dictionary
     """
-    if source == 'unsplash':
+    if source == 'bing':
+        try:
+            return get_bing_image_details(image_id=image_id)
+        except NotImplementedError:
+            # Fallback message for Bing Images detail retrieval
+            logger.warning("Bing Images detail retrieval not fully implemented. Returning basic info.")
+            # Create a minimal stub response with the ID
+            return {
+                'id': image_id,
+                'url': '',
+                'thumb_url': '',
+                'description': 'Bing image details not available',
+                'source': 'bing',
+                'attribution_text': 'Bing Image Search',
+                'attribution_url': ''
+            }
+    elif source == 'unsplash':
         return get_unsplash_photo(photo_id=image_id)
     elif source == 'google':
         try:
