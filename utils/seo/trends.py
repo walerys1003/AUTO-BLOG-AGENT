@@ -26,9 +26,10 @@ def get_daily_trends(country="pl"):
     logger.info(f"Fetching daily trends for {country}")
     
     try:
-        # Initialize pytrends
+        # Initialize pytrends with updated parameters
         pytrends = TrendReq(hl=f'{country}-{country.upper()}', timeout=(10, 25), 
-                          retries=2, backoff_factor=0.1)
+                          retries=2, backoff_factor=0.1,
+                          requests_args={'verify': True})
         
         # Get daily trends data
         daily_trends = pytrends.trending_searches(pn=country)
@@ -63,8 +64,9 @@ def get_related_topics(keyword, country="pl", timeframe="today 12-m"):
     logger.info(f"Fetching related topics for '{keyword}' in {country}")
     
     try:
-        # Initialize pytrends
-        pytrends = TrendReq(hl=f'{country}-{country.upper()}')
+        # Initialize pytrends with updated parameters
+        pytrends = TrendReq(hl=f'{country}-{country.upper()}',
+                          requests_args={'verify': True})
         
         # Build payload
         pytrends.build_payload([keyword], cat=0, timeframe=timeframe, geo=country.upper())
@@ -133,8 +135,9 @@ def get_interest_over_time(keyword, country="pl", timeframe="today 12-m"):
     logger.info(f"Fetching interest over time for '{keyword}' in {country}")
     
     try:
-        # Initialize pytrends
-        pytrends = TrendReq(hl=f'{country}-{country.upper()}')
+        # Initialize pytrends with updated parameters
+        pytrends = TrendReq(hl=f'{country}-{country.upper()}',
+                          requests_args={'verify': True})
         
         # Build payload
         pytrends.build_payload([keyword], cat=0, timeframe=timeframe, geo=country.upper())
