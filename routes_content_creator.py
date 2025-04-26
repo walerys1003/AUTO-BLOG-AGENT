@@ -1008,13 +1008,35 @@ def get_blog_categories(blog_id):
     """API endpoint to get categories for a blog"""
     blog = Blog.query.get_or_404(blog_id)
     
-    # Get categories from the blog
-    categories = blog.get_categories()
-    
-    return jsonify({
-        'success': True,
-        'categories': categories
-    })
+    try:
+        # Import WordPress client
+        from utils.wordpress import client as wp_client
+        
+        # Get categories directly from WordPress API
+        wordpress_categories = wp_client.get_wordpress_categories(blog_id)
+        
+        # Transform categories to the format expected by the frontend
+        categories = []
+        for cat in wordpress_categories:
+            categories.append({
+                'id': cat['id'],
+                'name': cat['name']
+            })
+        
+        return jsonify({
+            'success': True,
+            'categories': categories
+        })
+    except Exception as e:
+        logger.error(f"Error fetching WordPress categories: {str(e)}")
+        
+        # Fallback to local categories if WordPress API fails
+        categories = blog.get_categories()
+        
+        return jsonify({
+            'success': True,
+            'categories': categories
+        })
 
 @content_creator_bp.route('/content-creator/api/topics', endpoint='get_all_topics')
 def get_all_topics():
