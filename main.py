@@ -4,6 +4,7 @@ import os
 from routes import register_routes
 from utils.scheduler import start_scheduler
 from models import Blog, SocialAccount, ContentLog
+from utils.seo.analyzer import initialize_seo_module
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -26,6 +27,12 @@ with app.app_context():
     initialize_database()
     # Start the scheduler for automated content generation and posting
     start_scheduler()
+    # Initialize SEO module with Google Trends and SerpAPI
+    try:
+        initialize_seo_module()
+        logger.info("SEO module initialized")
+    except Exception as e:
+        logger.error(f"Error initializing SEO module: {str(e)}")
     logger.info("Flask application initialized")
 
 if __name__ == "__main__":
