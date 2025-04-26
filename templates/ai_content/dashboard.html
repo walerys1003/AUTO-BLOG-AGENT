@@ -156,7 +156,7 @@
                                     </td>
                                     <td>{{ article.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
-                                        <a href="{{ url_for('content.edit_article', article_id=article.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i> Edytuj
                                         </a>
                                     </td>
