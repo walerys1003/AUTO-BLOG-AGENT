@@ -199,6 +199,40 @@ def approve_topic(topic_id):
         flash(f"Error approving topic: {str(e)}", "danger")
         return redirect(url_for('seo.topics'))
 
+@seo_bp.route('/approve-all-topics', methods=['POST'])
+def approve_all_topics():
+    """Approve all pending topics for a specific blog"""
+    try:
+        blog_id = request.form.get('blog_id')
+        
+        if not blog_id:
+            flash("Please select a blog", "danger")
+            return redirect(url_for('seo.topics'))
+        
+        # Get pending topics for this blog
+        pending_topics = ArticleTopic.query.filter_by(
+            blog_id=blog_id,
+            status='pending'
+        ).all()
+        
+        if not pending_topics:
+            flash("No pending topics found for this blog", "info")
+            return redirect(url_for('seo.topics'))
+        
+        # Approve all pending topics
+        for topic in pending_topics:
+            topic.status = 'approved'
+        
+        db.session.commit()
+        
+        flash(f"Approved {len(pending_topics)} pending topics", "success")
+        return redirect(url_for('seo.topics'))
+        
+    except Exception as e:
+        logger.error(f"Error approving all topics: {str(e)}")
+        flash(f"Error approving all topics: {str(e)}", "danger")
+        return redirect(url_for('seo.topics'))
+
 @seo_bp.route('/reject-topic/<int:topic_id>', methods=['POST'])
 def reject_topic(topic_id):
     """Reject a pending topic"""
