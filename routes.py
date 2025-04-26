@@ -3,7 +3,8 @@ import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from models import (
     Blog, SocialAccount, ContentLog, ArticleTopic, Category, Tag,
-    Notification, PublishingSchedule, ContentMetrics, ImageLibrary
+    Notification, PublishingSchedule, ContentMetrics, ImageLibrary,
+    NewsletterConfig, AutomationRule
 )
 from app import db
 from utils.scheduler import start_scheduler, process_content_generation
@@ -191,12 +192,19 @@ def register_routes(app: Flask):
     def delete_blog(blog_id):
         """Delete a blog"""
         blog = Blog.query.get_or_404(blog_id)
+        blog_name = blog.name  # Zachowaj nazwę bloga na potrzeby komunikatu
         
         try:
-            # First, explicitly delete all related article topics to avoid FK constraint violation
+            # Usuń konfigurację newslettera (jeśli istnieje)
+            NewsletterConfig.query.filter_by(blog_id=blog_id).delete()
+            
+            # Usuń reguły automatyzacji
+            AutomationRule.query.filter_by(blog_id=blog_id).delete()
+            
+            # Usuń wszystkie powiązane tematy artykułów
             ArticleTopic.query.filter_by(blog_id=blog_id).delete()
             
-            # Delete other related items with foreign key constraints
+            # Usuń pozostałe elementy z kluczami obcymi
             ContentLog.query.filter_by(blog_id=blog_id).delete()
             Category.query.filter_by(blog_id=blog_id).delete()
             Tag.query.filter_by(blog_id=blog_id).delete()
@@ -206,11 +214,11 @@ def register_routes(app: Flask):
             ContentMetrics.query.filter_by(blog_id=blog_id).delete()
             ImageLibrary.query.filter_by(blog_id=blog_id).delete()
             
-            # Finally delete the blog itself
+            # Na końcu usuń sam blog
             db.session.delete(blog)
             db.session.commit()
             
-            flash(f'Blog {blog.name} deleted successfully', 'success')
+            flash(f'Blog {blog_name} deleted successfully', 'success')
             return redirect(url_for('blogs_list'))
             
         except Exception as e:
