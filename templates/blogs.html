@@ -104,42 +104,9 @@
                                 <a href="{{ url_for('api_process_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="Generate Content">
                                     <i class="fas fa-robot"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteBlogModal{{ blog.id }}" title="Delete Blog">
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-blog-btn" data-blog-id="{{ blog.id }}" data-blog-name="{{ blog.name }}" title="Delete Blog">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                            
-                            <!-- Delete Modal -->
-                            <div class="modal fade" id="deleteBlogModal{{ blog.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Delete Blog</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="d-flex flex-column align-items-center justify-content-center mb-4">
-                                                <div class="text-danger mb-3" style="font-size: 3rem;">
-                                                    <i class="fas fa-exclamation-triangle"></i>
-                                                </div>
-                                                <h4>Are you sure?</h4>
-                                                <p class="text-center">You are about to delete <strong>{{ blog.name }}</strong></p>
-                                            </div>
-                                            <div class="alert alert-danger">
-                                                <i class="fas fa-exclamation-circle me-2"></i>
-                                                <strong>Warning:</strong> This action cannot be undone. All associated content logs and topics will also be deleted.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <form action="{{ url_for('delete_blog', blog_id=blog.id) }}" method="post">
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fas fa-trash me-1"></i> Delete Blog
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -161,6 +128,39 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Blog Modal - Separate from table -->
+<div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Blog</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex flex-column align-items-center justify-content-center mb-4">
+                    <div class="text-danger mb-3" style="font-size: 3rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4>Are you sure?</h4>
+                    <p class="text-center">You are about to delete <strong id="deleteBlogName">blog</strong></p>
+                </div>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All associated content logs and topics will also be deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteBlogForm" action="{{ url_for('delete_blog', blog_id=0) }}" method="post">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Delete Blog
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -201,4 +201,33 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Delete blog button click handlers
+    const deleteButtons = document.querySelectorAll('.delete-blog-btn');
+    const deleteBlogModal = document.getElementById('deleteBlogModal');
+    const deleteBlogForm = document.getElementById('deleteBlogForm');
+    const deleteBlogName = document.getElementById('deleteBlogName');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const blogId = this.getAttribute('data-blog-id');
+            const blogName = this.getAttribute('data-blog-name');
+            
+            // Update form action with the correct blog ID
+            deleteBlogForm.action = deleteBlogForm.action.replace(/\/blogs\/delete\/\d+/, '/blogs/delete/' + blogId);
+            
+            // Update blog name in the modal
+            deleteBlogName.textContent = blogName;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(deleteBlogModal);
+            modal.show();
+        });
+    });
+});
+</script>
 {% endblock %}
