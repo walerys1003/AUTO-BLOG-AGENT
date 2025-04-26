@@ -1,148 +1,174 @@
 {% extends 'base.html' %}
 
-{% block title %}SEO Analyzer & Topic Generator{% endblock %}
+{% block title %}SEO Dashboard{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row mb-4">
-        <div class="col">
-            <h1 class="h2 mb-3">
-                <i class="fas fa-chart-line me-2"></i> SEO Analyzer & Topic Generator
-            </h1>
-            <p class="text-muted">
-                Generate blog topics based on Google Trends and SerpAPI. New topics are automatically generated daily at 5:00 AM.
-            </p>
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-chart-line text-primary me-3"></i> SEO Dashboard
+                    </h1>
+                    <p class="lead">
+                        Manage your content SEO strategy, analyze trends, and generate optimized topics.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- SEO Analysis Form -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="card-title mb-3">
-                <i class="fas fa-search me-2"></i> Generate Topics Now
-            </h5>
-            <form method="POST" action="{{ url_for('seo.run_analysis') }}">
-                <div class="row mb-3">
-                    <div class="col-md-9">
-                        <label class="form-label">Categories</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% set categories = ['medycyna', 'transport', 'IT', 'biznes', 'technologia', 'zdrowie', 'finanse', 'edukacja', 'rozrywka'] %}
-                            {% for category in categories %}
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" name="categories" id="category-{{ category }}" value="{{ category }}">
-                                    <label class="form-check-label" for="category-{{ category }}">{{ category|capitalize }}</label>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <div class="form-text">Select categories for topic generation. If none are selected, all categories will be used.</div>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end justify-content-md-end mt-3 mt-md-0">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sync-alt me-2"></i> Generate Topics
-                        </button>
+    <div class="row">
+        <!-- Quick Actions Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('seo.topics') }}" class="btn btn-primary">
+                            <i class="fas fa-lightbulb me-2"></i> Manage Topics
+                        </a>
+                        <a href="{{ url_for('seo.analyze_content_page') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i> Analyze Content
+                        </a>
+                        <a href="{{ url_for('seo.trends') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-line me-2"></i> View Trends
+                        </a>
+                        <a href="{{ url_for('seo.keywords') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-key me-2"></i> Research Keywords
+                        </a>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Current Trends -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="card-title mb-3">
-                <i class="fas fa-fire me-2"></i> Current Trends
-            </h5>
-            <div id="trends-container">
-                <div class="d-flex justify-content-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+        <!-- Latest Topics Card -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list text-info me-2"></i> Latest Topics
+                    </h5>
+                    <a href="{{ url_for('seo.topics') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt me-1"></i> View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped border-bottom">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Blog</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in topics[:5] if topics %}
+                                <tr>
+                                    <td>{{ topic.title }}</td>
+                                    <td>{{ topic.blog_name }}</td>
+                                    <td>
+                                        {% if topic.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif topic.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                        {% elif topic.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ topic.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ topic.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        <em>No topics found. <a href="{{ url_for('seo.topics') }}">Generate some topics</a> to get started.</em>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Topics List -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-            <h5 class="card-title mb-3">
-                <i class="fas fa-lightbulb me-2"></i> Generated Topics
-            </h5>
-            
-            {% if topics %}
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Blog</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for topic in topics %}
-                                <tr>
-                                    <td>{{ topic.title }}</td>
-                                    <td>
-                                        {% if topic.blog %}
-                                            {{ topic.blog.name }}
-                                        {% else %}
-                                            <span class="text-muted">Unknown</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if topic.status == 'approved' %}
-                                            <span class="badge bg-success">Approved</span>
-                                        {% elif topic.status == 'rejected' %}
-                                            <span class="badge bg-danger">Rejected</span>
-                                        {% else %}
-                                            <span class="badge bg-warning">Pending</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ topic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            {% if topic.status != 'approved' %}
-                                                <form method="POST" action="{{ url_for('seo.approve_topic', topic_id=topic.id) }}" class="d-inline">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Approve">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                </form>
-                                            {% endif %}
-                                            
-                                            {% if topic.status != 'rejected' %}
-                                                <form method="POST" action="{{ url_for('seo.reject_topic', topic_id=topic.id) }}" class="d-inline">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Reject">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </form>
-                                            {% endif %}
-                                            
-                                            <form method="POST" action="{{ url_for('seo.use_topic', topic_id=topic.id) }}" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-primary" title="Use Topic">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            <form method="POST" action="{{ url_for('seo.delete_topic', topic_id=topic.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this topic?')">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <div class="row">
+        <!-- Trending Keywords Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-fire text-danger me-2"></i> Trending Keywords
+                    </h5>
                 </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No topics have been generated yet. Generate topics using the form above or wait for the automated daily generation.
+                <div class="card-body">
+                    <div class="trend-keywords">
+                        {% for trend in trends[:10] if trends %}
+                        <span class="badge bg-light text-dark border m-1 p-2">{{ trend }}</span>
+                        {% else %}
+                        <p class="text-center py-3">
+                            <em>No trending keywords found. Check back later.</em>
+                        </p>
+                        {% endfor %}
+                    </div>
                 </div>
-            {% endif %}
+                <div class="card-footer bg-white">
+                    <small class="text-muted">Updated automatically daily at 5:00 AM</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic Generation Stats Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot text-primary me-2"></i> Topic Generation Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <h3 class="mb-0 fw-bold">{{ stats.pending_count if stats else 0 }}</h3>
+                            <small class="text-muted">Pending Topics</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h3 class="mb-0 fw-bold">{{ stats.approved_count if stats else 0 }}</h3>
+                            <small class="text-muted">Approved Topics</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h3 class="mb-0 fw-bold">{{ stats.rejected_count if stats else 0 }}</h3>
+                            <small class="text-muted">Rejected Topics</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <h3 class="mb-0 fw-bold">{{ stats.today_count if stats else 0 }}</h3>
+                            <small class="text-muted">Topics Today</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h3 class="mb-0 fw-bold">{{ stats.week_count if stats else 0 }}</h3>
+                            <small class="text-muted">Topics This Week</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{{ url_for('seo.topics') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sync-alt me-1"></i> Generate New Topics
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -150,55 +176,29 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Fetch current trends
-        fetchTrends();
-    });
-    
-    function fetchTrends() {
-        fetch('{{ url_for("seo.get_trends_api") }}')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('trends-container');
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch trending keywords
+    fetch('{{ url_for("seo.api_trends") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.trends.length > 0) {
+                const trendKeywordsContainer = document.querySelector('.trend-keywords');
                 
-                if (data.success && data.trends && data.trends.length > 0) {
-                    let html = '<div class="row">';
+                if (trendKeywordsContainer) {
+                    trendKeywordsContainer.innerHTML = '';
                     
                     data.trends.forEach(trend => {
-                        html += `
-                            <div class="col-md-4 mb-3">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i class="fas fa-chart-line text-primary me-2"></i>
-                                            ${trend}
-                                        </h6>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-light text-dark border m-1 p-2';
+                        badge.textContent = trend;
+                        trendKeywordsContainer.appendChild(badge);
                     });
-                    
-                    html += '</div>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = `
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${data.error || 'No trends available right now. Try again later.'}
-                        </div>
-                    `;
                 }
-            })
-            .catch(error => {
-                const container = document.getElementById('trends-container');
-                container.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        Error fetching trends: ${error.message}
-                    </div>
-                `;
-            });
-    }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching trends:', error);
+        });
+});
 </script>
 {% endblock %}

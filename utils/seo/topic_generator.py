@@ -4,29 +4,14 @@ Topic Generator
 This module provides functions for generating article topics from trends and keywords.
 """
 import logging
-import json
-import time
 import random
+import json
+from models import ArticleTopic, db
 from datetime import datetime
-from config import Config
-from utils.seo.serp import get_serp_data, analyze_serp_results
-from utils.seo.trends import get_daily_trends, get_related_topics
+from .serp import get_serp_data, analyze_serp_results
 
 # Setup logging
 logger = logging.getLogger(__name__)
-
-# Category mapping for better topic categorization
-CATEGORY_MAPPING = {
-    'biznes': ['finanse', 'inwestycje', 'przedsiębiorstwo', 'zarządzanie', 'firma', 'marketing'],
-    'technologia': ['ai', 'internet', 'programowanie', 'cyberbezpieczeństwo', 'komputery', 'aplikacje'],
-    'zdrowie': ['medycyna', 'dieta', 'fitness', 'wellness', 'choroba', 'leczenie'],
-    'edukacja': ['nauka', 'szkoła', 'uniwersytet', 'kształcenie', 'szkolenia', 'e-learning'],
-    'rozrywka': ['gry', 'filmy', 'muzyka', 'sport', 'podróże', 'hobby'],
-    'IT': ['programowanie', 'sieć', 'cyberbezpieczeństwo', 'cloud', 'software', 'hardware'],
-    'transport': ['samochody', 'logistyka', 'pojazdy', 'przewóz', 'elektryczne'],
-    'medycyna': ['leczenie', 'szpital', 'opieka', 'lekarze', 'choroby', 'terapia'],
-    'finanse': ['inwestycje', 'oszczędności', 'podatki', 'kredyty', 'bank', 'waluta']
-}
 
 def generate_topics_from_trends(trends, categories=None, blog_id=None, limit=5):
     """
@@ -43,90 +28,65 @@ def generate_topics_from_trends(trends, categories=None, blog_id=None, limit=5):
     """
     logger.info(f"Generating topics from {len(trends)} trends")
     
-    topics = []
+    if not trends:
+        logger.warning("No trends provided for topic generation")
+        return []
     
-    try:
-        # Process each trend
-        for trend in trends[:10]:  # Limit to top 10 trends
-            logger.info(f"Processing trend: '{trend}'")
-            
-            # Check if trend matches any category
-            if categories:
-                matches_category = False
-                
-                for category in categories:
-                    category_lower = category.lower()
-                    
-                    # Check direct match
-                    if category_lower in trend.lower():
-                        matches_category = True
-                        break
-                    
-                    # Check match with related terms
-                    if category_lower in CATEGORY_MAPPING:
-                        for related_term in CATEGORY_MAPPING[category_lower]:
-                            if related_term in trend.lower():
-                                matches_category = True
-                                break
-                
-                if not matches_category:
-                    logger.info(f"Trend '{trend}' does not match any selected category")
-                    continue
-            
+    topics = []
+    for trend in trends[:limit * 2]:  # Process more trends than we need
+        try:
             # Get SERP data for the trend
             serp_data = get_serp_data(trend)
             
-            if not serp_data:
-                logger.warning(f"No SERP data found for trend: '{trend}'")
-                continue
-            
             # Analyze SERP results
-            analysis = analyze_serp_results(serp_data)
+            serp_analysis = analyze_serp_results(serp_data)
             
-            if not analysis:
-                logger.warning(f"Failed to analyze SERP results for trend: '{trend}'")
-                continue
+            # Generate topic variations based on the trend and SERP analysis
+            variations = generate_topic_variations(trend, serp_analysis, categories)
             
-            # Generate topics based on SERP analysis
-            generated = generate_topic_variations(trend, analysis, categories)
-            
-            if generated:
-                topics.extend(generated)
+            # Take the first variation
+            if variations:
+                topic_data = variations[0]
                 
-                # Check if we have enough topics
+                # Add blog ID if provided
+                if blog_id:
+                    # Create a new ArticleTopic object
+                    topic = ArticleTopic(
+                        title=topic_data['title'],
+                        description=topic_data['description'],
+                        keywords=json.dumps(topic_data['keywords']),
+                        category=topic_data['category'],
+                        blog_id=blog_id,
+                        status='pending'
+                    )
+                    
+                    # Add topic to the database
+                    db.session.add(topic)
+                    
+                    # Generate additional topics if needed
+                    if len(topics) >= limit:
+                        break
+                
+                # Add topic to the list
+                topics.append(topic_data)
+                
+                # Break if we have enough topics
                 if len(topics) >= limit:
                     break
         
-        # If we still don't have enough topics, generate some from keywords
-        if len(topics) < limit and trends:
-            # Get related topics for the top trend
-            related = get_related_topics(trends[0])
-            
-            if related:
-                for topic in related[:5]:
-                    if len(topics) >= limit:
-                        break
-                    
-                    title = topic.get('title', '')
-                    
-                    if title and not any(t['title'] == title for t in topics):
-                        # Generate a topic from the related topic
-                        topics.append({
-                            'title': title,
-                            'score': 60,
-                            'keywords': [title],
-                            'category': get_best_category(title, categories),
-                            'blog_id': blog_id
-                        })
-        
-        # Prioritize topics
-        topics = sorted(topics, key=lambda x: x.get('score', 0), reverse=True)
-        
-        return topics[:limit]
-        
-    except Exception as e:
-        logger.error(f"Error generating topics from trends: {str(e)}")
-        return []
+        except Exception as e:
+            logger.error(f"Error generating topic for trend '{trend}': {str(e)}")
+    
+    # Commit changes to the database
+    if blog_id:
+        try:
+            db.session.commit()
+            logger.info(f"Generated {len(topics)} topics for blog ID {blog_id}")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error saving topics to database: {str(e)}")
+    
+    return topics
 
 def generate_topic_variations(trend, serp_analysis, categories=None):
     """
@@ -142,65 +102,47 @@ def generate_topic_variations(trend, serp_analysis, categories=None):
     """
     variations = []
     
-    try:
-        # Get current date for more relevant titles
-        current_year = datetime.now().year
-        current_month = datetime.now().strftime("%B")
-        
-        # Extract keywords from SERP analysis
-        keywords = serp_analysis.get('top_keywords', [])
-        
-        # Generate a standard "how to" topic
-        variations.append({
-            'title': f"Jak {trend.lower()} może pomóc w rozwoju Twojej firmy w {current_year} roku",
-            'score': 85,
-            'keywords': [trend] + keywords[:3],
-            'category': get_best_category(trend, categories),
-            'format': 'how-to'
-        })
-        
-        # Generate a list-based topic
-        variations.append({
-            'title': f"10 najważniejszych faktów o {trend.lower()}, które musisz znać w {current_year} roku",
-            'score': 80,
-            'keywords': [trend] + keywords[:3],
-            'category': get_best_category(trend, categories),
-            'format': 'listicle'
-        })
-        
-        # Generate a guide topic
-        variations.append({
-            'title': f"Kompletny przewodnik po {trend.lower()}: wszystko, co musisz wiedzieć",
-            'score': 75,
-            'keywords': [trend] + keywords[:3],
-            'category': get_best_category(trend, categories),
-            'format': 'guide'
-        })
-        
-        # Generate a comparison topic
-        if keywords and len(keywords) >= 2:
-            variations.append({
-                'title': f"{trend.capitalize()} vs {keywords[0].capitalize()}: co jest lepsze dla Twojej firmy?",
-                'score': 70,
-                'keywords': [trend, keywords[0]] + keywords[1:3],
-                'category': get_best_category(trend, categories),
-                'format': 'comparison'
-            })
-        
-        # Generate a case study topic
-        variations.append({
-            'title': f"Case study: Jak firma zwiększyła zyski o 50% dzięki {trend.lower()}",
-            'score': 65,
-            'keywords': [trend] + keywords[:3],
-            'category': get_best_category(trend, categories),
-            'format': 'case-study'
-        })
-        
-        return variations
-        
-    except Exception as e:
-        logger.error(f"Error generating topic variations: {str(e)}")
-        return []
+    # Determine the best category for the topic
+    best_category = get_best_category(trend, categories)
+    
+    # Generate primary topic from the trend
+    primary_topic = {
+        'title': f"{trend.capitalize()}: Complete Guide",
+        'description': f"A comprehensive guide to {trend.lower()}, covering everything you need to know.",
+        'keywords': [trend, f"{trend} guide", f"{trend} complete guide", f"about {trend}"],
+        'category': best_category
+    }
+    variations.append(primary_topic)
+    
+    # Generate "how to" variation
+    how_to_topic = {
+        'title': f"How to {trend.capitalize()} Step by Step",
+        'description': f"Learn how to {trend.lower()} with this detailed step-by-step guide.",
+        'keywords': [trend, f"how to {trend}", f"{trend} steps", f"{trend} guide"],
+        'category': best_category
+    }
+    variations.append(how_to_topic)
+    
+    # Generate "X tips" variation
+    tips_count = random.choice([5, 7, 10, 12, 15])
+    tips_topic = {
+        'title': f"Top {tips_count} Tips for {trend.capitalize()}",
+        'description': f"Discover the top {tips_count} tips for {trend.lower()} that will help you succeed.",
+        'keywords': [trend, f"{trend} tips", f"best {trend} tips", f"{trend} advice"],
+        'category': best_category
+    }
+    variations.append(tips_topic)
+    
+    # Generate "Ultimate guide" variation
+    ultimate_topic = {
+        'title': f"The Ultimate Guide to {trend.capitalize()} in {datetime.now().year}",
+        'description': f"The most comprehensive guide to {trend.lower()} updated for {datetime.now().year}.",
+        'keywords': [trend, f"{trend} guide", f"{trend} {datetime.now().year}", f"ultimate {trend} guide"],
+        'category': best_category
+    }
+    variations.append(ultimate_topic)
+    
+    return variations
 
 def get_best_category(topic, available_categories=None):
     """
@@ -213,26 +155,80 @@ def get_best_category(topic, available_categories=None):
     Returns:
         Best matching category
     """
-    topic_lower = topic.lower()
+    # Default categories if none provided
+    default_categories = [
+        "Technology", "Business", "Health", "Entertainment", 
+        "Travel", "Food", "Fashion", "Sports", "Education", "Lifestyle"
+    ]
     
-    if not available_categories:
-        available_categories = list(CATEGORY_MAPPING.keys())
+    categories = available_categories if available_categories else default_categories
     
-    # Check direct matches
-    for category in available_categories:
-        category_lower = category.lower()
-        
-        if category_lower in topic_lower:
-            return category
+    # Technology keywords
+    tech_keywords = [
+        "app", "software", "computer", "gadget", "tech", "digital", "mobile", 
+        "phone", "laptop", "internet", "online", "device", "smart", "technology",
+        "ai", "artificial intelligence", "machine learning", "code", "programming"
+    ]
     
-    # Check matches with related terms
-    for category in available_categories:
-        category_lower = category.lower()
-        
-        if category_lower in CATEGORY_MAPPING:
-            for related_term in CATEGORY_MAPPING[category_lower]:
-                if related_term in topic_lower:
-                    return category
+    # Business keywords
+    business_keywords = [
+        "business", "company", "startup", "entrepreneur", "invest", "market", 
+        "finance", "money", "career", "job", "work", "professional", "industry",
+        "economic", "economy", "corporate", "management", "strategy"
+    ]
     
-    # Return default category
-    return random.choice(available_categories) if available_categories else "Ogólne"
+    # Health keywords
+    health_keywords = [
+        "health", "fitness", "exercise", "workout", "nutrition", "diet", "wellness", 
+        "medical", "medicine", "doctor", "disease", "illness", "cure", "treatment",
+        "healthy", "weight", "mental health", "therapy", "healing"
+    ]
+    
+    # Entertainment keywords
+    entertainment_keywords = [
+        "movie", "film", "tv", "television", "show", "series", "actor", "actress", 
+        "celebrity", "music", "song", "album", "artist", "concert", "festival",
+        "entertainment", "game", "gaming", "video game", "book", "novel", "author"
+    ]
+    
+    # Travel keywords
+    travel_keywords = [
+        "travel", "vacation", "trip", "tour", "destination", "hotel", "resort", 
+        "flight", "airline", "beach", "mountain", "city", "country", "tourism",
+        "adventure", "explore", "journey", "guide", "holiday"
+    ]
+    
+    # Food keywords
+    food_keywords = [
+        "food", "recipe", "cook", "cooking", "meal", "dinner", "lunch", "breakfast", 
+        "restaurant", "dish", "cuisine", "bake", "baking", "dessert", "snack",
+        "drink", "beverage", "cocktail", "wine", "beer", "coffee", "tea"
+    ]
+    
+    # All keywords
+    all_keywords = {
+        "Technology": tech_keywords,
+        "Business": business_keywords,
+        "Health": health_keywords,
+        "Entertainment": entertainment_keywords,
+        "Travel": travel_keywords,
+        "Food": food_keywords,
+    }
+    
+    # Count keyword matches for each category
+    matches = {}
+    for category, keywords in all_keywords.items():
+        if category in categories:
+            matches[category] = sum(1 for keyword in keywords if keyword.lower() in topic.lower())
+    
+    # Find the category with the most matches
+    if matches:
+        best_category = max(matches.items(), key=lambda x: x[1])[0]
+        if matches[best_category] > 0:
+            return best_category
+    
+    # Return a random category if no match found
+    if categories:
+        return random.choice(categories)
+    else:
+        return "Uncategorized"

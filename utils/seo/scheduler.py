@@ -4,10 +4,12 @@ SEO Scheduler
 This module provides scheduling functionality for SEO tasks.
 """
 import logging
-import time
 import threading
+import time
 import schedule
+import json
 from datetime import datetime, timedelta
+from models import ArticleTopic, Blog, db
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ def initialize_seo_scheduler():
     # Schedule daily SEO analysis
     schedule_daily_seo_analysis()
     
-    # Start scheduler thread
+    # Start the scheduler thread
     start_scheduler_thread()
     
     logger.info("SEO analysis scheduler initialized and started")
@@ -27,11 +29,10 @@ def initialize_seo_scheduler():
 
 def schedule_daily_seo_analysis():
     """Schedule daily SEO analysis at 5:00 AM"""
-    # Schedule daily analysis at 5:00 AM
-    schedule.every().day.at("05:00").do(run_scheduled_seo_analysis)
-    
     logger.info("Scheduling daily SEO analysis job at 05:00")
-    return True
+    
+    # Schedule daily analysis at 5:00 AM
+    schedule.every().day.at("05:00").do(run_daily_seo_analysis)
 
 def start_scheduler_thread():
     """Start the scheduler thread"""
@@ -42,63 +43,65 @@ def start_scheduler_thread():
     scheduler_thread.start()
     
     logger.info("SEO analysis scheduler thread started")
-    return True
 
 def run_scheduler():
     """Run the scheduler loop"""
+    logger.info("Running SEO scheduler loop")
+    
     while True:
         try:
             schedule.run_pending()
             time.sleep(60)  # Check every minute
         except Exception as e:
             logger.error(f"Error in scheduler loop: {str(e)}")
-            time.sleep(60)  # Continue running even if there's an error
+            time.sleep(300)  # Wait 5 minutes on error
 
-def run_scheduled_seo_analysis():
-    """Run scheduled SEO analysis for all active blogs"""
-    logger.info("Running scheduled SEO analysis")
+def run_daily_seo_analysis():
+    """Run daily SEO analysis"""
+    logger.info("Running daily SEO analysis")
     
     try:
-        from utils.seo.analyzer import run_seo_analysis
-        from models import Blog
-        from app import db
-        
         # Get all active blogs
-        with db.app.app_context():
+        with db.session.no_autoflush:
             blogs = Blog.query.filter_by(active=True).all()
             
-            if not blogs:
-                logger.warning("No active blogs found for scheduled SEO analysis")
-                return
-            
-            # Run analysis for each blog
             for blog in blogs:
                 try:
-                    # Get blog categories
-                    categories = []
-                    try:
-                        if blog.categories:
-                            import json
-                            categories = json.loads(blog.categories)
-                    except Exception as e:
-                        logger.error(f"Error parsing blog categories: {str(e)}")
+                    logger.info(f"Running SEO analysis for blog: {blog.name}")
+                    
+                    # Get trends for this blog
+                    from .trends import get_trending_topics
+                    trends = get_trending_topics(limit=10)
+                    
+                    # Generate topics
+                    from .topic_generator import generate_topics_from_trends
+                    if trends:
+                        # Get categories from the blog
                         categories = []
-                    
-                    # Default categories if none specified
-                    if not categories:
-                        categories = ['biznes', 'technologia', 'zdrowie', 'edukacja', 'rozrywka']
-                    
-                    # Run analysis
-                    logger.info(f"Running scheduled SEO analysis for blog '{blog.name}'")
-                    run_seo_analysis(blog.id, categories)
-                    
-                except Exception as e:
-                    logger.error(f"Error running scheduled SEO analysis for blog '{blog.name}': {str(e)}")
-                    continue
+                        if blog.categories:
+                            try:
+                                categories = json.loads(blog.categories)
+                            except:
+                                pass
+                        
+                        # Generate topics for this blog
+                        topics = generate_topics_from_trends(
+                            trends=trends,
+                            categories=categories,
+                            blog_id=blog.id,
+                            limit=5
+                        )
+                        
+                        logger.info(f"Generated {len(topics)} topics for blog: {blog.name}")
+                    else:
+                        logger.warning(f"No trends found for blog: {blog.name}")
                 
-            logger.info("Scheduled SEO analysis completed")
-            
+                except Exception as e:
+                    logger.error(f"Error in SEO analysis for blog {blog.name}: {str(e)}")
+        
+        logger.info("Daily SEO analysis completed")
+        return True
+        
     except Exception as e:
-        logger.error(f"Error in scheduled SEO analysis: {str(e)}")
-    
-    return True
+        logger.error(f"Error in daily SEO analysis: {str(e)}")
+        return False

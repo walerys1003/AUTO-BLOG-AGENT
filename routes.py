@@ -9,6 +9,7 @@ from generator.content import generate_article_content
 from wordpress.publisher import publish_article, get_optimal_publish_time
 from social.autopost import post_article_to_social_media
 from utils.seo.analyzer import analyze_content
+from utils.seo.serp import get_keyword_competition
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
@@ -605,7 +606,7 @@ def register_routes(app: Flask):
                 return jsonify({"error": "Content and primary keyword are required"}), 400
             
             # Perform SEO analysis
-            analysis = seo_analyzer.analyze_content(
+            analysis = analyze_content(
                 html_content=html_content,
                 primary_keyword=primary_keyword,
                 secondary_keywords=secondary_keywords,
@@ -736,7 +737,7 @@ def register_routes(app: Flask):
                 return jsonify({"error": "Keyword is required"}), 400
             
             # Analyze competition
-            analysis = seo_analyzer.analyze_keyword_competition(
+            analysis = get_keyword_competition(
                 keyword=keyword,
                 related_keywords=related_keywords
             )

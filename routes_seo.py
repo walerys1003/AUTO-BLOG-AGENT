@@ -1,15 +1,18 @@
 """
-SEO Routes
+SEO Routes Module
 
-Routes for SEO analyzer and topic generator functionality
+This module provides routes for SEO-related functionality, including trend analysis,
+keyword research, topic generation, and content optimization.
 """
 import logging
-from datetime import datetime
+import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
-from models import ArticleTopic, Blog
-from app import db
-from utils.seo.trends import get_daily_trends, get_related_topics
-from utils.seo.analyzer import run_seo_analysis
+from models import ArticleTopic, Blog, db
+from datetime import datetime
+from utils.seo.trends import get_daily_trends, get_trending_topics
+from utils.seo.serp import get_serp_data, get_keyword_competition, analyze_serp_results
+from utils.seo.analyzer import analyze_content, get_keyword_suggestions
+from utils.seo.optimizer import seo_optimizer, generate_title_variations
 from utils.seo.topic_generator import generate_topics_from_trends
 
 # Setup logging
@@ -19,157 +22,371 @@ logger = logging.getLogger(__name__)
 seo_bp = Blueprint('seo', __name__, url_prefix='/seo')
 
 @seo_bp.route('/')
-def seo_dashboard():
-    """SEO Dashboard main view"""
-    # Get all topics
-    topics = ArticleTopic.query.order_by(ArticleTopic.created_at.desc()).all()
-    
-    return render_template('seo/dashboard.html', topics=topics)
-
-@seo_bp.route('/run-analysis', methods=['POST'])
-def run_analysis():
-    """Run SEO analysis manually"""
+def index():
+    """SEO dashboard page"""
+    # Get stats for topics
     try:
-        # Get selected categories from form
-        categories = request.form.getlist('categories')
+        from datetime import datetime, timedelta
         
-        if not categories:
-            # Use default categories if none selected
-            categories = ['medycyna', 'transport', 'IT', 'biznes', 'technologia', 'zdrowie', 'finanse', 'edukacja', 'rozrywka']
+        stats = {}
         
-        logger.info(f"Running SEO analysis for categories: {categories}")
+        # Count topics by status
+        stats['pending_count'] = ArticleTopic.query.filter_by(status='pending').count()
+        stats['approved_count'] = ArticleTopic.query.filter_by(status='approved').count()
+        stats['rejected_count'] = ArticleTopic.query.filter_by(status='rejected').count()
         
-        # Get blogs
-        blogs = Blog.query.filter_by(active=True).all()
+        # Count topics for today
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        stats['today_count'] = ArticleTopic.query.filter(
+            ArticleTopic.created_at >= today_start
+        ).count()
         
-        if not blogs:
-            flash("No active blogs found to generate topics for", "warning")
-            return redirect(url_for('seo.seo_dashboard'))
+        # Count topics for this week
+        week_start = today_start - timedelta(days=today_start.weekday())
+        stats['week_count'] = ArticleTopic.query.filter(
+            ArticleTopic.created_at >= week_start
+        ).count()
         
-        # Run analysis for each blog
-        topics_generated = 0
+        # Get recent topics
+        topics_query = db.session.query(
+            ArticleTopic, Blog
+        ).join(
+            Blog, ArticleTopic.blog_id == Blog.id
+        ).order_by(
+            ArticleTopic.created_at.desc()
+        ).limit(5)
         
-        for blog in blogs:
-            # Get blog categories
-            blog_categories = []
-            try:
-                if blog.categories:
-                    import json
-                    blog_categories = json.loads(blog.categories)
-            except Exception as e:
-                logger.error(f"Error parsing blog categories: {str(e)}")
-                blog_categories = []
-            
-            # If blog has no categories, use all selected categories
-            if not blog_categories:
-                blog_categories = categories
-            
-            # Generate topics
-            generated = run_seo_analysis(blog.id, blog_categories)
-            
-            if generated:
-                topics_generated += len(generated)
+        recent_topics = []
+        for topic, blog in topics_query:
+            recent_topics.append({
+                'id': topic.id,
+                'title': topic.title,
+                'status': topic.status,
+                'blog_name': blog.name,
+                'created_at': topic.created_at
+            })
         
-        if topics_generated > 0:
-            flash(f"Generated {topics_generated} new topics based on trending keywords", "success")
-        else:
-            flash("No new topics were generated. Try different categories or try again later.", "info")
-            
+        # Get trending keywords
+        from utils.seo.trends import get_daily_trends
+        trends = get_daily_trends()
+        
+        return render_template(
+            'seo/dashboard.html',
+            stats=stats,
+            topics=recent_topics,
+            trends=trends
+        )
+    
     except Exception as e:
-        logger.error(f"Error running SEO analysis: {str(e)}")
-        flash(f"Error running SEO analysis: {str(e)}", "danger")
-    
-    return redirect(url_for('seo.seo_dashboard'))
+        logger.error(f"Error loading SEO dashboard: {str(e)}")
+        return render_template('seo/dashboard.html')
 
-@seo_bp.route('/approve/<int:topic_id>', methods=['POST'])
-def approve_topic(topic_id):
-    """Approve a topic"""
-    topic = ArticleTopic.query.get_or_404(topic_id)
-    
+@seo_bp.route('/trends')
+def trends():
+    """View current trends"""
     try:
+        daily_trends = get_daily_trends()
+        return render_template('seo/trends.html', trends=daily_trends)
+    except Exception as e:
+        logger.error(f"Error loading trends: {str(e)}")
+        flash(f"Error loading trends: {str(e)}", "danger")
+        return render_template('seo/trends.html', trends=[])
+
+@seo_bp.route('/keywords')
+def keywords():
+    """Keyword research and analysis"""
+    return render_template('seo/keywords.html')
+
+@seo_bp.route('/topics')
+def topics():
+    """View and manage article topics"""
+    # Get topics with join to Blog
+    topics = db.session.query(ArticleTopic, Blog).join(Blog, ArticleTopic.blog_id == Blog.id).all()
+    
+    # Organize topics by status
+    organized_topics = {
+        'pending': [],
+        'approved': [],
+        'rejected': []
+    }
+    
+    for topic, blog in topics:
+        topic_data = {
+            'id': topic.id,
+            'title': topic.title,
+            'description': topic.description,
+            'keywords': json.loads(topic.keywords) if topic.keywords else [],
+            'category': topic.category,
+            'blog': blog.name,
+            'blog_id': blog.id,
+            'created_at': topic.created_at
+        }
+        
+        if topic.status in organized_topics:
+            organized_topics[topic.status].append(topic_data)
+    
+    # Get blogs for the generator form
+    blogs = Blog.query.filter_by(active=True).all()
+    
+    return render_template(
+        'seo/topics.html',
+        topics=organized_topics,
+        blogs=blogs
+    )
+
+@seo_bp.route('/generate-topics', methods=['POST'])
+def generate_topics():
+    """Generate new topics from trends and keywords"""
+    try:
+        blog_id = request.form.get('blog_id')
+        category = request.form.get('category')
+        count = int(request.form.get('count', 5))
+        
+        if not blog_id:
+            flash("Please select a blog to generate topics for", "danger")
+            return redirect(url_for('seo.topics'))
+        
+        # Get blog
+        blog = Blog.query.get(blog_id)
+        if not blog:
+            flash("Blog not found", "danger")
+            return redirect(url_for('seo.topics'))
+        
+        # Get available categories
+        available_categories = json.loads(blog.categories) if blog.categories else []
+        
+        # Get trends
+        trends = get_trending_topics(limit=10)
+        
+        # Generate topics
+        topic_list = generate_topics_from_trends(
+            trends=trends,
+            categories=available_categories if not category else [category],
+            blog_id=int(blog_id),
+            limit=count
+        )
+        
+        if topic_list:
+            flash(f"Generated {len(topic_list)} new topics for {blog.name}", "success")
+        else:
+            flash("No topics could be generated. Try changing the category or increasing the count.", "warning")
+        
+        return redirect(url_for('seo.topics'))
+        
+    except Exception as e:
+        logger.error(f"Error generating topics: {str(e)}")
+        flash(f"Error generating topics: {str(e)}", "danger")
+        return redirect(url_for('seo.topics'))
+
+@seo_bp.route('/approve-topic/<int:topic_id>', methods=['POST'])
+def approve_topic(topic_id):
+    """Approve a pending topic"""
+    try:
+        topic = ArticleTopic.query.get_or_404(topic_id)
+        
+        if topic.status != 'pending':
+            flash("Only pending topics can be approved", "warning")
+            return redirect(url_for('seo.topics'))
+        
         topic.status = 'approved'
         db.session.commit()
         
-        flash(f"Topic '{topic.title}' approved successfully", "success")
+        flash(f"Topic '{topic.title}' approved", "success")
+        return redirect(url_for('seo.topics'))
         
     except Exception as e:
-        db.session.rollback()
         logger.error(f"Error approving topic: {str(e)}")
         flash(f"Error approving topic: {str(e)}", "danger")
-    
-    return redirect(url_for('seo.seo_dashboard'))
+        return redirect(url_for('seo.topics'))
 
-@seo_bp.route('/reject/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/reject-topic/<int:topic_id>', methods=['POST'])
 def reject_topic(topic_id):
-    """Reject a topic"""
-    topic = ArticleTopic.query.get_or_404(topic_id)
-    
+    """Reject a pending topic"""
     try:
+        topic = ArticleTopic.query.get_or_404(topic_id)
+        
+        if topic.status != 'pending':
+            flash("Only pending topics can be rejected", "warning")
+            return redirect(url_for('seo.topics'))
+        
         topic.status = 'rejected'
         db.session.commit()
         
         flash(f"Topic '{topic.title}' rejected", "success")
+        return redirect(url_for('seo.topics'))
         
     except Exception as e:
-        db.session.rollback()
         logger.error(f"Error rejecting topic: {str(e)}")
         flash(f"Error rejecting topic: {str(e)}", "danger")
-    
-    return redirect(url_for('seo.seo_dashboard'))
+        return redirect(url_for('seo.topics'))
 
-@seo_bp.route('/delete/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/delete-topic/<int:topic_id>', methods=['POST'])
 def delete_topic(topic_id):
     """Delete a topic"""
-    topic = ArticleTopic.query.get_or_404(topic_id)
-    
     try:
+        topic = ArticleTopic.query.get_or_404(topic_id)
+        title = topic.title
+        
         db.session.delete(topic)
         db.session.commit()
         
-        flash(f"Topic '{topic.title}' deleted", "success")
+        flash(f"Topic '{title}' deleted", "success")
+        return redirect(url_for('seo.topics'))
         
     except Exception as e:
-        db.session.rollback()
         logger.error(f"Error deleting topic: {str(e)}")
         flash(f"Error deleting topic: {str(e)}", "danger")
-    
-    return redirect(url_for('seo.seo_dashboard'))
+        return redirect(url_for('seo.topics'))
 
-@seo_bp.route('/use/<int:topic_id>', methods=['POST'])
-def use_topic(topic_id):
-    """Use a topic for content creation"""
-    topic = ArticleTopic.query.get_or_404(topic_id)
+@seo_bp.route('/analyze-content', methods=['GET', 'POST'])
+def analyze_content_page():
+    """Analyze content for SEO optimization"""
+    if request.method == 'POST':
+        try:
+            content = request.form.get('content')
+            primary_keyword = request.form.get('primary_keyword')
+            secondary_keywords = request.form.get('secondary_keywords', '').split(',')
+            secondary_keywords = [k.strip() for k in secondary_keywords if k.strip()]
+            
+            if not content or not primary_keyword:
+                flash("Content and primary keyword are required", "danger")
+                return render_template('seo/analyze_content.html')
+            
+            # Perform analysis
+            analysis = analyze_content(
+                content=content, 
+                primary_keyword=primary_keyword,
+                secondary_keywords=secondary_keywords
+            )
+            
+            return render_template(
+                'seo/analyze_content.html',
+                content=content,
+                primary_keyword=primary_keyword,
+                secondary_keywords=','.join(secondary_keywords),
+                analysis=analysis
+            )
+            
+        except Exception as e:
+            logger.error(f"Error analyzing content: {str(e)}")
+            flash(f"Error analyzing content: {str(e)}", "danger")
+            return render_template('seo/analyze_content.html')
     
-    try:
-        # Redirect to content creation with this topic
-        return redirect(url_for('simplified_content.content_creator', topic_title=topic.title))
-        
-    except Exception as e:
-        logger.error(f"Error using topic: {str(e)}")
-        flash(f"Error using topic: {str(e)}", "danger")
-        return redirect(url_for('seo.seo_dashboard'))
+    return render_template('seo/analyze_content.html')
 
 @seo_bp.route('/api/trends')
-def get_trends_api():
+def api_trends():
     """API endpoint to get current trends"""
     try:
-        # Get daily trends
-        trends = get_daily_trends(geo='PL')
+        country = request.args.get('country', 'pl')
+        limit = int(request.args.get('limit', 10))
         
-        if trends:
-            return jsonify({
-                'success': True,
-                'trends': trends
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'No trends available'
-            })
-            
-    except Exception as e:
-        logger.error(f"Error fetching trends: {str(e)}")
+        trends = get_daily_trends(country=country)
+        
         return jsonify({
-            'success': False,
-            'error': str(e)
+            'status': 'success',
+            'trends': trends[:limit] if trends else []
         })
+        
+    except Exception as e:
+        logger.error(f"Error getting trends API: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@seo_bp.route('/api/keyword-competition', methods=['POST'])
+def api_keyword_competition():
+    """API endpoint to analyze keyword competition"""
+    try:
+        data = request.json
+        
+        if not data or 'keyword' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Keyword is required'
+            }), 400
+        
+        keyword = data['keyword']
+        country = data.get('country', 'pl')
+        
+        competition = get_keyword_competition(
+            keyword=keyword,
+            country=country
+        )
+        
+        return jsonify({
+            'status': 'success',
+            'competition': competition
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting keyword competition API: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@seo_bp.route('/api/keyword-suggestions', methods=['GET'])
+def api_keyword_suggestions():
+    """API endpoint to get keyword suggestions"""
+    try:
+        topic = request.args.get('topic')
+        limit = int(request.args.get('limit', 5))
+        
+        if not topic:
+            return jsonify({
+                'status': 'error',
+                'message': 'Topic is required'
+            }), 400
+        
+        suggestions = get_keyword_suggestions(
+            topic=topic,
+            limit=limit
+        )
+        
+        return jsonify({
+            'status': 'success',
+            'suggestions': suggestions
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting keyword suggestions API: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@seo_bp.route('/api/title-variations', methods=['POST'])
+def api_title_variations():
+    """API endpoint to generate title variations"""
+    try:
+        data = request.json
+        
+        if not data or 'title' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Title is required'
+            }), 400
+        
+        title = data['title']
+        keywords = data.get('keywords', [])
+        limit = data.get('limit', 5)
+        
+        variations = generate_title_variations(
+            title=title,
+            keywords=keywords,
+            limit=limit
+        )
+        
+        return jsonify({
+            'status': 'success',
+            'variations': variations
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating title variations API: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500

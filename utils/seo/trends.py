@@ -1,230 +1,218 @@
 """
-Google Trends API Interface
+Google Trends Integration
 
-This module provides functions for interacting with Google Trends data
+This module provides functions to interact with Google Trends data.
 """
 import logging
+import requests
 import json
-import time
 import random
 from datetime import datetime, timedelta
-from urllib.parse import urlencode
-import requests
+from pytrends.request import TrendReq
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-class TrendsRequestError(Exception):
-    """Exception raised when a Google Trends request fails"""
-    pass
-
-def initialize_trends_client():
-    """Initialize the Google Trends API client"""
-    logger.info("Google Trends API client initialized")
-    return True
-
-def get_daily_trends(geo='PL', language='pl-PL'):
+def get_daily_trends(country="pl"):
     """
-    Get daily trending searches for a specific geographic area.
+    Get daily trends from Google Trends.
     
     Args:
-        geo: The geographic area (default: 'PL' for Poland)
-        language: The language for results (default: 'pl-PL')
+        country: The country code (default: 'pl' for Poland)
         
     Returns:
-        List of trending topics
+        List of trending search terms
     """
-    try:
-        logger.info(f"Fetching daily trends for {geo.lower()}")
-        
-        # First, make a request to get a token/cookie
-        base_url = "https://trends.google.com/trends/explore"
-        params = {'geo': geo}
-        
-        try:
-            response = requests.get(base_url, params=params)
-            
-            if response.status_code != 200:
-                raise TrendsRequestError(f"Google returned a response with code {response.status_code}")
-        except Exception as e:
-            raise TrendsRequestError(f"The request failed: {str(e)}")
-        
-        # Now, fetch the actual trending data
-        api_url = "https://trends.google.com/trends/api/explore"
-        
-        # Parameters for trending search request
-        payload = {
-            'hl': language,
-            'tz': 360,  # Time zone offset in minutes
-            'req': json.dumps({
-                'comparisonItem': [{"keyword": "news", "time": "now 1-d", "geo": ""}],
-                'category': 0,
-                'property': '',
-            })
-        }
-        
-        trends_response = requests.post(api_url, params=payload)
-        
-        if trends_response.status_code != 200:
-            raise TrendsRequestError(f"Google returned a response with code {trends_response.status_code}")
-        
-        # Extract daily trends 
-        response_text = trends_response.text[5:]  # Remove garbage prefix
-        data = json.loads(response_text)
-        
-        # Try to get daily trends from another endpoint
-        daily_url = "https://trends.google.com/trends/hottrends/visualize/internal/data"
-        
-        daily_response = requests.get(daily_url)
-        
-        if daily_response.status_code != 200:
-            raise TrendsRequestError(f"Google returned a response with code {daily_response.status_code}")
-        
-        try:
-            daily_data = daily_response.json()
-            # Extract trending searches for the specified geo
-            if geo in daily_data:
-                trends = []
-                for topic_group in daily_data[geo]:
-                    for topic in topic_group:
-                        trends.append(topic['title'])
-                return trends[:10]  # Return top 10 trends
-            else:
-                # Fallback: generate some recent topics based on categories
-                return generate_fallback_trends()
-        except Exception as e:
-            logger.error(f"Error parsing daily trends: {str(e)}")
-            return generate_fallback_trends()
+    logger.info(f"Fetching daily trends for {country}")
     
+    try:
+        # Initialize pytrends
+        pytrends = TrendReq(hl=f'{country}-{country.upper()}', timeout=(10, 25), 
+                          retries=2, backoff_factor=0.1)
+        
+        # Get daily trends data
+        daily_trends = pytrends.trending_searches(pn=country)
+        
+        # Extract trending terms
+        if not daily_trends.empty:
+            trends = daily_trends[0].tolist()
+            return trends
+        else:
+            logger.warning(f"No daily trends found for {country}")
+            # Return a list of fallback trends in case we can't get real data
+            # (this happens due to API limits)
+            return get_fallback_trends(country)
+            
     except Exception as e:
         logger.error(f"Error fetching daily trends: {str(e)}")
-        return generate_fallback_trends()
+        # Return fallback trends on error
+        return get_fallback_trends(country)
 
-def get_related_topics(keyword, geo='PL', language='pl-PL'):
+def get_related_topics(keyword, country="pl", timeframe="today 12-m"):
     """
     Get topics related to a keyword.
     
     Args:
-        keyword: The search term to find related topics for
-        geo: The geographic area (default: 'PL' for Poland)
-        language: The language for results (default: 'pl-PL')
+        keyword: The keyword to get related topics for
+        country: The country code (default: 'pl')
+        timeframe: Time frame for the data (default: 'today 12-m')
         
     Returns:
-        List of related topics
+        Dictionary of related topics
     """
+    logger.info(f"Fetching related topics for '{keyword}' in {country}")
+    
     try:
-        logger.info(f"Fetching related topics for '{keyword}' in {geo}")
+        # Initialize pytrends
+        pytrends = TrendReq(hl=f'{country}-{country.upper()}')
         
-        # Base URL for the API
-        api_url = "https://trends.google.com/trends/api/widgetdata/relatedsearches"
+        # Build payload
+        pytrends.build_payload([keyword], cat=0, timeframe=timeframe, geo=country.upper())
         
-        # First get a token by making a request to the explore endpoint
-        explore_url = "https://trends.google.com/trends/api/explore"
+        # Get related topics
+        related_topics = pytrends.related_topics()
         
-        # Parameters for the explore request
-        explore_payload = {
-            'hl': language,
-            'tz': 360,
-            'req': json.dumps({
-                'comparisonItem': [{"keyword": keyword, "geo": geo, "time": "today 12-m"}],
-                'category': 0,
-                'property': '',
-            })
-        }
-        
-        explore_response = requests.post(explore_url, params=explore_payload)
-        
-        if explore_response.status_code != 200:
-            raise TrendsRequestError(f"Google returned a response with code {explore_response.status_code}")
-        
-        # Extract token from the explore response
-        response_text = explore_response.text[5:]  # Remove garbage prefix
-        data = json.loads(response_text)
-        
-        try:
-            widgets = data['widgets']
-            related_topics_widget = None
+        if keyword in related_topics and not related_topics[keyword].empty:
+            # Extract top related topics
+            top_topics = related_topics[keyword]['top']
+            topics = []
             
-            # Find the related topics widget
-            for widget in widgets:
-                if widget['id'] == 'RELATED_TOPICS':
-                    related_topics_widget = widget
-                    break
-            
-            if not related_topics_widget:
-                logger.warning(f"No related topics widget found for '{keyword}'")
-                return []
-            
-            # Get related topics data
-            token = related_topics_widget['token']
-            req = related_topics_widget['request']
-            
-            topics_payload = {
-                'hl': language,
-                'tz': 360,
-                'req': json.dumps(req),
-                'token': token,
-            }
-            
-            topics_response = requests.get(api_url, params=topics_payload)
-            
-            if topics_response.status_code != 200:
-                raise TrendsRequestError(f"Google returned a response with code {topics_response.status_code}")
-            
-            # Parse and extract related topics
-            topics_text = topics_response.text[5:]  # Remove garbage prefix
-            topics_data = json.loads(topics_text)
-            
-            related_topics = []
-            
-            if 'default' in topics_data['default']:
-                for topic in topics_data['default']['rankedList'][0]['rankedKeyword']:
-                    related_topics.append({
-                        'title': topic['topic']['title'],
-                        'type': topic['topic']['type'],
-                        'value': topic['value']
+            if not top_topics.empty:
+                for _, row in top_topics.iterrows():
+                    topics.append({
+                        'title': row.get('topic_title', ''),
+                        'type': row.get('topic_type', ''),
+                        'value': float(row.get('value', 0))
                     })
             
-            return related_topics
-            
-        except Exception as e:
-            logger.error(f"Error parsing related topics: {str(e)}")
+            return topics
+        else:
+            logger.warning(f"No related topics found for '{keyword}'")
             return []
-    
+            
     except Exception as e:
         logger.error(f"Error fetching related topics: {str(e)}")
         return []
 
-def generate_fallback_trends():
+def get_trending_topics(country="pl", limit=10):
     """
-    Generate fallback trends when the API fails.
+    Get trending topics for content creation.
     
+    Args:
+        country: The country code (default: 'pl')
+        limit: Maximum number of topics to return (default: 10)
+        
     Returns:
         List of trending topics
     """
-    categories = [
-        'biznes', 'finanse', 'inwestycje',
-        'technologia', 'AI', 'gadżety', 
-        'zdrowie', 'odporność', 'dieta',
-        'edukacja', 'szkolenia', 'e-learning',
-        'rozrywka', 'gry', 'filmy'
+    logger.info(f"Fetching trending topics for {country}")
+    
+    trending_topics = []
+    
+    # Get daily trends
+    daily_trends = get_daily_trends(country)
+    
+    # Limit results
+    if daily_trends:
+        trending_topics = daily_trends[:limit]
+    
+    return trending_topics
+
+def get_interest_over_time(keyword, country="pl", timeframe="today 12-m"):
+    """
+    Get interest over time for a keyword.
+    
+    Args:
+        keyword: The keyword to get interest data for
+        country: The country code (default: 'pl')
+        timeframe: Time frame for the data (default: 'today 12-m')
+        
+    Returns:
+        Dictionary with interest over time data
+    """
+    logger.info(f"Fetching interest over time for '{keyword}' in {country}")
+    
+    try:
+        # Initialize pytrends
+        pytrends = TrendReq(hl=f'{country}-{country.upper()}')
+        
+        # Build payload
+        pytrends.build_payload([keyword], cat=0, timeframe=timeframe, geo=country.upper())
+        
+        # Get interest over time
+        interest_df = pytrends.interest_over_time()
+        
+        if not interest_df.empty:
+            # Convert dataframe to dictionary
+            interest_data = []
+            
+            for date, row in interest_df.iterrows():
+                if keyword in row:
+                    interest_data.append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'value': int(row[keyword])
+                    })
+            
+            return {
+                'keyword': keyword,
+                'data': interest_data
+            }
+        else:
+            logger.warning(f"No interest data found for '{keyword}'")
+            return {
+                'keyword': keyword,
+                'data': []
+            }
+            
+    except Exception as e:
+        logger.error(f"Error fetching interest over time: {str(e)}")
+        return {
+            'keyword': keyword,
+            'data': []
+        }
+
+def get_fallback_trends(country="pl"):
+    """
+    Get fallback trends when Google Trends API is rate-limited.
+    This ensures we always have some trends to work with.
+    
+    Args:
+        country: The country code to get fallback trends for
+        
+    Returns:
+        List of trending search terms
+    """
+    # Poland-specific fallback trends for different categories
+    pl_trends = [
+        # Technology
+        "nowy iPhone", "sztuczna inteligencja", "ChatGPT", "Android 15", 
+        "najnowsze smartfony", "technologie przyszłości", "Starlink",
+        
+        # Business
+        "inwestowanie w złoto", "GPW", "kursy walut", "podwyżki stóp procentowych",
+        "inflacja", "kredyt hipoteczny", "dofinansowanie dla firm",
+        
+        # Health
+        "zdrowy tryb życia", "dieta śródziemnomorska", "naturalne suplementy",
+        "ćwiczenia w domu", "zdrowe odżywianie", "joga",
+        
+        # Entertainment
+        "nowe seriale Netflix", "premiery filmowe", "koncerty 2025",
+        "festiwale muzyczne", "najlepsze książki", "gry komputerowe",
+        
+        # Travel
+        "wakacje all-inclusive", "podróże po Polsce", "tanie loty",
+        "najpiękniejsze plaże", "zimowe wyjazdy", "agroturystyka",
+        
+        # Home
+        "urządzanie mieszkania", "nowoczesne wnętrza", "meble DIY",
+        "oszczędzanie energii", "fotowoltaika", "pompy ciepła",
+        
+        # Food
+        "przepisy na obiad", "kuchnia roślinna", "keto dieta",
+        "domowe wypieki", "slow food", "bezglutenowe przepisy"
     ]
     
-    # Get current date for more realistic trends
-    current_date = datetime.now()
-    date_str = current_date.strftime("%B %Y")
-    
-    trends = [
-        f"Najlepsze inwestycje {date_str}",
-        f"Trendy w technologii {date_str}",
-        f"Jak wzmocnić odporność organizmu",
-        f"Nowe metody uczenia się online",
-        f"Premiery filmowe {date_str}",
-        f"Rozwój sztucznej inteligencji w {current_date.year} roku",
-        f"Zarządzanie budżetem domowym w kryzysie",
-        f"Efektywne metody oszczędzania",
-        f"Najnowsze smartfony {date_str}",
-        f"Zdrowe nawyki żywieniowe"
-    ]
-    
-    return trends
+    # Return 10 random trends from the list
+    random.shuffle(pl_trends)
+    return pl_trends[:10]
