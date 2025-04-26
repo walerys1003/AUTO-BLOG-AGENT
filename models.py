@@ -79,6 +79,51 @@ class SocialAccount(db.Model):
     def __repr__(self):
         return f"<SocialAccount {self.platform} - {self.name}>"
 
+class Article(db.Model):
+    """Model for article content with long paragraphs"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)  # Full article content
+    excerpt = db.Column(db.Text, nullable=True)  # Article excerpt/summary
+    status = db.Column(db.String(50), default="draft")  # draft, ready, published, archived
+    post_id = db.Column(db.Integer, nullable=True)  # WordPress post ID if published
+    category_id = db.Column(db.Integer, nullable=True)  # Category ID
+    tags = db.Column(db.Text, nullable=True)  # JSON string of tags
+    token_count = db.Column(db.Integer, nullable=True)  # Total token count
+    paragraph_count = db.Column(db.Integer, nullable=True)  # Number of paragraphs
+    metrics_data = db.Column(db.Text, nullable=True)  # JSON string of metrics
+    featured_image_url = db.Column(db.String(512), nullable=True)  # URL to featured image
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)  # When the article was published
+    
+    # Define relationship with Blog
+    blog = db.relationship('Blog', backref=db.backref('articles', lazy=True))
+    
+    def __repr__(self):
+        return f"<Article {self.title} - {self.status}>"
+    
+    def get_tags(self):
+        """Returns tags as a Python list"""
+        if self.tags:
+            return json.loads(self.tags)
+        return []
+    
+    def set_tags(self, tags_list):
+        """Sets tags from a Python list"""
+        self.tags = json.dumps(tags_list)
+    
+    def get_metrics(self):
+        """Returns metrics as a Python dict"""
+        if self.metrics_data:
+            return json.loads(self.metrics_data)
+        return {}
+    
+    def set_metrics(self, metrics_dict):
+        """Sets metrics from a Python dict"""
+        self.metrics_data = json.dumps(metrics_dict)
+
 class ContentLog(db.Model):
     """Model for logging content generation and publishing activities"""
     id = db.Column(db.Integer, primary_key=True)

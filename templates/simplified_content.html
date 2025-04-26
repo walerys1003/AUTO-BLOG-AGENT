@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Generator Treści z Długimi Akapitami{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white border-secondary">
+                <div class="card-header bg-dark text-white border-secondary">
+                    <h2 class="mb-0">Generator Treści z Długimi Akapitami</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Ten moduł generuje wysokiej jakości artykuły z bardzo długimi akapitami (min. 1000 tokenów na akapit).
+                                Każdy akapit jest starannie rozbudowany, aby zapewnić optymalne SEO i lepszą pozycję w wyszukiwarkach.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="form-group mb-3">
+                                <label for="topicInput" class="form-label">Temat artykułu</label>
+                                <input type="text" class="form-control" id="topicInput" placeholder="Wpisz temat artykułu...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="paragraphsInput" class="form-label">Liczba akapitów</label>
+                                <select class="form-select" id="paragraphsInput">
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4" selected>4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <button id="generateButton" class="btn btn-primary w-100">
+                                <i class="fas fa-magic me-2"></i> Generuj Artykuł
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button id="clearButton" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-eraser me-2"></i> Wyczyść
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="loadingIndicator" class="row mb-4 d-none">
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generowanie...</span>
+                            </div>
+                            <p class="mt-2">Generowanie artykułu z długimi akapitami... To może potrwać kilka minut.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="generationError" class="row mb-4 d-none">
+                        <div class="col-12">
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="errorMessage">Błąd generowania treści.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="resultContainer" class="row d-none">
+                        <div class="col-md-8">
+                            <div class="card bg-dark text-white border-secondary mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Wygenerowany Artykuł</h5>
+                                    <button id="copyButton" class="btn btn-sm btn-outline-light">
+                                        <i class="fas fa-copy"></i> Kopiuj
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group mb-3">
+                                        <label for="titleInput" class="form-label">Tytuł</label>
+                                        <input type="text" class="form-control" id="titleInput" placeholder="Tytuł artykułu">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contentTextarea" class="form-label">Treść</label>
+                                        <textarea class="form-control" id="contentTextarea" rows="15"></textarea>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <select class="form-select mb-3" id="blogSelect">
+                                                <option value="" selected disabled>Wybierz blog...</option>
+                                                {% for blog in blogs %}
+                                                <option value="{{ blog.id }}">{{ blog.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button id="saveButton" class="btn btn-success w-100">
+                                                <i class="fas fa-save me-2"></i> Zapisz jako Szkic
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-dark text-white border-secondary mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Analiza Długości</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="metricsReport" class="font-monospace small" style="white-space: pre-wrap;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const topicInput = document.getElementById('topicInput');
+        const paragraphsInput = document.getElementById('paragraphsInput');
+        const generateButton = document.getElementById('generateButton');
+        const clearButton = document.getElementById('clearButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const generationError = document.getElementById('generationError');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultContainer = document.getElementById('resultContainer');
+        const titleInput = document.getElementById('titleInput');
+        const contentTextarea = document.getElementById('contentTextarea');
+        const metricsReport = document.getElementById('metricsReport');
+        const copyButton = document.getElementById('copyButton');
+        const saveButton = document.getElementById('saveButton');
+        const blogSelect = document.getElementById('blogSelect');
+        
+        let generatedContent = '';
+        
+        // Generate content when button is clicked
+        generateButton.addEventListener('click', async function() {
+            const topic = topicInput.value.trim();
+            
+            if (!topic) {
+                showError('Proszę podać temat artykułu.');
+                return;
+            }
+            
+            const numParagraphs = parseInt(paragraphsInput.value);
+            
+            // Show loading indicator and hide other containers
+            loadingIndicator.classList.remove('d-none');
+            generationError.classList.add('d-none');
+            resultContainer.classList.add('d-none');
+            generateButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/generate_simplified_content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        topic: topic,
+                        num_paragraphs: numParagraphs
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store generated content
+                    generatedContent = data.content;
+                    
+                    // Update UI
+                    titleInput.value = topic;
+                    contentTextarea.value = data.content;
+                    metricsReport.innerText = data.report;
+                    
+                    // Show result container
+                    resultContainer.classList.remove('d-none');
+                } else {
+                    showError(data.error || 'Błąd generowania treści.');
+                }
+            } catch (error) {
+                console.error('Error generating content:', error);
+                showError('Błąd komunikacji z serwerem.');
+            } finally {
+                // Hide loading indicator and re-enable generate button
+                loadingIndicator.classList.add('d-none');
+                generateButton.disabled = false;
+            }
+        });
+        
+        // Clear all inputs and results
+        clearButton.addEventListener('click', function() {
+            topicInput.value = '';
+            paragraphsInput.value = '4';
+            titleInput.value = '';
+            contentTextarea.value = '';
+            metricsReport.innerText = '';
+            generatedContent = '';
+            generationError.classList.add('d-none');
+            resultContainer.classList.add('d-none');
+        });
+        
+        // Copy content to clipboard
+        copyButton.addEventListener('click', function() {
+            contentTextarea.select();
+            document.execCommand('copy');
+            
+            // Show tooltip or some feedback
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check"></i> Skopiowano!';
+            setTimeout(() => {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        });
+        
+        // Save content as draft
+        saveButton.addEventListener('click', async function() {
+            const title = titleInput.value.trim();
+            const content = contentTextarea.value.trim();
+            const blogId = blogSelect.value;
+            
+            if (!title) {
+                showError('Proszę podać tytuł artykułu.');
+                return;
+            }
+            
+            if (!content) {
+                showError('Brak treści do zapisania.');
+                return;
+            }
+            
+            if (!blogId) {
+                showError('Proszę wybrać blog.');
+                return;
+            }
+            
+            saveButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/save_simplified_content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        content: content,
+                        blog_id: blogId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message
+                    alert('Artykuł został zapisany jako szkic.');
+                    
+                    // Clear the form
+                    clearButton.click();
+                } else {
+                    showError(data.error || 'Błąd zapisywania treści.');
+                }
+            } catch (error) {
+                console.error('Error saving content:', error);
+                showError('Błąd komunikacji z serwerem.');
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+        
+        // Helper to show error message
+        function showError(message) {
+            errorMessage.innerText = message;
+            generationError.classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}
