@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}SEO Trends{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-chart-line text-primary me-3"></i> Google Trends Analysis
+                    </h1>
+                    <p class="lead">
+                        Explore trending searches and use them to generate content ideas for your blogs.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-fire text-danger me-2"></i> Trending Keywords
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" id="refreshTrendsBtn">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-2 g-4" id="trendsContainer">
+                        {% for trend in trends %}
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm trend-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ trend }}</h5>
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-globe me-1"></i> pl
+                                        </span>
+                                        <a href="https://www.google.com/search?q={{ trend|urlencode }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-search me-1"></i> View Results
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <div class="display-6 text-muted mb-3">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h4>No trends available at the moment</h4>
+                            <p class="text-muted">Try refreshing the page or check back later.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-muted">
+                    <i class="fas fa-info-circle me-1"></i> Data source: Google Trends API. Updated daily.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-0 rounded-3 mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools text-secondary me-2"></i> Trend Tools
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('seo.topics') }}" class="btn btn-primary">
+                            <i class="fas fa-magic me-2"></i> Generate Topics from Trends
+                        </a>
+                        <button class="btn btn-outline-primary" id="analyzeSelectedBtn" disabled>
+                            <i class="fas fa-search me-2"></i> Analyze Selected Trend
+                        </button>
+                        <button class="btn btn-outline-primary" id="exportTrendsBtn">
+                            <i class="fas fa-file-export me-2"></i> Export Trends Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i> Trend Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> <strong>Pro Tip:</strong> Trending topics are often timely but may quickly lose relevance. Consider creating evergreen content that incorporates trending elements.
+                    </div>
+
+                    <h6 class="fw-bold mt-4">How to Use Trends</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-check-circle text-success me-2"></i> Identify patterns in trending topics
+                        </li>
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-check-circle text-success me-2"></i> Generate timely content ideas
+                        </li>
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-check-circle text-success me-2"></i> Research related keywords
+                        </li>
+                        <li class="list-group-item px-0">
+                            <i class="fas fa-check-circle text-success me-2"></i> Create content that combines trends with evergreen topics
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Refresh trends
+    document.getElementById('refreshTrendsBtn').addEventListener('click', function() {
+        fetch('{{ url_for("seo.api_trends") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.trends.length > 0) {
+                    const trendsContainer = document.getElementById('trendsContainer');
+                    
+                    // Clear existing trends
+                    trendsContainer.innerHTML = '';
+                    
+                    // Add new trends
+                    data.trends.forEach(trend => {
+                        const trendCol = document.createElement('div');
+                        trendCol.className = 'col';
+                        
+                        trendCol.innerHTML = `
+                            <div class="card h-100 border-0 shadow-sm trend-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${trend}</h5>
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-globe me-1"></i> pl
+                                        </span>
+                                        <a href="https://www.google.com/search?q=${encodeURIComponent(trend)}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-search me-1"></i> View Results
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        trendsContainer.appendChild(trendCol);
+                    });
+                    
+                    // Show success message
+                    alert('Trends refreshed successfully!');
+                } else {
+                    alert('Error refreshing trends: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error refreshing trends. Please try again later.');
+            });
+    });
+    
+    // Export trends
+    document.getElementById('exportTrendsBtn').addEventListener('click', function() {
+        const trends = [];
+        document.querySelectorAll('.trend-card .card-title').forEach(el => {
+            trends.push(el.textContent.trim());
+        });
+        
+        if (trends.length === 0) {
+            alert('No trends to export.');
+            return;
+        }
+        
+        const trendsText = trends.join('\n');
+        
+        // Create blob and download
+        const blob = new Blob([trendsText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'trends_export_' + new Date().toISOString().slice(0, 10) + '.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+});
+</script>
+{% endblock %}

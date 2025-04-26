@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Analyze Content for SEO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-search text-primary me-3"></i> Content SEO Analysis
+                    </h1>
+                    <p class="lead">
+                        Analyze your content for SEO optimization and get recommendations to improve its search ranking.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7 mb-4">
+            <div class="card shadow border-0 rounded-3 h-100">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt text-info me-2"></i> Content to Analyze
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('seo.analyze_content_page') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="primary_keyword" class="form-label">Primary Keyword <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="primary_keyword" name="primary_keyword" placeholder="Enter your main target keyword" value="{{ primary_keyword|default('') }}" required>
+                            <div class="form-text">The main keyword you want to rank for.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="secondary_keywords" class="form-label">Secondary Keywords (comma-separated)</label>
+                            <input type="text" class="form-control" id="secondary_keywords" name="secondary_keywords" placeholder="keyword1, keyword2, keyword3" value="{{ secondary_keywords|default('') }}">
+                            <div class="form-text">Additional keywords you want to target (optional).</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="content" name="content" rows="15" placeholder="Paste your content here" required>{{ content|default('') }}</textarea>
+                            <div class="form-text">Content can include HTML tags for headings (h1, h2, etc.)</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-analyze me-2"></i> Analyze Content
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-5 mb-4">
+            {% if analysis %}
+            <div class="card shadow border-0 rounded-3 mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar text-success me-2"></i> Analysis Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h3 class="mb-0">{{ analysis.word_count }}</h3>
+                                <small class="text-muted">Word Count</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h3 class="mb-0">{{ (analysis.primary_keyword.density * 100)|round(1) }}%</h3>
+                                <small class="text-muted">Keyword Density</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h3 class="mb-0">{{ analysis.readability.score|round(1) }}</h3>
+                                <small class="text-muted">Readability Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h3 class="mb-0">{{ analysis.readability.level }}</h3>
+                                <small class="text-muted">Reading Level</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Keyword Analysis -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold">Primary Keyword Analysis</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                In Title (H1)
+                                {% if analysis.primary_keyword.in_title %}
+                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                In First Paragraph
+                                {% if analysis.primary_keyword.in_first_paragraph %}
+                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                In Headings
+                                {% if analysis.primary_keyword.in_headings %}
+                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                In Last Paragraph
+                                {% if analysis.primary_keyword.in_last_paragraph %}
+                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Heading Structure -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold">Heading Structure</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                H1 Tags
+                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h1_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                H2 Tags
+                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h2_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                H3 Tags
+                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h3_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                H4+ Tags
+                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h4_plus_count }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i> Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for recommendation in analysis.recommendations %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i> {{ recommendation }}
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i> Your content is well optimized!
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body text-center p-5">
+                    <div class="display-6 text-muted mb-4">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                    <h3>Ready to Analyze</h3>
+                    <p class="text-muted mb-4">Enter your content and keywords to get a detailed SEO analysis.</p>
+                    <div class="text-start">
+                        <h6 class="fw-bold">What We Analyze:</h6>
+                        <ul class="list-unstyled ms-4">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Keyword usage and density</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Content structure and readability</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Heading structure and organization</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> SEO best practices</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

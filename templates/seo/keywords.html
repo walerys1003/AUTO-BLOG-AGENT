@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Keyword Research{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-key text-primary me-3"></i> Keyword Research
+                    </h1>
+                    <p class="lead">
+                        Research keywords, analyze competition, and find the best terms to target for your content.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search text-info me-2"></i> Keyword Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="keywordForm">
+                        <div class="mb-3">
+                            <label for="keyword" class="form-label">Keyword <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter a keyword to analyze" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <select class="form-select" id="country" name="country">
+                                <option value="pl" selected>Poland (PL)</option>
+                                <option value="us">United States (US)</option>
+                                <option value="uk">United Kingdom (UK)</option>
+                                <option value="de">Germany (DE)</option>
+                                <option value="fr">France (FR)</option>
+                                <option value="es">Spain (ES)</option>
+                                <option value="it">Italy (IT)</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="analyzeKeywordBtn">
+                                <i class="fas fa-search me-2"></i> Analyze Keyword
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-3 mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i> Keyword Suggestions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="suggestionsForm">
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">Topic <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="topic" name="topic" placeholder="Enter a topic for keyword suggestions" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="limit" class="form-label">Number of Suggestions</label>
+                            <select class="form-select" id="limit" name="limit">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="getKeywordSuggestionsBtn">
+                                <i class="fas fa-lightbulb me-2"></i> Get Suggestions
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7 mb-4">
+            <!-- Keyword Analysis Results -->
+            <div class="card shadow border-0 rounded-3 mb-4" id="analysisResultsCard" style="display: none;">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar text-success me-2"></i> <span id="analysisKeywordTitle">Keyword Analysis</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="border rounded text-center p-3 mb-3">
+                                <h3 class="mb-0" id="difficultyScore">0</h3>
+                                <small class="text-muted">Difficulty Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded text-center p-3 mb-3">
+                                <h3 class="mb-0" id="difficultyLevel">Unknown</h3>
+                                <small class="text-muted">Difficulty Level</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Recommendations -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold">Content Recommendations</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th>Recommended Content Length</th>
+                                            <td><span id="recommendedContentLength">0</span> words</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Recommended Headings</th>
+                                            <td><span id="recommendedHeadings">0</span> headings</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Competitors -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Top Competitors</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Domain</th>
+                                        <th>Title</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="competitorsTableBody">
+                                    <!-- Competitors will be added here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Keywords -->
+                    <div>
+                        <h6 class="fw-bold">Related Keywords</h6>
+                        <div id="suggestedKeywordsContainer">
+                            <!-- Suggested keywords will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyword Suggestions Results -->
+            <div class="card shadow border-0 rounded-3" id="suggestionsResultsCard" style="display: none;">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i> <span id="suggestionsTopic">Keyword Suggestions</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Keyword</th>
+                                    <th>Search Volume</th>
+                                    <th>Competition</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suggestionsTableBody">
+                                <!-- Suggestions will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-sm btn-outline-primary" id="exportSuggestionsBtn">
+                            <i class="fas fa-file-export me-1"></i> Export Suggestions
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" id="generateTitleVariationsBtn">
+                            <i class="fas fa-font me-1"></i> Generate Title Variations
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placeholder Card (shown when no results are available) -->
+            <div class="card shadow border-0 rounded-3" id="placeholderCard">
+                <div class="card-body text-center p-5">
+                    <div class="display-6 text-muted mb-4">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                    <h3>Keyword Research Tool</h3>
+                    <p class="text-muted mb-4">Enter a keyword or topic to get started with your research.</p>
+                    <div class="text-start">
+                        <h6 class="fw-bold">What You'll Get:</h6>
+                        <ul class="list-unstyled ms-4">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Keyword difficulty analysis</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Content recommendations</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Competitor insights</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Related keyword suggestions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle keyword analysis form submission
+    document.getElementById('keywordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const keyword = document.getElementById('keyword').value.trim();
+        const country = document.getElementById('country').value;
+        
+        if (!keyword) {
+            alert('Please enter a keyword to analyze.');
+            return;
+        }
+        
+        // Show loading state
+        document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Analyzing...';
+        document.getElementById('analyzeKeywordBtn').disabled = true;
+        
+        // Make API request
+        fetch('{{ url_for("seo.api_keyword_competition") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                keyword: keyword,
+                country: country
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-search me-2"></i> Analyze Keyword';
+            document.getElementById('analyzeKeywordBtn').disabled = false;
+            
+            if (data.status === 'success' && data.competition) {
+                displayKeywordAnalysis(data.competition, keyword);
+            } else {
+                alert('Error analyzing keyword: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-search me-2"></i> Analyze Keyword';
+            document.getElementById('analyzeKeywordBtn').disabled = false;
+            alert('Error analyzing keyword. Please try again later.');
+        });
+    });
+    
+    // Handle keyword suggestions form submission
+    document.getElementById('suggestionsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const topic = document.getElementById('topic').value.trim();
+        const limit = document.getElementById('limit').value;
+        
+        if (!topic) {
+            alert('Please enter a topic for keyword suggestions.');
+            return;
+        }
+        
+        // Show loading state
+        document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Getting Suggestions...';
+        document.getElementById('getKeywordSuggestionsBtn').disabled = true;
+        
+        // Make API request
+        fetch(`{{ url_for("seo.api_keyword_suggestions") }}?topic=${encodeURIComponent(topic)}&limit=${limit}`)
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-lightbulb me-2"></i> Get Suggestions';
+            document.getElementById('getKeywordSuggestionsBtn').disabled = false;
+            
+            if (data.status === 'success' && data.suggestions) {
+                displayKeywordSuggestions(data.suggestions, topic);
+            } else {
+                alert('Error getting keyword suggestions: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-lightbulb me-2"></i> Get Suggestions';
+            document.getElementById('getKeywordSuggestionsBtn').disabled = false;
+            alert('Error getting keyword suggestions. Please try again later.');
+        });
+    });
+    
+    // Function to display keyword analysis results
+    function displayKeywordAnalysis(competition, keyword) {
+        // Update card title
+        document.getElementById('analysisKeywordTitle').textContent = `Analysis for "${keyword}"`;
+        
+        // Update difficulty metrics
+        document.getElementById('difficultyScore').textContent = competition.difficulty_score || 0;
+        document.getElementById('difficultyLevel').textContent = (competition.difficulty || 'unknown').toUpperCase();
+        
+        // Set difficulty level color
+        const difficultyElement = document.getElementById('difficultyLevel');
+        difficultyElement.className = '';
+        if (competition.difficulty === 'easy') {
+            difficultyElement.classList.add('text-success');
+        } else if (competition.difficulty === 'moderate') {
+            difficultyElement.classList.add('text-warning');
+        } else if (competition.difficulty === 'hard') {
+            difficultyElement.classList.add('text-danger');
+        }
+        
+        // Update content recommendations
+        document.getElementById('recommendedContentLength').textContent = competition.recommended_content_length || 0;
+        document.getElementById('recommendedHeadings').textContent = competition.recommended_headings || 0;
+        
+        // Update competitors table
+        const competitorsTableBody = document.getElementById('competitorsTableBody');
+        competitorsTableBody.innerHTML = '';
+        
+        if (competition.top_competitors && competition.top_competitors.length > 0) {
+            competition.top_competitors.forEach(competitor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${competitor.domain || 'Unknown'}</td>
+                    <td><a href="${competitor.url || '#'}" target="_blank">${competitor.title || 'Unknown'}</a></td>
+                `;
+                competitorsTableBody.appendChild(row);
+            });
+        } else {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="2" class="text-center">No competitors data available</td>';
+            competitorsTableBody.appendChild(row);
+        }
+        
+        // Update suggested keywords
+        const suggestedKeywordsContainer = document.getElementById('suggestedKeywordsContainer');
+        suggestedKeywordsContainer.innerHTML = '';
+        
+        if (competition.suggested_keywords && competition.suggested_keywords.length > 0) {
+            competition.suggested_keywords.forEach(keyword => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark border m-1 p-2';
+                badge.textContent = keyword;
+                suggestedKeywordsContainer.appendChild(badge);
+            });
+        } else {
+            suggestedKeywordsContainer.innerHTML = '<p class="text-center text-muted">No suggested keywords available</p>';
+        }
+        
+        // Show analysis results card and hide placeholder
+        document.getElementById('analysisResultsCard').style.display = 'block';
+        document.getElementById('placeholderCard').style.display = 'none';
+    }
+    
+    // Function to display keyword suggestions results
+    function displayKeywordSuggestions(suggestions, topic) {
+        // Update card title
+        document.getElementById('suggestionsTopic').textContent = `Suggestions for "${topic}"`;
+        
+        // Update suggestions table
+        const suggestionsTableBody = document.getElementById('suggestionsTableBody');
+        suggestionsTableBody.innerHTML = '';
+        
+        if (suggestions && suggestions.length > 0) {
+            suggestions.forEach(suggestion => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${suggestion.keyword || 'Unknown'}</td>
+                    <td>${suggestion.search_volume || 'Unknown'}</td>
+                    <td>${suggestion.competition || 'Unknown'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary analyze-suggestion-btn" data-keyword="${suggestion.keyword}">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </td>
+                `;
+                suggestionsTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to analyze buttons
+            document.querySelectorAll('.analyze-suggestion-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const keyword = this.getAttribute('data-keyword');
+                    document.getElementById('keyword').value = keyword;
+                    document.getElementById('keywordForm').dispatchEvent(new Event('submit'));
+                });
+            });
+        } else {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="4" class="text-center">No suggestions available</td>';
+            suggestionsTableBody.appendChild(row);
+        }
+        
+        // Show suggestions results card and hide placeholder
+        document.getElementById('suggestionsResultsCard').style.display = 'block';
+        document.getElementById('placeholderCard').style.display = 'none';
+    }
+    
+    // Export suggestions button
+    document.getElementById('exportSuggestionsBtn').addEventListener('click', function() {
+        const suggestions = [];
+        
+        document.querySelectorAll('#suggestionsTableBody tr').forEach(row => {
+            const keyword = row.cells[0] ? row.cells[0].textContent : null;
+            const volume = row.cells[1] ? row.cells[1].textContent : null;
+            const competition = row.cells[2] ? row.cells[2].textContent : null;
+            
+            if (keyword && keyword !== 'No suggestions available') {
+                suggestions.push(`${keyword},${volume},${competition}`);
+            }
+        });
+        
+        if (suggestions.length === 0) {
+            alert('No suggestions to export.');
+            return;
+        }
+        
+        // Add header
+        suggestions.unshift('Keyword,Search Volume,Competition');
+        
+        // Create blob and download
+        const blob = new Blob([suggestions.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'keyword_suggestions_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+});
+</script>
+{% endblock %}
