@@ -73,6 +73,8 @@ def generate_simplified_content():
             "error": f"Błąd generowania treści: {str(e)}"
         }), 500
 
+from utils.images.auto_image_finder import find_and_associate_images
+
 @simplified_content_bp.route("/api/save_simplified_content", methods=["POST"])
 def save_simplified_content():
     """Save generated content to the database"""
@@ -82,6 +84,7 @@ def save_simplified_content():
         title = data.get("title")
         content = data.get("content")
         blog_id = data.get("blog_id")
+        auto_find_images = data.get("auto_find_images", True)  # Default to true
         
         if not title or not content:
             return jsonify({
@@ -105,11 +108,32 @@ def save_simplified_content():
         db.session.add(article)
         db.session.commit()
         
+        # Find and associate images if requested
+        images_found = []
+        if auto_find_images:
+            try:
+                logger.info(f"Finding images for article: {article.title}")
+                success, images_found = find_and_associate_images(
+                    article=article,
+                    num_images=3,  # Find 3 images, but only first will be set as featured
+                    prefer_source='unsplash',
+                    save_to_library=True
+                )
+                
+                if success:
+                    logger.info(f"Successfully found and associated {len(images_found)} images with article {article.id}")
+                else:
+                    logger.warning(f"Failed to find images for article {article.id}")
+            except Exception as img_err:
+                logger.error(f"Error finding images for article {article.id}: {str(img_err)}")
+                # This shouldn't fail the whole save operation
+        
         # Return success
         return jsonify({
             "success": True,
             "article_id": article.id,
-            "message": "Artykuł został zapisany jako szkic"
+            "message": "Artykuł został zapisany jako szkic",
+            "images": images_found
         })
         
     except Exception as e:
