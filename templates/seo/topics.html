@@ -142,7 +142,7 @@
                                 <tr>
                                     <td>
                                         <strong>{{ topic.title }}</strong>
-                                        <div class="small text-muted">{{ topic.description|default(""|truncate(80) }}</div>
+                                        <div class="small text-muted">{{ topic.description|default("")|truncate(80) }}</div>
                                     </td>
                                     <td>{{ topic.blog }}</td>
                                     <td><span class="badge bg-light text-dark">{{ topic.category }}</span></td>
@@ -204,7 +204,7 @@
                                 <tr>
                                     <td>
                                         <strong>{{ topic.title }}</strong>
-                                        <div class="small text-muted">{{ topic.description|default(""|truncate(80) }}</div>
+                                        <div class="small text-muted">{{ topic.description|default("")|truncate(80) }}</div>
                                     </td>
                                     <td>{{ topic.blog }}</td>
                                     <td><span class="badge bg-light text-dark">{{ topic.category }}</span></td>
@@ -259,7 +259,7 @@
                                 <tr>
                                     <td class="text-muted">
                                         <strong>{{ topic.title }}</strong>
-                                        <div class="small">{{ topic.description|default(""|truncate(80) }}</div>
+                                        <div class="small">{{ topic.description|default("")|truncate(80) }}</div>
                                     </td>
                                     <td class="text-muted">{{ topic.blog }}</td>
                                     <td><span class="badge bg-light text-muted">{{ topic.category }}</span></td>
