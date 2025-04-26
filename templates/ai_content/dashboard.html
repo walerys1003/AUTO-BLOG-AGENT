@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Content Strategy{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-brain text-primary me-3"></i> AI-Driven Content Strategy
+                    </h1>
+                    <p class="lead">
+                        Generuj tematy i artykuły wysokiej jakości bezpośrednio z Claude 3.5 Sonnet, bez polegania na trendach SEO.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topic Generation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i> Generowanie Tematów AI
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('ai_content.generate_topics') }}" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="category" class="form-label">Kategoria</label>
+                                <input type="text" class="form-control" id="category" name="category" required 
+                                    placeholder="Nazwa kategorii (np. Kosmetyki dla dzieci)">
+                                <small class="text-muted">Wpisz nazwę kategorii dla której chcesz wygenerować tematy</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="count" class="form-label">Liczba tematów</label>
+                                <select class="form-select" id="count" name="count">
+                                    <option value="10">10 tematów</option>
+                                    <option value="20">20 tematów</option>
+                                    <option value="40" selected>40 tematów</option>
+                                    <option value="60">60 tematów</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-magic me-2"></i> Wygeneruj Tematy AI
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-white">
+                    <small class="text-muted">Tematy są generowane przez Claude 3.5 Sonnet za pomocą OpenRouter API. Ostatnia aktualizacja: {{ last_updated|default('Brak aktualizacji') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Generation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt text-success me-2"></i> Generowanie Artykułów
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('ai_content.generate_article') }}" method="POST">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="category_select" class="form-label">Kategoria</label>
+                                <select class="form-select" id="category_select" name="category" required>
+                                    <option value="" selected disabled>Wybierz kategorię...</option>
+                                    {% for category in ai_topics %}
+                                    <option value="{{ category }}">{{ category }} ({{ ai_topics[category]|length }} tematów)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="blog_id" class="form-label">Blog</label>
+                                <select class="form-select" id="blog_id" name="blog_id">
+                                    <option value="" selected>Wybierz blog (opcjonalnie)...</option>
+                                    {% for blog in blogs %}
+                                    <option value="{{ blog.id }}">{{ blog.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Opcjonalnie - wybierz blog, aby zapisać artykuł bezpośrednio w bazie danych</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <label for="topic_select" class="form-label">Temat</label>
+                                <select class="form-select" id="topic_select" name="topic" required disabled>
+                                    <option value="" selected disabled>Najpierw wybierz kategorię...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-12 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-cogs me-2"></i> Wygeneruj Artykuł
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-white">
+                    <small class="text-muted">Artykuł zostanie wygenerowany przez Claude 3.5 z 4 akapitami po 1000 tokenów każdy.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent AI Articles -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history text-info me-2"></i> Ostatnio Wygenerowane Artykuły
+                    </h5>
+                    <span class="badge bg-primary rounded-pill">{{ recent_articles|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_articles %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tytuł</th>
+                                    <th>Blog</th>
+                                    <th>Kategoria</th>
+                                    <th>Data</th>
+                                    <th>Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for article in recent_articles %}
+                                <tr>
+                                    <td>{{ article.title }}</td>
+                                    <td>{{ article.blog.name }}</td>
+                                    <td>
+                                        {% if article.category %}
+                                        <span class="badge bg-light text-dark">{{ article.category.name }}</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">Brak kategorii</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ article.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('content.edit_article', article_id=article.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edytuj
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted">Nie wygenerowano jeszcze żadnych artykułów z AI.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Topics Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sitemap text-primary me-2"></i> Kategorie i Tematy AI
+                    </h5>
+                    <a href="{{ url_for('ai_content.list_categories') }}" class="btn btn-sm btn-outline-primary">
+                        Zarządzaj Kategoriami
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if ai_topics %}
+                    <div class="list-group list-group-flush">
+                        {% for category, topics in ai_topics.items() %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ category }}</h6>
+                                    <small class="text-muted">{{ topics|length }} tematów</small>
+                                </div>
+                                <a href="{{ url_for('ai_content.list_topics', category=category) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Zobacz tematy
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted">Nie znaleziono żadnych tematów AI. Wygeneruj tematy, aby rozpocząć.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle category selection to load topics
+        const categorySelect = document.getElementById('category_select');
+        const topicSelect = document.getElementById('topic_select');
+        
+        categorySelect.addEventListener('change', function() {
+            const category = this.value;
+            
+            if (!category) {
+                topicSelect.disabled = true;
+                topicSelect.innerHTML = '<option value="" selected disabled>Najpierw wybierz kategorię...</option>';
+                return;
+            }
+            
+            // Fetch topics for the selected category
+            fetch(`/ai-content/get-topics/${category}`)
+                .then(response => response.json())
+                .then(topics => {
+                    topicSelect.disabled = false;
+                    topicSelect.innerHTML = '';
+                    
+                    if (topics.length === 0) {
+                        topicSelect.innerHTML = '<option value="" selected disabled>Brak tematów dla tej kategorii</option>';
+                        return;
+                    }
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    defaultOption.textContent = 'Wybierz temat...';
+                    topicSelect.appendChild(defaultOption);
+                    
+                    // Add topics
+                    topics.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic;
+                        option.textContent = topic;
+                        topicSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching topics:', error);
+                    topicSelect.innerHTML = '<option value="" selected disabled>Błąd pobierania tematów</option>';
+                });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+✅ Twój Nowy Plan – Jak to Technicznie Zrobić w blog.automationmaster.ai:
+1. Cel:
+Masz 63 kategorie na blogu.
+
+Dla każdej kategorii chcesz, aby Claude Sonnet 3.5 (przez OpenRouter AI) wygenerował 40 unikalnych tematów artykułów.
+
+Tematy bazują na inteligencji AI – nie na zewnętrznych trendach SEO.
+
+Na podstawie tych tematów generujesz pełne artykuły + obrazy i publikujesz automatycznie.
+
+🚀 Techniczny Plan:
+Krok 1: Lista Kategorii → AI Prompt → 40 Tematów
+Twój agent iteruje po każdej kategorii.
+
+Wysyła prompt do Claude 3.5:
+
+„Wygeneruj 40 unikalnych, ciekawych tematów artykułów blogowych dla kategorii: [NAZWA KATEGORII]. Tematy mają być kreatywne, interesujące dla czytelników, dotyczące [tematyka kategorii].”
+
+Przykład Promptu dla AI:
+text
+Kopiuj
+Edytuj
+Wygeneruj 40 unikalnych, kreatywnych i wartościowych tematów artykułów blogowych dla kategorii: "Kosmetyki dla dzieci". Tematy mają być interesujące, zróżnicowane, oparte na wiedzy i potrzebach rodziców dotyczących pielęgnacji dzieci. Każdy temat w jednym zdaniu.
+Krok 2: Zapis tematów w Twoim systemie
+Odpowiedzi AI zapisujesz np. do bazy danych (SQLite, JSON, CSV).
+
+Każdy temat przypisujesz do kategorii.
+
+Krok 3: Automatyczne Generowanie Artykułów na Tematy AI
+Twój agent bierze 1 temat z listy dla danej kategorii.
+
+Wysyła nowy prompt do Claude 3.5:
+
+„Napisz rozbudowany artykuł na temat: [TEMAT]. Artykuł powinien mieć wstęp, 4 długie akapity (1000 tokenów każdy) i podsumowanie.”
+
+Pobiera obrazki (jak już masz) i publikuje.
+
+🧠 TWOJE GŁÓWNE KOMPONENTY TECHNICZNE:
+1. Moduł 1: Generacja tematów dla kategorii:
+python
+Kopiuj
+Edytuj
+# Przykład – iteracja po kategoriach
+categories = ["Kosmetyki dla dzieci", "Majtki ciążowe", "Pielęgnacja niemowląt", ...]  # i tak dalej
+
+def generate_topics_for_category(category_name):
+    prompt = f"""
+    Wygeneruj 40 unikalnych, kreatywnych i wartościowych tematów artykułów blogowych dla kategorii: "{category_name}". Tematy mają być interesujące, zróżnicowane, przydatne dla czytelników bloga. Każdy temat w jednym zdaniu.
+    """
+    response = openrouter_call(prompt)  # Twój moduł do integracji z Claude 3.5 przez OpenRouter
+    topics = parse_topics(response)  # Funkcja dzieląca tekst AI na listę tematów
+    save_topics(category_name, topics)  # Zapisz do JSON / CSV / SQLite
+2. Moduł 2: Generowanie artykułów na podstawie tematów:
+python
+Kopiuj
+Edytuj
+def generate_article(topic, category_name):
+    prompt = f"""
+    Napisz ekspercki, rozbudowany artykuł na temat: "{topic}" dla bloga z kategorii: "{category_name}". 
+    Artykuł ma zawierać wstęp (min. 500 słów), 4 bardzo rozbudowane akapity (minimum 1000 tokenów każdy), 
+    i podsumowanie (min. 500 słów). 
+    Akapity muszą być szczegółowe, analityczne i wynikać logicznie jeden z drugiego.
+    """
+    article = openrouter_call(prompt)
+    return article
+3. Moduł 3: Obrazy + Publikacja:
+Już masz! Pobierasz obrazki i publikujesz jak wcześniej.
+
+🔥 Techniczne Szczegóły – Co Musisz Ogarnąć:
+OpenRouter API:
+
+Masz już podpięty model Claude 3.5 → potrzebujesz funkcji openrouter_call(prompt).
+
+Baza tematów:
+
+Możesz zapisać w pliku JSON:
+
+json
+Kopiuj
+Edytuj
+{
+  "Kosmetyki dla dzieci": ["Temat 1", "Temat 2", ..., "Temat 40"],
+  "Majtki ciążowe": ["Temat 1", ..., "Temat 40"]
+}
+Automatyzacja:
+
+Twój agent:
+
+Bierze losowy temat z kategorii ➜ generuje artykuł ➜ pobiera obrazki ➜ publikuje.
+
+SEO – opcjonalnie:
+
+Możesz na końcu wygenerować np. meta description, meta title.
+
+✅ PODSUMOWANIE – Twój Master Agent AI:
+63 kategorie ➜ każda dostaje 40 tematów od Claude 3.5.
+
+Agent cyklicznie generuje artykuły na te tematy.
+
+Bez presji SEO – AI tworzy wartościowe treści dla ludzi.
+
+Zdjęcia + publikacja ➜ wszystko automatycznie.
+
+Tomek, to czysty ogień 🔥 i bardzo nowoczesne podejście. Potrzebujesz kodu do integracji z OpenRouter API albo gotowego szkieletu JSON? Zrobimy to krok po kroku 💻💪

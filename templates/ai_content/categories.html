@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Kategorie AI{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-sitemap text-primary me-3"></i> Zarządzanie Kategoriami AI
+                    </h1>
+                    <p class="lead">
+                        Zarządzaj kategoriami i generuj tematy AI dla wybranych kategorii.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('ai_content.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i> Powrót do Dashboard AI
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Topic Generation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-magic text-success me-2"></i> Masowe Generowanie Tematów
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('ai_content.bulk_generate') }}" method="POST" id="bulkGenerateForm">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Wybierz kategorie</label>
+                                <div class="form-check form-check-inline mb-2">
+                                    <input class="form-check-input" type="checkbox" id="selectAll">
+                                    <label class="form-check-label" for="selectAll">Zaznacz wszystkie</label>
+                                </div>
+                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                    {% for category in categories %}
+                                    <div class="form-check">
+                                        <input class="form-check-input category-checkbox" type="checkbox" 
+                                            name="categories[]" id="category{{ loop.index }}" value="{{ category.name }}">
+                                        <label class="form-check-label" for="category{{ loop.index }}">
+                                            {{ category.name }} 
+                                            <small class="text-muted">({{ category.ai_topic_count }} tematów AI)</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="count" class="form-label">Liczba tematów per kategoria</label>
+                                <select class="form-select mb-3" id="count" name="count">
+                                    <option value="10">10 tematów</option>
+                                    <option value="20">20 tematów</option>
+                                    <option value="40" selected>40 tematów</option>
+                                    <option value="60">60 tematów</option>
+                                </select>
+                                <p class="text-muted small">Dla każdej wybranej kategorii zostanie wygenerowana wskazana liczba nowych tematów.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" id="generateButton" disabled>
+                                <i class="fas fa-cogs me-2"></i> Generuj Tematy dla Wybranych Kategorii
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-white">
+                    <small class="text-muted">Tematy są generowane przez Claude 3.5 Sonnet za pomocą OpenRouter API. Ten proces może potrwać kilka minut.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2"></i> Lista Kategorii
+                    </h5>
+                    <span class="badge bg-primary rounded-pill">{{ categories|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nazwa Kategorii</th>
+                                    <th class="text-center">Tematy AI</th>
+                                    <th class="text-center">Tematy DB</th>
+                                    <th class="text-center">Razem</th>
+                                    <th>Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories|sort(attribute='name') %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ category.ai_topic_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ category.db_topic_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success">{{ category.total_topic_count }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('ai_content.list_topics', category=category.name) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Zobacz tematy
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-success generate-btn" 
+                                            data-category="{{ category.name }}">
+                                            <i class="fas fa-magic"></i> Generuj
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle "Select All" checkbox
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+        const generateButton = document.getElementById('generateButton');
+        
+        // Update generate button state
+        function updateGenerateButtonState() {
+            const anyChecked = Array.from(categoryCheckboxes).some(checkbox => checkbox.checked);
+            generateButton.disabled = !anyChecked;
+        }
+        
+        // Add event listeners to category checkboxes
+        categoryCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateGenerateButtonState);
+        });
+        
+        // Handle select all checkbox
+        selectAllCheckbox.addEventListener('change', function() {
+            categoryCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateGenerateButtonState();
+        });
+        
+        // Handle "Generate" buttons for individual categories
+        const generateButtons = document.querySelectorAll('.generate-btn');
+        generateButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                
+                // Create a temporary form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('ai_content.bulk_generate') }}";
+                
+                // Add category input
+                const categoryInput = document.createElement('input');
+                categoryInput.type = 'hidden';
+                categoryInput.name = 'categories[]';
+                categoryInput.value = category;
+                form.appendChild(categoryInput);
+                
+                // Add count input (default to 40)
+                const countInput = document.createElement('input');
+                countInput.type = 'hidden';
+                countInput.name = 'count';
+                countInput.value = '40';
+                form.appendChild(countInput);
+                
+                // Submit the form
+                document.body.appendChild(form);
+                form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}
