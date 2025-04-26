@@ -179,17 +179,117 @@ def extract_image_data(grid_item):
     
     return images
 
-def get_google_image_details(image_id: str) -> Dict[str, Any]:
+def search_google_images_api(
+    query: str,
+    per_page: int = 20,
+    page: int = 1,
+    orientation: Optional[str] = None,
+    safe_search: bool = True
+) -> List[Dict[str, Any]]:
     """
-    Get details for a specific Google image (placeholder)
+    Search for images using Google Custom Search API
     
     Args:
-        image_id: Google image ID
+        query: Search query
+        per_page: Number of results per page (max 10 for free tier, max 100 for paid)
+        page: Page number
+        orientation: Optional orientation filter (landscape, portrait, square)
+        safe_search: Whether to enable safe search
+        
+    Returns:
+        List of image data dictionaries
+    """
+    # Get API key and CSE ID from config
+    api_key = Config.GOOGLE_API_KEY
+    cse_id = Config.GOOGLE_CSE_ID
+    
+    if not api_key or not cse_id:
+        logger.error("Google Custom Search API key or CSE ID not found")
+        return []
+    
+    try:
+        # Initialize Google Custom Search API
+        service = build("customsearch", "v1", developerKey=api_key)
+        
+        # Set up search parameters
+        search_params = {
+            'q': query,
+            'cx': cse_id,
+            'searchType': 'image',
+            'num': min(per_page, 10),  # Max 10 per page for free tier
+            'start': (page - 1) * 10 + 1,  # Pagination start at 1
+            'imgSize': 'large'  # Default to large images
+        }
+        
+        # Add safe search if enabled
+        if safe_search:
+            search_params['safe'] = 'high'
+        
+        # Add orientation if provided
+        if orientation:
+            if orientation == 'landscape':
+                search_params['imgType'] = 'photo'
+                search_params['imgSize'] = 'xlarge'
+            elif orientation == 'portrait':
+                search_params['imgType'] = 'photo'
+                search_params['imgSize'] = 'large'
+            elif orientation == 'square':
+                search_params['imgType'] = 'photo'
+                search_params['imgSize'] = 'medium'
+        
+        # Execute search
+        logger.info(f"Searching Google Images API for: {query}")
+        results = service.cse().list(**search_params).execute()
+        
+        # Process results
+        images = []
+        if 'items' in results:
+            for item in results['items']:
+                image = {
+                    'id': item.get('link', ''),  # Use link as ID
+                    'url': item.get('link', ''),
+                    'thumb_url': item.get('image', {}).get('thumbnailLink', item.get('link', '')),
+                    'width': item.get('image', {}).get('width'),
+                    'height': item.get('image', {}).get('height'),
+                    'description': item.get('title', ''),
+                    'source': 'google_api',
+                    'attribution_text': f"Image from {item.get('displayLink', 'Google Images')}",
+                    'attribution_url': item.get('image', {}).get('contextLink', ''),
+                    'user': {
+                        'name': item.get('displayLink', 'Unknown'),
+                        'profile_url': item.get('image', {}).get('contextLink', '')
+                    }
+                }
+                images.append(image)
+        
+        return images
+        
+    except Exception as e:
+        logger.error(f"Error searching Google Images API: {str(e)}")
+        return []
+
+def get_google_image_details(image_id: str) -> Dict[str, Any]:
+    """
+    Get details for a specific Google image
+    
+    Args:
+        image_id: Google image ID (URL in this case)
         
     Returns:
         Image data dictionary
     """
-    # This is a placeholder since Google doesn't provide a direct API for image details
-    # In a real implementation, you might store the full details when performing the search
-    # and retrieve them here
-    raise NotImplementedError("Google Images detail retrieval not supported")
+    # Since Google Custom Search API doesn't provide a direct endpoint for image details
+    # We return a simple response with the available information
+    return {
+        'id': image_id,
+        'url': image_id,  # The ID is the URL for Google images
+        'thumb_url': image_id,
+        'description': 'Google image',
+        'source': 'google_api',
+        'attribution_text': 'Image from Google Images',
+        'attribution_url': '',
+        'user': {
+            'name': 'Unknown',
+            'profile_url': ''
+        }
+    }

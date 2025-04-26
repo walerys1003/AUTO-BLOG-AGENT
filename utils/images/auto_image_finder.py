@@ -97,7 +97,7 @@ def find_images_for_article(
     article_title: str, 
     article_content: Optional[str] = None,
     num_images: int = 3,
-    prefer_source: str = 'unsplash'  # Using Unsplash as primary source
+    prefer_source: str = 'google'  # Using Google as primary source
 ) -> List[Dict[str, Any]]:
     """
     Find images that match an article's title and content.
@@ -225,7 +225,7 @@ def save_image_to_library(image_data: Dict[str, Any]) -> Optional[ImageLibrary]:
 def find_and_associate_images(
     article: Article, 
     num_images: int = 1, 
-    prefer_source: str = 'unsplash',
+    prefer_source: str = 'google',  # Updated to use Google as default source
     save_to_library: bool = True
 ) -> Tuple[bool, List[Dict[str, Any]]]:
     """

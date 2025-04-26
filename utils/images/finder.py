@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional, Union
 import urllib.parse
 
 from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
-from utils.images.google import search_google_images, get_google_image_details
+from utils.images.google import search_google_images, search_google_images_api, get_google_image_details
 from utils.images.serpapi import search_google_images_serpapi
 from utils.images.bing import search_bing_images, get_bing_image_details
 
@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 
 def search_images(
     query: str,
-    source: str = 'bing',  # Changed default to Bing as main source
+    source: str = 'google',  # Changed default to Google as main source
     per_page: int = 20,
     page: int = 1,
     orientation: Optional[str] = None,
     tags: Optional[List[str]] = None,
     color: Optional[str] = None,
-    use_serpapi: bool = True
+    use_serpapi: bool = False  # Default to Google Custom Search API not SerpAPI
 ) -> List[Dict[str, Any]]:
     """
     Search for images from various sources
@@ -68,8 +68,17 @@ def search_images(
     # Search Google if requested or as fallback
     if (source == 'google' or source == 'all') and (len(results) == 0 or source == 'google'):
         try:
-            # Use SerpAPI for Google Images by default (better results)
-            if use_serpapi:
+            # Use Google Custom Search API by default
+            if not use_serpapi:
+                google_results = search_google_images_api(
+                    query=query,
+                    per_page=per_page,
+                    page=page,
+                    orientation=orientation,
+                    safe_search=True
+                )
+            elif use_serpapi:
+                # Use SerpAPI if requested
                 google_results = search_google_images_serpapi(
                     query=query,
                     per_page=per_page,
@@ -78,7 +87,7 @@ def search_images(
                     safe_search=True
                 )
             else:
-                # Fallback to scraping method
+                # Last fallback to web scraping method (avoid if possible)
                 google_results = search_google_images(
                     query=query,
                     per_page=per_page,
