@@ -1,0 +1,244 @@
+📜 Techniczny Prompt: Codzienny Automatyczny Proces Analizy SEO i Generowania Tematów przez Agenta ZYGA (Integracja: Google Trends + SerpApi)
+🎯 Cel:
+Automatyzacja codziennego procesu zbierania danych SEO i generowania trafnych tematów blogowych na podstawie Google Trends (nieoficjalne API) i SerpApi (100 darmowych zapytań/miesiąc). Agent ZYGA ma działać codziennie i dostarczać zoptymalizowane pod kątem SEO propozycje tematów dla wybranych kategorii.
+
+🛠️ Funkcjonalności Agenta ZYGA:
+1. Zbieranie Danych SEO:
+A. Google Trends – Analiza Trendów (DARMOWE):
+Biblioteka Node.js:
+
+google-trends-api GitHub
+
+Instalacja:
+
+bash
+Kopiuj
+Edytuj
+npm install google-trends-api
+Przykład pobierania trendów dziennych:
+
+javascript
+Kopiuj
+Edytuj
+const googleTrends = require('google-trends-api');
+
+async function fetchTrends() {
+  try {
+    const results = await googleTrends.dailyTrends({
+      geo: 'PL',
+    });
+    const parsed = JSON.parse(results);
+    return parsed.default.trendingSearchesDays[0].trendingSearches.map(search => search.title.query);
+  } catch (err) {
+    console.error('Google Trends Error:', err);
+    return [];
+  }
+}
+B. SerpApi – Analiza SERP i Pytań Użytkowników (100 zapytań/miesiąc ZA DARMO):
+Rejestracja:
+
+https://serpapi.com/users/sign_up
+
+API Key znajdziesz w Dashboard po zalogowaniu. Api key : 57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c
+
+Instalacja Axios:
+
+bash
+Kopiuj
+Edytuj
+npm install axios
+Przykład pobierania pytań:
+
+javascript
+Kopiuj
+Edytuj
+const axios = require('axios');
+const SERP_API_KEY = 'YOUR_SERPAPI_KEY';
+
+async function fetchSerpApiData(keyword) {
+  try {
+    const response = await axios.get('https://serpapi.com/search.json', {
+      params: {
+        q: keyword,
+        location: 'Poland',
+        hl: 'pl',
+        gl: 'pl',
+        api_key: SERP_API_KEY
+      }
+    });
+    return response.data.related_questions.map(q => q.question);
+  } catch (err) {
+    console.error('SerpApi Error:', err);
+    return [];
+  }
+}
+2. Generowanie i Priorytetyzacja Tematów:
+Generowanie tytułów artykułów:
+
+javascript
+Kopiuj
+Edytuj
+function generateTitles(keywords, category) {
+  return keywords.map(kw => `Najlepsze porady dotyczące ${kw} w kategorii ${category}`);
+}
+Przykład procesu z priorytetyzacją:
+
+javascript
+Kopiuj
+Edytuj
+async function prioritizeSuggestions(suggestions) {
+  // Prosty przykład – możesz rozszerzyć o dodatkowe dane SEO
+  return suggestions.slice(0, 3); // Wybiera top 3 tematy
+}
+3. Automatyzacja Procesu (CRON):
+Codzienne uruchamianie:
+
+javascript
+Kopiuj
+Edytuj
+const cron = require('node-cron');
+
+cron.schedule('0 5 * * *', async () => {
+  const categories = ['medycyna', 'transport', 'IT'];
+  for (const category of categories) {
+    const trends = await fetchTrends(); // Google Trends
+    const suggestions = generateTitles(trends, category);
+
+    const prioritized = await prioritizeSuggestions(suggestions);
+
+    console.log(`Tematy dla kategorii ${category}:`, prioritized);
+    // saveToDatabase(category, prioritized); // Możesz zapisać do DB
+  }
+});
+📊 Rezultat Końcowy:
+Dla każdego bloga:
+
+3–4 SEO-optimalne tytuły, np.:
+
+makefile
+Kopiuj
+Edytuj
+Blog: StartJob.it
+- "Najlepsze porady dotyczące cyberbezpieczeństwa w kategorii IT"
+- "Trendy w pracy zdalnej w 2025 – co musisz wiedzieć"
+- "Sztuczna inteligencja zmienia rynek IT – przewodnik"
+🔧 Moduły Techniczne:
+Fetch SEO Data:
+
+fetchTrends() – Google Trends.
+
+fetchSerpApiData(keyword) – SerpApi.
+
+Generowanie Tytułów:
+
+Na bazie trendów + pytań SerpApi.
+
+CRON Automatyzacja:
+
+Codzienny harmonogram (5:00).
+
+Priorytetyzacja:
+
+Na podstawie świeżości i liczby wystąpień.
+
+🧩 Możliwe Rozszerzenia:
+Połączenie trendów Google z pytaniami SerpApi dla dokładniejszych tematów.
+
+Zapis wyników do bazy (np. MongoDB, PostgreSQL).
+
+Automatyczne dodanie tematów do WordPress jako szkice.
+
+
+📜 Prompt dla Agenta ZYGA: Integracja Google Trends + SerpApi do Codziennej Automatyzacji SEO Tematów Blogowych
+🎯 Cel Zadania dla Agenta:
+Zintegruj Google Trends (nieoficjalne API) oraz SerpApi (100 darmowych zapytań miesięcznie) w celu automatyzacji codziennego procesu zbierania danych SEO i generowania trafnych tematów blogowych, które będą wykorzystywane do tworzenia artykułów zoptymalizowanych pod kątem ruchu organicznego.
+
+✅ Wymagania Zadania:
+Codzienna Automatyzacja:
+
+Uruchamiaj proces codziennie o 5:00 rano (CRON).
+
+Zbieraj aktualne trendy i pytania użytkowników.
+
+Integracja Źródeł:
+
+Google Trends API (nieoficjalne):
+
+Pobierz trendy dzienne dla regionu PL.
+
+Wydobądź 5–10 najpopularniejszych zapytań.
+
+SerpApi (REST API):
+
+Dla każdego z zapytań z Google Trends pobierz related questions.
+
+Maksymalnie 100 zapytań/miesiąc – kontroluj limit.
+
+Generowanie Tematów:
+
+Na podstawie zebranych danych wygeneruj 3–4 tytuły artykułów dla każdej zdefiniowanej kategorii tematycznej.
+
+Priorytetyzacja Tematów:
+
+Wybierz tematy, które łączą:
+
+Aktualność (ostatnie 24h).
+
+Wysokie zainteresowanie (częstotliwość występowania w trendach).
+
+Trafność dla danej kategorii blogowej.
+
+Efekt Końcowy:
+
+Lista priorytetowych tematów dostępna codziennie w systemie.
+
+(Opcjonalnie) Zapis wyników do bazy danych.
+
+🛠️ Techniczne Szczegóły Integracji:
+Google Trends:
+
+Użyj biblioteki google-trends-api (Node.js).
+
+Parametry: geo: 'PL', trendy dzienne.
+
+SerpApi:
+
+REST API, endpoint: https://serpapi.com/search.json.
+
+Parametry: q=keyword, hl=pl, gl=pl, api_key.
+
+🔗 Przykładowy Flow Agenta:
+Pobierz trendy z Google Trends:
+
+trendy = fetchTrends().
+
+Dla każdego trendu pobierz dane z SerpApi:
+
+relatedQuestions = fetchSerpApiData(trend).
+
+Wygeneruj propozycje tematów:
+
+tematy = generateTitles(trendy + relatedQuestions).
+
+Wybierz najlepsze tematy:
+
+priorytetowe = prioritizeSuggestions(tematy).
+
+Zapisz i wyświetl wyniki.
+
+🔑 Sprawdzenie Poprawności:
+Proces uruchamia się automatycznie.
+
+Dane z Google Trends i SerpApi są pobierane i przetwarzane.
+
+Lista wygenerowanych tematów jest dostępna każdego dnia.
+
+Nie występują błędy integracji API.
+
+Limity SerpApi są kontrolowane.
+
+🧠 Cel Agenta:
+Zapewnij, że proces zbierania danych SEO i generowania tematów działa codziennie, jest zautomatyzowany, a wygenerowane tematy są aktualne i mają wysoką wartość SEO.
+
+✨ Potwierdzenie Sukcesu:
+✅ Integracja działa poprawnie, tematy są generowane na podstawie rzeczywistych trendów i pytań użytkowników, a agent dostarcza codziennie świeże propozycje do tworzenia treści blogowych.

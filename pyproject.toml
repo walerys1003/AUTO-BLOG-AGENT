@@ -19,6 +19,7 @@ dependencies = [
     "pillow>=11.2.1",
     "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.1.0",
+    "pytrends>=4.9.2",
     "requests>=2.32.3",
     "schedule>=1.2.2",
     "sendgrid>=6.11.0",

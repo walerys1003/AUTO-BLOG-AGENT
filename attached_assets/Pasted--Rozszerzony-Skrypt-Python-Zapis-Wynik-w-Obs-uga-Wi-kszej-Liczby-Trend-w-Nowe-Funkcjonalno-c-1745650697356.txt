@@ -1,0 +1,124 @@
+📜 Rozszerzony Skrypt Python: Zapis Wyników + Obsługa Większej Liczby Trendów
+🎯 Nowe Funkcjonalności:
+Obsługa większej liczby trendów – do 10 z Google Trends.
+
+Zapis wyników:
+
+Do pliku CSV.
+
+Każde uruchomienie zapisuje nowe tematy z datą.
+
+🛠️ Dodatkowe Biblioteki:
+bash
+Kopiuj
+Edytuj
+pip install pandas
+📂 Rozszerzony Skrypt Python:
+python
+Kopiuj
+Edytuj
+from pytrends.request import TrendReq
+import requests
+import schedule
+import time
+import pandas as pd
+from datetime import datetime
+
+# Konfiguracja pytrends i API
+pytrends = TrendReq(hl='pl-PL', tz=360)
+SERP_API_KEY = 'YOUR_SERPAPI_KEY'
+
+# Kategorie blogowe
+categories = ['medycyna', 'transport', 'IT']
+
+# Ilość trendów do obsługi
+NUM_TRENDS = 10
+
+# Ścieżka do pliku CSV
+CSV_FILE = 'tematy_blogowe.csv'
+
+def fetch_google_trends():
+    pytrends.build_payload(kw_list=['news'], timeframe='now 1-d')
+    trending_searches = pytrends.trending_searches(pn='poland')
+    top_trends = trending_searches[0:NUM_TRENDS].tolist()
+    return top_trends
+
+def fetch_serpapi_questions(keyword):
+    url = 'https://serpapi.com/search.json'
+    params = {
+        'q': keyword,
+        'location': 'Poland',
+        'hl': 'pl',
+        'gl': 'pl',
+        'api_key': SERP_API_KEY
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    questions = []
+    if 'related_questions' in data:
+        questions = [q['question'] for q in data['related_questions']]
+    return questions
+
+def generate_titles(keywords, category):
+    titles = []
+    for kw in keywords:
+        titles.append(f"Najlepsze porady dotyczące {kw} w kategorii {category}")
+    return titles
+
+def prioritize_suggestions(titles):
+    return titles[:5]  # Więcej tematów dzięki większej ilości trendów
+
+def save_to_csv(data):
+    df = pd.DataFrame(data)
+    try:
+        existing_df = pd.read_csv(CSV_FILE)
+        df = pd.concat([existing_df, df], ignore_index=True)
+    except FileNotFoundError:
+        pass  # Plik jeszcze nie istnieje
+    df.to_csv(CSV_FILE, index=False)
+    print(f"💾 Wyniki zapisane do {CSV_FILE}")
+
+def daily_task():
+    print("🔍 Rozpoczynam codzienną analizę SEO...")
+    trends = fetch_google_trends()
+    print(f"📊 Dzisiejsze trendy Google: {trends}")
+
+    all_data = []
+
+    for category in categories:
+        combined_keywords = []
+        for trend in trends:
+            combined_keywords.append(trend)
+            questions = fetch_serpapi_questions(trend)
+            combined_keywords.extend(questions[:2])  # Ograniczamy SerpApi zapytania
+
+        titles = generate_titles(combined_keywords, category)
+        prioritized = prioritize_suggestions(titles)
+
+        for title in prioritized:
+            all_data.append({
+                'Data': datetime.now().strftime('%Y-%m-%d'),
+                'Kategoria': category,
+                'Tytuł': title
+            })
+
+        print(f"\n📑 Tematy dla kategorii {category}:")
+        for title in prioritized:
+            print(f"- {title}")
+
+    save_to_csv(all_data)
+
+# Harmonogram codzienny o 5:00
+schedule.every().day.at("05:00").do(daily_task)
+
+print("⏳ Agent ZYGA działa... Czeka na uruchomienie.")
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+📊 Efekt:
+Obsługa większej liczby trendów – teraz do 10.
+
+5 tematów dla każdej kategorii dziennie.
+
+Wyniki trwale zapisane do pliku tematy_blogowe.csv, z datą i kategorią.
+

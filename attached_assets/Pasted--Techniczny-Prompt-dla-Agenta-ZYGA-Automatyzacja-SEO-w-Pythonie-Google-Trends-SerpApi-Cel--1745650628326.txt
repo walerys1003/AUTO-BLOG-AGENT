@@ -1,0 +1,116 @@
+📜 Techniczny Prompt dla Agenta ZYGA: Automatyzacja SEO w Pythonie (Google Trends + SerpApi)
+🎯 Cel:
+Zautomatyzuj codzienny proces zbierania danych SEO i generowania tematów blogowych w Pythonie z użyciem:
+
+Google Trends (biblioteka pytrends – darmowa, nieoficjalna),
+
+SerpApi (100 darmowych zapytań/miesiąc).
+
+🛠️ Kompletny Skrypt Python:
+1. Wymagane biblioteki:
+bash
+Kopiuj
+Edytuj
+pip install pytrends
+pip install requests
+pip install schedule
+2. Skrypt Python – Automatyczny Proces:
+python
+Kopiuj
+Edytuj
+from pytrends.request import TrendReq
+import requests
+import schedule
+import time
+
+# Konfiguracja pytrends
+pytrends = TrendReq(hl='pl-PL', tz=360)
+
+# Twój klucz API do SerpApi
+SERP_API_KEY = 'YOUR_SERPAPI_KEY'
+
+# Kategorie do analizy
+categories = ['medycyna', 'transport', 'IT']
+
+def fetch_google_trends():
+    pytrends.build_payload(kw_list=['news'], timeframe='now 1-d')
+    trending_searches = pytrends.trending_searches(pn='poland')
+    top_trends = trending_searches[0:5].tolist()
+    return top_trends
+
+def fetch_serpapi_questions(keyword):
+    url = 'https://serpapi.com/search.json'
+    params = {
+        'q': keyword,
+        'location': 'Poland',
+        'hl': 'pl',
+        'gl': 'pl',
+        'api_key': SERP_API_KEY
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    questions = []
+    if 'related_questions' in data:
+        questions = [q['question'] for q in data['related_questions']]
+    return questions
+
+def generate_titles(keywords, category):
+    titles = []
+    for kw in keywords:
+        titles.append(f"Najlepsze porady dotyczące {kw} w kategorii {category}")
+    return titles
+
+def prioritize_suggestions(titles):
+    # Prosty priorytet: pierwsze 3
+    return titles[:3]
+
+def daily_task():
+    print("🔍 Rozpoczynam codzienną analizę SEO...")
+    trends = fetch_google_trends()
+    print(f"📊 Dzisiejsze trendy Google: {trends}")
+
+    for category in categories:
+        combined_keywords = []
+        for trend in trends:
+            combined_keywords.append(trend)
+            questions = fetch_serpapi_questions(trend)
+            combined_keywords.extend(questions[:2])  # Ograniczamy dla oszczędności zapytań
+
+        titles = generate_titles(combined_keywords, category)
+        prioritized = prioritize_suggestions(titles)
+        
+        print(f"\n📑 Tematy dla kategorii {category}:")
+        for title in prioritized:
+            print(f"- {title}")
+
+# Harmonogram codzienny o 5:00 rano
+schedule.every().day.at("05:00").do(daily_task)
+
+print("⏳ Agent ZYGA czeka na uruchomienie...")
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+🔑 Jak działa ten skrypt:
+Codziennie o 5:00:
+
+Pobiera top 5 trendów z Google Trends (Polska).
+
+Dla każdego trendu pobiera related questions z SerpApi.
+
+Łączy trendy + pytania → generuje tematy artykułów dla każdej kategorii.
+
+Priorytetyzuje 3 najlepsze tematy i drukuje je (możesz zmienić na zapis do pliku/DB).
+
+✅ Efekt:
+Codziennie świeże, trafne propozycje tematów blogowych.
+
+Integracja działa w Pythonie.
+
+Wykorzystuje darmowe API: pytrends + SerpApi (do 100 zapytań/miesiąc).
+
+📂 Rozszerzenia (opcjonalnie):
+Zapis wyników do pliku .csv lub bazy danych.
+
+Wysyłka mailowa tematów.
+
+Automatyczne przekazanie do WordPressa jako draft.

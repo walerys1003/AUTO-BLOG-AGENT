@@ -14,6 +14,9 @@ class Config:
     # Image API Configuration
     UNSPLASH_API_KEY = os.environ.get("UNSPLASH_API_KEY")
     
+    # SEO API Configuration
+    SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c")
+    
     # Social Media API Configuration
     FACEBOOK_APP_ID = os.environ.get("FACEBOOK_APP_ID")
     FACEBOOK_APP_SECRET = os.environ.get("FACEBOOK_APP_SECRET")
