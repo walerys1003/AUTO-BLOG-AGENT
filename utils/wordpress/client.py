@@ -42,8 +42,14 @@ def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/categories"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/categories"
     auth = (username, token)
+    
+    logger.info(f"Fetching categories from: {url}")
     
     try:
         response = requests.get(url, auth=auth, params={"per_page": 100})
@@ -91,8 +97,14 @@ def get_wordpress_tags(blog_id: int) -> List[Dict[str, Any]]:
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/tags"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/tags"
     auth = (username, token)
+    
+    logger.info(f"Fetching tags from: {url}")
     
     try:
         response = requests.get(url, auth=auth, params={"per_page": 100})
@@ -139,8 +151,14 @@ def get_wordpress_post(blog_id: int, post_id: int) -> Dict[str, Any]:
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/posts/{post_id}"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/posts/{post_id}"
     auth = (username, token)
+    
+    logger.info(f"Fetching post from: {url}")
     
     try:
         response = requests.get(url, auth=auth)
@@ -180,8 +198,14 @@ def create_wordpress_post(
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/posts"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/posts"
     auth = (username, token)
+    
+    logger.info(f"Creating post on: {url}")
     
     # Prepare post data
     post_data = {
@@ -244,8 +268,14 @@ def update_wordpress_post(
     """
     api_url, username, token, _ = get_wordpress_client(blog_id)
     
-    url = f"{api_url}/posts/{post_id}"
+    # Upewnij się, że api_url nie kończy się slashem
+    if api_url.endswith('/'):
+        api_url = api_url[:-1]
+    
+    url = f"{api_url}/wp/v2/posts/{post_id}"
     auth = (username, token)
+    
+    logger.info(f"Updating post on: {url}")
     
     # Prepare post data
     post_data = {}
