@@ -1,0 +1,1389 @@
+
+Google Images API
+API uptime
+99.998%
+Our Google Images API allows you to scrape results from the Google Images page. The API is accessed through the following endpoint: /search?engine=google_images. A user may query the following: https://serpapi.com/search?engine=google_images utilizing a GET request. Head to the playground for a live and interactive demo.
+
+If you are interested in the reverse image search - head to our Reverse Image API.
+
+API Parameters
+Search Query
+q
+
+Required
+
+Parameter defines the query you want to search. You can use anything that you would use in a regular Google Images search. e.g. inurl:, site:, intitle:.
+
+Geographic Location
+location
+
+Optional
+
+Parameter defines from where you want the search to originate. If several locations match the location requested, we'll pick the most popular one. Head to the /locations.json API if you need more precise control. The location and uule parameters can't be used together. It is recommended to specify location at the city level in order to simulate a real user’s search. If location is omitted, the search may take on the location of the proxy.
+
+uule
+
+Optional
+
+Parameter is the Google encoded location you want to use for the search.
+
+uule and location parameters can't be used together.
+
+Localization
+google_domain
+
+Optional
+
+Parameter defines the Google domain to use. It defaults to google.com. Head to the Google domains for a full list of supported Google domains.
+
+gl
+
+Optional
+
+Parameter defines the country to use for the Google Images search. It's a two-letter country code. (e.g., us for the United States, uk for United Kingdom, or fr for France) Head to the Google countries for a full list of supported Google countries.
+
+hl
+
+Optional
+
+Parameter defines the language to use for the Google Images search. It's a two-letter language code. (e.g., en for English, es for Spanish, or fr for French) Head to the Google languages for a full list of supported Google languages.
+
+cr
+
+Optional
+
+Parameter defines one or multiple countries to limit the search to. It uses country{two-letter upper-case country code} to specify countries and | as a delimiter. (e.g., countryFR|countryDE will only search French and German pages). Head to the Google cr countries page for a full list of supported countries.
+
+Time Period
+period_unit
+
+Optional
+
+Parameter defines the time period unit to search for the recent images, e.g. from past minute, hour, day etc.
+
+Options:
+s - Second
+n - Minute
+h - Hour
+d - Day
+w - Week
+m - Month
+y - Year
+
+This parameter can't be used with start_date/end_date parameters.
+This parameter overrides qdr component of tbs parameter.
+
+period_value
+
+Optional
+
+Parameter defines an optional time period value that can be used with period_unit to describe time periods like 15 seconds, 42 hours, 178 days etc.
+
+Default value: 1
+Value range: 1..2147483647
+
+start_date
+
+Optional
+
+Parameter defines the start date of time period you want to limit the image search to.
+
+Format: YYYYMMDD
+Example: 20241201
+
+This parameter can't be used with period_unit/period_value parameters.
+start_date with blank end_date produces date range FROM start_date TO today.
+This parameter overrides cdr and cd_min components of tbs parameter.
+
+end_date
+
+Optional
+
+Parameter defines the end date of time period you want to limit the image search to.
+
+Format: YYYYMMDD
+Example: 20241231
+
+This parameter can't be used with period_unit/period_value parameters.
+end_date with blank start_date produces date range BEFORE end_date.
+This parameter overrides cdr and cd_max components of tbs parameter.
+
+Advanced Filters
+chips
+
+Optional
+
+Parameter enables to filter image search. It's a string provided by Google as suggested search, like: red apple. Chips are provided under the section: suggested_searches when ijn = 0. Both chips and serpapi_link values are provided for each suggested search.
+
+tbs
+
+Optional
+
+(to be searched) parameter defines advanced search parameters that aren't possible in the regular query field.
+
+imgar
+
+Optional
+
+Parameter defines the set aspect ratio of images.
+
+Options:
+s - Square
+t - Tall
+w - Wide
+xw - Panoramic
+
+imgsz
+
+Optional
+
+Parameter defines the size of images.
+
+Options:
+l - Large
+m - Medium
+i - Icon
+qsvga - Larger than 400×300
+vga - Larger than 640×480
+svga - Larger than 800×600
+xga - Larger than 1024×768
+2mp - Larger than 2 MP
+4mp - Larger than 4 MP
+6mp - Larger than 6 MP
+8mp - Larger than 8 MP
+10mp - Larger than 10 MP
+12mp - Larger than 12 MP
+15mp - Larger than 15 MP
+20mp - Larger than 20 MP
+40mp - Larger than 40 MP
+70mp - Larger than 70 MP
+
+image_color
+
+Optional
+
+Parameter defines the color of images.
+
+Options:
+bw - Black and white
+trans - Transparent
+red - Red
+orange - Orange
+yellow - Yellow
+green - Green
+teal - Teal
+blue - Blue
+purple - Purple
+pink - Pink
+white - White
+gray - Gray
+black - Black
+brown - Brown
+
+This parameter overrides ic and isc components of tbs parameter
+
+image_type
+
+Optional
+
+Parameter defines the type of images.
+
+Options:
+face - Face
+photo - Photo
+clipart - Clip art
+lineart - Line drawing
+animated - Animated
+
+This parameter overrides itp component of tbs parameter
+
+licenses
+
+Optional
+
+Parameter defines the scope of licenses of images.
+
+Options:
+f - Free to use or share
+fc - Free to use or share, even commercially
+fm - Free to use, share or modify
+fmc - Free to use, share or modify, even commercially
+cl - Creative Commons licenses
+ol - Commercial and other licenses
+
+This parameter overrides sur component of tbs parameter
+
+safe
+
+Optional
+
+Parameter defines the level of filtering for adult content. It can be set to active or off, by default Google will blur explicit content.
+
+nfpr
+
+Optional
+
+Parameter defines the exclusion of results from an auto-corrected query when the original query is spelled wrong. It can be set to 1 to exclude these results, or 0 to include them (default). Note that this parameter may not prevent Google from returning results for an auto-corrected query if no other results are available.
+
+filter
+
+Optional
+
+Parameter defines if the filters for 'Similar Results' and 'Omitted Results' are on or off. It can be set to 1 (default) to enable these filters, or 0 to disable these filters.
+
+Pagination
+ijn
+
+Optional
+
+Parameter defines the page number for Google Images. There are 100 images per page. This parameter is equivalent to start (offset) = ijn * 100.
+
+Serpapi Parameters
+engine
+
+Required
+
+Set parameter to google_images to use the Google Images API engine.
+
+device
+
+Optional
+
+Parameter defines the device to use to get the results. It can be set to desktop (default) to use a regular browser, tablet to use a tablet browser (currently using iPads), or mobile to use a mobile browser.
+
+no_cache
+
+Optional
+
+Parameter will force SerpApi to fetch the Google Images results even if a cached version is already present. A cache is served only if the query and all parameters are exactly the same. Cache expires after 1h. Cached searches are free, and are not counted towards your searches per month. It can be set to false (default) to allow results from the cache, or true to disallow results from the cache. no_cache and async parameters should not be used together.
+
+async
+
+Optional
+
+Parameter defines the way you want to submit your search to SerpApi. It can be set to false (default) to open an HTTP connection and keep it open until you got your search results, or true to just submit your search to SerpApi and retrieve them later. In this case, you'll need to use our Searches Archive API to retrieve your results. async and no_cache parameters should not be used together. async should not be used on accounts with Ludicrous Speed enabled.
+
+zero_trace
+
+Optional
+
+Enterprise only. Parameter enables ZeroTrace mode. It can be set to false (default) or true. Enable this mode to skip storing search parameters, search files, and search metadata on our servers. This may make debugging more difficult.
+
+api_key
+
+Required
+
+Parameter defines the SerpApi private key to use.
+
+output
+
+Optional
+
+Parameter defines the final output you want. It can be set to json (default) to get a structured JSON of the results, or html to get the raw html retrieved.
+
+API Results
+JSON Results
+JSON output includes structured data for Suggested Searches, Images Results, Shopping Results and Related Searches.
+
+A search status is accessible through search_metadata.status. It flows this way: Processing -> Success || Error. If a search has failed, error will contain an error message. search_metadata.id is the search ID inside SerpApi.
+
+HTML Results
+HTML output is useful to debug JSON results or support features not supported yet by SerpApi. HTML output gives you the raw HTML results from Google.
+
+API Examples
+Results for:
+Coffee
+GET
+
+
+https://serpapi.com/search.json?engine=google_images&q=Coffee&location=Austin,+TX,+Texas,+United+States
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  engine: "google_images",
+  q: "Coffee",
+  location: "Austin, TX, Texas, United States",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+hash_results = search.get_hash
+
+JSON Example
+
+{
+  "search_metadata": {
+    "id": "642d73b7de9834017010c43c",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/7a8e9eb0cab36efa/642d73b7de9834017010c43c.json",
+    "created_at": "2023-04-05 13:12:23 UTC",
+    "processed_at": "2023-04-05 13:12:23 UTC",
+    "google_images_url": "https://www.google.com/search?q=Coffee&oq=Coffee&uule=w+CAIQICIdQXVzdGluLFRYLFRleGFzLFVuaXRlZCBTdGF0ZXM&hl=en&gl=us&udm=2",
+    "raw_html_file": "https://serpapi.com/searches/7a8e9eb0cab36efa/642d73b7de9834017010c43c.html",
+    "total_time_taken": 1.9
+  },
+  "search_parameters": {
+    "engine": "google_images",
+    "q": "Coffee",
+    "location_requested": "Austin, TX, Texas, United States",
+    "location_used": "Austin,TX,Texas,United States",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us",
+    "device": "desktop"
+  },
+  "search_information": {
+    "image_results_state": "Results for exact spelling"
+  },
+  "suggested_searches": [
+    {
+    {
+      "name": "Cup",
+      "link": "https://www.google.com/search?sca_esv=1086af29042c933c&q=coffee+cup&uds=AMwkrPs55Qr38c7pW3nP4Vwy_BHvXIxraOqxTMA9ACbDPOXbFTlKNauvtpL9slQHqNq0hKsoLUJrfTC-Zmotk3ztIfovjn0XvRrmJkbPU7kg45ttFIyVaxdqGYsEnfj7C5gkddQq1M4IxgbnEx5dU9BamP6kD8CBFitKjMP9NB91Y6RYxAkfoqrEOktjO86neAjw0DgejaLpj4U6_iccqwUAiwMe4njQ29FBvz_6mtjp_l56Atpq2g1OBH_qsKY5oSzvfrVTaw0CTbPWS1HijnD-eX1OZHT2yOg9HY2HFdgILaI-BHSW70jRaWtXbaeNVigw_Jn_z7ooVNnSP-xzJExCr4cqkwa3VQ&udm=2&sa=X&ved=2ahUKEwiyobanzLuFAxXXL1kFHZ7LDPAQxKsJegQIDxAB&ictx=0",
+      "uds": "AMwkrPs55Qr38c7pW3nP4Vwy_BHvXIxraOqxTMA9ACbDPOXbFTlKNauvtpL9slQHqNq0hKsoLUJrfTC-Zmotk3ztIfovjn0XvRrmJkbPU7kg45ttFIyVaxdqGYsEnfj7C5gkddQq1M4IxgbnEx5dU9BamP6kD8CBFitKjMP9NB91Y6RYxAkfoqrEOktjO86neAjw0DgejaLpj4U6_iccqwUAiwMe4njQ29FBvz_6mtjp_l56Atpq2g1OBH_qsKY5oSzvfrVTaw0CTbPWS1HijnD-eX1OZHT2yOg9HY2HFdgILaI-BHSW70jRaWtXbaeNVigw_Jn_z7ooVNnSP-xzJExCr4cqkwa3VQ",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=Coffee&uds=AMwkrPs55Qr38c7pW3nP4Vwy_BHvXIxraOqxTMA9ACbDPOXbFTlKNauvtpL9slQHqNq0hKsoLUJrfTC-Zmotk3ztIfovjn0XvRrmJkbPU7kg45ttFIyVaxdqGYsEnfj7C5gkddQq1M4IxgbnEx5dU9BamP6kD8CBFitKjMP9NB91Y6RYxAkfoqrEOktjO86neAjw0DgejaLpj4U6_iccqwUAiwMe4njQ29FBvz_6mtjp_l56Atpq2g1OBH_qsKY5oSzvfrVTaw0CTbPWS1HijnD-eX1OZHT2yOg9HY2HFdgILaI-BHSW70jRaWtXbaeNVigw_Jn_z7ooVNnSP-xzJExCr4cqkwa3VQ",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "name": "Wallpaper",
+      "link": "https://www.google.com/search?sca_esv=1086af29042c933c&q=coffee+wallpaper&uds=AMwkrPuvJBl3PcIkkkp1xS01e6s8yOk-X_1MCiZrgJH4hRuScmmy_GJVTyC_FGDDuhYiTRB8cPFYCfMxlakG_3j2qEi370kOX3t53jpFzPwzspqDLFBvoiH7Zyu03lDZA0FOZCVnFWzCx-KIXuCd_YYka8Ew-WNOF0VfAT-rf-FYER045mucSI6CW_ySVvdrf2OzaENfknwBxLYPL_3ufTmMSaghEtI_kyBOhyJFU0iOo87nVrArylOgLuV9_y6loTvPzlwtzxGNb8FBEmqPwOrccCVh4I_Q_F5mQab76PERLmn7eBQAldyP_se7r5nmgO2qM2tuRqqZ3D0DN5O842O9YbZ-0fCKRg&udm=2&sa=X&ved=2ahUKEwiyobanzLuFAxXXL1kFHZ7LDPAQxKsJegQIDBAB&ictx=0",
+      "uds": "AMwkrPuvJBl3PcIkkkp1xS01e6s8yOk-X_1MCiZrgJH4hRuScmmy_GJVTyC_FGDDuhYiTRB8cPFYCfMxlakG_3j2qEi370kOX3t53jpFzPwzspqDLFBvoiH7Zyu03lDZA0FOZCVnFWzCx-KIXuCd_YYka8Ew-WNOF0VfAT-rf-FYER045mucSI6CW_ySVvdrf2OzaENfknwBxLYPL_3ufTmMSaghEtI_kyBOhyJFU0iOo87nVrArylOgLuV9_y6loTvPzlwtzxGNb8FBEmqPwOrccCVh4I_Q_F5mQab76PERLmn7eBQAldyP_se7r5nmgO2qM2tuRqqZ3D0DN5O842O9YbZ-0fCKRg",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=Coffee&uds=AMwkrPuvJBl3PcIkkkp1xS01e6s8yOk-X_1MCiZrgJH4hRuScmmy_GJVTyC_FGDDuhYiTRB8cPFYCfMxlakG_3j2qEi370kOX3t53jpFzPwzspqDLFBvoiH7Zyu03lDZA0FOZCVnFWzCx-KIXuCd_YYka8Ew-WNOF0VfAT-rf-FYER045mucSI6CW_ySVvdrf2OzaENfknwBxLYPL_3ufTmMSaghEtI_kyBOhyJFU0iOo87nVrArylOgLuV9_y6loTvPzlwtzxGNb8FBEmqPwOrccCVh4I_Q_F5mQab76PERLmn7eBQAldyP_se7r5nmgO2qM2tuRqqZ3D0DN5O842O9YbZ-0fCKRg",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "name": "Cafe",
+      "link": "https://www.google.com/search?sca_esv=1086af29042c933c&q=coffee+cafe&uds=AMwkrPvAKgYCkrKJEJt18hQNzeTS-1cLNUqtZ1dSzp6fkR27FXD7vkFsgoxNCsrLMr3LsL5tz0I2_YOSHCSISqdkEubxc5z6i4bWC5ReVlHoW9mLK0W3RlaKsM-UukBstgKqL5jL2RN_kjSkU6kme1HWOte2SloRFACJkk2goV3-mcruh0a-7J3WvxzFGSmGQQICeD5QFARo6DiQTVUJxnNplX-WPlHa0uELCfhK7sdJoRgTYiBZPYg8eXAtdLNcLAmYNF3Awamimsifzem4C2JJsicXDBRPscDhyLJwIinS_kdxuK_fH3t-S_53lDIQj-CnkmdZD9hwpVs0J1YUaVoDMnJzQZxPrg&udm=2&sa=X&ved=2ahUKEwiyobanzLuFAxXXL1kFHZ7LDPAQxKsJegQIChAB&ictx=0",
+      "uds": "AMwkrPvAKgYCkrKJEJt18hQNzeTS-1cLNUqtZ1dSzp6fkR27FXD7vkFsgoxNCsrLMr3LsL5tz0I2_YOSHCSISqdkEubxc5z6i4bWC5ReVlHoW9mLK0W3RlaKsM-UukBstgKqL5jL2RN_kjSkU6kme1HWOte2SloRFACJkk2goV3-mcruh0a-7J3WvxzFGSmGQQICeD5QFARo6DiQTVUJxnNplX-WPlHa0uELCfhK7sdJoRgTYiBZPYg8eXAtdLNcLAmYNF3Awamimsifzem4C2JJsicXDBRPscDhyLJwIinS_kdxuK_fH3t-S_53lDIQj-CnkmdZD9hwpVs0J1YUaVoDMnJzQZxPrg",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=Coffee&uds=AMwkrPvAKgYCkrKJEJt18hQNzeTS-1cLNUqtZ1dSzp6fkR27FXD7vkFsgoxNCsrLMr3LsL5tz0I2_YOSHCSISqdkEubxc5z6i4bWC5ReVlHoW9mLK0W3RlaKsM-UukBstgKqL5jL2RN_kjSkU6kme1HWOte2SloRFACJkk2goV3-mcruh0a-7J3WvxzFGSmGQQICeD5QFARo6DiQTVUJxnNplX-WPlHa0uELCfhK7sdJoRgTYiBZPYg8eXAtdLNcLAmYNF3Awamimsifzem4C2JJsicXDBRPscDhyLJwIinS_kdxuK_fH3t-S_53lDIQj-CnkmdZD9hwpVs0J1YUaVoDMnJzQZxPrg",
+      "thumbnail": "<URL to image>"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": 1,
+      "thumbnail": "<URL to image>",
+      "related_content_id": "Y0hoQW1Kcnc4RXRiV01cIixcIlU2b0pNbkYtZWVWVEFN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?related_content_id=Y0hoQW1Kcnc4RXRiV01cIixcIlU2b0pNbkYtZWVWVEFN&engine=google_images_related_content&gl=us&hl=en&q=Coffee",
+      "source": "Wikipedia",
+      "title": "Coffee - Wikipedia",
+      "link": "https://en.wikipedia.org/wiki/Coffee",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Latte_and_dark_coffee.jpg",
+      "original_width": 3200,
+      "original_height": 2000,
+      "is_product": false
+    },
+    {
+      "position": 2,
+      "thumbnail": "<URL to image>",
+      "related_content_id": "OU0xWDJFRHhzWU5UWk1cIixcIk8wcDJtOEhfdDdFNm5N",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?related_content_id=OU0xWDJFRHhzWU5UWk1cIixcIk8wcDJtOEhfdDdFNm5N&engine=google_images_related_content&gl=us&hl=en&q=Coffee",
+      "source": "Tasting Table",
+      "title": "31 Coffee Brands, Ranked From Worst To Best",
+      "link": "https://www.tastingtable.com/718678/coffee-brands-ranked-from-worst-to-best/",
+      "original": "https://www.tastingtable.com/img/gallery/coffee-brands-ranked-from-worst-to-best/l-intro-1645231221.jpg",
+      "original_width": 1600,
+      "original_height": 900,
+      "is_product": false
+    },
+    {
+      "position": 3,
+      "thumbnail": "<URL to image>",
+      "related_content_id": "OXB5UmV6N0EwMXlMZU1cIixcIkN2M1hDN0lVanNiZ0pN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?related_content_id=OXB5UmV6N0EwMXlMZU1cIixcIkN2M1hDN0lVanNiZ0pN&engine=google_images_related_content&gl=us&hl=en&q=Coffee",
+      "source": "CNN",
+      "title": "Is coffee healthy? | CNN",
+      "link": "https://www.cnn.com/2017/09/29/health/coffee-healthy-food-drayer/index.html",
+      "original": "https://media.cnn.com/api/v1/images/stellar/prod/150929101049-black-coffee-stock.jpg?q=x_3,y_1231,h_1684,w_2993,c_crop/h_720,w_1280",
+      "original_width": 1280,
+      "original_height": 720,
+      "is_product": false
+    },
+    ...
+  ],
+  "related_searches": [
+    {
+      "link": "https://www.google.com/search?q=cup+coffee&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjY--3X6JL-AhUjFFkFHdmqACYQrNwCKAB6BQgBEJ0C",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=cup+coffee",
+      "query": "cup coffee",
+      "highlighted_words": [
+        "cup"
+      ],
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "link": "https://www.google.com/search?q=wallpaper+coffee&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjY--3X6JL-AhUjFFkFHdmqACYQrNwCKAB6BQgBEJ8C",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=wallpaper+coffee",
+      "query": "wallpaper coffee",
+      "highlighted_words": [
+        "wallpaper"
+      ],
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "link": "https://www.google.com/search?q=cafe+coffee&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjY--3X6JL-AhUjFFkFHdmqACYQrNwCKAB6BQgBEKEC",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&location=Austin%2C+TX%2C+Texas%2C+United+States&q=cafe+coffee",
+      "query": "cafe coffee",
+      "highlighted_words": [
+        "cafe"
+      ],
+      "thumbnail": "<URL to image>"
+    },
+    ...
+  ],
+  "serpapi_pagination":
+  {
+    "current": 0,
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=1&q=Coffee"
+  }
+}
+Results for:
+Coffee
+with
+tbs = sur:cl
+(Creative Commons licenses)
+Available license options:
+- sur:cl (Creative Commons licenses)
+- sur:ol (Commercial & other licenses)
+
+GET
+
+
+https://serpapi.com/search.json?engine=google_images&q=Coffee&hl=en&gl=us&tbs=sur:cl
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  engine: "google_images",
+  q: "Coffee",
+  hl: "en",
+  gl: "us",
+  tbs: "sur:cl",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+hash_results = search.get_hash
+
+JSON Example
+
+{
+  "search_metadata": {
+    "id": "6514965731dcccae74622850",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/d2c5115e33603d69/6514965731dcccae74622850.json",
+    "created_at": "2023-09-27 20:53:43 UTC",
+    "processed_at": "2023-09-27 20:53:44 UTC",
+    "google_images_url": "https://www.google.com/search?q=Coffee&oq=Coffee&hl=en&gl=us&udm=2&tbs=sur:cl",
+    "raw_html_file": "https://serpapi.com/searches/d2c5115e33603d69/6514965731dcccae74622850.html",
+    "total_time_taken": 1.36
+  },
+  "search_parameters": {
+    "engine": "google_images",
+    "q": "Coffee",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us",
+    "device": "desktop",
+    "tbs": "sur:cl"
+  },
+  "search_information": {
+    "image_results_state": "Results for exact spelling"
+  },
+  "suggested_searches": [
+    {
+      "name": "cup",
+      "link": "https://www.google.com/search?q=Coffee&udm=2&hl=en&gl=us&chips=q:coffee,g_1:cup:IMvs4y4LC4c%3D&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQ4lYoAHoECAEQMw",
+      "chips": "q:coffee,g_1:cup:IMvs4y4LC4c%3D",
+      "serpapi_link": "https://serpapi.com/search.json?chips=q%3Acoffee%2Cg_1%3Acup%3AIMvs4y4LC4c%253D&device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=Coffee&tbs=sur%3Acl",
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/9df12b771985dc2bd31ef9483a0caed0666c49108c1659415eb79e20e0613c1c.png"
+    },
+    {
+      "name": "wallpaper",
+      "link": "https://www.google.com/search?q=Coffee&udm=2&hl=en&gl=us&chips=q:coffee,g_1:wallpaper:ZxXEaBIJwWU%3D&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQ4lYoAXoECAEQNQ",
+      "chips": "q:coffee,g_1:wallpaper:ZxXEaBIJwWU%3D",
+      "serpapi_link": "https://serpapi.com/search.json?chips=q%3Acoffee%2Cg_1%3Awallpaper%3AZxXEaBIJwWU%253D&device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=Coffee&tbs=sur%3Acl",
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/9df12b771985dc2bd31ef9483a0caed06104578962cee23f74d258f5e3c25987.jpeg"
+    },
+    {
+      "name": "cafe",
+      "link": "https://www.google.com/search?q=Coffee&udm=2&hl=en&gl=us&chips=q:coffee,g_1:cafe:Z3V9iDLlllY%3D&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQ4lYoAnoECAEQNw",
+      "chips": "q:coffee,g_1:cafe:Z3V9iDLlllY%3D",
+      "serpapi_link": "https://serpapi.com/search.json?chips=q%3Acoffee%2Cg_1%3Acafe%3AZ3V9iDLlllY%253D&device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=Coffee&tbs=sur%3Acl",
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/9df12b771985dc2bd31ef9483a0caed01c1995bf441f98ee79f37abb4427a988.jpeg"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": 1,
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e9171df88270dd2cac5c6017773f36f41e54f6aa6313fe18589b.jpeg",
+      "license_details_url": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+      "related_content_id": "aGhXQ0pydURmT1RDVk1cIixcIjJ0MWRnQVNod2tGQXZN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=aGhXQ0pydURmT1RDVk1cIixcIjJ0MWRnQVNod2tGQXZN",
+      "source": "CoffeeGeek",
+      "source_logo": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e9171df88270dd2cac5c6cfadf99a83e80c87d123e407365ccb5.png",
+      "title": "How to Make an Americano » CoffeeGeek",
+      "link": "https://www.coffeegeek.com/guides/americano/",
+      "tag": "Licensable",
+      "original": "https://www.coffeegeek.com/wp-content/uploads/2019/09/americano-1.jpg",
+      "original_width": 2400,
+      "original_height": 1600,
+      "is_product": false
+    },
+    {
+      "position": 2,
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e9178e97ff06db616132d774233dbcc5cd9aa782e55e545ec9c8.jpeg",
+      "license_details_url": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+      "related_content_id": "ajZHWkNWY2NIX2RmUU1cIixcIlcxdG5tRDRaNE1QakdN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=ajZHWkNWY2NIX2RmUU1cIixcIlcxdG5tRDRaNE1QakdN",
+      "source": "www.coffeegeek.com",
+      "source_logo": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e9178e97ff06db6161325b358c47eb5245fb3a41c59c8db75369.png",
+      "title": "CoffeeGeek » The worlds most read coffee and espresso resource",
+      "link": "https://www.coffeegeek.com/",
+      "tag": "Licensable",
+      "original": "https://www.coffeegeek.com/wp-content/uploads/2019/09/espressoilly-1.jpg",
+      "original_width": 1500,
+      "original_height": 1041,
+      "is_product": false
+    },
+    {
+      "position": 3,
+      "thumbnail": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e917873f28f310a251cf5db215622c0f5fa35225e52ab3c65ab4.jpeg",
+      "license_details_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "related_content_id": "OExfbFFrakFyQUh3UE1cIixcIkFWbWhwbHFGVnQydHBN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=OExfbFFrakFyQUh3UE1cIixcIkFWbWhwbHFGVnQydHBN",
+      "source": "Wikimedia Commons",
+      "source_logo": "https://serpapi.com/searches/6514965731dcccae74622850/images/246079d42202e917873f28f310a251cf2c36f25d8915279bb188592f4958049c.png",
+      "title": "File:Coffee with milk (563800).jpg - Wikimedia Commons",
+      "link": "https://commons.wikimedia.org/wiki/File:Coffee_with_milk_%28563800%29.jpg",
+      "tag": "Licensable",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/4/41/Coffee_with_milk_%28563800%29.jpg",
+      "original_width": 2720,
+      "original_height": 4080,
+      "is_product": false
+    },
+    ...
+  ],
+  "related_searches": [
+    {
+      "link": "https://www.google.com/search?q=starbucks+coffee&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQrNwCKAB6BQgBELwB",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=starbucks+coffee&tbs=sur%3Acl",
+      "query": "starbucks coffee",
+      "highlighted_words": [
+        "starbucks"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9vTkVOmK5C6RLw1Xz6kXkW062F2h5D5nhTt4hrTomzBIfGxvJbsmizPo&usqp=CAU"
+    },
+    {
+      "link": "https://www.google.com/search?q=coffee+cup&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQrNwCKAB6BQgBEL4B",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=coffee+cup&tbs=sur%3Acl",
+      "query": "coffee cup",
+      "highlighted_words": [
+        "cup"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHoy2YiQsoU1Tlw6Yuk8XxlCk6dxdLSm6LfbrEXzGjgYPeyVetVtZ6cvA&usqp=CAU"
+    },
+    {
+      "link": "https://www.google.com/search?q=iced+coffee&udm=2&hl=en&gl=us&sa=X&ved=2ahUKEwjTx_6Z1suBAxVyuIkEHT34DqwQrNwCKAB6BQgBEMAB",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=iced+coffee&tbs=sur%3Acl",
+      "query": "iced coffee",
+      "highlighted_words": [
+        "iced"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStmDf8Mx7rgn2K27_HLZQ_VhhO-QypBSYNEyIqWRlMp7uEqH9EEdMKAJc&usqp=CAU"
+    },
+    ...
+  ],
+  "serpapi_pagination":
+  {
+    "current": 0,
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&ijn=1&q=Coffee"
+  }
+}
+Results for:
+Coffee
+with
+tbs = ift:webp
+(Find images in WebP format)
+Available format options:
+- ift:jpg (JPG files)
+- ift:gif (GIF files)
+- ift:png (PNG files)
+- ift:bmp (BMP files)
+- ift:svg (SVG files)
+- ift:webp (WEBP files)
+- ift:ico (ICO files)
+- ift:craw (RAW files)
+
+GET
+
+
+https://serpapi.com/search.json?engine=google_images&q=Coffee&hl=en&gl=us&tbs=ift:webp
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  engine: "google_images",
+  q: "Coffee",
+  hl: "en",
+  gl: "us",
+  tbs: "ift:webp",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+hash_results = search.get_hash
+
+JSON Example
+
+  {
+    ...
+    "images_results": [
+      {
+        "position": 1,
+        "thumbnail": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc0a88f70435b2bcc161bb0096b8641871c76a75aed8041195a.jpeg",
+        "related_content_id": "NzI3WWpRSWtqd0s3eE1cIixcIkZFa2c0RVNpVVpnZ2tN",
+        "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=NzI3WWpRSWtqd0s3eE1cIixcIkZFa2c0RVNpVVpnZ2tN",
+        "source": "Starbucks® at Home",
+        "source_logo": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc0a88f70435b2bcc167f7bd0926705d026aaf73534308a03b2.png",
+        "title": "Crafted Coffees | Starbucks® Coffee ...",
+        "link": "https://athome.starbucks.com/learn/heart-starbucks-crafted-coffee",
+        "original": "https://athome.starbucks.com/sites/default/files/styles/story_banner_xlarge/public/2023-08/1_CAH_Article_HeartSbxCraftedCoffee_2880x1660.jpg.webp?itok=b3HYvj9u",
+        "original_width": 1440,
+        "original_height": 830,
+        "is_product": false
+      },
+      {
+        "position": 2,
+        "thumbnail": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc01ffc9aa30bfedf0f0db240cfda602093b9177cf93da94a7c.jpeg",
+        "related_content_id": "QUNXbWRrVl9TZHVyOU1cIixcIms4b3FCbmRSSzVYa0NN",
+        "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=QUNXbWRrVl9TZHVyOU1cIixcIms4b3FCbmRSSzVYa0NN",
+        "source": "Harwelden Mansion",
+        "source_logo": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc01ffc9aa30bfedf0fa83fe580196c1e53eec2eba94bcc65f1.png",
+        "title": "A Guide to Local Coffee Shops Near the ...",
+        "link": "https://harweldenmansion.com/a-guide-to-coffee-shops-near-the-harwelden-mansion/",
+        "original": "https://harweldenmansion.com/wp-content/uploads/2023/09/Coffee-.webp",
+        "original_width": 1200,
+        "original_height": 800,
+        "is_product": false
+      },
+      {
+        "position": 3,
+        "thumbnail": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc00aead341eeadc6fcd053576bda4a564543e2ac77563bdf3d.jpeg",
+        "related_content_id": "WFdPZ2h2R1NVUU5jZE1cIixcIlZSVWlDb2hqMEhBdURN",
+        "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=WFdPZ2h2R1NVUU5jZE1cIixcIlZSVWlDb2hqMEhBdURN",
+        "source": "The University of Queensland",
+        "source_logo": "https://serpapi.com/searches/66dec5238f337c2eb5555d18/images/b6adb488360e4cc00aead341eeadc6fc86ec7abbf14a704f960da1d025762f1f.png",
+        "title": "Is coffee going extinct? Here's how it ...",
+        "link": "https://stories.uq.edu.au/research/2022/coffee-is-going-extinct/index.html",
+        "original": "https://stories.uq.edu.au/research/2022/coffee-is-going-extinct/assets/wUb2t9rgAD/uq-research-coffee-cup-2560x1440.webp",
+        "original_width": 2560,
+        "original_height": 1440,
+        "is_product": false
+      },
+    ],
+    ...
+  }
+
+Results for:
+apple iphone
+with 
+uds
+(Suggested Search)
+GET
+
+
+https://serpapi.com/search.json?engine=google_images&q=apple+iphone&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc&hl=en&gl=us
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  engine: "google_images",
+  q: "apple iphone",
+  uds: "AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+  hl: "en",
+  gl: "us",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+hash_results = search.get_hash
+
+JSON Example
+
+{
+  "search_metadata": {
+    "id": "661d775d914a810094dffa7c",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/ae21e44296d22581/661d775d914a810094dffa7c.json",
+    "created_at": "2024-04-15 18:52:12 UTC",
+    "processed_at": "2024-04-15 18:52:13 UTC",
+    "google_images_url": "https://www.google.com/search?q=apple+iphone&oq=apple+iphone&hl=en&gl=us&udm=2&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+    "raw_html_file": "https://serpapi.com/searches/ae21e44296d22581/661d775d914a810094dffa7c.html",
+    "total_time_taken": 1.47
+  },
+  "search_parameters": {
+    "engine": "google_images",
+    "q": "apple iphone",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us",
+    "uds": "AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+    "device": "desktop"
+  },
+  "search_information": {
+    "image_results_state": "Results for exact spelling"
+  },
+  "shopping_results": [
+    {
+      "position": 1,
+      "block_position": "top",
+      "title": "Apple iPhone 15 Pro 1TB in Blue Titanium | Smartphone | Verizon (with contract)",
+      "price": "$0.00 now",
+      "extracted_price": 0,
+      "link": "https://www.verizon.com/smartphones/apple-iphone-15-pro/?sku=sku6004518&edgeTerm=36",
+      "source": "Verizon",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/d786f4b44b78881867d9290d6f4b4d60fa763c5f9c818da8a969f741f4960ea7.webp"
+    },
+    {
+      "position": 2,
+      "block_position": "top",
+      "title": "Apple iPhone 15 Plus 512GB in Pink | Smartphone | Verizon (with contract)",
+      "price": "$0.00 now",
+      "extracted_price": 0,
+      "link": "https://www.verizon.com/smartphones/apple-iphone-15-plus/?sku=sku6004513&edgeTerm=36",
+      "source": "Verizon",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/d786f4b44b78881867d9290d6f4b4d60c2200dc13321947a7a1b25ebe6ec70e9.webp"
+    },
+    {
+      "position": 3,
+      "block_position": "top",
+      "title": "Apple iPhone 15 Pro Max 256GB in Black Titanium | Smartphone | Verizon (with contract)",
+      "price": "$0.00 now",
+      "extracted_price": 0,
+      "link": "https://www.verizon.com/smartphones/apple-iphone-15-pro-max/?sku=sku6004761&edgeTerm=36",
+      "source": "Verizon",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/d786f4b44b78881867d9290d6f4b4d6072b3d6177864d6ea9a1c41136a7ac954.webp"
+    },
+    ...
+  ],
+  "suggested_searches": [
+    {
+      "name": "Wallpaper",
+      "link": "https://www.google.com/search?sca_esv=9cc8c3117245717b&gl=us&hl=en&q=iphone+wallpaper+apple&uds=AMwkrPvh81dKOSCFbewvsenyAq2h77_7RRMSccgDMc2bnTlSrU5kKZ7IK9ji4yMc7-XdSDsAt--wSPSC0BJbyxXJso8v0sUZzl5efw79N5vGA0DklWuLvxZOnjp2foOegiCNyfEjMjC-Bu1twRhgjJxhWB15UXi9ecZatrmvqnnP95_gkKcs_HGlY2VqyC74r-fUZoO9qXSWm8mbbT9s43HXrVE-MJozxMq6nbtzunnjd1vtnwTTEwn-EM3eXQ6Uoa8PpoElfmmm9Ee0_lP5DpOo-i9tU9-fE62Kq-60WKLyFtW0ReNusQKzaLbrhtA2j5w_xockHK3ba35qf_S-4MBIt-ySr6PRCfhy6b5kCq_E-2zjxecWzljXkIV_7uEpf4tOSMZmd1m5x-0Nj-uD5D5OJtiYwFV8qw&udm=2&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQxKsJegQIDhAB&ictx=0",
+      "uds": "AMwkrPvh81dKOSCFbewvsenyAq2h77_7RRMSccgDMc2bnTlSrU5kKZ7IK9ji4yMc7-XdSDsAt--wSPSC0BJbyxXJso8v0sUZzl5efw79N5vGA0DklWuLvxZOnjp2foOegiCNyfEjMjC-Bu1twRhgjJxhWB15UXi9ecZatrmvqnnP95_gkKcs_HGlY2VqyC74r-fUZoO9qXSWm8mbbT9s43HXrVE-MJozxMq6nbtzunnjd1vtnwTTEwn-EM3eXQ6Uoa8PpoElfmmm9Ee0_lP5DpOo-i9tU9-fE62Kq-60WKLyFtW0ReNusQKzaLbrhtA2j5w_xockHK3ba35qf_S-4MBIt-ySr6PRCfhy6b5kCq_E-2zjxecWzljXkIV_7uEpf4tOSMZmd1m5x-0Nj-uD5D5OJtiYwFV8qw",
+      "q": "iphone wallpaper apple",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=iphone+wallpaper+apple&uds=AMwkrPvh81dKOSCFbewvsenyAq2h77_7RRMSccgDMc2bnTlSrU5kKZ7IK9ji4yMc7-XdSDsAt--wSPSC0BJbyxXJso8v0sUZzl5efw79N5vGA0DklWuLvxZOnjp2foOegiCNyfEjMjC-Bu1twRhgjJxhWB15UXi9ecZatrmvqnnP95_gkKcs_HGlY2VqyC74r-fUZoO9qXSWm8mbbT9s43HXrVE-MJozxMq6nbtzunnjd1vtnwTTEwn-EM3eXQ6Uoa8PpoElfmmm9Ee0_lP5DpOo-i9tU9-fE62Kq-60WKLyFtW0ReNusQKzaLbrhtA2j5w_xockHK3ba35qf_S-4MBIt-ySr6PRCfhy6b5kCq_E-2zjxecWzljXkIV_7uEpf4tOSMZmd1m5x-0Nj-uD5D5OJtiYwFV8qw",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/348c211b8525dde19987ff885eaaf71b679568bb625037e97141db9c45ee12ea.jpeg"
+    },
+    {
+      "name": "Gold",
+      "link": "https://www.google.com/search?sca_esv=9cc8c3117245717b&gl=us&hl=en&q=gold+apple+iphone&uds=AMwkrPvDSfzGNNr7cyj_l_tyITVRSbDtbDcluwSs6ofcQoVC0nRL_3YekISJ2X31Xdz15ILkrTFFFplgOD9Xovyo8-C3mbVpClJDTsBLZurEmTqRnF_m5p1frGM-Hjj_OyRafBkC68wXznuqYQRv2LfC2sSw_Bkpa2pZkwybVlmpeRXaITVb7Dp1p-VGS9PALDOarEGziYUbmooP5-HUWDQ_wX09RVtMujZJK3F__4tk8M7Vye-XN__81K4qwbPGN2GeLHqf-tmRapuAT9f4-mkfTyERdgt6HEG2zzrCs2Qzcg0LGxXT_oDPHaBqD4fB6zFpgqunwaA6oKpbG1FcHVmwrY3RTxyh6fFlzxdNcP_PIku3xrhDQtlHCTgldiyVe-NRCrKkRmGm&udm=2&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQxKsJegQICxAB&ictx=0",
+      "uds": "AMwkrPvDSfzGNNr7cyj_l_tyITVRSbDtbDcluwSs6ofcQoVC0nRL_3YekISJ2X31Xdz15ILkrTFFFplgOD9Xovyo8-C3mbVpClJDTsBLZurEmTqRnF_m5p1frGM-Hjj_OyRafBkC68wXznuqYQRv2LfC2sSw_Bkpa2pZkwybVlmpeRXaITVb7Dp1p-VGS9PALDOarEGziYUbmooP5-HUWDQ_wX09RVtMujZJK3F__4tk8M7Vye-XN__81K4qwbPGN2GeLHqf-tmRapuAT9f4-mkfTyERdgt6HEG2zzrCs2Qzcg0LGxXT_oDPHaBqD4fB6zFpgqunwaA6oKpbG1FcHVmwrY3RTxyh6fFlzxdNcP_PIku3xrhDQtlHCTgldiyVe-NRCrKkRmGm",
+      "q": "gold apple iphone",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=gold+apple+iphone&uds=AMwkrPvDSfzGNNr7cyj_l_tyITVRSbDtbDcluwSs6ofcQoVC0nRL_3YekISJ2X31Xdz15ILkrTFFFplgOD9Xovyo8-C3mbVpClJDTsBLZurEmTqRnF_m5p1frGM-Hjj_OyRafBkC68wXznuqYQRv2LfC2sSw_Bkpa2pZkwybVlmpeRXaITVb7Dp1p-VGS9PALDOarEGziYUbmooP5-HUWDQ_wX09RVtMujZJK3F__4tk8M7Vye-XN__81K4qwbPGN2GeLHqf-tmRapuAT9f4-mkfTyERdgt6HEG2zzrCs2Qzcg0LGxXT_oDPHaBqD4fB6zFpgqunwaA6oKpbG1FcHVmwrY3RTxyh6fFlzxdNcP_PIku3xrhDQtlHCTgldiyVe-NRCrKkRmGm",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/348c211b8525dde19987ff885eaaf71b8dc446438ce2cdbef435e9174d8250d7.jpeg"
+    },
+    {
+      "name": "Mobile",
+      "link": "https://www.google.com/search?sca_esv=9cc8c3117245717b&gl=us&hl=en&q=mobile+apple+iphone&uds=AMwkrPvDSfzGNNr7cyj_l_tyITVRVnwforJwxUt0k8GUIm-qeUn8jLvSD6ooZ_JW2PBPcM8_OSsBsdJX8P649ro9V2_IjqJiuE4HPYaRDAcUS0Rx6zS7rtUWgmm_jJ_5_oV5DGhkJgpt7SYZu9SCoYrIgtTvzcLTQrd4UlM-douIoV-9wJEK13C4nD-YoHA1HL2K3Rwk0DYraUjzy-FmwGkaXClozJTcEQqbf9In0tC_VEWWsyQe4b5N7-pZ7lHCx8xq5cYbKACoQsYXIm_z-2RfYwJtOHff1vi0s6JzWNlZl2Rv5VW8vw3bUbCvyhJxIa5AdwvTuqVPPcG73xLiDO88gRWKZoYj9XDvSykuG8P2fVUmNPmHUucBtr21lkFPm2yK_AsC_5A4&udm=2&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQxKsJegQIDRAB&ictx=0",
+      "uds": "AMwkrPvDSfzGNNr7cyj_l_tyITVRVnwforJwxUt0k8GUIm-qeUn8jLvSD6ooZ_JW2PBPcM8_OSsBsdJX8P649ro9V2_IjqJiuE4HPYaRDAcUS0Rx6zS7rtUWgmm_jJ_5_oV5DGhkJgpt7SYZu9SCoYrIgtTvzcLTQrd4UlM-douIoV-9wJEK13C4nD-YoHA1HL2K3Rwk0DYraUjzy-FmwGkaXClozJTcEQqbf9In0tC_VEWWsyQe4b5N7-pZ7lHCx8xq5cYbKACoQsYXIm_z-2RfYwJtOHff1vi0s6JzWNlZl2Rv5VW8vw3bUbCvyhJxIa5AdwvTuqVPPcG73xLiDO88gRWKZoYj9XDvSykuG8P2fVUmNPmHUucBtr21lkFPm2yK_AsC_5A4",
+      "q": "mobile apple iphone",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=mobile+apple+iphone&uds=AMwkrPvDSfzGNNr7cyj_l_tyITVRVnwforJwxUt0k8GUIm-qeUn8jLvSD6ooZ_JW2PBPcM8_OSsBsdJX8P649ro9V2_IjqJiuE4HPYaRDAcUS0Rx6zS7rtUWgmm_jJ_5_oV5DGhkJgpt7SYZu9SCoYrIgtTvzcLTQrd4UlM-douIoV-9wJEK13C4nD-YoHA1HL2K3Rwk0DYraUjzy-FmwGkaXClozJTcEQqbf9In0tC_VEWWsyQe4b5N7-pZ7lHCx8xq5cYbKACoQsYXIm_z-2RfYwJtOHff1vi0s6JzWNlZl2Rv5VW8vw3bUbCvyhJxIa5AdwvTuqVPPcG73xLiDO88gRWKZoYj9XDvSykuG8P2fVUmNPmHUucBtr21lkFPm2yK_AsC_5A4",
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/348c211b8525dde19987ff885eaaf71bb6a029a9c2e08e6e34c967ed3b545fa9.jpeg"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": 1,
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a662674bfc35737a950958f1d36a06c565f421e98800163aabe8.jpeg",
+      "related_content_id": "WVZab19kdHJIcF9OWE1cIixcInNfcTEzUUVVNFJMbklN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=apple+iphone&related_content_id=WVZab19kdHJIcF9OWE1cIixcInNfcTEzUUVVNFJMbklN",
+      "source": "Boost Mobile · In stock",
+      "source_logo": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a662674bfc35737a9509555a630ea1e8167427ba60a18aaa9403.png",
+      "title": "Apple iPhone 15 Pro Max | Boost Mobile",
+      "link": "https://www.boostmobile.com/shop/iphone-15-pro-max-001346.html",
+      "original": "https://s7d1.scene7.com/is/image/dish/iPhone_15_Pro_Max_Natural_1?$ProductBase$&fmt=webp",
+      "original_width": 1000,
+      "original_height": 1000,
+      "in_stock": true,
+      "is_product": true
+    },
+    {
+      "position": 2,
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a662bf096ce0b3f22a2f6dfcd470df4181bd4a2a9a533e569239.jpeg",
+      "related_content_id": "VERyS0pDWkR2WjRjd01cIixcIkpFVHRyVHE2U2hhNFJN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=apple+iphone&related_content_id=VERyS0pDWkR2WjRjd01cIixcIkpFVHRyVHE2U2hhNFJN",
+      "source": "AT&T",
+      "source_logo": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a662bf096ce0b3f22a2f6cbeddc93c41114d11a462f4ddf7b8ea.png",
+      "title": "Apple iPhone 15 – Price, Specs ...",
+      "link": "https://www.att.com/buy/phones/apple-iphone-15.html",
+      "original": "https://www.att.com/scmsassets/global/devices/phones/apple/apple-iphone-15/carousel/pink-1.png",
+      "original_width": 376,
+      "original_height": 650,
+      "is_product": false
+    },
+    {
+      "position": 3,
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a6623203260c87475af3004a25e64703fd4d9a0f63481b4bdb83.jpeg",
+      "related_content_id": "MTRNbTlQYkxkak53ak1cIixcIjJxQmVIdGNHOGVPaldN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=apple+iphone&related_content_id=MTRNbTlQYkxkak53ak1cIixcIjJxQmVIdGNHOGVPaldN",
+      "source": "Buy Refurbished and Used Mobile Phone, Tablets & Laptops Online at Best  Prices",
+      "source_logo": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/959b67591360a6623203260c87475af37f7eb80dd91f019c0a19ce470f9d546c.png",
+      "title": "APPLE iPhone Xs Max - 256 GB, Gold ...",
+      "link": "https://www.smartcellular.us/apple-iphone-xs-max-256-gb-gold-unlocked-good",
+      "original": "https://www.smartcellular.us/media/catalog/product/cache/bf0ca523f7526fad50b11dad4e4bee43/l/_/l_10185856_001_1_16_1_1.jpg",
+      "original_width": 600,
+      "original_height": 532,
+      "is_product": true
+    },
+    ...
+  ],
+  "related_searches": [
+    {
+      "link": "https://www.google.com/search?q=iphone+15&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQrNwCegUIhAEQAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=iphone+15&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+      "query": "iphone 15",
+      "highlighted_words": [
+        "15"
+      ],
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/a8482b64a74f50dbb3efe5eb2b968a4ddc87eaa7dc76d25a0de4cb6a85f7d59e.jpeg"
+    },
+    {
+      "link": "https://www.google.com/search?q=iphone+13&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQrNwCegUIhgEQAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=iphone+13&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+      "query": "iphone 13",
+      "highlighted_words": [
+        "13"
+      ],
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/a8482b64a74f50dbb3efe5eb2b968a4dfc87793eeb1da35135a4ecc6f7ee6e63.jpeg"
+    },
+    {
+      "link": "https://www.google.com/search?q=iphone+14&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwjC2d768cSFAxWzha8BHTvNA9MQrNwCegUIhQEQAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&q=iphone+14&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc",
+      "query": "iphone 14",
+      "highlighted_words": [
+        "14"
+      ],
+      "thumbnail": "https://serpapi.com/searches/661d775d914a810094dffa7c/images/a8482b64a74f50dbb3efe5eb2b968a4d0b075c553d083a35eb3f37b7b975bff3.jpeg"
+    },
+    ...
+  ],
+  "serpapi_pagination": {
+    "current": 0,
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=1&q=apple+iphone&uds=AMwkrPvvboxV7GBhzqZZqvc6EiBaRoRjXwlOwCr_h2tqGkhIQPDfOnJiPb_s8Li8Y-qwyjR5WNORGfGQh6Hl2FCHyI3yRsCidzU7V9Wmxl_Zs3ikf5Dj9zTjbFEm3V0r92BAFlQyLIuZ-W9Srijr1QZOdPSZNfqR67MwDRqsMvaYrjBD623_otDx7MG2UDgS5gL7mmP-4C1qUAnb7uRU_5WMI1-8Uqoafp_YsG0sXKAN5NUCzfYM6t5KBJ1qzrY0lkcyczPJRyXssjOVrPqJJY65tPIIzZdzrhmG4UZooTrZmTMjW71KWe7cXLvAa8-9VT8CeFL5V9xG479rQK14KYsv09Gwwr3sO-sDeYzO9lhqm88I_pj4uXc"
+  }
+}
+Results for:
+coffee
+with set 
+imgar
+(Aspect Ratio: Square)
+GET
+
+
+https://serpapi.com/search.json?engine=google_images&q=coffee&imgar=s&hl=en&gl=us
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  engine: "google_images",
+  q: "coffee",
+  imgar: "s",
+  hl: "en",
+  gl: "us",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+hash_results = search.get_hash
+
+JSON Example
+
+{
+  "search_metadata": {
+    "id": "673b5ab0877a914935218a2c",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/a18718e9d11e15ac/673b5ab0877a914935218a2c.json",
+    "created_at": "2024-11-18 15:18:08 UTC",
+    "processed_at": "2024-11-18 15:18:08 UTC",
+    "google_images_url": "https://www.google.com/search?q=Coffee&oq=Coffee&hl=en&gl=us&udm=2&imgar=s",
+    "raw_html_file": "https://serpapi.com/searches/a18718e9d11e15ac/673b5ab0877a914935218a2c.html",
+    "total_time_taken": 4.18
+  },
+  "search_parameters": {
+    "engine": "google_images",
+    "q": "Coffee",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us",
+    "device": "desktop",
+    "imgar": "s"
+  },
+  "search_information": {
+    "image_results_state": "Results for exact spelling"
+  },
+  "shopping_results": [
+    {
+      "position": 1,
+      "block_position": "top",
+      "title": "Bikini Bottom Bundle | Bones Coffee",
+      "price": "$49.99",
+      "extracted_price": 49.99,
+      "link": "https://www.bonescoffee.com/products/bikini-bottom-bundle?variant=44511306743860",
+      "source": "Bones Coffee Company",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8168f1adb657c0a9b15ae9b6bd1e240947f4331d6b8c0c6844cb0b95a15b370f.webp"
+    },
+    {
+      "position": 2,
+      "block_position": "top",
+      "title": "Folgers House Blend Medium Roast Ground Coffee, 25.9 Ounce (Pack of 6)",
+      "price": "$77.94",
+      "extracted_price": 77.94,
+      "link": "https://www.amazon.com/Folgers-House-Ground-Coffee-Medium/dp/B09HCVG3NY?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&psc=1&smid=A3R9ZB910FTHQV",
+      "source": "Amazon.com",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8168f1adb657c0a9b15ae9b6bd1e2409a27bb1b0e207dfee2f9668f25888405a.webp",
+      "extensions": [
+        "Free shipping",
+        "Free shipping"
+      ]
+    },
+    {
+      "position": 3,
+      "block_position": "top",
+      "title": "Crispy Marshmallow Treats Flavored Coffee | 12oz Bag | Whole Bean | Medium Roast | Web-Slinger | Bones Coffee Company",
+      "price": "$17.99",
+      "extracted_price": 17.99,
+      "link": "https://www.bonescoffee.com/products/web-slinger-12oz?variant=41112349409332",
+      "source": "Bones Coffee Company",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8168f1adb657c0a9b15ae9b6bd1e2409af1c9c6dc13665c05e33ed46bd3959e0.webp"
+    },
+    ...
+  ],
+  "suggested_searches": [
+    {
+      "name": "Cup",
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&q=coffee+cup&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dWh3pMQ8boPWDC5mbLmmB-f65R3OJy3nc2t5Zu32o-FKwbFD5y5QuFtk9FvLLRNb3lFrj1yzBm5GtUET-1Ij9Jjm2BoVlwW2gpDgD9kQOIDpr99OnYqnGP4bCTjiqS79pcS1cRg&udm=2&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQxKsJegQIEhAB&ictx=0",
+      "uds": "ADvngMjcH0KdF7qGWtwTBrP0nt7dWh3pMQ8boPWDC5mbLmmB-f65R3OJy3nc2t5Zu32o-FKwbFD5y5QuFtk9FvLLRNb3lFrj1yzBm5GtUET-1Ij9Jjm2BoVlwW2gpDgD9kQOIDpr99OnYqnGP4bCTjiqS79pcS1cRg",
+      "q": "coffee cup",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=coffee+cup&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dWh3pMQ8boPWDC5mbLmmB-f65R3OJy3nc2t5Zu32o-FKwbFD5y5QuFtk9FvLLRNb3lFrj1yzBm5GtUET-1Ij9Jjm2BoVlwW2gpDgD9kQOIDpr99OnYqnGP4bCTjiqS79pcS1cRg",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/3038d8d7ca2776eb1dad810c911aa46ee94b2046808e57e8b4735fe811a7cb3a.jpeg"
+    },
+    {
+      "name": "Cafe",
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&q=cafe+coffee&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dee_YpCLlMQbCBhk2v5kr-EkJYg8hay1vUS71E9HkeKVK_-m1HHrkzuvcTezJkCMQHTPM4LN8lfu_Lk2F97OZArYpb7JizbF3J8dw_H4_hsjdJLODw8IQhAKiF44usEnVM-xMLw&udm=2&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQxKsJegQIERAB&ictx=0",
+      "uds": "ADvngMjcH0KdF7qGWtwTBrP0nt7dee_YpCLlMQbCBhk2v5kr-EkJYg8hay1vUS71E9HkeKVK_-m1HHrkzuvcTezJkCMQHTPM4LN8lfu_Lk2F97OZArYpb7JizbF3J8dw_H4_hsjdJLODw8IQhAKiF44usEnVM-xMLw",
+      "q": "cafe coffee",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=cafe+coffee&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dee_YpCLlMQbCBhk2v5kr-EkJYg8hay1vUS71E9HkeKVK_-m1HHrkzuvcTezJkCMQHTPM4LN8lfu_Lk2F97OZArYpb7JizbF3J8dw_H4_hsjdJLODw8IQhAKiF44usEnVM-xMLw",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/3038d8d7ca2776eb1dad810c911aa46e58212c6b849ee806f9cac212b5d28cce.jpeg"
+    },
+    {
+      "name": "Wallpaper",
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&q=coffee+wallpaper&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dCkH7jUOA-VsrzXzgx3zlfOaWn7_8-2DBVWuj6znpjL6vvscNiAJ1irF3EMYIAPVDGzyGnQ_KsA3BkptEBG4KEfd4SYpoJQFRoY082XNXHf1_5tw0iI_4rYEdST1LZLEeEQJLPg&udm=2&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQxKsJegQICBAB&ictx=0",
+      "uds": "ADvngMjcH0KdF7qGWtwTBrP0nt7dCkH7jUOA-VsrzXzgx3zlfOaWn7_8-2DBVWuj6znpjL6vvscNiAJ1irF3EMYIAPVDGzyGnQ_KsA3BkptEBG4KEfd4SYpoJQFRoY082XNXHf1_5tw0iI_4rYEdST1LZLEeEQJLPg",
+      "q": "coffee wallpaper",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=coffee+wallpaper&uds=ADvngMjcH0KdF7qGWtwTBrP0nt7dCkH7jUOA-VsrzXzgx3zlfOaWn7_8-2DBVWuj6znpjL6vvscNiAJ1irF3EMYIAPVDGzyGnQ_KsA3BkptEBG4KEfd4SYpoJQFRoY082XNXHf1_5tw0iI_4rYEdST1LZLEeEQJLPg",
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/3038d8d7ca2776eb1dad810c911aa46e660f2b05895fd2631e495144961436df.jpeg"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": 1,
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e016cee69ae7863a02666bb30a54eedeff512350fa0b2a2a4b.jpeg",
+      "related_content_id": "bmR6Y2dGQ0lnektUNU1cIixcImV0WWh2bF9OSVJRa3NN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=bmR6Y2dGQ0lnektUNU1cIixcImV0WWh2bF9OSVJRa3NN",
+      "source": "SAKI",
+      "source_logo": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e016cee69ae7863a021b3b0348483a3ad372c521a5797490a5.png",
+      "title": "What is Dibek Coffee & How to Make It ...",
+      "link": "https://sakiproducts.com/blogs/turkish-coffee/dibek-coffee-recipe",
+      "original": "http://sakiproducts.com/cdn/shop/articles/20230202120418-dibek-coffee-recipe-blog_1200x1200.webp?v=1694506959",
+      "original_width": 1200,
+      "original_height": 1200,
+      "is_product": false
+    },
+    {
+      "position": 2,
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e0bed5720e0d554eecdc2309372205924a804b41f6d01f417a.jpeg",
+      "related_content_id": "OHR3TXV0Zy1TZVZ1dk1cIixcInFFV1pocDhrQzZXa1FN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=OHR3TXV0Zy1TZVZ1dk1cIixcInFFV1pocDhrQzZXa1FN",
+      "source": "Dassana's Veg Recipes",
+      "source_logo": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e0bed5720e0d554eecf0dfcf5bfb6bd56229acd0baa3a53d8b.png",
+      "title": "Hot Coffee | Beaten Coffee (Cafe Style)",
+      "link": "https://www.vegrecipesofindia.com/hot-coffee-recipe-cafe-style/",
+      "tag": "Recipe",
+      "original": "https://www.vegrecipesofindia.com/wp-content/uploads/2018/02/cafe-style-hot-coffee-recipe-1.jpg",
+      "original_width": 606,
+      "original_height": 606,
+      "is_product": false
+    },
+    {
+      "position": 3,
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e001a5a0f12621ea9dbff2d17307a61323e469d0cd66f6060e.jpeg",
+      "related_content_id": "X1lFeHEtZmJMejBGek1cIixcImxmNDZoMEJETngzWkpN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?engine=google_images_related_content&gl=us&hl=en&q=Coffee&related_content_id=X1lFeHEtZmJMejBGek1cIixcImxmNDZoMEJETngzWkpN",
+      "source": "Espresso & Coffee Guide",
+      "source_logo": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/8f61e6a0cffe42e001a5a0f12621ea9d8b4a2fba0251e07865c28b5503ccf980.png",
+      "title": "Cafe Con Leche (Recipe) - Espresso ...",
+      "link": "https://espressocoffeeguide.com/all-about-espresso/espresso-drink-recipes/cafe-con-leche/",
+      "tag": "Recipe",
+      "original": "https://espressocoffeeguide.com/wp-content/uploads/2022/08/cafe-con-leche.jpg",
+      "original_width": 1200,
+      "original_height": 1200,
+      "is_product": false
+    },
+    ...
+  ],
+  "related_searches": [
+    {
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&udm=2&q=cafe+coffee&stick=H4sIAAAAAAAAAFvEyp2cmJaqkJyflpaaCgBHReR_DgAAAA&source=univ&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQrNwCegQIPxAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=cafe+coffee",
+      "query": "cafe coffee",
+      "highlighted_words": [
+        "cafe"
+      ],
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/6e42446e8f9a40383484263fa9644158ac0ba68f58bf95eb11b8a32fd03c8c75.jpeg"
+    },
+    {
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&udm=2&q=coffee+cup&stick=H4sIAAAAAAAAAFvEypWcn5aWmqqQXFoAAEbT3aANAAAA&source=univ&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQrNwCegQIRhAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=coffee+cup",
+      "query": "coffee cup",
+      "highlighted_words": [
+        "cup"
+      ],
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/6e42446e8f9a40383484263fa964415811add1ce4c5522e2964860af9e4926f0.jpeg"
+    },
+    {
+      "link": "https://www.google.com/search?sca_esv=eabdc2486f328348&gl=us&hl=en&imgar=s&udm=2&q=clip+art+coffee&stick=H4sIAAAAAAAAAFvEyp-ck1mgkFhUopCcn5aWmgoAOTTt0BIAAAA&source=univ&sa=X&ved=2ahUKEwig0KrlluaJAxXhhYkEHTNwGqUQrNwCegQIRBAA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&imgar=s&q=clip+art+coffee",
+      "query": "clip art coffee",
+      "highlighted_words": [
+        "clip art"
+      ],
+      "thumbnail": "https://serpapi.com/searches/673b5ab0877a914935218a2c/images/6e42446e8f9a40383484263fa9644158fa2d6eb47e58801d46b99c2e1dc37262.jpeg"
+    },
+    ...
+  ],
+  "serpapi_pagination": {
+    "current": 0,
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=1&imgar=s&q=Coffee"
+  }
+}
+JSON structure overview
+{
+  ...
+  "shopping_results": [
+    {
+      "position": "Integer - Item position",
+      "block_position": "String - Item block location",
+      "title": "String - Item title",
+      "price": "String - Item price",
+      "extracted_price": "Float - Item price as a float",
+      "link": "String - Link to the Google item page",
+      "source": "String - Product source name",
+      "rating": "Float - Item rating as a float",
+      "reviews": "Integer - Item reviews as an integer",
+      "reviews_original": "String - Item review in text format",
+      "thumbnail": "String - URL of an image",
+      "extensions": "Array[String] - Extra information of the item"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": "Integer - Image index",
+      "thumbnail": "String - URL of an image",
+      "license_details_url": "String - License details URL",
+      "related_content_id": "String - Unique ID for retrieving the Related Content of an image",
+      "serpapi_related_content_link": "String - Link to SerpApi to fetch the Related Content of an image",
+      "original": "String - Original Image URL (full resolution)",
+      "original_width": "Integer - Original Image width",
+      "original_height": "Integer - Original Image height",
+      "title": "String - Short Image Description",
+      "tag": "String - Optional tag of the image",
+      "link": "String - Link to the page providing the image",
+      "source": "String - Original Domain Name",
+      "source_logo": "String - URL to the source logo",
+      "is_product": "Boolean - Is the link to the page providing the image containing a product",
+      "in_stock": "Boolean - Is product in stock"
+    },
+    ...
+  ],
+  "suggested_searches": [
+    {
+      "name": "String - Suggested searches name",
+      "link": "String - Google search link original",
+      "chips": "String - Google chips parameter value",
+      "uds": "String - Google uds parameter value",
+      "q": "String - Google q parameter value to be used alonside uds parameter",
+      "serpapi_link": "String - Link to SerpApi to fetch the suggested searches",
+      "thumbnail": "String - URL of an image"
+    },
+    ...
+  ],
+  "related_searches": [
+    {
+      "query": "String - Related searches query",
+      "link": "String - Google Images search link original",
+      "serpapi_link": "String - Link to SerpApi to fetch the related images searches",
+      "highlighted_words": "Array[String] - Highlighted words in the search query",
+      "thumbnail": "String - URL of an image"
+    },
+    ...
+  ],
+  "serpapi_pagination": {
+    "current": "Integer - Index of the current page",
+    "next": "String - SerpApi link for paginating to the next page of results",
+    "previous": "String - SerpApi link for paginating to the previous page of results"
+  },
+}
+
+
+
+
+Google Images Results API
+The Google Images Results API allows a user to scrape images from a Google Images search results page. When SerpApi encounters image results, we add them to our JSON output as the array image_results. Head to the playground for a live and interactive demo.
+
+If you are interested in the reverse image search - head to our Reverse Image API.
+
+API Examples
+Results for:
+Apple
+GET
+
+
+https://serpapi.com/search.json?q=Apple&engine=google_images&ijn=0
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  q: "Apple",
+  engine: "google_images",
+  ijn: "0",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+images_results = search.get_hash[:images_results]
+
+JSON Example
+
+{
+  ...
+  "shopping_results": [
+    {
+      "position": 1,
+      "title": "iPhone 13 20W Apple Certified USB C Fast Charger for iPhone 13/13 mini/13 Pro/13 Pro Max 12/12 mini/12 Pro/12 Pro Max/11/11 Pro/11 Pro Max/XS/XR/X/8",
+      "price": "$19.99",
+      "extracted_price": 19.99,
+      "link": "https://www.amazon.com/iPhone-Certified-Charger-Type-C-Lightning/dp/B09B72F9CS?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&psc=1&smid=A19ZDYPFLKPVN6",
+      "source": "Amazon.com",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "position": 2,
+      "title": "Cosmic Crisp Apples - each",
+      "price": "$0.99",
+      "extracted_price": 0.99,
+      "link": "https://www.target.com/p/cosmic-crisp-apples-each/-/A-79154064?ref=tgt_adv_XS000000&AFID=google_pla_df_free_local&CPNG=Grocery&adgroup=266-5",
+      "source": "Target",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "position": 3,
+      "title": "Apple Watch Ultra GPS + Cellular, 49mm Titanium Case with Orange Alpine Loop - Medium",
+      "price": "$799.00",
+      "extracted_price": 799,
+      "link": "https://www.apple.com/us/shop/go/product/MQEU3?cid=aos-us-seo-pla",
+      "source": "Apple",
+      "thumbnail": "<URL to image>"
+    },
+    ...
+  ],
+  "images_results": [
+    {
+      "position": 1,
+      "thumbnail": "<URL to image>",
+      "related_content_id": "d3ZFQTJGZ1dtVUVDZk1cIixcIjZQTFZWdWJTLWdNZ2RN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?related_content_id=d3ZFQTJGZ1dtVUVDZk1cIixcIjZQTFZWdWJTLWdNZ2RN&engine=google_images_related_content&gl=us&hl=en&q=Apple",
+      "source": "New York Apple Association",
+      "title": "SnapDragon® - New York Apple Association",
+      "link": "https://www.applesfromny.com/varieties/snapdragon/",
+      "original": "<URL to image>",
+      "original_width": 2400,
+      "original_height": 1889,
+      "is_product": false
+    },
+    {
+      "position": 2,
+      "thumbnail": "<URL to image>",
+      "related_content_id": "a3RjeHZGNUxhWHlWWE1cIixcIkMwRVJlOXBJSHZIZmdN",
+      "serpapi_related_content_link": "https://serpapi.com/search.json?related_content_id=a3RjeHZGNUxhWHlWWE1cIixcIkMwRVJlOXBJSHZIZmdN&engine=google_images_related_content&gl=us&hl=en&q=Apple",
+      "source": "New York Apple Association",
+      "title": "Varieties Archive - New York Apple Association",
+      "link": "https://www.applesfromny.com/varieties/",
+      "original": "<URL to image>",
+      "original_width": 2400,
+      "original_height": 1889,
+      "is_product": false
+    },
+    ...
+  ],
+  "suggested_searches": [
+    {
+      "name": "Logo",
+      "link": "https://www.google.com/search?sca_esv=221f3c1ac0fa11b3&sca_upv=1&q=apple+logo&uds=AMwkrPujEvoKO88_gtxxkRd0v3RzhyhkqYCqvtbEuGrAPAoXk7OxEykGFZujOUBdRS-EuogruysWL1hjUkKgDZVq2wrKVBm-zvsTGvEB8QBuR8iP_LeP8P65adjeoBum5RmQSIaPM-V4B9MV8zK3dH27TqSJtoqJcAjebG908XAHoOI2Jls_7AyxKJEh4DEQUFZTDefu-xAegG3_uHO3npBMcoAWVtoKrq8607ASD9sW1_YUB3W71F_m_EQpWmGFFLAVyacF22-chndjx8jUhlHIj_PlFXvfwqkyGSnW6FCackfzOTc8z8e9-B-kDgGq4UWlXJI9Ci6R5jDHIp9Nok54dvkZpo1OrA&udm=2&sa=X&ved=2ahUKEwj8uZSlyruFAxUASvEDHWiQDgwQxKsJegQICRAB&ictx=0",
+      "uds": "AMwkrPujEvoKO88_gtxxkRd0v3RzhyhkqYCqvtbEuGrAPAoXk7OxEykGFZujOUBdRS-EuogruysWL1hjUkKgDZVq2wrKVBm-zvsTGvEB8QBuR8iP_LeP8P65adjeoBum5RmQSIaPM-V4B9MV8zK3dH27TqSJtoqJcAjebG908XAHoOI2Jls_7AyxKJEh4DEQUFZTDefu-xAegG3_uHO3npBMcoAWVtoKrq8607ASD9sW1_YUB3W71F_m_EQpWmGFFLAVyacF22-chndjx8jUhlHIj_PlFXvfwqkyGSnW6FCackfzOTc8z8e9-B-kDgGq4UWlXJI9Ci6R5jDHIp9Nok54dvkZpo1OrA",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=0&q=Apple&uds=AMwkrPujEvoKO88_gtxxkRd0v3RzhyhkqYCqvtbEuGrAPAoXk7OxEykGFZujOUBdRS-EuogruysWL1hjUkKgDZVq2wrKVBm-zvsTGvEB8QBuR8iP_LeP8P65adjeoBum5RmQSIaPM-V4B9MV8zK3dH27TqSJtoqJcAjebG908XAHoOI2Jls_7AyxKJEh4DEQUFZTDefu-xAegG3_uHO3npBMcoAWVtoKrq8607ASD9sW1_YUB3W71F_m_EQpWmGFFLAVyacF22-chndjx8jUhlHIj_PlFXvfwqkyGSnW6FCackfzOTc8z8e9-B-kDgGq4UWlXJI9Ci6R5jDHIp9Nok54dvkZpo1OrA",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "name": "red",
+      "link": "https://www.google.com/search?sca_esv=221f3c1ac0fa11b3&sca_upv=1&q=apple+logo&uds=AMwkrPu_54wJAGwKfpxF7r7p0Dry82z4VUt-fUSGRFt0VbTTaB_76YygSdHXvn3TYuTL9Tnb9lfKW_QO64kDajQqBuf0pCj9akaAoCoHXtE0lMv7tDsV5lMt2bkb66b8ML7_ebgcNfWb-FyEdo_bSFgjELRJDBfm9Vow_dXV5AoBAR65pBJVRukiXWfqiT8c0UdYOewfog2Yco_Nfbboobl3hInzzGVPlvCXlUi-Ntt_HENuZe2NxTKwss61G_OoR7zMSpwVyIzFrKvxVjKcijQMirxXY9FiiVraeL7LkHZVsuAHRAfV7wzxm9shZ-GY5IM12emc_lnHPlx9zMKRYXwyZCiPIR6H2Q&udm=2&sa=X&ved=2ahUKEwj8uZSlyruFAxUASvEDHWiQDgwQxKsJegQICRAB&ictx=0",
+      "chips": "q:apple,g_1:red:MbDAkgkowSA%3D",
+      "serpapi_link": "https://serpapi.com/search.json?device=mobile&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=0&q=Apple&uds=AMwkrPu_54wJAGwKfpxF7r7p0Dry82z4VUt-fUSGRFt0VbTTaB_76YygSdHXvn3TYuTL9Tnb9lfKW_QO64kDajQqBuf0pCj9akaAoCoHXtE0lMv7tDsV5lMt2bkb66b8ML7_ebgcNfWb-FyEdo_bSFgjELRJDBfm9Vow_dXV5AoBAR65pBJVRukiXWfqiT8c0UdYOewfog2Yco_Nfbboobl3hInzzGVPlvCXlUi-Ntt_HENuZe2NxTKwss61G_OoR7zMSpwVyIzFrKvxVjKcijQMirxXY9FiiVraeL7LkHZVsuAHRAfV7wzxm9shZ-GY5IM12emc_lnHPlx9zMKRYXwyZCiPIR6H2Q",
+      "thumbnail": "<URL to image>"
+    },
+    {
+      "name": "Fruit",
+      "link": "https://www.google.com/search?sca_esv=221f3c1ac0fa11b3&sca_upv=1&q=apple+fruit+images&uds=AMwkrPuv_kvMoMCAqup72mhE6FekLHcL3SifwcZpZ3maU-P62shsm7_8yw6VCvBNmxtxOCym2s_wgrULHT5d_P5Z8r8-g-3qKGOGTt03WAh6ZPsg_0VnEfR-9ucoz32l3YPSAgnG6g5VYZN00DjXTs2CVdrNce7y69U6f2F6RCqFRvLJeVkcuW9mFSjcMJ9aX3yQA1Jub7pPl72eTSait4WxaQRFS3goU98vxoaimvQJwoy4q2zlIuQAXQocypciivAQo-6M62hq2_ansYJHc3x9kP9nJ5SJizFb6k8z2KwunAM-oIvvp9ia0baJQP25gqiuJAhKRvRTOHzi15jPfJcJnWW6rlcEbQ&udm=2&sa=X&ved=2ahUKEwj8uZSlyruFAxUASvEDHWiQDgwQxKsJegQIDRAB&ictx=0",
+      "uds": "AMwkrPuv_kvMoMCAqup72mhE6FekLHcL3SifwcZpZ3maU-P62shsm7_8yw6VCvBNmxtxOCym2s_wgrULHT5d_P5Z8r8-g-3qKGOGTt03WAh6ZPsg_0VnEfR-9ucoz32l3YPSAgnG6g5VYZN00DjXTs2CVdrNce7y69U6f2F6RCqFRvLJeVkcuW9mFSjcMJ9aX3yQA1Jub7pPl72eTSait4WxaQRFS3goU98vxoaimvQJwoy4q2zlIuQAXQocypciivAQo-6M62hq2_ansYJHc3x9kP9nJ5SJizFb6k8z2KwunAM-oIvvp9ia0baJQP25gqiuJAhKRvRTOHzi15jPfJcJnWW6rlcEbQ",
+      "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google_images&gl=us&google_domain=google.com&hl=en&ijn=0&q=Apple&uds=AMwkrPuv_kvMoMCAqup72mhE6FekLHcL3SifwcZpZ3maU-P62shsm7_8yw6VCvBNmxtxOCym2s_wgrULHT5d_P5Z8r8-g-3qKGOGTt03WAh6ZPsg_0VnEfR-9ucoz32l3YPSAgnG6g5VYZN00DjXTs2CVdrNce7y69U6f2F6RCqFRvLJeVkcuW9mFSjcMJ9aX3yQA1Jub7pPl72eTSait4WxaQRFS3goU98vxoaimvQJwoy4q2zlIuQAXQocypciivAQo-6M62hq2_ansYJHc3x9kP9nJ5SJizFb6k8z2KwunAM-oIvvp9ia0baJQP25gqiuJAhKRvRTOHzi15jPfJcJnWW6rlcEbQ",
+      "thumbnail": "<URL to image>"
+    },
+    ...
+  ],
+  ...
+}
+Related Searches results for:
+macbook
+GET
+
+
+https://serpapi.com/search.json?q=macbook&engine=google_images
+
+Code to integrate
+
+
+Ruby
+
+require 'google_search_results' 
+
+params = {
+  q: "macbook",
+  engine: "google_images",
+  api_key: "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c"
+}
+
+search = GoogleSearch.new(params)
+related_searches = search.get_hash[:related_searches]
+
+JSON Example
+
+{
+  ...
+  "related_searches": [
+    {
+      "link": "https://www.google.com/search?q=macbook+pro&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwirvLHyuav9AhWIOEQIHdWnAvAQrNwCKAB6BQgBEJ4C",
+      "serpapi_link": "https//serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&location=Austin%2C+Texas%2C+United+States&q=macbook+pro&engine=google_images",
+      "query": "macbook pro",
+      "highlighted_words": [
+        "pro"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRK0b6EMQvMA1yV9g5W4QXmsVY1rp3quUt0nshqFBDYXpaQck20UJVC&usqp=CAU"
+    },
+    {
+      "link": "https://www.google.com/search?q=macbook+air&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwirvLHyuav9AhWIOEQIHdWnAvAQrNwCKAB6BQgBEKAC",
+      "serpapi_link": "https//serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&location=Austin%2C+Texas%2C+United+States&q=macbook+air&engine=google_images",
+      "query": "macbook air",
+      "highlighted_words": [
+        "air"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQf_O13LxX8u9w3OXckgTVZl1e8otkHoq7RiC7e8liIi5-0rYlCD48n&usqp=CAU"
+    },
+    {
+      "link": "https://www.google.com/search?q=macbook+air+2022&udm=2&gl=us&hl=en&sa=X&ved=2ahUKEwirvLHyuav9AhWIOEQIHdWnAvAQrNwCKAB6BQgBEKIC",
+      "serpapi_link": "https//serpapi.com/search.json?device=desktop&engine=google&gl=us&google_domain=google.com&hl=en&location=Austin%2C+Texas%2C+United+States&q=macbook+air+2022&engine=google_images",
+      "query": "macbook air 2022",
+      "highlighted_words": [
+        "air 2022"
+      ],
+      "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTB5iZmm_aHEtwjz3wr7GjtsH6tZdNEDouyslit2SUEF0ZMWHO7lT31&usqp=CAU"
+    },
+    ...
+  ],
+  ...
+}
+JSON structure overview
+{
+  "images_results": [
+    {
+      "position": "Integer - Image index",
+      "thumbnail": "String - URL of an image",
+      "related_content_id": "String - Unique ID for retrieving the Related Content of an image",
+      "serpapi_related_content_link": "String - Link to SerpApi to fetch the Related Content of an image",
+      "original": "String - Original Image URL (full resolution)",
+      "original_width": "Integer - Original Image width",
+      "original_height": "Integer - Original Image height",
+      "title": "String - Short Image Description",
+      "tag": "String - Optional tag of the image",
+      "link": "String - Link to the page providing the image",
+      "source": "String - Original Domain Name",
+      "source_logo": "String - URL to the source logo",
+      "is_product": "Boolean - Is the link to the page providing the image containing a product",
+      "in_stock": "Boolean - Is product in stock"
+    },
+    ...
+  ],
+}
+Images Pagination
+Images are fetched by batch of 100 images per search. To fech additional images, you need to perform the same search again, incrementing the ijn parameter for each page of results you want to retrieve. As an example, to get the first 300 images for the search "Apple":
+
+1. https://serpapi.com/playground?q=Apple&engine=google_images&ijn=0
+2. https://serpapi.com/playground?q=Apple&engine=google_images&ijn=1
+3. https://serpapi.com/playground?q=Apple&engine=google_images&ijn=2
+Images Advanced Filter Search
+tbs=iar (aspect ratio) has been deprecated by Google. Use parameter imgar instead (imgar documentation)
+Google Images provides a way to filter by size, image type, and more. This information is encoded in the tbs parameter. E.g., tbs=itp:photos,isz:l selects only large photos.
+
+SerpApi search examples:
+• https://serpapi.com/playground?q=apple&engine=google_images&ijn=0&tbs=itp:photos,isz:l
+• https://serpapi.com/playground?q=apple&engine=google_images&ijn=1&tbs=itp:photos,isz:l
+To build your own tbs parameter, you can perform a regular Google Images search in your browser and copy the value of the field tbs from the url:
+1. Enable Tools dropdown on the right
+2. Select the image filters you want to use
+Your browser URL should contains somthing like: ...&tbs=itp:photos,isz:l.... You can use this value directly on SerpApi.

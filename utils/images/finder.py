@@ -4,30 +4,33 @@ import urllib.parse
 
 from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
 from utils.images.google import search_google_images, get_google_image_details
+from utils.images.serpapi import search_google_images_serpapi
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
 def search_images(
     query: str,
-    source: str = 'unsplash',
+    source: str = 'google',  # Changed default to Google per user request
     per_page: int = 20,
     page: int = 1,
     orientation: Optional[str] = None,
     tags: Optional[List[str]] = None,
-    color: Optional[str] = None
+    color: Optional[str] = None,
+    use_serpapi: bool = True
 ) -> List[Dict[str, Any]]:
     """
     Search for images from various sources
     
     Args:
         query: Search query
-        source: Source to search (unsplash, google, all)
+        source: Source to search (google, unsplash, all)
         per_page: Number of results per page
         page: Page number
         orientation: Optional orientation filter (landscape, portrait, squarish)
         tags: Optional list of tags to filter by
         color: Optional color to filter by
+        use_serpapi: Whether to use SerpAPI for Google Images (default True)
         
     Returns:
         List of image data dictionaries
@@ -38,8 +41,41 @@ def search_images(
     # Log search
     logger.info(f"Searching for images with query '{query}', source: {source}")
     
-    # Search based on source
-    if source == 'unsplash' or source == 'all':
+    # Search based on source, with Google as first priority
+    if source == 'google' or source == 'all':
+        try:
+            # Use SerpAPI for Google Images by default (better results)
+            if use_serpapi:
+                google_results = search_google_images_serpapi(
+                    query=query,
+                    per_page=per_page,
+                    page=page,
+                    orientation=orientation,
+                    safe_search=True
+                )
+            else:
+                # Fallback to scraping method
+                google_results = search_google_images(
+                    query=query,
+                    per_page=per_page,
+                    page=page,
+                    orientation=orientation,
+                    safe_search=True
+                )
+            
+            results.extend(google_results)
+            
+            # If we got results from Google, return them immediately
+            if results and len(results) > 0:
+                logger.info(f"Found {len(results)} images from Google for '{query}'")
+                # Skip other sources if we have results
+                if source != 'all':
+                    return results
+        except Exception as e:
+            logger.warning(f"Error searching Google Images: {str(e)}")
+    
+    # Only search Unsplash if specifically requested or if 'all' and no Google results
+    if (source == 'unsplash' or source == 'all') and (len(results) == 0 or source == 'unsplash'):
         try:
             unsplash_results = search_unsplash_images(
                 query=query,
@@ -48,22 +84,9 @@ def search_images(
                 orientation=orientation
             )
             results.extend(unsplash_results)
+            logger.info(f"Found {len(unsplash_results)} images from Unsplash for '{query}'")
         except Exception as e:
             logger.warning(f"Error searching Unsplash: {str(e)}")
-    
-    if source == 'google' or source == 'all':
-        try:
-            # Call Google Images search function
-            google_results = search_google_images(
-                query=query,
-                per_page=per_page,
-                page=page,
-                orientation=orientation,
-                safe_search=True
-            )
-            results.extend(google_results)
-        except Exception as e:
-            logger.warning(f"Error searching Google Images: {str(e)}")
     
     # Filter results by tags if provided
     if tags and len(tags) > 0:
