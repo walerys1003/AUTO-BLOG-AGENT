@@ -7,6 +7,17 @@ This module provides functionality for:
 3. Generating blog topics based on SEO data
 4. Scheduling daily SEO analysis
 """
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
+# Apply monkey patches to fix compatibility issues
+from . import monkey_patch
+if monkey_patch.apply_patches():
+    logger.info("Successfully applied SEO module patches")
+else:
+    logger.warning("Failed to apply some SEO module patches")
 
 # Make all modules available through the package
 from . import trends

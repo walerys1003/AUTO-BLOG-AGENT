@@ -8,10 +8,12 @@ import requests
 import json
 import random
 from datetime import datetime, timedelta
-from pytrends.request import TrendReq
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+# Import TrendReq - simple import for now
+from pytrends.request import TrendReq
 
 def get_daily_trends(country="pl"):
     """
