@@ -116,7 +116,7 @@ def save_simplified_content():
                 success, images_found = find_and_associate_images(
                     article=article,
                     num_images=3,  # Find 3 images, but only first will be set as featured
-                    prefer_source='unsplash',
+                    prefer_source='google',  # Changed to Google as primary source
                     save_to_library=True
                 )
                 
