@@ -1,0 +1,97 @@
+✅ Pełna Integracja z Twoimi Danymi API:
+Google API Key:
+AIzaSyAqIRfjsdiZrmDqap0Je8-YZPISawTsQSY
+
+CSE ID:
+10400bb2536244d91
+
+🔥 Zaktualizowany Kod Python z Twoimi Danymi:
+python
+Kopiuj
+Edytuj
+from google_images_search import GoogleImagesSearch
+
+# Twoje dane API (już uzupełnione)
+API_KEY = 'AIzaSyAqIRfjsdiZrmDqap0Je8-YZPISawTsQSY'
+CSE_ID = '10400bb2536244d91'
+
+gis = GoogleImagesSearch(API_KEY, CSE_ID)
+
+def get_image_for_article(query, num_images=2):
+    search_params = {
+        'q': query,
+        'num': num_images,
+        'safe': 'high',
+        'fileType': 'jpg|png',
+        'imgType': 'photo',
+        'imgSize': 'large'
+    }
+
+    gis.search(search_params)
+    images = []
+    for image in gis.results():
+        images.append(image.url)
+    
+    return images
+
+# Przykład użycia:
+topic = "Naturalne metody pielęgnacji skóry niemowląt"
+image_urls = get_image_for_article(topic)
+print(image_urls)  # Lista URL do obrazków – gotowe do wstawienia w artykule
+✅ Jak Twój Master Agent AI korzysta z tego kodu:
+Po wygenerowaniu artykułu – Master Agent bierze temat lub słowa kluczowe.
+
+Funkcja get_image_for_article() pobiera obrazy z Google Images.
+
+Master Agent osadza obrazki w treści artykułu jako <img src="{URL}">.
+
+Publikacja przez WordPress REST API – automatycznie, z obrazami.
+
+🧠 Tomek – pełna analiza, co Twój AI robi teraz:
+SEO analiza ➜ generuje temat.
+
+Tworzy artykuł:
+
+4 akapity po 1000 tokenów (750 słów).
+
+Wstęp + zakończenie (min. 500 słów każde).
+
+Pobiera 2 obrazy z Google Images na podstawie tematu.
+
+Dodaje obrazy w HTML do artykułu.
+
+Publikuje całość na blogu mama-testuje.com.
+
+💡 BONUS: Dodanie obrazów bezpośrednio do WordPress (upload do Mediów):
+Jeśli chcesz, żeby obrazy były nie tylko zlinkowane, ale fizycznie załadowane do WordPressa:
+
+python
+Kopiuj
+Edytuj
+import requests
+
+def upload_image_to_wordpress(image_url, wp_url, wp_user, wp_pass):
+    image_data = requests.get(image_url).content
+    filename = image_url.split('/')[-1]
+    media_endpoint = wp_url + '/wp-json/wp/v2/media'
+    headers = {
+        'Content-Disposition': f'attachment; filename={filename}',
+    }
+
+    response = requests.post(media_endpoint,
+                             headers=headers,
+                             data=image_data,
+                             auth=(wp_user, wp_pass))
+
+    if response.status_code == 201:
+        print("Obrazek załadowany:", response.json()['source_url'])
+        return response.json()['id'], response.json()['source_url']
+    else:
+        print("Błąd:", response.content)
+        return None, None
+🔥 Podsumowanie:
+Twój API Key i CSE ID są gotowe i zaimplementowane.
+
+Masz w pełni zautomatyzowany proces generacji treści + obrazki.
+
+Twój agent AI jest teraz kompletnym redaktorem + grafik + SEO specjalista. 💪

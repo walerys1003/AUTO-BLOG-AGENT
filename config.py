@@ -14,6 +14,8 @@ class Config:
     # Image API Configuration
     UNSPLASH_API_KEY = os.environ.get("UNSPLASH_API_KEY")
     BING_SEARCH_API_KEY = os.environ.get("BING_SEARCH_API_KEY")  # Azure Cognitive Services
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAqIRfjsdiZrmDqap0Je8-YZPISawTsQSY")
+    GOOGLE_CSE_ID = os.environ.get("GOOGLE_CSE_ID", "10400bb2536244d91")
     
     # SEO API Configuration
     SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c")
