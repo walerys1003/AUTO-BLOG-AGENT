@@ -86,7 +86,7 @@ class PatchedTrendReq:
                 'hl': self.hl,
                 'tz': self.tz,
                 'ed': int(datetime.now().timestamp()),
-                'geo': pn[:2].upper(),
+                'geo': self.geo or (pn[:2].upper() if pn.lower() != 'poland' else 'PL'),
                 'ns': 15
             }
             
