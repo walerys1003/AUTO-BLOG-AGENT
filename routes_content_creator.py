@@ -1006,23 +1006,31 @@ def run_automation_rule(rule_id):
 @content_creator_bp.route('/api/blogs/<int:blog_id>/categories')
 def get_blog_categories(blog_id):
     """API endpoint to get categories for a blog"""
+    logger.info(f"Fetching categories for blog ID: {blog_id}")
     blog = Blog.query.get_or_404(blog_id)
+    logger.info(f"Found blog: {blog.name} (URL: {blog.url})")
     
     try:
         # Import WordPress client
         from utils.wordpress import client as wp_client
         
         # Get categories directly from WordPress API
+        logger.info(f"Requesting WordPress categories for blog ID: {blog_id}")
         wordpress_categories = wp_client.get_wordpress_categories(blog_id)
+        logger.info(f"Retrieved {len(wordpress_categories)} WordPress categories")
         
         # Transform categories to the format expected by the frontend
         categories = []
         for cat in wordpress_categories:
+            cat_id = cat.get('id')
+            cat_name = cat.get('name', 'Unknown Category')
+            logger.info(f"Processing category: {cat_name} (ID: {cat_id})")
             categories.append({
-                'id': cat['id'],
-                'name': cat['name']
+                'id': cat_id,
+                'name': cat_name
             })
         
+        logger.info(f"Returning {len(categories)} categories for blog ID {blog_id}")
         return jsonify({
             'success': True,
             'categories': categories
@@ -1031,7 +1039,9 @@ def get_blog_categories(blog_id):
         logger.error(f"Error fetching WordPress categories: {str(e)}")
         
         # Fallback to local categories if WordPress API fails
+        logger.info(f"Falling back to local categories for blog ID {blog_id}")
         categories = blog.get_categories()
+        logger.info(f"Retrieved {len(categories)} local categories")
         
         return jsonify({
             'success': True,

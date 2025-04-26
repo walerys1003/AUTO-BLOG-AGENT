@@ -62,7 +62,11 @@ def get_wordpress_categories(blog_id: int) -> List[Dict[str, Any]]:
         else:
             base_url = f"{api_url}/wp-json/wp/v2"
     
-    url = f"{base_url}/categories"
+    # Remove any duplicate slashes in the URL path
+    if base_url.endswith('/'):
+        url = f"{base_url}categories"
+    else:
+        url = f"{base_url}/categories"
     
     logger.info(f"Checking API URL format: {api_url} -> {base_url}")
     auth = (username, token)
@@ -135,7 +139,11 @@ def get_wordpress_tags(blog_id: int) -> List[Dict[str, Any]]:
         else:
             base_url = f"{api_url}/wp-json/wp/v2"
     
-    url = f"{base_url}/tags"
+    # Remove any duplicate slashes in the URL path
+    if base_url.endswith('/'):
+        url = f"{base_url}tags"
+    else:
+        url = f"{base_url}/tags"
     auth = (username, token)
     
     logger.info(f"Checking API URL format: {api_url} -> {base_url}")
