@@ -1,13 +1,16 @@
 """
 SEO Routes
 
-Routes for SEO functionality and topic generation
+Routes for SEO analyzer and topic generator functionality
 """
 import logging
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from app import db
+from datetime import datetime
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from models import ArticleTopic, Blog
-from utils.seo.analyzer import analyze_topics_now
+from app import db
+from utils.seo.trends import get_daily_trends, get_related_topics
+from utils.seo.analyzer import run_seo_analysis
+from utils.seo.topic_generator import generate_topics_from_trends
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -18,72 +21,103 @@ seo_bp = Blueprint('seo', __name__, url_prefix='/seo')
 @seo_bp.route('/')
 def seo_dashboard():
     """SEO Dashboard main view"""
-    topics = ArticleTopic.query.order_by(ArticleTopic.created_at.desc()).limit(20).all()
-    blogs = Blog.query.filter_by(active=True).all()
+    # Get all topics
+    topics = ArticleTopic.query.order_by(ArticleTopic.created_at.desc()).all()
     
-    return render_template(
-        'seo/dashboard.html',
-        topics=topics,
-        blogs=blogs
-    )
+    return render_template('seo/dashboard.html', topics=topics)
 
-@seo_bp.route('/analyze', methods=['POST'])
+@seo_bp.route('/run-analysis', methods=['POST'])
 def run_analysis():
     """Run SEO analysis manually"""
     try:
         # Get selected categories from form
-        selected_categories = request.form.getlist('categories')
+        categories = request.form.getlist('categories')
         
-        # Run analysis with selected categories
-        results = analyze_topics_now(
-            categories=selected_categories if selected_categories else None
-        )
+        if not categories:
+            # Use default categories if none selected
+            categories = ['medycyna', 'transport', 'IT', 'biznes', 'technologia', 'zdrowie', 'finanse', 'edukacja', 'rozrywka']
         
-        # Count total topics generated
-        total_topics = sum(len(topics) for topics in results.values())
+        logger.info(f"Running SEO analysis for categories: {categories}")
         
-        # Flash success message
-        flash(f'Successfully generated {total_topics} topics for {len(results)} categories', 'success')
+        # Get blogs
+        blogs = Blog.query.filter_by(active=True).all()
         
+        if not blogs:
+            flash("No active blogs found to generate topics for", "warning")
+            return redirect(url_for('seo.seo_dashboard'))
+        
+        # Run analysis for each blog
+        topics_generated = 0
+        
+        for blog in blogs:
+            # Get blog categories
+            blog_categories = []
+            try:
+                if blog.categories:
+                    import json
+                    blog_categories = json.loads(blog.categories)
+            except Exception as e:
+                logger.error(f"Error parsing blog categories: {str(e)}")
+                blog_categories = []
+            
+            # If blog has no categories, use all selected categories
+            if not blog_categories:
+                blog_categories = categories
+            
+            # Generate topics
+            generated = run_seo_analysis(blog.id, blog_categories)
+            
+            if generated:
+                topics_generated += len(generated)
+        
+        if topics_generated > 0:
+            flash(f"Generated {topics_generated} new topics based on trending keywords", "success")
+        else:
+            flash("No new topics were generated. Try different categories or try again later.", "info")
+            
     except Exception as e:
         logger.error(f"Error running SEO analysis: {str(e)}")
-        flash(f'Error running SEO analysis: {str(e)}', 'danger')
+        flash(f"Error running SEO analysis: {str(e)}", "danger")
     
     return redirect(url_for('seo.seo_dashboard'))
 
-@seo_bp.route('/topics/approve/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/approve/<int:topic_id>', methods=['POST'])
 def approve_topic(topic_id):
     """Approve a topic"""
     topic = ArticleTopic.query.get_or_404(topic_id)
-    topic.status = 'approved'
     
     try:
+        topic.status = 'approved'
         db.session.commit()
-        flash('Topic approved successfully', 'success')
+        
+        flash(f"Topic '{topic.title}' approved successfully", "success")
+        
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error approving topic: {str(e)}")
-        flash(f'Error approving topic: {str(e)}', 'danger')
+        flash(f"Error approving topic: {str(e)}", "danger")
     
     return redirect(url_for('seo.seo_dashboard'))
 
-@seo_bp.route('/topics/reject/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/reject/<int:topic_id>', methods=['POST'])
 def reject_topic(topic_id):
     """Reject a topic"""
     topic = ArticleTopic.query.get_or_404(topic_id)
-    topic.status = 'rejected'
     
     try:
+        topic.status = 'rejected'
         db.session.commit()
-        flash('Topic rejected successfully', 'success')
+        
+        flash(f"Topic '{topic.title}' rejected", "success")
+        
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error rejecting topic: {str(e)}")
-        flash(f'Error rejecting topic: {str(e)}', 'danger')
+        flash(f"Error rejecting topic: {str(e)}", "danger")
     
     return redirect(url_for('seo.seo_dashboard'))
 
-@seo_bp.route('/topics/delete/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/delete/<int:topic_id>', methods=['POST'])
 def delete_topic(topic_id):
     """Delete a topic"""
     topic = ArticleTopic.query.get_or_404(topic_id)
@@ -91,29 +125,51 @@ def delete_topic(topic_id):
     try:
         db.session.delete(topic)
         db.session.commit()
-        flash('Topic deleted successfully', 'success')
+        
+        flash(f"Topic '{topic.title}' deleted", "success")
+        
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error deleting topic: {str(e)}")
-        flash(f'Error deleting topic: {str(e)}', 'danger')
+        flash(f"Error deleting topic: {str(e)}", "danger")
     
     return redirect(url_for('seo.seo_dashboard'))
 
-@seo_bp.route('/topics/use/<int:topic_id>', methods=['POST'])
+@seo_bp.route('/use/<int:topic_id>', methods=['POST'])
 def use_topic(topic_id):
     """Use a topic for content creation"""
     topic = ArticleTopic.query.get_or_404(topic_id)
     
-    # Redirect to content editor with topic
-    return redirect(url_for('simplified_content.content_editor', topic_id=topic.id))
+    try:
+        # Redirect to content creation with this topic
+        return redirect(url_for('simplified_content.content_creator', topic_title=topic.title))
+        
+    except Exception as e:
+        logger.error(f"Error using topic: {str(e)}")
+        flash(f"Error using topic: {str(e)}", "danger")
+        return redirect(url_for('seo.seo_dashboard'))
 
-@seo_bp.route('/trends/api/get', methods=['GET'])
+@seo_bp.route('/api/trends')
 def get_trends_api():
     """API endpoint to get current trends"""
     try:
-        from utils.seo.trends import get_daily_trends
-        trends = get_daily_trends(limit=10)
-        return jsonify({'success': True, 'trends': trends})
+        # Get daily trends
+        trends = get_daily_trends(geo='PL')
+        
+        if trends:
+            return jsonify({
+                'success': True,
+                'trends': trends
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No trends available'
+            })
+            
     except Exception as e:
-        logger.error(f"Error getting trends: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)})
+        logger.error(f"Error fetching trends: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })

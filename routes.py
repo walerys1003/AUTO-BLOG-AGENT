@@ -8,7 +8,7 @@ from generator.seo import generate_article_topics
 from generator.content import generate_article_content
 from wordpress.publisher import publish_article, get_optimal_publish_time
 from social.autopost import post_article_to_social_media
-from utils.seo.analyzer import seo_analyzer
+from utils.seo.analyzer import analyze_content
 from utils.seo.optimizer import seo_optimizer
 from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
@@ -21,6 +21,7 @@ from newsletter import newsletter_bp
 from routes_publishing import publishing_bp
 from routes_social import social_bp
 from routes_monitoring import monitoring_bp
+from routes_seo import seo_bp
 import json
 from datetime import datetime, timedelta
 
@@ -940,3 +941,6 @@ def register_routes(app: Flask):
     
     # Register monitoring blueprint
     app.register_blueprint(monitoring_bp, url_prefix='/monitoring')
+    
+    # Register SEO blueprint
+    app.register_blueprint(seo_bp)

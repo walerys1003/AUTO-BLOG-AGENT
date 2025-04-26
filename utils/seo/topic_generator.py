@@ -1,239 +1,238 @@
 """
-SEO Topic Generator combining Google Trends and SerpAPI data
+Topic Generator
+
+This module provides functions for generating article topics from trends and keywords.
 """
 import logging
-import os
-import pandas as pd
+import json
+import time
+import random
 from datetime import datetime
-from . import trends
-from . import serp
-from models import ArticleTopic, Blog
-from app import db
+from config import Config
+from utils.seo.serp import get_serp_data, analyze_serp_results
+from utils.seo.trends import get_daily_trends, get_related_topics
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Categories for blogs
-DEFAULT_CATEGORIES = ['medycyna', 'transport', 'IT', 'biznes', 'technologia', 'zdrowie', 'finanse', 'edukacja', 'rozrywka']
+# Category mapping for better topic categorization
+CATEGORY_MAPPING = {
+    'biznes': ['finanse', 'inwestycje', 'przedsiębiorstwo', 'zarządzanie', 'firma', 'marketing'],
+    'technologia': ['ai', 'internet', 'programowanie', 'cyberbezpieczeństwo', 'komputery', 'aplikacje'],
+    'zdrowie': ['medycyna', 'dieta', 'fitness', 'wellness', 'choroba', 'leczenie'],
+    'edukacja': ['nauka', 'szkoła', 'uniwersytet', 'kształcenie', 'szkolenia', 'e-learning'],
+    'rozrywka': ['gry', 'filmy', 'muzyka', 'sport', 'podróże', 'hobby'],
+    'IT': ['programowanie', 'sieć', 'cyberbezpieczeństwo', 'cloud', 'software', 'hardware'],
+    'transport': ['samochody', 'logistyka', 'pojazdy', 'przewóz', 'elektryczne'],
+    'medycyna': ['leczenie', 'szpital', 'opieka', 'lekarze', 'choroby', 'terapia'],
+    'finanse': ['inwestycje', 'oszczędności', 'podatki', 'kredyty', 'bank', 'waluta']
+}
 
-# CSV file path for saving topics
-CSV_FILE = os.path.join(os.getcwd(), 'data', 'tematy_blogowe.csv')
-
-# Make sure the data directory exists
-os.makedirs(os.path.dirname(CSV_FILE), exist_ok=True)
-
-def generate_titles(keywords, category):
+def generate_topics_from_trends(trends, categories=None, blog_id=None, limit=5):
     """
-    Generate article titles from keywords for a specific category
+    Generate article topics from trending searches.
     
     Args:
-        keywords: List of keywords/phrases
-        category: Category name
+        trends: List of trending search terms
+        categories: List of categories to filter by
+        blog_id: ID of the blog to generate topics for
+        limit: Maximum number of topics to generate (default: 5)
         
     Returns:
-        list: List of generated titles
+        List of generated topics
     """
-    titles = []
+    logger.info(f"Generating topics from {len(trends)} trends")
     
-    # Various title templates for diversity
-    templates = [
-        f"Najlepsze porady dotyczące {{keyword}} w kategorii {category}",
-        f"Jak {{keyword}} wpływa na rozwój w branży {category}?",
-        f"{{keyword}} - wszystko co musisz wiedzieć w {category}",
-        f"{category.capitalize()}: {{keyword}} - praktyczny poradnik",
-        f"10 sposobów wykorzystania {{keyword}} w {category}"
-    ]
+    topics = []
     
-    # Generate titles using different templates
-    for keyword in keywords:
-        for template in templates[:2]:  # Limit to first 2 templates to avoid too many titles
-            title = template.format(keyword=keyword)
-            titles.append(title)
-    
-    return titles
-
-def prioritize_suggestions(titles, limit=5):
-    """
-    Prioritize title suggestions
-    
-    Args:
-        titles: List of title suggestions
-        limit: Maximum number of titles to return
-        
-    Returns:
-        list: List of prioritized titles
-    """
-    return titles[:limit]
-
-def save_to_csv(data):
-    """
-    Save topics data to CSV file
-    
-    Args:
-        data: List of dictionaries with topic data
-        
-    Returns:
-        bool: True if saved successfully, False otherwise
-    """
     try:
-        df = pd.DataFrame(data)
-        
-        # Check if file exists and append data
-        try:
-            if os.path.exists(CSV_FILE):
-                existing_df = pd.read_csv(CSV_FILE)
-                df = pd.concat([existing_df, df], ignore_index=True)
-        except Exception as e:
-            logger.warning(f"Error reading existing CSV: {str(e)}")
-        
-        # Save data to CSV
-        df.to_csv(CSV_FILE, index=False)
-        logger.info(f"Topics saved to {CSV_FILE}")
-        return True
-    except Exception as e:
-        logger.error(f"Error saving to CSV: {str(e)}")
-        return False
-
-def save_to_database(data, auto_approve=True):
-    """
-    Save topics to database as ArticleTopic objects
-    
-    Args:
-        data: List of dictionaries with topic data
-        auto_approve: Whether to automatically approve topics (default: True)
-        
-    Returns:
-        int: Number of topics saved to database
-    """
-    try:
-        # Get all active blogs
-        blogs = Blog.query.filter_by(active=True).all()
-        if not blogs:
-            logger.warning("No active blogs found, cannot save topics to database")
-            return 0
-        
-        # Map category names to blog IDs (simple mapping for demo)
-        blog_categories = {}
-        for blog in blogs:
-            # Extract first word from blog name as category
-            category = blog.name.split()[0].lower()
-            blog_categories[category] = blog.id
-        
-        # Default to first blog if no matching category
-        default_blog_id = blogs[0].id
-        
-        saved_count = 0
-        
-        for item in data:
-            category = item.get('Kategoria', '').lower()
-            title = item.get('Tytuł', '')
+        # Process each trend
+        for trend in trends[:10]:  # Limit to top 10 trends
+            logger.info(f"Processing trend: '{trend}'")
             
-            if not title:
+            # Check if trend matches any category
+            if categories:
+                matches_category = False
+                
+                for category in categories:
+                    category_lower = category.lower()
+                    
+                    # Check direct match
+                    if category_lower in trend.lower():
+                        matches_category = True
+                        break
+                    
+                    # Check match with related terms
+                    if category_lower in CATEGORY_MAPPING:
+                        for related_term in CATEGORY_MAPPING[category_lower]:
+                            if related_term in trend.lower():
+                                matches_category = True
+                                break
+                
+                if not matches_category:
+                    logger.info(f"Trend '{trend}' does not match any selected category")
+                    continue
+            
+            # Get SERP data for the trend
+            serp_data = get_serp_data(trend)
+            
+            if not serp_data:
+                logger.warning(f"No SERP data found for trend: '{trend}'")
                 continue
             
-            # Find matching blog_id or use default
-            blog_id = blog_categories.get(category, default_blog_id)
+            # Analyze SERP results
+            analysis = analyze_serp_results(serp_data)
             
-            # Create new ArticleTopic
-            topic = ArticleTopic(
-                title=title,
-                blog_id=blog_id,
-                status='approved' if auto_approve else 'pending',
-                created_at=datetime.now()
-            )
+            if not analysis:
+                logger.warning(f"Failed to analyze SERP results for trend: '{trend}'")
+                continue
             
-            db.session.add(topic)
-            saved_count += 1
+            # Generate topics based on SERP analysis
+            generated = generate_topic_variations(trend, analysis, categories)
+            
+            if generated:
+                topics.extend(generated)
+                
+                # Check if we have enough topics
+                if len(topics) >= limit:
+                    break
         
-        # Commit changes to database
-        db.session.commit()
-        logger.info(f"Saved {saved_count} topics to database")
-        return saved_count
-    
+        # If we still don't have enough topics, generate some from keywords
+        if len(topics) < limit and trends:
+            # Get related topics for the top trend
+            related = get_related_topics(trends[0])
+            
+            if related:
+                for topic in related[:5]:
+                    if len(topics) >= limit:
+                        break
+                    
+                    title = topic.get('title', '')
+                    
+                    if title and not any(t['title'] == title for t in topics):
+                        # Generate a topic from the related topic
+                        topics.append({
+                            'title': title,
+                            'score': 60,
+                            'keywords': [title],
+                            'category': get_best_category(title, categories),
+                            'blog_id': blog_id
+                        })
+        
+        # Prioritize topics
+        topics = sorted(topics, key=lambda x: x.get('score', 0), reverse=True)
+        
+        return topics[:limit]
+        
     except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving topics to database: {str(e)}")
-        return 0
+        logger.error(f"Error generating topics from trends: {str(e)}")
+        return []
 
-def analyze_and_generate_topics(categories=None, num_trends=10, questions_per_trend=2, save_csv=True, save_db=True):
+def generate_topic_variations(trend, serp_analysis, categories=None):
     """
-    Analyze SEO data and generate blog topics
+    Generate topic variations based on a trend and SERP analysis.
     
     Args:
-        categories: List of categories (default: DEFAULT_CATEGORIES)
-        num_trends: Number of trends to fetch (default: 10)
-        questions_per_trend: Number of questions to fetch per trend (default: 2)
-        save_csv: Whether to save topics to CSV (default: True)
-        save_db: Whether to save topics to database (default: True)
+        trend: The trend term
+        serp_analysis: SERP analysis data
+        categories: List of categories to filter by
         
     Returns:
-        dict: Dictionary with generated topics by category
+        List of generated topic variations
     """
-    logger.info("Starting SEO analysis and topic generation")
+    variations = []
     
-    # Use default categories if none provided
-    if categories is None:
-        categories = DEFAULT_CATEGORIES
-    
-    # Get trending searches from Google Trends
-    google_trends = trends.get_daily_trends(country='poland', limit=num_trends)
-    logger.info(f"Found {len(google_trends)} trending searches: {google_trends}")
-    
-    all_data = []
-    results_by_category = {}
-    
-    for category in categories:
-        logger.info(f"Generating topics for category: {category}")
+    try:
+        # Get current date for more relevant titles
+        current_year = datetime.now().year
+        current_month = datetime.now().strftime("%B")
         
-        combined_keywords = []
+        # Extract keywords from SERP analysis
+        keywords = serp_analysis.get('top_keywords', [])
         
-        # Process each trend and get related questions
-        for trend in google_trends:
-            combined_keywords.append(trend)
-            
-            # Get related questions from SerpAPI
-            related_questions = serp.get_related_questions(
-                trend, 
-                limit=questions_per_trend
-            )
-            combined_keywords.extend(related_questions)
+        # Generate a standard "how to" topic
+        variations.append({
+            'title': f"Jak {trend.lower()} może pomóc w rozwoju Twojej firmy w {current_year} roku",
+            'score': 85,
+            'keywords': [trend] + keywords[:3],
+            'category': get_best_category(trend, categories),
+            'format': 'how-to'
+        })
         
-        # Generate titles from keywords
-        titles = generate_titles(combined_keywords, category)
+        # Generate a list-based topic
+        variations.append({
+            'title': f"10 najważniejszych faktów o {trend.lower()}, które musisz znać w {current_year} roku",
+            'score': 80,
+            'keywords': [trend] + keywords[:3],
+            'category': get_best_category(trend, categories),
+            'format': 'listicle'
+        })
         
-        # Prioritize suggestions
-        prioritized = prioritize_suggestions(titles)
-        results_by_category[category] = prioritized
+        # Generate a guide topic
+        variations.append({
+            'title': f"Kompletny przewodnik po {trend.lower()}: wszystko, co musisz wiedzieć",
+            'score': 75,
+            'keywords': [trend] + keywords[:3],
+            'category': get_best_category(trend, categories),
+            'format': 'guide'
+        })
         
-        # Prepare data for CSV and database
-        for title in prioritized:
-            all_data.append({
-                'Data': datetime.now().strftime('%Y-%m-%d'),
-                'Kategoria': category,
-                'Tytuł': title
+        # Generate a comparison topic
+        if keywords and len(keywords) >= 2:
+            variations.append({
+                'title': f"{trend.capitalize()} vs {keywords[0].capitalize()}: co jest lepsze dla Twojej firmy?",
+                'score': 70,
+                'keywords': [trend, keywords[0]] + keywords[1:3],
+                'category': get_best_category(trend, categories),
+                'format': 'comparison'
             })
         
-        # Log generated topics
-        logger.info(f"Generated {len(prioritized)} topics for {category}")
-        for title in prioritized:
-            logger.info(f"- {title}")
-    
-    # Save data to CSV if requested
-    if save_csv and all_data:
-        save_to_csv(all_data)
-    
-    # Save data to database if requested
-    if save_db and all_data:
-        save_to_database(all_data)
-    
-    return results_by_category
+        # Generate a case study topic
+        variations.append({
+            'title': f"Case study: Jak firma zwiększyła zyski o 50% dzięki {trend.lower()}",
+            'score': 65,
+            'keywords': [trend] + keywords[:3],
+            'category': get_best_category(trend, categories),
+            'format': 'case-study'
+        })
+        
+        return variations
+        
+    except Exception as e:
+        logger.error(f"Error generating topic variations: {str(e)}")
+        return []
 
-def daily_analysis_job():
+def get_best_category(topic, available_categories=None):
     """
-    Run daily analysis job to generate topics
-    This function can be scheduled to run daily
+    Determine the best category for a topic.
+    
+    Args:
+        topic: The topic to categorize
+        available_categories: List of available categories
+        
+    Returns:
+        Best matching category
     """
-    logger.info("Running daily SEO analysis job")
-    results = analyze_and_generate_topics()
-    logger.info(f"Daily analysis job completed. Generated topics for {len(results)} categories")
-    return results
+    topic_lower = topic.lower()
+    
+    if not available_categories:
+        available_categories = list(CATEGORY_MAPPING.keys())
+    
+    # Check direct matches
+    for category in available_categories:
+        category_lower = category.lower()
+        
+        if category_lower in topic_lower:
+            return category
+    
+    # Check matches with related terms
+    for category in available_categories:
+        category_lower = category.lower()
+        
+        if category_lower in CATEGORY_MAPPING:
+            for related_term in CATEGORY_MAPPING[category_lower]:
+                if related_term in topic_lower:
+                    return category
+    
+    # Return default category
+    return random.choice(available_categories) if available_categories else "Ogólne"

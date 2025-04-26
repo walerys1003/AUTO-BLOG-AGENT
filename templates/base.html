@@ -286,15 +286,27 @@
                                 <i class="fas fa-clipboard-list me-1"></i> Logs
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: var(--dark-color) !important;">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if '/seo' in request.path %}active{% endif %}" href="#" id="seoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
                                 <i class="fas fa-search me-1"></i> SEO Tools
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-magic me-1"></i> SEO Inspirations
-                            </a>
+                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="seoDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: black !important;">
+                                        <i class="fas fa-chart-line me-1"></i> SEO Analytics
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: black !important;">
+                                        <i class="fas fa-magic me-1"></i> SEO Inspirations
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if '/seo/' in request.path %}active{% endif %}" href="{{ url_for('seo.seo_dashboard') }}" style="color: black !important;">
+                                        <i class="fas fa-robot me-1"></i> <strong>Topic Generator</strong>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {% if '/content-creator' in request.path or '/content-generator' in request.path %}active{% endif %}" href="#" id="contentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">

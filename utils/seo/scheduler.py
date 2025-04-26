@@ -1,58 +1,104 @@
 """
-SEO Analysis Scheduler
+SEO Scheduler
 
-Schedules daily SEO analysis and topic generation
+This module provides scheduling functionality for SEO tasks.
 """
 import logging
-import schedule
 import time
 import threading
-from . import topic_generator
+import schedule
+from datetime import datetime, timedelta
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-def schedule_daily_analysis(time_str="05:00"):
-    """
-    Schedule daily SEO analysis at specified time
+def initialize_seo_scheduler():
+    """Initialize the SEO scheduler"""
+    logger.info("Initializing SEO scheduler")
     
-    Args:
-        time_str: Time to run analysis (24-hour format, e.g. "05:00")
-    """
-    logger.info(f"Scheduling daily SEO analysis job at {time_str}")
-    
-    # Schedule the job to run daily at specified time
-    schedule.every().day.at(time_str).do(topic_generator.daily_analysis_job)
-    
-    logger.info("SEO analysis scheduler initialized")
-
-def start_scheduler_thread():
-    """
-    Start scheduler in a background thread
-    
-    Returns:
-        Thread: Started scheduler thread
-    """
-    def run_scheduler():
-        logger.info("Starting SEO analysis scheduler thread")
-        while True:
-            schedule.run_pending()
-            time.sleep(60)  # Check every minute
-    
-    # Create and start thread
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
-    
-    logger.info("SEO analysis scheduler thread started")
-    return scheduler_thread
-
-# Initialize scheduler
-def init_scheduler():
-    """Initialize SEO analysis scheduler"""
-    # Schedule daily analysis at 5:00 AM
-    schedule_daily_analysis()
+    # Schedule daily SEO analysis
+    schedule_daily_seo_analysis()
     
     # Start scheduler thread
     start_scheduler_thread()
     
     logger.info("SEO analysis scheduler initialized and started")
+    return True
+
+def schedule_daily_seo_analysis():
+    """Schedule daily SEO analysis at 5:00 AM"""
+    # Schedule daily analysis at 5:00 AM
+    schedule.every().day.at("05:00").do(run_scheduled_seo_analysis)
+    
+    logger.info("Scheduling daily SEO analysis job at 05:00")
+    return True
+
+def start_scheduler_thread():
+    """Start the scheduler thread"""
+    logger.info("Starting SEO analysis scheduler thread")
+    
+    # Create and start the scheduler thread
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+    
+    logger.info("SEO analysis scheduler thread started")
+    return True
+
+def run_scheduler():
+    """Run the scheduler loop"""
+    while True:
+        try:
+            schedule.run_pending()
+            time.sleep(60)  # Check every minute
+        except Exception as e:
+            logger.error(f"Error in scheduler loop: {str(e)}")
+            time.sleep(60)  # Continue running even if there's an error
+
+def run_scheduled_seo_analysis():
+    """Run scheduled SEO analysis for all active blogs"""
+    logger.info("Running scheduled SEO analysis")
+    
+    try:
+        from utils.seo.analyzer import run_seo_analysis
+        from models import Blog
+        from app import db
+        
+        # Get all active blogs
+        with db.app.app_context():
+            blogs = Blog.query.filter_by(active=True).all()
+            
+            if not blogs:
+                logger.warning("No active blogs found for scheduled SEO analysis")
+                return
+            
+            # Run analysis for each blog
+            for blog in blogs:
+                try:
+                    # Get blog categories
+                    categories = []
+                    try:
+                        if blog.categories:
+                            import json
+                            categories = json.loads(blog.categories)
+                    except Exception as e:
+                        logger.error(f"Error parsing blog categories: {str(e)}")
+                        categories = []
+                    
+                    # Default categories if none specified
+                    if not categories:
+                        categories = ['biznes', 'technologia', 'zdrowie', 'edukacja', 'rozrywka']
+                    
+                    # Run analysis
+                    logger.info(f"Running scheduled SEO analysis for blog '{blog.name}'")
+                    run_seo_analysis(blog.id, categories)
+                    
+                except Exception as e:
+                    logger.error(f"Error running scheduled SEO analysis for blog '{blog.name}': {str(e)}")
+                    continue
+                
+            logger.info("Scheduled SEO analysis completed")
+            
+    except Exception as e:
+        logger.error(f"Error in scheduled SEO analysis: {str(e)}")
+    
+    return True
