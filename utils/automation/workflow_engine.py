@@ -14,7 +14,7 @@ from enum import Enum
 from app import db
 from models import (
     AutomationRule, Blog, Article, ArticleTopic, Category, 
-    ContentMetrics, ImageLibrary, Notification
+    ContentMetrics, ImageLibrary, Notification, ContentLog
 )
 from utils.ai_content_strategy.topic_generator import generate_ai_topics_for_category
 from utils.ai_content_strategy.article_generator import generate_article_from_topic
@@ -293,7 +293,7 @@ class WorkflowEngine:
                 content=article_result["content"],
                 excerpt=article_result.get("excerpt", "")[:200] if article_result.get("excerpt") else "",
                 status="ready" if automation_rule.auto_publish else "draft",
-                category=topic.category,
+                category_id=None,  # Zostanie ustawione podczas publikacji
                 created_at=datetime.utcnow()
             )
             
