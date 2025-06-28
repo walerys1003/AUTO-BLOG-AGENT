@@ -169,6 +169,19 @@
                         </div>
                     </div>
                     
+                    <!-- Auto-find Images Checkbox -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_find_images" name="auto_find_images" value="1" checked>
+                                <label class="form-check-label" for="auto_find_images">
+                                    <i class="fas fa-images me-1"></i> Automatycznie wyszukaj i dodaj obrazy
+                                </label>
+                                <div class="form-text">System automatycznie znajdzie i doda odpowiednie obrazy do artykułu</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="d-flex mt-3 gap-2">
                         <button type="button" class="btn btn-success flex-grow-1" onclick="generateContentDynamically()">
                             <i class="fas fa-magic me-2"></i> Generate Article (Dynamic)
@@ -561,6 +574,7 @@ function generateContentDynamically() {
     const topicTitle = document.getElementById('topic_display').value;
     const style = document.getElementById('style').value;
     const paragraphCount = parseInt(document.getElementById('paragraph_count').value);
+    const autoFindImages = document.getElementById('auto_find_images').checked;
     
     // Validation
     if (!topicId || !topicTitle || topicTitle === 'No topic selected') {
