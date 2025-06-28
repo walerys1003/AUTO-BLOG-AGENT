@@ -284,12 +284,24 @@ class ArticleTopic(db.Model):
     """Model for storing generated topics"""
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)  # Added description field
+    topic = db.Column(db.String(255), nullable=False)  # Changed from title to topic
+    title = db.Column(db.String(255), nullable=True)  # Keep both for compatibility
+    description = db.Column(db.Text, nullable=True)
     keywords = db.Column(db.Text, nullable=True)  # JSON string of keywords
     category = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(50), default="pending")  # pending, approved, rejected, used
+    priority = db.Column(db.Integer, default=3)  # Priority level (1-7)
+    used = db.Column(db.Boolean, default=False)  # Whether topic was used for article
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=True)  # Link to generated article
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    used_at = db.Column(db.DateTime, nullable=True)  # When topic was used
+    approved_at = db.Column(db.DateTime, nullable=True)  # When topic was approved
+    approved_by = db.Column(db.Integer, nullable=True)  # User ID who approved
+    rejected_at = db.Column(db.DateTime, nullable=True)  # When topic was rejected
+    rejected_by = db.Column(db.Integer, nullable=True)  # User ID who rejected
+    rejection_reason = db.Column(db.Text, nullable=True)  # Why was rejected
+    estimated_words = db.Column(db.Integer, default=1600)  # Estimated article length
     score = db.Column(db.Float, default=0.0)  # SEO score or priority
     
     # Define relationship with Blog
@@ -818,6 +830,18 @@ class AutomationRule(db.Model):
     auto_enable_topics = db.Column(db.Boolean, default=True)  # Automatically enable topics that meet minimum score
     auto_promote_content = db.Column(db.Boolean, default=False)  # Automatically promote content to social media
     
+    # Workflow settings - dodane dla workflow_engine
+    auto_publish = db.Column(db.Boolean, default=True)  # Automatically publish generated articles
+    auto_social_post = db.Column(db.Boolean, default=False)  # Automatically post to social media
+    auto_approve_topics = db.Column(db.Boolean, default=False)  # Automatically approve generated topics
+    article_length = db.Column(db.Integer, default=1600)  # Target article length in words
+    
+    # Workflow execution tracking
+    last_execution_at = db.Column(db.DateTime, nullable=True)  # When rule was last executed
+    next_execution_at = db.Column(db.DateTime, nullable=True)  # When rule should be executed next
+    failure_count = db.Column(db.Integer, default=0)  # Number of consecutive failures
+    max_failures = db.Column(db.Integer, default=3)  # Max failures before disabling rule
+    
     # Priority (higher number = higher priority)
     priority = db.Column(db.Integer, default=10)
     
@@ -880,3 +904,8 @@ class AutomationRule(db.Model):
     def set_categories(self, categories_list):
         """Alias for set_topic_categories, sets categories from a Python list"""
         self.set_topic_categories(categories_list)
+    
+    @property
+    def active(self):
+        """Compatibility property for workflow engine"""
+        return self.is_active
