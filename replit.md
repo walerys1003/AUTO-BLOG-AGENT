@@ -122,11 +122,25 @@ Preferred communication style: Simple, everyday language.
 - ✅ **Database Extensions**: Extended models with workflow tracking fields and status management
 - ✅ **API Endpoints**: Implemented REST API for automation control (/automation/api/*)
 
+### June 28, 2025 - Advanced Publication Scheduler with Author Rotation
+- ✅ **Real WordPress Categories**: Updated scheduler to use authentic MamaTestuje.com categories (85 categories from WordPress API)
+- ✅ **Product-Review Content**: Transformed from generic parenting topics to product-focused review articles
+- ✅ **Author Management System**: Integrated 4 real journalists from WordPress with intelligent rotation
+- ✅ **Specialization Matching**: Authors automatically assigned based on category expertise
+- ✅ **30-Day Scheduling**: 100 articles with balanced category distribution and author rotation
+
+**Author Rotation System**:
+- **Tomasz Kotliński** (ID: 2): Administrator, 7373 existing posts, 50% weight
+- **Gabriela Bielec** (ID: 5): Child products specialist, 20% weight  
+- **Helena Rybikowska** (ID: 4): Child health expert, 15% weight
+- **Zofia Chryplewicz** (ID: 3): Cosmetics specialist, 15% weight
+
 **System Status**: MASTER AGENT AI is now fully autonomous and operational
 - 2 active automation rules running
 - 15 approved topics ready for use  
 - 0 failed rules
 - Scheduler running successfully with 8 scheduled jobs
+- Advanced publication scheduler with author rotation ready
 
 **Capabilities Achieved**:
 - Autonomous topic generation from AI for blog categories
@@ -135,6 +149,8 @@ Preferred communication style: Simple, everyday language.
 - Automated scheduling and execution of content workflows
 - Real-time monitoring and error tracking
 - Manual override and testing capabilities
+- Intelligent author assignment based on specializations
+- Product-review focused content generation for MamaTestuje.com
 
 ### Initial Setup
 - June 28, 2025. Project foundation established

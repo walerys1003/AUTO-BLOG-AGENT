@@ -15,26 +15,53 @@ class MamaTestujeScheduler:
     def __init__(self):
         self.blog_name = "MamaTestuje.com"
         
-        # Autorzy/dziennikarze MamaTestuje.com z WordPress API
+        # Autorzy/dziennikarze MamaTestuje.com z WordPress (prawdziwe dane)
         self.authors = {
             2: {
                 "name": "Tomasz Kotliński",
-                "slug": "tomaszkotlinski",
+                "slug": "TomaszKotlinski",
                 "wordpress_id": 2,
-                "role": "Redaktor naczelny",
+                "email": "kotlinski.tomek@gmail.com",
+                "role": "Administrator",
+                "posts_count": 7373,  # Główny autor - 7373 wpisy
                 "description": "Redaktor naczelny portalu MamaTestuje.com, znany z tworzenia treści, które edukują i inspirują. Dzięki wieloletniemu doświadczeniu i strategicznemu podejściu tworzy artykuły, które łączą merytoryczność z wyjątkową wartością dla współczesnych rodziców.",
-                "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam"],
-                "weight": 60  # 60% artykułów
+                "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam", "Laktacja i karmienie"],
+                "weight": 50  # 50% artykułów (główny autor)
             },
-            1: {
-                "name": "Admin MamaTestuje",
-                "slug": "admin", 
-                "wordpress_id": 1,
+            5: {
+                "name": "Gabriela Bielec",
+                "slug": "GabrielaBielec",
+                "wordpress_id": 5,
+                "email": "halinka.kotlinska@tlen.pl",
                 "role": "Redaktor",
-                "description": "Zespół redakcyjny MamaTestuje.com specjalizujący się w testowaniu produktów dla mam i dzieci.",
-                "specialties": ["Karmienie dziecka", "Zdrowie dziecka", "Akcesoria dziecięce"],
-                "weight": 40  # 40% artykułów
+                "posts_count": 0,
+                "description": "Redaktor specjalizujący się w produktach dla dzieci i młodych mam.",
+                "specialties": ["Karmienie dziecka", "Kosmetyki dla dzieci", "Przewijanie dziecka"],
+                "weight": 20  # 20% artykułów
+            },
+            4: {
+                "name": "Helena Rybikowska", 
+                "slug": "Helena Rybikowska",
+                "wordpress_id": 4,
+                "email": "tadeuszkotlinski@onet.pl",
+                "role": "Redaktor",
+                "posts_count": 0,
+                "description": "Redaktor specjalizujący się w zdrowiu dziecka i akcesoriach.",
+                "specialties": ["Zdrowie dziecka", "Akcesoria dziecięce", "Bielizna poporodowa"],
+                "weight": 15  # 15% artykułów
+            },
+            3: {
+                "name": "Zofia Chryplewicz",
+                "slug": "Zofia Chryplewicz", 
+                "wordpress_id": 3,
+                "email": "halinka.kotlinska@o2.pl",
+                "role": "Redaktor",
+                "posts_count": 0,
+                "description": "Redaktor specjalizujący się w kosmetykach i pielęgnacji.",
+                "specialties": ["Kosmetyki dla mam", "Kosmetyki dla dzieci", "Zdrowie w ciąży"],
+                "weight": 15  # 15% artykułów
             }
+            # Admin (ID: 1) pominięty - konto techniczne
         }
         
         # Prawdziwe kategorie MamaTestuje.com z WordPress (produktowo-recenzyjne)
