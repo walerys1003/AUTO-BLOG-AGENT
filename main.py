@@ -5,6 +5,7 @@ from routes import register_routes
 from utils.scheduler import start_scheduler
 from models import Blog, SocialAccount, ContentLog
 from utils.seo.analyzer import initialize_seo_module
+from utils.automation.scheduler import start_automation_scheduler
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)

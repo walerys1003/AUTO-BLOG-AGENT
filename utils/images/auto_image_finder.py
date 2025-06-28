@@ -262,6 +262,42 @@ def save_image_to_library(image_data: Dict[str, Any]) -> Optional[ImageLibrary]:
         logger.error(f"Error saving image to library: {str(e)}")
         return None
 
+def find_article_images(article_title: str, article_content: str = "", max_images: int = 3) -> List[Dict[str, Any]]:
+    """
+    Main function to find images for an article - compatibility wrapper for workflow engine.
+    
+    Args:
+        article_title: Title of the article
+        article_content: Content of the article (optional)
+        max_images: Maximum number of images to return
+        
+    Returns:
+        List of image dictionaries with url, title, source, tags
+    """
+    try:
+        images = find_images_for_article(
+            article_title=article_title,
+            article_content=article_content,
+            num_images=max_images
+        )
+        
+        # Convert to expected format for workflow engine
+        result = []
+        for img in images:
+            result.append({
+                'url': img.get('url', ''),
+                'title': img.get('description', article_title),
+                'source': img.get('source', 'auto'),
+                'tags': '',
+                'thumbnail_url': img.get('thumb_url', '')
+            })
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error finding article images: {str(e)}")
+        return []
+
 def find_and_associate_images(
     article: Article, 
     num_images: int = 1, 

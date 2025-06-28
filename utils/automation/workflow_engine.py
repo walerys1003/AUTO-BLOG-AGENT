@@ -19,8 +19,9 @@ from models import (
 from utils.ai_content_strategy.topic_generator import generate_ai_topics_for_category
 from utils.ai_content_strategy.article_generator import generate_article_from_topic
 from utils.images.auto_image_finder import find_article_images
-from utils.wordpress.client import WordPressClient
+from utils.wordpress.client import build_wp_api_url
 from social.autopost import post_article_to_social_media
+import requests
 from utils.content.ai_adapter import get_default_ai_service
 
 # Configure logging
@@ -368,13 +369,8 @@ class WorkflowEngine:
         
         try:
             blog = Blog.query.get(automation_rule.blog_id)
-            
-            # Utwórz klienta WordPress
-            wp_client = WordPressClient(
-                base_url=blog.url,
-                username=blog.username,
-                password=blog.api_token
-            )
+            if not blog:
+                return {"success": False, "error": "Blog not found"}
             
             # Przygotuj dane do publikacji
             post_data = {
@@ -388,9 +384,15 @@ class WorkflowEngine:
             # Dodaj kategorię jeśli istnieje
             if article.category_id:
                 post_data["categories"] = [article.category_id]
-                
-            # Publikuj na WordPress
-            post_result = wp_client.create_post(post_data)
+            
+            # Publikuj na WordPress przez API
+            api_url = build_wp_api_url(blog.api_url, "posts")
+            auth = (blog.username, blog.api_token)
+            
+            response = requests.post(api_url, auth=auth, json=post_data)
+            response.raise_for_status()
+            
+            post_result = response.json()
             
             if post_result and "id" in post_result:
                 # Aktualizuj artykuł z ID WordPress
