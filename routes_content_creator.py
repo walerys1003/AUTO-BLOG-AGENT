@@ -10,9 +10,10 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from sqlalchemy import desc, and_, or_, func
 
 from app import db
-from models import Blog, ArticleTopic, ContentLog, AutomationRule
+from models import Blog, ArticleTopic, ContentLog, AutomationRule, Article
 from utils.writing import content_generator
 from utils.automation import content_automation
+from utils.images.auto_image_finder import find_and_associate_images
 
 # Create Blueprint
 content_creator_bp = Blueprint('content_creator', __name__)
@@ -142,6 +143,7 @@ def generate_content():
     style = request.form.get('style', 'informative')
     paragraph_count = request.form.get('paragraph_count', '4')
     auto_generate = request.form.get('auto_generate', '0')
+    auto_find_images = request.form.get('auto_find_images', '0')
     
     # Ensure paragraph_count is a valid integer between 3 and 6
     try:
@@ -158,6 +160,12 @@ def generate_content():
         auto_generate = int(auto_generate)
     except (ValueError, TypeError):
         auto_generate = 0
+    
+    # Convert auto_find_images to integer
+    try:
+        auto_find_images = int(auto_find_images)
+    except (ValueError, TypeError):
+        auto_find_images = 0
     
     if not topic_id:
         flash('Topic ID is required', 'danger')
@@ -188,7 +196,8 @@ def generate_content():
                                 topic_id=topic_id, 
                                 style=style, 
                                 paragraph_count=paragraph_count,
-                                auto_generate=auto_generate))
+                                auto_generate=auto_generate,
+                                auto_find_images=auto_find_images))
         
     except Exception as e:
         logger.error(f"Error starting content generation: {str(e)}")
@@ -204,6 +213,7 @@ def edit_content(content_id):
     style = request.args.get('style', 'informative')
     paragraph_count = request.args.get('paragraph_count', 4)
     auto_generate = request.args.get('auto_generate', '0') == '1'
+    auto_find_images = request.args.get('auto_find_images', '0') == '1'
     
     # Ensure paragraph_count is a valid integer between 3 and 6
     try:
@@ -315,6 +325,42 @@ def edit_content(content_id):
                 
                 content_log.error_message = json.dumps(content_data)
                 db.session.commit()
+                
+                # Auto-find images if requested
+                if auto_find_images:
+                    try:
+                        # Create a temporary Article object for image search
+                        # We need to create an Article entry in the database first
+                        article = Article(
+                            title=content_log.title,
+                            content="",  # Temporary placeholder
+                            blog_id=content_log.blog_id,
+                            created_at=datetime.utcnow()
+                        )
+                        db.session.add(article)
+                        db.session.commit()
+                        
+                        # Now search for images
+                        success, images_found = find_and_associate_images(
+                            article=article,
+                            num_images=3,  # Find 3 images
+                            prefer_source='google',
+                            save_to_library=True
+                        )
+                        
+                        if success and images_found:
+                            # Set the first image as featured image
+                            featured_image_url = images_found[0].get('url', '')
+                            content_data['featured_image_url'] = featured_image_url
+                            content_log.error_message = json.dumps(content_data)
+                            db.session.commit()
+                            logger.info(f"Auto-found {len(images_found)} images for article {content_log.id}")
+                        else:
+                            logger.warning(f"Failed to auto-find images for article {content_log.id}")
+                            
+                    except Exception as img_error:
+                        logger.error(f"Error auto-finding images: {str(img_error)}")
+                        # Don't fail the whole operation if image search fails
                 
         except Exception as e:
             logger.error(f"Error generating content: {str(e)}")
