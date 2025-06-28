@@ -114,6 +114,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 28, 2025 - Automatic Image Integration with Content Creator
+- ✅ **Auto Image Finding**: Integrated automatic image search with content generation workflow
+- ✅ **Google Images API Fix**: Fixed critical parameter bug (LARGE vs large) in Google Custom Search API
+- ✅ **UI Integration**: Added "Automatycznie wyszukaj obrazy" checkbox to content creation forms
+- ✅ **Image Library**: Automatic saving of found images to database image_library table
+- ✅ **Featured Image**: First found image automatically set as article featured image
+- ✅ **End-to-End Testing**: Confirmed full workflow from AI content generation to automatic image finding
+
 ### June 28, 2025 - Complete Automation System Implementation
 - ✅ **Workflow Engine**: Implemented central automation orchestrator (utils/automation/workflow_engine.py)
 - ✅ **Topic Manager**: Built topic lifecycle management with bulk approval (utils/automation/topic_manager.py)  
