@@ -648,13 +648,65 @@ class ContentCalendar(db.Model):
     scheduled_date = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(50), default="planned")  # planned, in_progress, published, cancelled
     priority = db.Column(db.Integer, default=3)  # 1-5 (5 highest)
+
+
+class ScheduledPublication(db.Model):
+    """Model for advanced 30-day publication scheduling"""
+    id = db.Column(db.Integer, primary_key=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    main_category = db.Column(db.String(100), nullable=False)
+    subcategory = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    keywords = db.Column(db.Text, nullable=True)  # JSON string
+    scheduled_date = db.Column(db.DateTime, nullable=False)
+    priority = db.Column(db.Integer, default=5)  # 1-10 scale
+    status = db.Column(db.String(50), default="scheduled")  # scheduled, generating, published, failed
+    content_log_id = db.Column(db.Integer, db.ForeignKey('content_log.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)
+    
+    # Define relationships
+    blog = db.relationship('Blog', backref=db.backref('scheduled_publications', lazy=True))
+    
+    def __repr__(self):
+        return f"<ScheduledPublication {self.title} - {self.scheduled_date}>"
+    
+    def get_keywords_list(self):
+        """Returns keywords as a Python list"""
+        if self.keywords:
+            import json
+            return json.loads(self.keywords)
+        return []
+    
+    def set_keywords_list(self, keywords_list):
+        """Sets keywords from a Python list"""
+        import json
+        self.keywords = json.dumps(keywords_list)
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'blog_id': self.blog_id,
+            'title': self.title,
+            'main_category': self.main_category,
+            'subcategory': self.subcategory,
+            'description': self.description,
+            'keywords': self.get_keywords_list(),
+            'scheduled_date': self.scheduled_date.isoformat(),
+            'priority': self.priority,
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'published_at': self.published_at.isoformat() if self.published_at else None
+        }
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Define relationships
     blog = db.relationship('Blog', backref=db.backref('content_calendar', lazy=True))
-    topic = db.relationship('ArticleTopic', backref=db.backref('calendar_entries', lazy=True))
+    # topic = db.relationship('ArticleTopic', backref=db.backref('calendar_entries', lazy=True))
     
     def __repr__(self):
         return f"<ContentCalendar {self.title} - {self.scheduled_date.strftime('%Y-%m-%d')}>"

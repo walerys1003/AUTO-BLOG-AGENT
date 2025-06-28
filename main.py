@@ -3,16 +3,17 @@ import logging
 import os
 from routes import register_routes
 from utils.scheduler import start_scheduler
-from models import Blog, SocialAccount, ContentLog
+from models import Blog, SocialAccount, ContentLog, ScheduledPublication
 from utils.seo.analyzer import initialize_seo_module
 from utils.automation.scheduler import start_automation_scheduler
+from routes_scheduling import scheduling_bp
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Routes are now registered directly in app.py
-# register_routes(app)
+# Register blueprints
+app.register_blueprint(scheduling_bp)
 
 # Initialize the database function
 def initialize_database():
