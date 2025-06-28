@@ -28,6 +28,14 @@ with app.app_context():
     initialize_database()
     # Start the scheduler for automated content generation and posting
     start_scheduler()
+    
+    # Start automation scheduler for workflow management
+    try:
+        start_automation_scheduler()
+        logger.info("Automation scheduler started")
+    except Exception as e:
+        logger.error(f"Error starting automation scheduler: {str(e)}")
+    
     # Initialize SEO module with Google Trends and SerpAPI
     try:
         initialize_seo_module()
