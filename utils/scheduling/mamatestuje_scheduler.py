@@ -15,6 +15,28 @@ class MamaTestujeScheduler:
     def __init__(self):
         self.blog_name = "MamaTestuje.com"
         
+        # Autorzy/dziennikarze MamaTestuje.com z WordPress API
+        self.authors = {
+            2: {
+                "name": "Tomasz Kotliński",
+                "slug": "tomaszkotlinski",
+                "wordpress_id": 2,
+                "role": "Redaktor naczelny",
+                "description": "Redaktor naczelny portalu MamaTestuje.com, znany z tworzenia treści, które edukują i inspirują. Dzięki wieloletniemu doświadczeniu i strategicznemu podejściu tworzy artykuły, które łączą merytoryczność z wyjątkową wartością dla współczesnych rodziców.",
+                "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam"],
+                "weight": 60  # 60% artykułów
+            },
+            1: {
+                "name": "Admin MamaTestuje",
+                "slug": "admin", 
+                "wordpress_id": 1,
+                "role": "Redaktor",
+                "description": "Zespół redakcyjny MamaTestuje.com specjalizujący się w testowaniu produktów dla mam i dzieci.",
+                "specialties": ["Karmienie dziecka", "Zdrowie dziecka", "Akcesoria dziecięce"],
+                "weight": 40  # 40% artykułów
+            }
+        }
+        
         # Prawdziwe kategorie MamaTestuje.com z WordPress (produktowo-recenzyjne)
         self.main_categories = {
             "Planowanie ciąży": [
@@ -199,6 +221,9 @@ class MamaTestujeScheduler:
                 # Ustaw godzinę publikacji
                 hour = self.publication_hours[hour_idx % len(self.publication_hours)]
                 
+                # Wybierz autora na podstawie specjalizacji i rotacji
+                author = self._select_author_for_category(main_cat, article_count)
+                
                 # Utworz wpis harmonogramu
                 schedule_entry = {
                     "date": current_date.strftime("%Y-%m-%d"),
@@ -213,7 +238,11 @@ class MamaTestujeScheduler:
                     "description": topic["description"],
                     "keywords": topic["keywords"],
                     "priority": topic["priority"],
-                    "estimated_length": topic["estimated_length"]
+                    "estimated_length": topic["estimated_length"],
+                    "author_id": author["wordpress_id"],
+                    "author_name": author["name"],
+                    "author_slug": author["slug"],
+                    "author_role": author["role"]
                 }
                 
                 schedule.append(schedule_entry)
@@ -330,6 +359,77 @@ class MamaTestujeScheduler:
             return random.randint(5, 7)
         else:
             return random.randint(3, 6)
+    
+    def _select_author_for_category(self, main_category: str, article_count: int) -> Dict[str, Any]:
+        """
+        Wybiera autora na podstawie specjalizacji i systemu rotacji
+        
+        Args:
+            main_category: Kategoria główna artykułu
+            article_count: Numer artykułu w harmonogramie (do rotacji)
+        
+        Returns:
+            Słownik z danymi autora
+        """
+        # Znajdź autorów specjalizujących się w danej kategorii
+        specialized_authors = []
+        general_authors = []
+        
+        for author_id, author_data in self.authors.items():
+            if main_category in author_data["specialties"]:
+                specialized_authors.append((author_id, author_data))
+            else:
+                general_authors.append((author_id, author_data))
+        
+        # Jeśli są specjaliści, preferuj ich (80% prawdopodobieństwa)
+        if specialized_authors and random.random() < 0.8:
+            selected_authors = specialized_authors
+        else:
+            # Użyj wszystkich autorów jako fallback
+            selected_authors = list(self.authors.items())
+        
+        # Implementuj system rotacji oparty na wagach autorów
+        author_pool = []
+        for author_id, author_data in selected_authors:
+            # Dodaj autora do puli odpowiednią liczbę razy na podstawie wagi
+            repetitions = max(1, int(author_data["weight"] / 10))
+            author_pool.extend([author_data] * repetitions)
+        
+        # Wybierz autora na podstawie pozycji w harmonogramie (rotacja)
+        if author_pool:
+            selected_author = author_pool[article_count % len(author_pool)]
+        else:
+            # Fallback - pierwszy dostępny autor
+            selected_author = list(self.authors.values())[0]
+        
+        return selected_author
+    
+    def get_authors_stats(self, schedule: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Zwraca statystyki autorów w harmonogramie"""
+        author_counts = defaultdict(int)
+        author_categories = defaultdict(set)
+        
+        for article in schedule:
+            author_name = article.get("author_name", "Unknown")
+            author_counts[author_name] += 1
+            author_categories[author_name].add(article["main_category"])
+        
+        # Oblicz procentowe rozkład
+        total_articles = len(schedule)
+        author_stats = {}
+        
+        for author_name, count in author_counts.items():
+            percentage = round((count / total_articles) * 100, 1)
+            categories_list = list(author_categories[author_name])
+            
+            author_stats[author_name] = {
+                "articles_count": count,
+                "percentage": percentage,
+                "categories": categories_list,
+                "categories_count": len(categories_list)
+            }
+        
+        return author_stats
 
 
 def create_mamatestuje_schedule(export_csv: bool = True) -> Dict[str, Any]:
@@ -341,11 +441,16 @@ def create_mamatestuje_schedule(export_csv: bool = True) -> Dict[str, Any]:
         # Oblicz statystyki
         stats = _calculate_schedule_stats(schedule, scheduler.main_categories)
         
+        # Dodaj statystyki autorów
+        author_stats = scheduler.get_authors_stats(schedule)
+        stats["authors"] = author_stats
+        
         result = {
             "success": True,
             "schedule": schedule,
             "total_articles": len(schedule),
-            "stats": stats
+            "stats": stats,
+            "authors_list": scheduler.authors
         }
         
         if export_csv:
