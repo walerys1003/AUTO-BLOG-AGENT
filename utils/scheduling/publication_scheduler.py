@@ -17,71 +17,82 @@ class PublicationScheduler:
     def __init__(self, blog_name: str = "MamaTestuje.com"):
         self.blog_name = blog_name
         
-        # Kategorie główne dla MamaTestuje.com
+        # Prawdziwe kategorie MamaTestuje.com z WordPress (produktowo-recenzyjne)
         self.main_categories = {
             "Planowanie ciąży": [
-                "Przygotowanie do ciąży",
-                "Zdrowie przed ciążą", 
-                "Żywienie w okresie przedkoncepcyjnym",
-                "Suplementacja",
-                "Badania przedkoncepcyjne"
+                "Testy ciążowe",
+                "Testy płodności", 
+                "Wsparcie płodności"
             ],
-            "Ciąża": [
-                "I trymestr",
-                "II trymestr", 
-                "III trymestr",
-                "Żywienie w ciąży",
-                "Ćwiczenia w ciąży",
-                "Badania prenatalne",
-                "Komplikacje ciąży",
-                "Psychologia ciąży"
+            "Zdrowie w ciąży": [
+                "Witaminy ciążowe",
+                "Układ moczowy",
+                "Odporność w ciąży",
+                "Mdłości i nudności",
+                "Zaparcia i wzdęcia"
             ],
-            "Poród": [
-                "Przygotowanie do porodu",
-                "Rodzaje porodów",
-                "Ból porodowy",
-                "Wyprawka do szpitala",
-                "Pierwsze dni po porodzie"
+            "Kosmetyki dla mam": [
+                "Nawilżające",
+                "Okolice intymne",
+                "Pielęgnacja biustu",
+                "Pielęgnacja nóg",
+                "Przeciw rozstępom",
+                "Ujędrniające"
             ],
-            "Noworodek": [
-                "Pielęgnacja noworodka",
-                "Karmienie piersią",
-                "Karmienie butelką",
-                "Sen noworodka",
-                "Rozwój noworodka",
-                "Zdrowie noworodka"
+            "Bielizna poporodowa": [
+                "Majtki i wkłady",
+                "Pasy"
             ],
-            "Niemowlę": [
-                "Rozwój niemowlęcia 0-6 miesięcy",
-                "Rozwój niemowlęcia 6-12 miesięcy",
-                "Żywienie niemowląt",
-                "Zabawki dla niemowląt",
-                "Pielęgnacja niemowlęcia",
-                "Sen niemowlęcia"
+            "Laktacja i karmienie": [
+                "Laktatory",
+                "Podgrzewacze i sterylizatory",
+                "Przechowywanie",
+                "Wkładki laktacyjne i muszle"
             ],
-            "Dziecko": [
-                "Rozwój dziecka 1-3 lata",
-                "Żywienie małych dzieci",
-                "Wychowanie i dyscyplina",
-                "Zabawki i rozwój",
-                "Przedszkole",
-                "Zdrowie dziecka"
+            "Karmienie dziecka": [
+                "Witaminy",
+                "Mleka dla dzieci",
+                "Zupki dla dzieci",
+                "Obiadki dla dzieci",
+                "Kaszki dla dzieci",
+                "Deserki, Słodycze i przekąski",
+                "Herbatki dla dzieci",
+                "Żywienie medyczne dzieci"
             ],
-            "Rodzicielstwo": [
-                "Psychologia rodzicielstwa",
-                "Relacje w rodzinie",
-                "Organizacja czasu",
-                "Finansy rodzinne",
-                "Urlopy i wyjazdy z dziećmi",
-                "Powrót do pracy"
+            "Przewijanie dziecka": [
+                "Pieluchy dla dzieci",
+                "Chusteczki nawilżane",
+                "Podkłady do przewijania"
             ],
-            "Zdrowie i uroda": [
-                "Zdrowie kobiety",
-                "Uroda w ciąży",
-                "Dieta i odżywianie",
-                "Sport i aktywność",
-                "Suplementy",
-                "Medycyna naturalna"
+            "Kosmetyki dla dzieci": [
+                "Balsamy i emolienty",
+                "Kąpiel dziecka",
+                "Kremy dla dzieci",
+                "Oliwki dla dzieci",
+                "Pasty do zębów dla dzieci",
+                "Preparaty na ciemieniuchę",
+                "Pudry i zasypki",
+                "Szampony dla dzieci"
+            ],
+            "Zdrowie dziecka": [
+                "Odporność i witaminy",
+                "Infekcje i przeziębienia",
+                "Zdrowe trawienie i apetyt",
+                "Higiena i pielęgnacja",
+                "Problemy alergiczne i specjalistyczne",
+                "Podróże i choroba lokomocyjna",
+                "Urazy i pierwsza pomoc",
+                "Rozwój i koncentracja"
+            ],
+            "Akcesoria dziecięce": [
+                "Aspiratory i higiena nosa",
+                "Karmienie niemowląt",
+                "Gryzaki i zabawki",
+                "Pielęgnacja włosów i paznokci",
+                "Higiena codzienna",
+                "Naczynia i sztućce dla dzieci",
+                "Śliniaki i ochrona odzieży",
+                "Pomiar temperatury"
             ]
         }
         
@@ -175,21 +186,35 @@ class PublicationScheduler:
     def _generate_subcategory_topics(self, main_category: str, subcategory: str) -> List[Dict[str, Any]]:
         """Generuje specyficzne tematy dla podkategorii"""
         
-        # Szablony tematów dla różnych podkategorii
+        # Szablony tematów dla różnych podkategorii - produktowo-recenzyjne
         topic_templates = {
-            "Przygotowanie do ciąży": [
-                "Jak przygotować się do ciąży - kompletny przewodnik krok po kroku",
-                "10 najważniejszych kroków przed zajściem w ciążę - lista kontrolna",
-                "Plan przygotowań do ciąży dla par planujących potomstwo",
-                "Przygotowanie psychiczne i fizyczne do ciąży - porady specjalistów",
-                "Optymalizacja płodności - naturalne sposoby zwiększenia szans na ciążę"
+            "Testy ciążowe": [
+                "Najlepsze testy ciążowe 2025 - ranking i recenzje",
+                "Jakie testy ciążowe są najdokładniejsze - porównanie marek",
+                "Test ciążowy cyfrowy vs tradycyjny - który wybrać",
+                "Kiedy robić test ciążowy - poradnik krok po kroku",
+                "Najpopularniejsze testy ciążowe - opinie i ceny"
             ],
-            "Zdrowie przed ciążą": [
-                "Badania przed ciążą - kompletna lista niezbędnych badań",
-                "Profilaktyka zdrowotna przed zajściem w ciążę - co warto wiedzieć",
-                "Jak poprawić płodność naturalnie - sprawdzone metody",
-                "Choroby przewlekłe a planowanie ciąży - porady lekarza",
-                "Szczepienia przed ciążą - które są obowiązkowe"
+            "Testy płodności": [
+                "Najlepsze testy płodności dla kobiet - ranking 2025",
+                "Domowe testy płodności - jak działają i czy warto",
+                "Test owulacji vs test płodności - różnice i zastosowanie",
+                "Testy płodności dla mężczyzn - przegląd dostępnych opcji",
+                "Ile kosztują testy płodności - porównanie cen"
+            ],
+            "Wsparcie płodności": [
+                "Najlepsze suplementy na płodność - ranking i opinie",
+                "Naturalne sposoby wspierania płodności - co naprawdę działa",
+                "Witaminy i minerały wspomagające płodność - kompletny przewodnik",
+                "Zioła na płodność - które są skuteczne i bezpieczne",
+                "Produkty wspierające płodność - test i porównanie"
+            ],
+            "Witaminy ciążowe": [
+                "Najlepsze witaminy ciążowe - ranking 2025",
+                "Kwas foliowy w ciąży - które preparaty wybrać",
+                "Witaminy prenatalne - porównanie składów i cen",
+                "DHA w ciąży - najlepsze suplementy omega-3",
+                "Żelazo w ciąży - przegląd najskuteczniejszych preparatów"
             ],
             "I trymestr": [
                 "Pierwszy trymestr ciąży - rozwój dziecka tydzień po tygodniu",
