@@ -279,27 +279,21 @@ class WorkflowEngine:
             
             # Generuj artykuł
             article_result = generate_article_from_topic(
-                topic=topic.topic,
                 category=topic.category,
-                blog_name=blog.name,
-                target_length=automation_rule.article_length or 1600,
-                ai_service=self.ai_service
+                topic=topic.topic
             )
             
-            if not article_result["success"]:
-                return {"success": False, "error": article_result["error"]}
+            if not article_result or not article_result.get("title"):
+                return {"success": False, "error": "Failed to generate article content"}
                 
             # Zapisz artykuł w bazie
-            article = Article(
+            article = ContentLog(
                 blog_id=automation_rule.blog_id,
                 title=article_result["title"],
                 content=article_result["content"],
-                excerpt=article_result.get("excerpt", ""),
+                excerpt=article_result.get("excerpt", "")[:200] if article_result.get("excerpt") else "",
                 status="ready" if automation_rule.auto_publish else "draft",
-                category_id=topic.category,
-                token_count=article_result.get("token_count", 0),
-                paragraph_count=article_result.get("paragraph_count", 0),
-                metrics_data=article_result.get("metrics", {}),
+                category=topic.category,
                 created_at=datetime.utcnow()
             )
             
