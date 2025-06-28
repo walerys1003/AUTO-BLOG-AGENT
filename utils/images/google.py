@@ -218,7 +218,7 @@ def search_google_images_api(
             'searchType': 'image',
             'num': min(per_page, 10),  # Max 10 per page for free tier
             'start': (page - 1) * 10 + 1,  # Pagination start at 1
-            'imgSize': 'large'  # Default to large images
+            'imgSize': 'LARGE'  # Default to large images
         }
         
         # Add safe search if enabled
@@ -229,13 +229,13 @@ def search_google_images_api(
         if orientation:
             if orientation == 'landscape':
                 search_params['imgType'] = 'photo'
-                search_params['imgSize'] = 'xlarge'
+                search_params['imgSize'] = 'XLARGE'
             elif orientation == 'portrait':
                 search_params['imgType'] = 'photo'
-                search_params['imgSize'] = 'large'
+                search_params['imgSize'] = 'LARGE'
             elif orientation == 'square':
                 search_params['imgType'] = 'photo'
-                search_params['imgSize'] = 'medium'
+                search_params['imgSize'] = 'MEDIUM'
         
         # Execute search
         logger.info(f"Searching Google Images API for: {query}")
