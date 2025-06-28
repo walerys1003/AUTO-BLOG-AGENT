@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Automation Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Automation Dashboard</h2>
+            <p class="text-muted">Zarządzanie systemem automatyzacji treści</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('automation.topics_management') }}" class="btn btn-outline-primary">
+                <i class="fas fa-lightbulb me-2"></i>Zarządzaj tematami
+            </a>
+            <a href="{{ url_for('automation.logs') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-history me-2"></i>Logi wykonania
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="h4 mb-0 text-primary">{{ active_rules }}</div>
+                            <div class="text-muted small">Active Rules</div>
+                        </div>
+                        <i class="fas fa-cogs text-primary opacity-50"></i>
+                    </div>
+                    <div class="small text-muted">z {{ total_rules }} total</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="h4 mb-0 text-warning">{{ pending_topics }}</div>
+                            <div class="text-muted small">Pending Topics</div>
+                        </div>
+                        <i class="fas fa-clock text-warning opacity-50"></i>
+                    </div>
+                    <div class="small text-muted">oczekują zatwierdzenia</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="h4 mb-0 text-success">{{ approved_topics }}</div>
+                            <div class="text-muted small">Ready Topics</div>
+                        </div>
+                        <i class="fas fa-check-circle text-success opacity-50"></i>
+                    </div>
+                    <div class="small text-muted">gotowe do użycia</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="h4 mb-0 {% if scheduler_status.is_running %}text-success{% else %}text-danger{% endif %}">
+                                {% if scheduler_status.is_running %}
+                                    <i class="fas fa-play-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-pause-circle"></i>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">Scheduler</div>
+                        </div>
+                    </div>
+                    <div class="small text-muted">
+                        {% if scheduler_status.is_running %}
+                            Running
+                        {% else %}
+                            Stopped
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Blog Statistics -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Blog Statistics</h5>
+                </div>
+                <div class="card-body">
+                    {% if blog_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Blog</th>
+                                    <th>Active Rules</th>
+                                    <th>Ready Topics</th>
+                                    <th>Articles Today</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for blog_id, stats in blog_stats.items() %}
+                                <tr>
+                                    <td>{{ stats.name }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ stats.rules }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ stats.topics }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ stats.articles_today }}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="refreshTopics({{ blog_id }})">
+                                            <i class="fas fa-sync-alt"></i> Refresh Topics
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-blog text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No active blogs found</h5>
+                        <p class="text-muted">Add a blog to start automation</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Executions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Recent Executions</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_executions %}
+                    <div class="list-group list-group-flush">
+                        {% for execution in recent_executions %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ execution.name }}</h6>
+                                    <p class="mb-1 small text-muted">
+                                        {% if execution.last_execution_at %}
+                                            {{ execution.last_execution_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    {% if execution.failure_count > 0 %}
+                                        <span class="badge bg-danger">{{ execution.failure_count }} failures</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Success</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No recent executions</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Refresh topics for specific blog
+function refreshTopics(blogId) {
+    fetch(`/automation/api/topics/refresh/${blogId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Topics refreshed successfully');
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to refresh topics');
+        }
+    })
+    .catch(error => {
+        alert('Network error occurred');
+    });
+}
+</script>
+{% endblock %}
