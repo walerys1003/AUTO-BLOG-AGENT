@@ -470,7 +470,15 @@ class WorkflowEngine:
                 db.session.commit()
                 
                 logger.info(f"Article published to WordPress with ID: {post_result['id']}")
-                return {"success": True, "post_id": post_result["id"]}
+                logger.info(f"Published with category ID: {category_id}, tags: {self._generate_tags_for_category(category)}")
+                
+                return {
+                    "success": True, 
+                    "post_id": post_result["id"],
+                    "category_assigned": category_id,
+                    "tags_assigned": len(self._generate_tags_for_category(category)),
+                    "featured_image": featured_image_id
+                }
             else:
                 return {"success": False, "error": "WordPress API returned invalid response"}
                 
