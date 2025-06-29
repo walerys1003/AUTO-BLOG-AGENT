@@ -437,6 +437,10 @@ class WorkflowEngine:
             # Znajdź ID kategorii WordPress
             category_id = self._get_wordpress_category_id(blog, category)
             
+            # Utwórz tagi w WordPress i pobierz ich ID
+            tag_names = self._generate_tags_for_category(category)
+            tag_ids = self._create_tags_in_wordpress(blog, tag_names)
+            
             # Przygotuj dane do publikacji
             post_data = {
                 "title": article.title,
@@ -445,7 +449,7 @@ class WorkflowEngine:
                 "status": "publish" if automation_rule.auto_publish else "draft",
                 "author": selected_author["wordpress_id"],  # Przypisz autora
                 "categories": [category_id] if category_id else [],
-                "tags": self._generate_tags_for_category(category)
+                "tags": tag_ids
             }
             
             # Dodaj featured image jeśli dostępny
@@ -621,6 +625,42 @@ class WorkflowEngine:
         }
         
         return tag_mapping.get(category, ["mama", "dzieci", "rodzina"])
+    
+    def _create_tags_in_wordpress(self, blog: Blog, tag_names: List[str]) -> List[int]:
+        """
+        Tworzy tagi w WordPress API i zwraca listę ich ID.
+        """
+        from utils.wordpress.client import build_wp_api_url
+        
+        tag_ids = []
+        auth = (blog.username, blog.api_token)
+        
+        for tag_name in tag_names:
+            try:
+                # Sprawdź czy tag już istnieje
+                search_url = build_wp_api_url(blog.api_url, "tags")
+                search_response = requests.get(f"{search_url}?search={tag_name}", auth=auth)
+                
+                if search_response.status_code == 200:
+                    existing_tags = search_response.json()
+                    if existing_tags:
+                        tag_ids.append(existing_tags[0]['id'])
+                        logger.info(f"Found existing tag: {tag_name} (ID: {existing_tags[0]['id']})")
+                        continue
+                
+                # Utwórz nowy tag
+                create_url = build_wp_api_url(blog.api_url, "tags")
+                create_response = requests.post(create_url, auth=auth, json={"name": tag_name})
+                
+                if create_response.status_code == 201:
+                    new_tag = create_response.json()
+                    tag_ids.append(new_tag['id'])
+                    logger.info(f"Created new tag: {tag_name} (ID: {new_tag['id']})")
+                
+            except Exception as e:
+                logger.warning(f"Failed to create tag '{tag_name}': {e}")
+                
+        return tag_ids
     
     def _get_featured_image_for_article(self, blog: Blog, article: Article) -> Optional[int]:
         """

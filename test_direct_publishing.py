@@ -76,6 +76,28 @@ def test_direct_publishing():
             from utils.wordpress.client import build_wp_api_url
             import requests
             
+            # Autentykacja
+            auth = (blog.username, blog.api_token)
+            
+            # Utwórz tagi w WordPress API i pobierz ich ID
+            tag_ids = []
+            try:
+                for tag_name in tags:
+                    # Sprawdź czy tag już istnieje
+                    tag_api_url = build_wp_api_url(blog.api_url, "tags")
+                    search_response = requests.get(f"{tag_api_url}?search={tag_name}", auth=auth)
+                    existing_tags = search_response.json()
+                    
+                    if existing_tags:
+                        tag_ids.append(existing_tags[0]['id'])
+                    else:
+                        # Utwórz nowy tag
+                        create_response = requests.post(tag_api_url, auth=auth, json={"name": tag_name})
+                        if create_response.status_code == 201:
+                            tag_ids.append(create_response.json()['id'])
+            except Exception as e:
+                print(f"⚠️ Tag creation error: {e}")
+            
             # Test direct WordPress publishing
             post_data = {
                 "title": mock_article.title,
@@ -83,8 +105,12 @@ def test_direct_publishing():
                 "excerpt": mock_article.meta_description,
                 "status": "publish",
                 "categories": [category_id] if category_id else [],
-                "tags": tags
+                "tags": tag_ids
             }
+            
+            print(f"📤 Publishing data:")
+            print(f"   Categories: {post_data['categories']}")
+            print(f"   Tags: {post_data['tags']}")
             
             try:
                 api_url = build_wp_api_url(blog.api_url, "posts")
