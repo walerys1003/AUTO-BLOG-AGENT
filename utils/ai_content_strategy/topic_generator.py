@@ -29,7 +29,7 @@ def generate_ai_topics_for_category(category: str, count: int = 20) -> List[str]
     """
     logger.info(f"Generating {count} AI topics for category: {category}")
     
-    system_prompt = """Jesteś ekspertem w tworzeniu pomysłów na artykuły blogowe.
+    system_prompt = """Jesteś ekspertem w tworzeniu pomysłów na artykuły blogowe dla matek i rodzin.
     Twoim zadaniem jest wygenerowanie listy interesujących tematów na artykuły dla podanej kategorii.
     
     Zasady:
@@ -38,9 +38,10 @@ def generate_ai_topics_for_category(category: str, count: int = 20) -> List[str]
     3. Tematy powinny być zróżnicowane i obejmować różne aspekty kategorii
     4. Unikaj ogólnych i zbyt szerokich tematów
     5. Każdy temat powinien mieć potencjał na artykuł o długości 1200-1600 słów
-    6. Zwróć odpowiedź jako tablicę JSON zawierającą listę tematów
+    6. Zwróć odpowiedź w formacie JSON z kluczem "tematy" zawierającym listę tematów
     
     Wygeneruj dokładnie tyle tematów, ile zostało określone w zapytaniu.
+    Odpowiedź: {"tematy": ["temat 1", "temat 2", ...]}
     """
     
     user_prompt = f"Wygeneruj {count} interesujących i szczegółowych tematów na artykuły blogowe dla kategorii: {category}"
@@ -63,6 +64,8 @@ def generate_ai_topics_for_category(category: str, count: int = 20) -> List[str]
             # Extract topics from the response (handle different response formats)
             if isinstance(result, list):
                 topics = result
+            elif isinstance(result, dict) and "tematy" in result:
+                topics = result["tematy"]
             elif isinstance(result, dict) and "topics" in result:
                 topics = result["topics"]
             elif isinstance(result, dict) and "results" in result:
