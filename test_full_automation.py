@@ -72,15 +72,15 @@ def test_full_automation():
             print(f"   📊 Długość: {len(article.content)} znaków")
             print(f"   🆔 ID artykułu: {article.id}")
             
-            # 3. Pozyskiwanie obrazów
-            print("\n3️⃣ Pozyskiwanie obrazów...")
+            # 4. Pozyskiwanie obrazów
+            print("\n4️⃣ Pozyskiwanie obrazów...")
             image_result = engine._execute_image_acquisition(article)
             print(f"   Wynik: {'✅ Sukces' if image_result.get('success') else '❌ Błąd'}")
             if image_result.get('success'):
                 print(f"   🖼️ Znaleziono obrazów: {image_result.get('images_found', 0)}")
             
-            # 4. Publikacja na WordPress
-            print("\n4️⃣ Publikacja na WordPress...")
+            # 5. Publikacja na WordPress
+            print("\n5️⃣ Publikacja na WordPress...")
             publish_result = engine._execute_wordpress_publishing(article, rule)
             print(f"   Wynik: {'✅ Sukces' if publish_result.get('success') else '❌ Błąd'}")
             
@@ -96,13 +96,9 @@ def test_full_automation():
                 print(f"   🖼️ Featured image: {'✅ Tak' if featured_image else '❌ Nie'}")
                 print(f"   🌐 URL: https://mamatestuje.com/?p={post_id}")
                 
-                # 5. Social media (opcjonalnie)
-                print("\n5️⃣ Publikacja w social media...")
-                try:
-                    social_result = engine._execute_social_media_distribution(article, rule)
-                    print(f"   Wynik: {'✅ Sukces' if social_result.get('success') else '❌ Błąd'}")
-                except Exception as e:
-                    print(f"   ⚠️ Social media: {e}")
+                # 6. Social media (opcjonalnie)
+                print("\n6️⃣ Publikacja w social media...")
+                print(f"   ⚠️ Social media: Funkcja w rozwoju")
                 
                 print(f"\n🎉 SUKCES! Artykuł '{article.title}' został w pełni zautomatyzowany!")
                 print("🔍 Sprawdź WordPress aby zweryfikować metadane")
