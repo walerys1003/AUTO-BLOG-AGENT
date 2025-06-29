@@ -66,14 +66,46 @@ def test_direct_publishing():
                 def __init__(self, content_log, category_name):
                     self.title = content_log.title
                     self.content = content_log.content
-                    self.meta_description = content_log.meta_description
+                    self.meta_description = getattr(content_log, 'description', f"Artykuł o {content_log.title}")
                     self.category = category_name
                     self.featured_image = None
             
             mock_article = MockArticle(article, category_name)
             
-            # Test publishing
-            success = engine._execute_wordpress_publishing(mock_article, blog)
+            # Test publishing using WordPress client directly
+            from utils.wordpress.client import build_wp_api_url
+            import requests
+            
+            # Test direct WordPress publishing
+            post_data = {
+                "title": mock_article.title,
+                "content": mock_article.content,
+                "excerpt": mock_article.meta_description,
+                "status": "publish",
+                "categories": [category_id] if category_id else [],
+                "tags": tags
+            }
+            
+            try:
+                api_url = build_wp_api_url(blog.api_url, "posts")
+                auth = (blog.username, blog.api_token)
+                
+                response = requests.post(api_url, auth=auth, json=post_data)
+                response.raise_for_status()
+                
+                post_result = response.json()
+                success = "id" in post_result
+                
+                if success:
+                    print(f"✅ Post ID: {post_result['id']}")
+                    print(f"✅ Categories: {post_result.get('categories', [])}")
+                    print(f"✅ Tags: {post_result.get('tags', [])}")
+                else:
+                    success = False
+                    
+            except Exception as e:
+                print(f"❌ Publishing error: {e}")
+                success = False
             
             if success:
                 print("🎉 Article published successfully with metadata!")

@@ -398,7 +398,7 @@ class WorkflowEngine:
                 # Zapisz obrazy w bibliotece
                 for img in image_results:
                     image_entry = ImageLibrary(
-                        blog_id=article.blog_id,
+                        blog_id=article.id,
                         title=img.get("title", article.title),
                         url=img["url"],
                         source=img.get("source", "auto"),
