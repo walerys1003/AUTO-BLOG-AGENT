@@ -26,7 +26,7 @@ class MamaTestujeScheduler:
                 "posts_count": 7373,  # Główny autor - 7373 wpisy
                 "description": "Redaktor naczelny portalu MamaTestuje.com, znany z tworzenia treści, które edukują i inspirują. Dzięki wieloletniemu doświadczeniu i strategicznemu podejściu tworzy artykuły, które łączą merytoryczność z wyjątkową wartością dla współczesnych rodziców.",
                 "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam", "Laktacja i karmienie"],
-                "weight": 50  # 50% artykułów (główny autor)
+                "weight": 25  # 25% artykułów (równy podział)
             },
             5: {
                 "name": "Gabriela Bielec",
@@ -37,7 +37,7 @@ class MamaTestujeScheduler:
                 "posts_count": 0,
                 "description": "Redaktor specjalizujący się w produktach dla dzieci i młodych mam.",
                 "specialties": ["Karmienie dziecka", "Kosmetyki dla dzieci", "Przewijanie dziecka"],
-                "weight": 20  # 20% artykułów
+                "weight": 25  # 25% artykułów (równy podział)
             },
             4: {
                 "name": "Helena Rybikowska", 
@@ -48,7 +48,7 @@ class MamaTestujeScheduler:
                 "posts_count": 0,
                 "description": "Redaktor specjalizujący się w zdrowiu dziecka i akcesoriach.",
                 "specialties": ["Zdrowie dziecka", "Akcesoria dziecięce", "Bielizna poporodowa"],
-                "weight": 15  # 15% artykułów
+                "weight": 25  # 25% artykułów (równy podział)
             },
             3: {
                 "name": "Zofia Chryplewicz",
@@ -59,7 +59,7 @@ class MamaTestujeScheduler:
                 "posts_count": 0,
                 "description": "Redaktor specjalizujący się w kosmetykach i pielęgnacji.",
                 "specialties": ["Kosmetyki dla mam", "Kosmetyki dla dzieci", "Zdrowie w ciąży"],
-                "weight": 15  # 15% artykułów
+                "weight": 25  # 25% artykułów (równy podział)
             }
             # Admin (ID: 1) pominięty - konto techniczne
         }

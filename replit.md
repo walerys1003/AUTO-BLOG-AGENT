@@ -138,10 +138,10 @@ Preferred communication style: Simple, everyday language.
 - ✅ **30-Day Scheduling**: 100 articles with balanced category distribution and author rotation
 
 **Author Rotation System**:
-- **Tomasz Kotliński** (ID: 2): Administrator, 7373 existing posts, 50% weight
-- **Gabriela Bielec** (ID: 5): Child products specialist, 20% weight  
-- **Helena Rybikowska** (ID: 4): Child health expert, 15% weight
-- **Zofia Chryplewicz** (ID: 3): Cosmetics specialist, 15% weight
+- **Tomasz Kotliński** (ID: 2): Administrator, 7373 existing posts, 25% weight
+- **Gabriela Bielec** (ID: 5): Child products specialist, 25% weight  
+- **Helena Rybikowska** (ID: 4): Child health expert, 25% weight
+- **Zofia Chryplewicz** (ID: 3): Cosmetics specialist, 25% weight
 
 **System Status**: MASTER AGENT AI is now fully autonomous and operational
 - 2 active automation rules running

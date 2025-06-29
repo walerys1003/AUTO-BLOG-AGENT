@@ -178,31 +178,31 @@ class WorkflowEngine:
         """
         Wybiera autora na podstawie kategorii i systemu rotacji MamaTestuje.com
         """
-        # Autorzy MamaTestuje.com z ich specjalizacjami
+        # Autorzy MamaTestuje.com z równymi wagami (25% każdy)
         authors = {
             2: {
                 "name": "Tomasz Kotliński",
                 "wordpress_id": 2,
                 "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam", "Laktacja i karmienie"],
-                "weight": 50
+                "weight": 25
             },
             5: {
                 "name": "Gabriela Bielec", 
                 "wordpress_id": 5,
                 "specialties": ["Karmienie dziecka", "Kosmetyki dla dzieci", "Akcesoria dziecięce"],
-                "weight": 20
+                "weight": 25
             },
             4: {
                 "name": "Helena Rybikowska",
                 "wordpress_id": 4, 
                 "specialties": ["Zdrowie dziecka", "Przewijanie dziecka"],
-                "weight": 15
+                "weight": 25
             },
             3: {
                 "name": "Zofia Chryplewicz",
                 "wordpress_id": 3,
                 "specialties": ["Kosmetyki dla mam", "Bielizna poporodowa"],
-                "weight": 15
+                "weight": 25
             }
         }
         
