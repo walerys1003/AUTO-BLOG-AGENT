@@ -325,7 +325,7 @@ class WorkflowEngine:
             selected_topic.used_at = datetime.utcnow()
             db.session.commit()
             
-            logger.info(f"Selected topic: {selected_topic.topic}")
+            logger.info(f"Selected topic: {selected_topic.title}")
             return selected_topic
             
         except Exception as e:
@@ -336,7 +336,7 @@ class WorkflowEngine:
         """
         Generuje artykuł na podstawie wybranego tematu.
         """
-        logger.info(f"Generating content for topic: {topic.topic}")
+        logger.info(f"Generating content for topic: {topic.title}")
         
         try:
             blog = Blog.query.get(automation_rule.blog_id)
@@ -344,7 +344,7 @@ class WorkflowEngine:
             # Generuj artykuł
             article_result = generate_article_from_topic(
                 category=topic.category,
-                topic=topic.topic
+                topic=topic.title
             )
             
             if not article_result or not article_result.get("title"):
