@@ -190,26 +190,19 @@ class AutomationScheduler:
                     db.session.commit()
     
     def _schedule_next_execution(self, rule: AutomationRule):
-        """Planuje następne wykonanie reguły"""
+        """Planuje następne wykonanie reguły - po jednym artykule na sesję"""
         try:
             current_time = datetime.utcnow()
             
-            # Oblicz następny czas wykonania na podstawie ustawień
+            # Oblicz interwał między artykułami dla częstszych, krótszych sesji
             if rule.posts_per_day <= 1:
                 # Jeden post dziennie - następny dzień o tej samej godzinie
                 next_execution = current_time + timedelta(days=1)
-                if rule.publishing_time:
-                    time_parts = rule.publishing_time.split(':')
-                    next_execution = next_execution.replace(
-                        hour=int(time_parts[0]),
-                        minute=int(time_parts[1]),
-                        second=0,
-                        microsecond=0
-                    )
             else:
-                # Więcej postów dziennie - oblicz interwał
-                interval_hours = 24 / rule.posts_per_day
-                next_execution = current_time + timedelta(hours=interval_hours)
+                # Wiele postów dziennie - rozłóż na równe interwały przez cały dzień
+                # Zamiast wszystkich naraz, generuj po jednym artykule częściej
+                hours_between_posts = 24 / rule.posts_per_day
+                next_execution = current_time + timedelta(hours=hours_between_posts)
                 
             rule.next_execution_at = next_execution
             db.session.commit()

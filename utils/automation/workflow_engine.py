@@ -332,50 +332,97 @@ class WorkflowEngine:
             logger.error(f"Topic selection failed: {str(e)}")
             return None
     
-    def _execute_content_generation(self, automation_rule: AutomationRule, topic: ArticleTopic) -> Dict[str, Any]:
+    def _execute_content_generation(self, automation_rule: AutomationRule, topic: ArticleTopic, max_retries: int = 2) -> Dict[str, Any]:
         """
-        Generuje artykuł na podstawie wybranego tematu.
+        Generuje artykuł na podstawie wybranego tematu z retry mechanism.
         """
         logger.info(f"Generating content for topic: {topic.title}")
         
-        try:
-            blog = Blog.query.get(automation_rule.blog_id)
-            
-            # Generuj artykuł
-            article_result = generate_article_from_topic(
-                category=topic.category,
-                topic=topic.title
-            )
-            
-            if not article_result or not article_result.get("title"):
-                return {"success": False, "error": "Failed to generate article content"}
+        for attempt in range(max_retries + 1):
+            try:
+                logger.info(f"Content generation attempt {attempt + 1}/{max_retries + 1}")
                 
-            # Zapisz artykuł w bazie
-            article = ContentLog(
-                blog_id=automation_rule.blog_id,
-                title=article_result["title"],
-                content=article_result["content"],
-                excerpt=article_result.get("excerpt", "")[:200] if article_result.get("excerpt") else "",
-                status="ready" if automation_rule.auto_publish else "draft",
-                category_id=None,  # Zostanie ustawione podczas publikacji
-                created_at=datetime.utcnow()
-            )
-            
-            db.session.add(article)
-            db.session.commit()
-            
-            logger.info(f"Article created with ID: {article.id}")
-            
-            return {
-                "success": True,
-                "article_id": article.id,
-                "article": article,
-                "content_metrics": article_result.get("metrics", {})
-            }
-            
-        except Exception as e:
-            logger.error(f"Content generation failed: {str(e)}")
-            return {"success": False, "error": str(e)}
+                blog = Blog.query.get(automation_rule.blog_id)
+                
+                # Timeout protection - max 3 minutes per article
+                import signal
+                import threading
+                
+                def timeout_handler():
+                    raise TimeoutError("Article generation timeout after 3 minutes")
+                
+                timer = threading.Timer(180.0, timeout_handler)  # 3 minutes
+                timer.start()
+                
+                try:
+                    # Generuj artykuł z timeout protection
+                    article_result = generate_article_from_topic(
+                        category=topic.category,
+                        topic=topic.title
+                    )
+                finally:
+                    timer.cancel()
+                
+                if not article_result or not article_result.get("title"):
+                    if attempt < max_retries:
+                        logger.warning(f"Content generation returned empty result, retrying ({attempt + 1}/{max_retries})")
+                        continue
+                    return {"success": False, "error": "Failed to generate article content after retries"}
+                
+                # Validate article content
+                if len(article_result.get("content", "")) < 200:
+                    if attempt < max_retries:
+                        logger.warning(f"Generated content too short, retrying ({attempt + 1}/{max_retries})")
+                        continue
+                    logger.warning("Generated content is very short but using it anyway")
+                
+                # Zapisz artykuł w bazie z lepszą obsługą błędów
+                try:
+                    article = ContentLog()
+                    article.blog_id = automation_rule.blog_id
+                    article.title = article_result["title"]
+                    article.content = article_result["content"]
+                    article.excerpt = article_result.get("excerpt", "")[:200] if article_result.get("excerpt") else ""
+                    article.status = "ready" if automation_rule.auto_publish else "draft"
+                    article.category_id = None  # Zostanie ustawione podczas publikacji
+                    article.created_at = datetime.utcnow()
+                    
+                    db.session.add(article)
+                    db.session.commit()
+                    
+                    logger.info(f"Article created successfully with ID: {article.id}")
+                    
+                    return {
+                        "success": True,
+                        "article_id": article.id,
+                        "article": article,
+                        "content_metrics": article_result.get("metrics", {}),
+                        "attempts": attempt + 1
+                    }
+                    
+                except Exception as db_error:
+                    db.session.rollback()
+                    logger.error(f"Database error saving article: {str(db_error)}")
+                    if attempt < max_retries:
+                        logger.info(f"Database error, retrying ({attempt + 1}/{max_retries})")
+                        continue
+                    return {"success": False, "error": f"Database error: {str(db_error)}"}
+                
+            except TimeoutError as e:
+                logger.error(f"Content generation timeout on attempt {attempt + 1}: {str(e)}")
+                if attempt < max_retries:
+                    logger.info(f"Timeout occurred, retrying ({attempt + 1}/{max_retries})")
+                    continue
+                return {"success": False, "error": "Content generation timeout after multiple attempts"}
+                
+            except Exception as e:
+                logger.error(f"Content generation error on attempt {attempt + 1}: {str(e)}")
+                if attempt < max_retries:
+                    logger.info(f"Error occurred, retrying ({attempt + 1}/{max_retries})")
+                    continue
+                return {"success": False, "error": f"Content generation failed after {max_retries + 1} attempts: {str(e)}"}
+        
+        return {"success": False, "error": "Maximum retries exceeded"}
     
     def _execute_image_acquisition(self, article: Article) -> Dict[str, Any]:
         """

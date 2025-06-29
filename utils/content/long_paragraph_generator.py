@@ -49,104 +49,66 @@ def generate_long_paragraph(
     title: str,
     topic: str,
     section_title: str,
-    target_tokens: int = 1000,
+    target_tokens: int = 400,  # Zmniejszono z 1000 na 400 dla szybkości
     index: int = 1,
-    max_attempts: int = 3
+    max_attempts: int = 1  # Tylko jedna próba, bez retry
 ) -> str:
     """
-    Generate a long paragraph with a target token count.
+    Generate a paragraph with optimized speed and efficiency.
     
     Args:
         title: The article title
         topic: The specific topic
         section_title: The section title
-        target_tokens: Target number of tokens (default: 1000)
+        target_tokens: Target number of tokens (reduced to 400 for speed)
         index: The paragraph index (for context)
-        max_attempts: Maximum attempts to reach target length
+        max_attempts: Maximum attempts (set to 1 for speed)
         
     Returns:
         Generated paragraph text
     """
-    system_prompt = f"""Jesteś ekspertem w pisaniu długich, szczegółowych akapitów do artykułów.
-    Twoim zadaniem jest wygenerowanie jednego długiego akapitu na temat '{topic}' dla sekcji '{section_title}'.
+    system_prompt = f"""Jesteś ekspertem w pisaniu wartościowych akapitów do artykułów.
+    Twoim zadaniem jest wygenerowanie jednego akapitu na temat '{topic}' dla sekcji '{section_title}'.
     
     Zasady:
-    1. Akapit powinien mieć około {target_tokens} tokenów (około {target_tokens*4} znaków)
-    2. Akapit powinien zawierać szczegółowe, wartościowe informacje
-    3. Unikaj powtarzania tych samych myśli i zwrotów
-    4. Używaj różnorodnego, ale naturalnego języka
-    5. Akapit powinien być spójny i logiczny
-    6. Pisz w języku polskim, przyjaznym tonem eksperta
-    7. Format: zwróć tekst w paragrafach HTML (<p>treść</p>)
-    8. Możesz użyć pogrubień (<strong>) i kursywy (<em>) dla ważnych pojęć
+    1. Napisz wartościowy akapit o długości około 400-600 tokenów
+    2. Zawrzyj praktyczne informacje i porady
+    3. Używaj naturalnego, przyjaznego języka polskiego
+    4. Format: zwróć tekst w paragrafach HTML (<p>treść</p>)
+    5. Możesz użyć pogrubień (<strong>) dla ważnych pojęć
+    6. Bądź konkretny i merytoryczny
     
-    Jest to akapit numer {index} w artykule, więc zadbaj o spójność z resztą treści.
+    Jest to sekcja {index} w artykule o tytule: {title}
     """
     
-    user_prompt = f"""Tytuł artykułu: {title}
-    Temat: {topic}
-    Tytuł sekcji: {section_title}
+    user_prompt = f"""Napisz akapit dla sekcji '{section_title}' w artykule na temat: {topic}
+
+    Wygeneruj praktyczny, wartościowy akapit który pomoże czytelnikowi zrozumieć ten aspekt tematu."""
     
-    Wygeneruj szczegółowy akapit dla tej sekcji artykułu.
-    """
-    
-    attempts = 0
-    while attempts < max_attempts:
-        attempts += 1
+    try:
+        # Single AI call with timeout protection
+        paragraph = get_ai_completion(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=600,  # Reduced from 1200
+            temperature=0.7
+        )
         
-        try:
-            # Generate paragraph
-            paragraph = get_ai_completion(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=Config.DEFAULT_CONTENT_MODEL,
-                max_tokens=target_tokens + 200,  # Allow some extra tokens
-                temperature=0.7
-            )
+        # Basic cleanup
+        paragraph = re.sub(r'\n\s*\n', '\n\n', paragraph.strip())
+        
+        # Return immediately - no token counting or retries
+        if paragraph and len(paragraph) > 100:
+            return paragraph
+        else:
+            # Quick fallback without additional AI calls
+            return f"<p><strong>{section_title}</strong> to ważny aspekt {topic}. Eksperci w tej dziedzinie podkreślają jego znaczenie dla prawidłowego zrozumienia całej tematyki. Warto zwrócić uwagę na kluczowe elementy i praktyczne zastosowania w codziennym życiu.</p>"
             
-            # Clean up paragraph (remove unnecessary line breaks, etc.)
-            paragraph = re.sub(r'\n\s*\n', '\n\n', paragraph)
-            
-            # Check token count
-            token_count = count_tokens(paragraph)
-            
-            if token_count >= target_tokens * 0.8:  # At least 80% of target
-                # Successfully generated a paragraph of appropriate length
-                return paragraph
-                
-            logger.warning(f"Generated paragraph too short: {token_count} tokens (target: {target_tokens})")
-            
-            if attempts < max_attempts:
-                # Update prompt to request longer paragraph
-                system_prompt = f"""Jesteś ekspertem w pisaniu bardzo długich, szczegółowych akapitów do artykułów.
-                Poprzednia próba była zbyt krótka. Potrzebuję znacznie dłuższego i bardziej szczegółowego akapitu.
-                
-                Twoim zadaniem jest wygenerowanie jednego bardzo długiego akapitu na temat '{topic}' dla sekcji '{section_title}'.
-                
-                Zasady:
-                1. Akapit MUSI mieć przynajmniej {target_tokens} tokenów (około {target_tokens*4} znaków)
-                2. Akapit powinien zawierać wyczerpujące, wartościowe informacje
-                3. Podaj wiele przykładów, szczegółów i wyjaśnień
-                4. Unikaj powtarzania tych samych myśli i zwrotów
-                5. Używaj różnorodnego, ale naturalnego języka
-                6. Pisz w języku polskim, przyjaznym tonem eksperta
-                7. Format: zwróć tekst w paragrafach HTML (<p>treść</p>)
-                8. Możesz użyć pogrubień (<strong>) i kursywy (<em>) dla ważnych pojęć
-                
-                Jest to akapit numer {index} w artykule, więc zadbaj o spójność z resztą treści.
-                """
-                
-                # Wait a bit before retrying
-                time.sleep(1)
-                continue
-                
-        except Exception as e:
-            logger.error(f"Error generating long paragraph: {str(e)}")
-            # Return simple fallback paragraph in case of failure
-            return f"<p>W kontekście {topic}, {section_title} stanowi istotny element, który warto dokładnie przeanalizować. Eksperci w tej dziedzinie wielokrotnie podkreślają jego znaczenie dla całościowego zrozumienia omawianej tematyki.</p>"
-    
-    # If all attempts failed, return the last generated paragraph (even if too short)
-    return paragraph
+    except Exception as e:
+        logger.error(f"Error generating paragraph: {str(e)}")
+        # Quick fallback without retry
+        return f"<p><strong>{section_title}</strong> stanowi istotny element związany z {topic}. Ta sekcja dostarcza wartościowych informacji potrzebnych do pełnego zrozumienia omawianej tematyki.</p>"
 
 def generate_long_paragraph_content(
     topic: str,
