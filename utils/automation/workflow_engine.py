@@ -434,19 +434,24 @@ class WorkflowEngine:
             category = getattr(article, 'category', 'Planowanie ciąży')
             selected_author = self._select_author_for_article(category, article.id)
             
+            # Znajdź ID kategorii WordPress
+            category_id = self._get_wordpress_category_id(blog, category)
+            
             # Przygotuj dane do publikacji
             post_data = {
                 "title": article.title,
                 "content": article.content,
                 "excerpt": article.excerpt,
                 "status": "publish" if automation_rule.auto_publish else "draft",
-                "featured_media": None,
-                "author": selected_author["wordpress_id"]  # Przypisz autora
+                "author": selected_author["wordpress_id"],  # Przypisz autora
+                "categories": [category_id] if category_id else [],
+                "tags": self._generate_tags_for_category(category)
             }
             
-            # Dodaj kategorię jeśli istnieje
-            if article.category_id:
-                post_data["categories"] = [article.category_id]
+            # Dodaj featured image jeśli dostępny
+            featured_image_id = self._get_featured_image_for_article(blog, article)
+            if featured_image_id:
+                post_data["featured_media"] = featured_image_id
             
             # Publikuj na WordPress przez API
             api_url = build_wp_api_url(blog.api_url, "posts")
@@ -563,6 +568,111 @@ class WorkflowEngine:
             logger.error(f"Metrics update failed: {str(e)}")
             return {"error": str(e)}
     
+    def _get_wordpress_category_id(self, blog: Blog, category_name: str) -> Optional[int]:
+        """
+        Pobiera ID kategorii WordPress na podstawie nazwy.
+        """
+        try:
+            from utils.wordpress.client import build_wp_api_url
+            
+            api_url = build_wp_api_url(blog.api_url, "categories")
+            auth = (blog.username, blog.api_token)
+            
+            # Szukaj kategorii po nazwie
+            response = requests.get(f"{api_url}?search={category_name}", auth=auth)
+            response.raise_for_status()
+            
+            categories = response.json()
+            for cat in categories:
+                if cat['name'].lower() == category_name.lower():
+                    return cat['id']
+            
+            # Jeśli nie znaleziono, zwróć standardową kategorię "Planowanie ciąży"
+            response = requests.get(f"{api_url}?search=Planowanie", auth=auth)
+            response.raise_for_status()
+            categories = response.json()
+            for cat in categories:
+                if 'planowanie' in cat['name'].lower():
+                    return cat['id']
+                    
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get WordPress category ID: {e}")
+            return None
+    
+    def _generate_tags_for_category(self, category: str) -> List[str]:
+        """
+        Generuje tagi na podstawie kategorii.
+        """
+        tag_mapping = {
+            "Planowanie ciąży": ["planowanie ciąży", "płodność", "zdrowie", "rodzina", "przygotowanie"],
+            "Zdrowie w ciąży": ["ciąża", "zdrowie", "mama", "dziecko", "opieka"],
+            "Wychowanie": ["wychowanie", "dzieci", "rozwój", "edukacja", "rodzina"],
+            "Kosmetyki": ["kosmetyki", "uroda", "pielęgnacja", "mama", "produkty"],
+            "Żywienie": ["żywienie", "dzieci", "zdrowie", "dieta", "rozwój"]
+        }
+        
+        return tag_mapping.get(category, ["mama", "dzieci", "rodzina"])
+    
+    def _get_featured_image_for_article(self, blog: Blog, article: Article) -> Optional[int]:
+        """
+        Pobiera ID featured image dla artykułu z biblioteki obrazów.
+        """
+        try:
+            # Znajdź pierwszy obraz z biblioteki dla tego artykułu
+            image = ImageLibrary.query.filter_by(blog_id=blog.id).order_by(
+                ImageLibrary.created_at.desc()
+            ).first()
+            
+            if image and image.url:
+                # Upload obrazu do WordPress Media Library
+                media_id = self._upload_image_to_wordpress(blog, image.url, image.title or "Featured Image")
+                return media_id
+            
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get featured image: {e}")
+            return None
+    
+    def _upload_image_to_wordpress(self, blog: Blog, image_url: str, title: str) -> Optional[int]:
+        """
+        Uploaduje obraz do WordPress Media Library.
+        """
+        try:
+            from utils.wordpress.client import build_wp_api_url
+            
+            # Pobierz obraz
+            image_response = requests.get(image_url)
+            image_response.raise_for_status()
+            
+            # Przygotuj dane do uploadu
+            api_url = build_wp_api_url(blog.api_url, "media")
+            auth = (blog.username, blog.api_token)
+            
+            # Określ typ pliku
+            content_type = image_response.headers.get('content-type', 'image/jpeg')
+            filename = f"{title.replace(' ', '_')}.jpg"
+            
+            # Upload do WordPress
+            files = {
+                'file': (filename, image_response.content, content_type)
+            }
+            
+            data = {
+                'title': title,
+                'alt_text': title
+            }
+            
+            response = requests.post(api_url, auth=auth, files=files, data=data)
+            response.raise_for_status()
+            
+            media_result = response.json()
+            return media_result.get('id')
+            
+        except Exception as e:
+            logger.error(f"Failed to upload image to WordPress: {e}")
+            return None
+
     def _create_notification(self, title: str, message: str, type: str = "info"):
         """
         Tworzy powiadomienie w systemie.
