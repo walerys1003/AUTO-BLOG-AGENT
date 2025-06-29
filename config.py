@@ -8,8 +8,7 @@ load_dotenv()
 class Config:
     # OpenRouter API Configuration
     OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")  # Fallback
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")  # Fallback
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")  # Direct Anthropic API fallback
     
     # Image API Configuration
     UNSPLASH_API_KEY = os.environ.get("UNSPLASH_API_KEY")
