@@ -273,14 +273,15 @@ class WorkflowEngine:
                             ).first()
                             
                             if not existing:
-                                new_topic = ArticleTopic(
-                                    blog_id=automation_rule.blog_id,
-                                    topic=topic_text,
-                                    category=category_name,
-                                    status='approved' if automation_rule.auto_approve_topics else 'pending',
-                                    priority=5,  # Domyślny priorytet
-                                    created_at=datetime.utcnow()
-                                )
+                                new_topic = ArticleTopic()
+                                new_topic.blog_id = automation_rule.blog_id
+                                new_topic.topic = topic_text
+                                new_topic.category = category_name
+                                new_topic.status = 'approved' if automation_rule.auto_approve_topics else 'pending'
+                                new_topic.priority = 5
+                                new_topic.created_at = datetime.utcnow()
+                                if automation_rule.auto_approve_topics:
+                                    new_topic.approved_at = datetime.utcnow()
                                 db.session.add(new_topic)
                                 
                         db.session.commit()
