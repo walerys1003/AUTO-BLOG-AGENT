@@ -174,6 +174,69 @@ class WorkflowEngine:
             
         return workflow_result
     
+    def _select_author_for_article(self, category: str, article_id: int) -> Dict[str, Any]:
+        """
+        Wybiera autora na podstawie kategorii i systemu rotacji MamaTestuje.com
+        """
+        # Autorzy MamaTestuje.com z ich specjalizacjami
+        authors = {
+            2: {
+                "name": "Tomasz Kotliński",
+                "wordpress_id": 2,
+                "specialties": ["Planowanie ciąży", "Zdrowie w ciąży", "Kosmetyki dla mam", "Laktacja i karmienie"],
+                "weight": 50
+            },
+            5: {
+                "name": "Gabriela Bielec", 
+                "wordpress_id": 5,
+                "specialties": ["Karmienie dziecka", "Kosmetyki dla dzieci", "Akcesoria dziecięce"],
+                "weight": 20
+            },
+            4: {
+                "name": "Helena Rybikowska",
+                "wordpress_id": 4, 
+                "specialties": ["Zdrowie dziecka", "Przewijanie dziecka"],
+                "weight": 15
+            },
+            3: {
+                "name": "Zofia Chryplewicz",
+                "wordpress_id": 3,
+                "specialties": ["Kosmetyki dla mam", "Bielizna poporodowa"],
+                "weight": 15
+            }
+        }
+        
+        # Znajdź specjalistów dla kategorii
+        specialists = []
+        all_authors = []
+        
+        for author_id, author_data in authors.items():
+            if category in author_data["specialties"]:
+                specialists.append(author_data)
+            all_authors.append(author_data)
+        
+        # Preferuj specjalistów (80% szans)
+        import random
+        if specialists and random.random() < 0.8:
+            available_authors = specialists
+        else:
+            available_authors = all_authors
+        
+        # Rotacja na podstawie ID artykułu i wag
+        author_pool = []
+        for author in available_authors:
+            repetitions = max(1, int(author["weight"] / 10))
+            author_pool.extend([author] * repetitions)
+        
+        # Wybierz autora
+        if author_pool:
+            selected_author = author_pool[article_id % len(author_pool)]
+        else:
+            selected_author = authors[2]  # Fallback na Tomasz Kotliński
+            
+        logger.info(f"Selected author for article {article_id}: {selected_author['name']}")
+        return selected_author
+    
     def _execute_topic_management(self, automation_rule: AutomationRule) -> Dict[str, Any]:
         """
         Zarządza tematami - sprawdza dostępność i generuje nowe jeśli potrzeba.
@@ -357,7 +420,7 @@ class WorkflowEngine:
     
     def _execute_wordpress_publishing(self, article: Article, automation_rule: AutomationRule) -> Dict[str, Any]:
         """
-        Publikuje artykuł na WordPress.
+        Publikuje artykuł na WordPress z automatyczną rotacją autorów.
         """
         logger.info(f"Publishing article to WordPress: {article.title}")
         
@@ -366,13 +429,18 @@ class WorkflowEngine:
             if not blog:
                 return {"success": False, "error": "Blog not found"}
             
+            # Wybierz autora na podstawie kategorii i rotacji (fallback jeśli brak kategorii)
+            category = getattr(article, 'category', 'Planowanie ciąży')
+            selected_author = self._select_author_for_article(category, article.id)
+            
             # Przygotuj dane do publikacji
             post_data = {
                 "title": article.title,
                 "content": article.content,
                 "excerpt": article.excerpt,
                 "status": "publish" if automation_rule.auto_publish else "draft",
-                "featured_media": None  # TODO: Upload featured image first
+                "featured_media": None,
+                "author": selected_author["wordpress_id"]  # Przypisz autora
             }
             
             # Dodaj kategorię jeśli istnieje
