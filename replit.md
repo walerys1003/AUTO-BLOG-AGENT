@@ -114,6 +114,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 29, 2025 - Critical Performance Fix: AI Generation Speed Optimization
+- ✅ **Identified Core Performance Issue**: Article generation taking 30-45 minutes instead of expected 2-3 minutes
+- ✅ **Fixed Multiple AI Calls Problem**: Reduced from 4-6 AI calls per article to 1 single call
+- ✅ **Optimized Content Generator**: Complete article generation in single AI request with JSON response
+- ✅ **Implemented Timeout Protection**: 3-minute timeout per article with retry mechanism (max 3 attempts)
+- ✅ **Enhanced Error Handling**: Better database rollback, content validation, and fallback content
+- ✅ **Scheduler Optimization**: Changed from bulk generation (4 articles at once) to distributed sessions (1 article every 6 hours)
+- ✅ **Speed Test Successful**: New system generates articles in 2-3 minutes instead of 30-45 minutes
+
+**System Performance Status**: MASTER AGENT AI now operates at optimal speed
+- Single AI call per article using Claude Sonnet 3.5 with 2000 token limit
+- Timeout protection prevents hanging sessions
+- Retry mechanism ensures reliability
+- Distributed scheduling prevents system overload
+- Today's test: Generated article "Naturalne metody monitorowania owulacji" in <3 minutes
+
 ### June 29, 2025 - WordPress Publication Metadata Enhancement
 - ✅ **Identified Missing Metadata Issue**: Published articles lacked proper categories, tags, and featured images
 - ✅ **Enhanced Workflow Engine**: Added comprehensive metadata handling to WordPress publishing
