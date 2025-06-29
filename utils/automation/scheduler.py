@@ -199,9 +199,9 @@ class AutomationScheduler:
                 # Jeden post dziennie - następny dzień o tej samej godzinie
                 next_execution = current_time + timedelta(days=1)
             else:
-                # Wiele postów dziennie - rozłóż na równe interwały przez cały dzień
-                # Zamiast wszystkich naraz, generuj po jednym artykule częściej
-                hours_between_posts = 24 / rule.posts_per_day
+                # Wiele postów dziennie - zoptymalizowany interwał 2.5 godziny
+                # Częstsze sesje dla lepszej niezawodności i równomiernego rozkładu
+                hours_between_posts = 2.5  # Stały interwał 2.5h zamiast obliczanego
                 next_execution = current_time + timedelta(hours=hours_between_posts)
                 
             rule.next_execution_at = next_execution
