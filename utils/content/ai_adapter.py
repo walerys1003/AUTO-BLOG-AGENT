@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 def get_openrouter_api_key():
     """Get OpenRouter API key from environment or config"""
-    return Config.OPENROUTER_API_KEY
+    # Temporary: Use new API key until environment is updated
+    return "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"
 
 def get_ai_completion(
     system_prompt: str,
