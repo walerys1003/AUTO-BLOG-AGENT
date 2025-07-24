@@ -98,9 +98,16 @@ def test_wordpress_credentials(username, app_password):
     print(f"   Jeśli Test 1 ✅ ale Test 2 ❌ → Problem z uprawnieniami")
 
 if __name__ == "__main__":
-    print("🔧 Aby przetestować nowe dane, uruchom:")
-    print("python test_new_credentials.py")
-    print("\nLub zaktualizuj dane w kodzie i uruchom test_wordpress_credentials()")
+    print("🔧 QUICK TEST - wklej nowe Application Password:")
+    print("=" * 50)
     
-    # Przykład użycia:
-    # test_wordpress_credentials("TomaszKotlinski", "NOWE_HASŁO_APLIKACJI")
+    # Wprowadź tutaj nowe hasło z WordPress Admin
+    NEW_PASSWORD = input("Wklej nowe Application Password: ").strip()
+    
+    if NEW_PASSWORD and len(NEW_PASSWORD) > 10:
+        print(f"\n🧪 Testowanie nowego hasła...")
+        test_wordpress_credentials("TomaszKotlinski", NEW_PASSWORD)
+    else:
+        print("❌ Nie wprowadzono hasła lub jest za krótkie")
+        print("\nLub użyj bezpośrednio:")
+        print("test_wordpress_credentials('TomaszKotlinski', 'NOWE_HASŁO')")
