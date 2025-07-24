@@ -11,6 +11,8 @@ from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from app import db
 from models import Blog, ContentLog, AutomationRule
+import requests
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -18,24 +20,13 @@ class AuthorRotationManager:
     """Manages rotational author assignment for multi-blog publishing"""
     
     def __init__(self):
-        # Blog-specific author configurations
+        # Real WordPress author IDs (will be updated from WordPress API)
         self.blog_authors = {
-            'MAMATESTUJE.COM': [
-                {'id': 2, 'name': 'TomaszKotlinski', 'weight': 1},
-                {'id': 5, 'name': 'GabrielaBielec', 'weight': 1}, 
-                {'id': 4, 'name': 'HelenaRybikowska', 'weight': 1},
-                {'id': 3, 'name': 'ZofiaChryplewicz', 'weight': 1}
-            ],
-            'ZNANEKOSMETYKI.PL': [
-                {'id': 1, 'name': 'admin', 'weight': 1},
-                {'id': 2, 'name': 'kosmety_expert', 'weight': 1},
-                {'id': 3, 'name': 'beauty_writer', 'weight': 1}
-            ],
-            'HOMOSONLY.PL': [
-                {'id': 1, 'name': 'admin', 'weight': 1},
-                {'id': 2, 'name': 'lifestyle_expert', 'weight': 1}
-            ]
+            'MAMATESTUJE.COM': [],  # Will be populated from WordPress
+            'ZNANEKOSMETYKI.PL': [], # Will be populated from WordPress  
+            'HOMOSONLY.PL': []      # Will be populated from WordPress
         }
+        self._populate_real_authors()
     
     def get_next_author_for_blog(self, blog_id: int, daily_quota: int) -> Optional[Dict]:
         """
@@ -267,6 +258,103 @@ class AuthorRotationManager:
         
         # Return as many unique categories as quota requires
         return pool[:quota] if len(pool) >= quota else pool * ((quota // len(pool)) + 1)[:quota]
+    
+    def _populate_real_authors(self):
+        """Populate real WordPress author IDs from WordPress API"""
+        try:
+            from app import app, db
+            
+            with app.app_context():
+                blogs_config = [
+                    {'name': 'MAMATESTUJE.COM', 'username': 'TomaszKotlinski', 'token': 'xylc IFTY xwwr QTQN suAM N5X6'},
+                    {'name': 'ZNANEKOSMETYKI.PL', 'username': 'admin', 'token': 'HQFQ zPo1 E4pj wCp4 sLhu NCR3'},
+                    {'name': 'HOMOSONLY.PL', 'username': 'admin', 'token': 'DmDc pWRg upV6 vjMM fbLm OAHU'}
+                ]
+                
+                for blog_config in blogs_config:
+                    blog = Blog.query.filter_by(name=blog_config['name']).first()
+                    if not blog:
+                        continue
+                    
+                    try:
+                        # Get WordPress users
+                        api_url = f'{blog.url}/wp-json/wp/v2/users'
+                        username = blog_config['username']
+                        user_token = blog_config['token']
+                        credentials = f'{username}:{user_token}'
+                        token = base64.b64encode(credentials.encode()).decode('utf-8')
+                        headers = {
+                            'Authorization': f'Basic {token}',
+                            'Content-Type': 'application/json'
+                        }
+                        
+                        response = requests.get(api_url, headers=headers, timeout=30)
+                        
+                        if response.status_code == 200:
+                            users = response.json()
+                            blog_authors = []
+                            
+                            for user in users:
+                                user_id = user.get('id')
+                                user_name = user.get('name') or user.get('slug') or f'User_{user_id}'
+                                blog_authors.append({
+                                    'id': user_id,
+                                    'name': user_name,
+                                    'slug': user.get('slug'),
+                                    'weight': 1
+                                })
+                            
+                            self.blog_authors[blog_config['name']] = blog_authors
+                            logger.info(f"Loaded {len(blog_authors)} authors for {blog_config['name']}")
+                            
+                    except Exception as e:
+                        logger.error(f"Error loading authors for {blog_config['name']}: {str(e)}")
+                        # Fallback to default authors if API fails
+                        if blog_config['name'] == 'MAMATESTUJE.COM':
+                            self.blog_authors[blog_config['name']] = [{'id': 2, 'name': 'TomaszKotlinski', 'weight': 1}]
+                        elif blog_config['name'] == 'ZNANEKOSMETYKI.PL':
+                            self.blog_authors[blog_config['name']] = [{'id': 1, 'name': 'admin', 'weight': 1}]  
+                        elif blog_config['name'] == 'HOMOSONLY.PL':
+                            self.blog_authors[blog_config['name']] = [{'id': 1, 'name': 'admin', 'weight': 1}]
+                            
+        except Exception as e:
+            logger.error(f"Error in _populate_real_authors: {str(e)}")
+    
+    def get_rotational_author_by_day_and_index(self, blog_name: str, article_index: int) -> Optional[Dict]:
+        """
+        Get rotational author based on day and article index (following user specification)
+        
+        Args:
+            blog_name: Name of the blog
+            article_index: Index of article for today (0, 1, 2, etc.)
+            
+        Returns:
+            Dict with author info or None
+        """
+        try:
+            import datetime
+            
+            if blog_name not in self.blog_authors:
+                logger.error(f"Blog {blog_name} not found in authors")
+                return None
+                
+            authors = self.blog_authors[blog_name]
+            if not authors:
+                logger.error(f"No authors found for blog {blog_name}")
+                return None
+            
+            # Calculate rotational author based on day + article index
+            day_index = datetime.date.today().toordinal()  # Unique day number
+            author_index = (day_index + article_index) % len(authors)
+            
+            selected_author = authors[author_index]
+            logger.info(f"Rotational author for {blog_name} article {article_index}: {selected_author['name']}")
+            
+            return selected_author
+            
+        except Exception as e:
+            logger.error(f"Error getting rotational author: {str(e)}")
+            return None
 
 # Global instance
 author_rotation_manager = AuthorRotationManager()
