@@ -5,7 +5,7 @@ Generates relevant Polish SEO tags based on article content and category
 import logging
 import re
 from typing import List, Set
-from utils.ai.client import get_ai_completion
+from utils.content.ai_adapter import get_ai_completion
 from config import Config
 
 logger = logging.getLogger(__name__)

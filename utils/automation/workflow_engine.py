@@ -499,7 +499,7 @@ class WorkflowEngine:
     
     def _execute_wordpress_publishing(self, article: Article, automation_rule: AutomationRule) -> Dict[str, Any]:
         """
-        Publikuje artykuł na WordPress z automatyczną rotacją autorów.
+        Publikuje artykuł na WordPress z automatyczną rotacją autorów i featured image.
         """
         logger.info(f"Publishing article to WordPress: {article.title}")
         
@@ -508,61 +508,60 @@ class WorkflowEngine:
             if not blog:
                 return {"success": False, "error": "Blog not found"}
             
-            # Wybierz autora na podstawie kategorii i rotacji (fallback jeśli brak kategorii)
-            category = getattr(article, 'category', 'Planowanie ciąży')
-            selected_author = self._select_author_for_article(category, article.id)
+            # Przygotuj featured image data jeśli dostępny
+            featured_image = None
+            if hasattr(article, 'featured_image_url') and article.featured_image_url:
+                featured_image = {
+                    'url': article.featured_image_url,
+                    'alt_text': f"Ilustracja do artykułu: {article.title}",
+                    'name': f"featured-{article.id}.jpg"
+                }
+                logger.info(f"Prepared featured image: {featured_image['url']}")
             
-            # Znajdź ID kategorii WordPress
+            # Wybierz kategorię (fallback jeśli brak)
+            category = getattr(article, 'category', 'Planowanie ciąży')
             category_id = self._get_wordpress_category_id(blog, category)
             
-            # Utwórz tagi w WordPress i pobierz ich ID
-            tag_names = self._generate_tags_for_category(category)
-            tag_ids = self._create_tags_in_wordpress(blog, tag_names)
+            # Wygeneruj tagi (użyj zapisanych tagów lub wygeneruj nowe)
+            if hasattr(article, 'get_tags') and article.get_tags():
+                tag_names = article.get_tags()[:6]  # WordPress limit
+            else:
+                tag_names = self._generate_tags_for_category(category)[:6]
             
-            # Przygotuj dane do publikacji
-            post_data = {
-                "title": article.title,
-                "content": article.content,
-                "excerpt": article.excerpt,
-                "status": "publish" if automation_rule.auto_publish else "draft",
-                "author": selected_author["wordpress_id"],  # Przypisz autora
-                "categories": [category_id] if category_id else [],
-                "tags": tag_ids
-            }
+            # Użyj publish_wordpress_post z utils/wordpress/client.py dla właściwego uploadu featured image
+            from utils.wordpress.client import publish_wordpress_post
             
-            # Dodaj featured image jeśli dostępny
-            featured_image_id = self._get_featured_image_for_article(blog, article)
-            if featured_image_id:
-                post_data["featured_media"] = featured_image_id
+            success, post_id, error = publish_wordpress_post(
+                blog_id=blog.id,
+                title=article.title,
+                content=article.content,
+                excerpt=article.excerpt,
+                category_id=category_id,
+                tags=tag_names,
+                featured_image=featured_image
+            )
             
-            # Publikuj na WordPress przez API
-            api_url = build_wp_api_url(blog.api_url, "posts")
-            auth = (blog.username, blog.api_token)
-            
-            response = requests.post(api_url, auth=auth, json=post_data)
-            response.raise_for_status()
-            
-            post_result = response.json()
-            
-            if post_result and "id" in post_result:
+            if success:
                 # Aktualizuj artykuł z ID WordPress
-                article.post_id = post_result["id"]
+                article.post_id = post_id
                 article.status = "published"
                 article.published_at = datetime.utcnow()
                 db.session.commit()
                 
-                logger.info(f"Article published to WordPress with ID: {post_result['id']}")
-                logger.info(f"Published with category ID: {category_id}, tags: {self._generate_tags_for_category(category)}")
+                logger.info(f"Article published to WordPress with ID: {post_id}")
+                logger.info(f"Published with category ID: {category_id}, tags: {tag_names}")
+                logger.info(f"Featured image: {'✅ UPLOADED' if featured_image else '❌ NOT SET'}")
                 
                 return {
                     "success": True, 
-                    "post_id": post_result["id"],
+                    "post_id": post_id,
                     "category_assigned": category_id,
-                    "tags_assigned": len(self._generate_tags_for_category(category)),
-                    "featured_image": featured_image_id
+                    "tags_assigned": len(tag_names),
+                    "featured_image_uploaded": bool(featured_image)
                 }
             else:
-                return {"success": False, "error": "WordPress API returned invalid response"}
+                logger.error(f"WordPress publishing failed: {error}")
+                return {"success": False, "error": error}
                 
         except Exception as e:
             logger.error(f"WordPress publishing failed: {str(e)}")
