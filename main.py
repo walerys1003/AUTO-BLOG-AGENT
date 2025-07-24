@@ -7,6 +7,7 @@ from models import Blog, SocialAccount, ContentLog, ScheduledPublication
 from utils.seo.analyzer import initialize_seo_module
 from utils.automation.scheduler import start_automation_scheduler
 from routes_scheduling import scheduling_bp
+import routes_multi_blog  # Multi-blog management API endpoints
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
