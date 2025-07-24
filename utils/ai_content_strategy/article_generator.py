@@ -102,14 +102,53 @@ Każdy akapit musi być rozbudowany (4-6 zdań). Dodaj liczne przykłady, statys
 
 To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         
-        # Enhanced single AI completion with maximum token limit for 4-page A4 articles
-        response = get_ai_completion(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
+        # Multiple AI calls to guarantee length - paragraph by paragraph approach
+        content_parts = []
+        
+        # Generate introduction (300+ words)
+        intro_prompt = f"Napisz bardzo długie wprowadzenie (minimum 300 słów) do artykułu o temacie: {topic}. Kategoria: {category}. Użyj storytelling, statystyk, hook'a dla czytelnika. Format: czysty HTML z tagami <p>."
+        intro_response = get_ai_completion(
+            system_prompt="Jesteś ekspertem w pisaniu długich wprowadzeń do artykułów.",
+            user_prompt=intro_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=8000,  # Increased tokens for guaranteed 1300+ word articles (4 pages A4)
+            max_tokens=1200,
             temperature=0.7
         )
+        content_parts.append(intro_response.strip())
+        
+        # Generate 5 main sections (250+ words each)
+        sections = [
+            f"Podstawowe informacje o {topic}",
+            f"Szczegółowe porady i wskazówki dotyczące {topic}",
+            f"Praktyczne przykłady i przypadki z życia związane z {topic}",
+            f"Najczęstsze błędy i jak ich unikać w kontekście {topic}",
+            f"Plan działania i następne kroki dla {topic}"
+        ]
+        
+        for i, section_topic in enumerate(sections, 1):
+            section_prompt = f"Napisz bardzo długą sekcję artykułu (minimum 250 słów) na temat: {section_topic}. Dodaj nagłówek H2, szczegółowe akapity z przykładami, statystykami, poradami. Format: HTML z <h2> i <p>."
+            section_response = get_ai_completion(
+                system_prompt="Jesteś ekspertem w pisaniu długich, szczegółowych sekcji artykułów.",
+                user_prompt=section_prompt,
+                model=Config.DEFAULT_CONTENT_MODEL,
+                max_tokens=1000,
+                temperature=0.7
+            )
+            content_parts.append(section_response.strip())
+        
+        # Generate conclusion (200+ words)
+        conclusion_prompt = f"Napisz bardzo długie podsumowanie (minimum 200 słów) do artykułu o {topic}. Zawrzyj kluczowe wnioski, call-to-action, praktyczne wskazówki. Format: HTML z <p>."
+        conclusion_response = get_ai_completion(
+            system_prompt="Jesteś ekspertem w pisaniu długich podsumowań artykułów.",
+            user_prompt=conclusion_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=800,
+            temperature=0.7
+        )
+        content_parts.append(conclusion_response.strip())
+        
+        # Combine all parts
+        response = '\n\n'.join(content_parts)
         
         # Response is pure HTML content - no JSON parsing needed
         content = response.strip()

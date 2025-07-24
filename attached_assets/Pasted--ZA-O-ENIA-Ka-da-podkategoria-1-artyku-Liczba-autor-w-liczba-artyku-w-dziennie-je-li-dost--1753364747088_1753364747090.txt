@@ -1,0 +1,78 @@
+✅ ZAŁOŻENIA
+Każda podkategoria = 1 artykuł.
+
+Liczba autorów = liczba artykułów dziennie (jeśli dostępni).
+
+Każdy autor publikuje maksymalnie 1 artykuł dziennie.
+
+Autorzy są przydzielani rotacyjnie, czyli zmieniają się cyklicznie.
+
+System działa dla każdego bloga osobno: MamaTestuje, ZnaneKosmetyki, HomosOnly.
+
+✅ STRUKTURA ROTACYJNA W PYTHONIE
+🔁 1. Lista autorów dla danego bloga (WordPress user ID)
+python
+Kopiuj
+Edytuj
+AUTHORS = {
+    "mamatestuje": [3, 7, 12],           # ID użytkowników WordPress
+    "znanekosmetyki": [4, 9, 11],
+    "homosonly": [5, 6, 8, 13]
+}
+📆 2. Oblicz rotacyjnego autora na podstawie dnia i indeksu artykułu
+python
+Kopiuj
+Edytuj
+import datetime
+
+def get_author_for_blog(blog_name: str, article_index: int):
+    authors = AUTHORS[blog_name]
+    day_index = datetime.date.today().toordinal()  # unikalny numer dnia
+    author_index = (day_index + article_index) % len(authors)
+    return authors[author_index]
+📝 3. Przykład przypisania autorów do 3 artykułów na blogu znanekosmetyki.pl
+python
+Kopiuj
+Edytuj
+blog = "znanekosmetyki"
+articles_today = 3  # liczba artykułów do publikacji dzisiaj
+
+for i in range(articles_today):
+    author_id = get_author_for_blog(blog, i)
+    post_data = {
+        "title": tytul,
+        "content": tresc,
+        "excerpt": lead,
+        "status": "publish",
+        "featured_media": image_id,
+        "author": author_id,  # <-- tu przypisujesz autora
+        "categories": [id_kategorii],
+        "tags": id_tagi
+    }
+    # opublikuj artykuł z tym autorem
+🛠️ 4. Co musisz zrobić teraz:
+🔐 A. Sprawdź ID autorów na każdym blogu
+W WordPress REST API:
+
+bash
+Kopiuj
+Edytuj
+GET https://twojblog.pl/wp-json/wp/v2/users
+Zobaczysz listę użytkowników z ich id, name i slug.
+
+💡 B. Zadbaj o to, by w ciągu dnia:
+agent pobrał listę aktywnych autorów danego bloga,
+
+zliczył ile artykułów ma wygenerować dla danej liczby podkategorii,
+
+przypisał rotacyjnie autorów z listy (każdy max 1 artykuł dziennie),
+
+opublikował każdy artykuł z innym autorem.
+
+✅ Co zyskujesz?
+Równomierne obciążenie wszystkich autorów.
+
+Wiarygodny wygląd bloga — wiele osób publikuje.
+
+Lepsza optymalizacja SEO (WordPress rozpoznaje różnych autorów jako "ekspertów").
+
