@@ -73,6 +73,17 @@ Kategoria: {category}
 Napisz profesjonalny, bardzo długi i dogłębny artykuł w języku polskim dla rodziców i przyszłych rodziców.
 
 BEZWZGLĘDNE WYMAGANIA DŁUGOŚCI (4 STRONY A4):
+- OBLIGATORYJNE MINIMUM: 1400 SŁÓW (nie można zakończyć poniżej tej liczby)
+- OBLIGATORYJNE MINIMUM: 9000 ZNAKÓW ZE SPACJAMI
+- OBLIGATORYJNE MINIMUM: 7500 ZNAKÓW BEZ SPACJI
+
+STRATEGIA PISANIA:
+- Każdy akapit musi mieć minimum 6-8 zdań (około 120-150 słów)
+- Każda sekcja H2 musi mieć minimum 280 słów
+- Wstęp minimum 300 słów, podsumowanie minimum 200 słów
+- Dodawaj szczegółowe przykłady, cytaty, statystyki, porównania
+- Używaj storytelling, przypadki z życia, pytania retoryczne
+- NIE SKRACAJ - artykuł musi być naprawdę długi i szczegółowy
 - MINIMUM 1300 słów (nie mniej!)
 - MINIMUM 8500 znaków ze spacjami
 - Każda sekcja H2 musi mieć co najmniej 4-5 długich akapitów
@@ -91,12 +102,12 @@ Każdy akapit musi być rozbudowany (4-6 zdań). Dodaj liczne przykłady, statys
 
 To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         
-        # Single AI completion with maximum token limit for 4-page A4 articles
+        # Enhanced single AI completion with maximum token limit for 4-page A4 articles
         response = get_ai_completion(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=6000,  # Maximum tokens for 1300+ word articles (4 pages A4)
+            max_tokens=8000,  # Increased tokens for guaranteed 1300+ word articles (4 pages A4)
             temperature=0.7
         )
         
