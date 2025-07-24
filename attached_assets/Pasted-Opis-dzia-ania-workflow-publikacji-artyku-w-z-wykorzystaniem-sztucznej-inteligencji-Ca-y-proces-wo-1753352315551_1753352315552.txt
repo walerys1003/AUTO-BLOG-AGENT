@@ -1,0 +1,44 @@
+Opis działania workflow publikacji artykułów z wykorzystaniem sztucznej inteligencji
+
+Cały proces workflow powinien wyglądać następująco:
+
+Generowanie tematów
+Sztuczna inteligencja automatycznie tworzy listę tematów artykułów dla każdej podkategorii przypisanej do głównej kategorii bloga. Kategorie są dobierane w taki sposób, aby w ciągu miesiąca lub określonego cyklu czasowego każda z nich została uzupełniona o nowe treści.
+
+Harmonogram publikacji
+System uwzględnia dzienny limit publikacji – np. maksymalnie 4 artykuły dziennie. AI dobiera podkategorie w sposób zrównoważony, aby zapewnić regularne uzupełnianie wszystkich działów w równym tempie. Po zakończeniu jednego cyklu (czyli po zaktualizowaniu wszystkich podkategorii) cały proces rozpoczyna się od nowa.
+
+Struktura kategorii
+Należy pamiętać, że główne kategorie pełnią wyłącznie funkcję organizacyjną i nie są miejscem publikacji treści. Artykuły dodawane są wyłącznie do podkategorii. To istotne przy organizacji danych w systemie.
+
+Dobór tematów i słów kluczowych
+Propozycje tematów powinny być atrakcyjne i aktualne – najlepiej oparte na analizie popularnych zapytań z wyszukiwarek. Dzięki temu treści będą odpowiadały na realne potrzeby użytkowników i zwiększały ruch na stronie.
+
+Parametry artykułów
+Każdy artykuł powinien mieć określoną długość – przykładowo odpowiadać objętości 4 stron A4, zawierać konkretną liczbę słów i znaków. Artykuły tworzone są etapowo – nie w jednym wywołaniu, lecz w przemyślanych krokach, co zapewnia większą kontrolę nad jakością i spójnością tekstu.
+
+Elementy publikacyjne
+Po wygenerowaniu treści, artykuł musi być automatycznie wzbogacony o:
+
+Tagi i znaczniki SEO,
+
+Przyciągający uwagę tytuł i lead,
+
+Zdjęcie główne (dobierane na podstawie słów kluczowych lub tematyki artykułu),
+
+Ewentualnie dodatkowe grafiki lub infografiki, jeśli są wymagane.
+
+Automatyczna publikacja
+Artykuł powinien być przypisany do odpowiedniej podkategorii i zaplanowany do publikacji w ustalonym czasie (np. co kilka godzin lub dni), zgodnie z harmonogramem.
+
+Pytania do doprecyzowania lub realizacji technicznej:
+
+Czy artykuły mają być generowane w całości jednym promptem, czy etapowo – np. oddzielnie: tytuł, lead, wstęp, rozwinięcie, zakończenie?
+
+Jakie dokładnie prompty będą używane do generowania artykułów? Czy są one dynamiczne (na podstawie słów kluczowych i podkategorii)?
+
+Jakie narzędzie odpowiada za dobór obrazów? Czy ma dostęp do banków zdjęć (np. Unsplash, Pexels)?
+
+Czy publikacja odbywa się przez REST API WordPressa lub inny system CMS?
+
+Czy system uwzględnia logikę ponownej rotacji tematów po zakończeniu cyklu publikacji?
