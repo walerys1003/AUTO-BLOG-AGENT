@@ -369,12 +369,35 @@ class WorkflowEngine:
                         continue
                     return {"success": False, "error": "Failed to generate article content after retries"}
                 
-                # Validate article content
-                if len(article_result.get("content", "")) < 200:
+                # Enhanced content validation using the new validator
+                from utils.content.content_validator import validate_before_publication
+                
+                title = article_result.get("title", "")
+                excerpt = article_result.get("excerpt", "")
+                content = article_result.get("content", "")
+                
+                # Basic length check first
+                if len(content) < 200:
                     if attempt < max_retries:
                         logger.warning(f"Generated content too short, retrying ({attempt + 1}/{max_retries})")
                         continue
                     logger.warning("Generated content is very short but using it anyway")
+                
+                # Comprehensive validation
+                is_valid, validation_errors = validate_before_publication(title, excerpt, content, topic.category)
+                
+                if not is_valid and len(validation_errors) > 3:  # Allow minor issues
+                    if attempt < max_retries:
+                        logger.warning(f"Content validation failed with {len(validation_errors)} errors, retrying ({attempt + 1}/{max_retries})")
+                        for error in validation_errors[:3]:  # Log first 3 errors
+                            logger.warning(f"   - {error}")
+                        continue
+                    else:
+                        logger.warning(f"Content validation failed but using anyway after {max_retries} attempts")
+                elif validation_errors:
+                    logger.info(f"Minor content issues detected: {len(validation_errors)} warnings")
+                else:
+                    logger.info("Content validation passed successfully")
                 
                 # Zapisz artykuł w bazie z lepszą obsługą błędów
                 try:

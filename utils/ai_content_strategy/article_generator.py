@@ -34,24 +34,34 @@ def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     logger.info(f"Fast generating article for topic '{topic}' in category '{category}'")
     
     try:
-        # Single AI call to generate complete article - NO JSON, pure Polish HTML
+        # Enhanced Polish-only article generation following exact specifications
         system_prompt = f"""Jesteś ekspertem w pisaniu artykułów dla polskiego bloga MamaTestuje.com w kategorii '{category}'.
 
-WAŻNE: Pisz WYŁĄCZNIE w języku polskim. Żadnych słów angielskich!
+FUNDAMENTALNE ZASADY:
+- WYŁĄCZNIE język polski (zero słów angielskich)
+- Czysta treść HTML bez artefaktów JSON
+- Profesjonalna jakość jak w magazynie dla rodziców
 
-Napisz kompletny artykuł na temat: '{topic}'
+Napisz ekspercki artykuł na temat: '{topic}'
 
-WYMAGANIA:
-1. Długość: 1200-1600 słów w języku polskim
-2. Struktura: wprowadzenie + 4-5 głównych sekcji + praktyczne podsumowanie
-3. Każda sekcja: nagłówek H2 + 3-4 rozbudowane akapity
-4. Używaj: <h2>, <p>, <strong>, <em>, <ul>, <li>
-5. Ton: ekspercki, ciepły, pomocny dla rodziców
-6. Zawartość: konkretne porady, praktyczne informacje, przykłady
-7. Unikaj ogólników - podawaj szczegóły i fakty
+SZCZEGÓŁOWE WYMAGANIA:
+1. DŁUGOŚĆ: minimum 1500 słów (6000+ znaków) - artykuł ma być bardzo szczegółowy
+2. STRUKTURA OBOWIĄZKOWA:
+   - Długi akapit wprowadzający (hook + kontekst + znaczenie tematu)
+   - 5-6 sekcji głównych z nagłówkami H2
+   - Każda sekcja: 4-5 szczegółowych akapitów (min 150 słów na sekcję)
+   - Rozbudowane podsumowanie z praktycznymi wskazówkami (CTA)
+3. ELEMENTY HTML: <h2>, <p>, <strong>, <em>, <ul>, <li>
+4. TREŚĆ MERYTORYCZNA:
+   - Bardzo szczegółowe porady krok po kroku
+   - Liczne przykłady z życia wzięte
+   - Odwołania do badań i opinii ekspertów
+   - Storytelling, pytania retoryczne, porównania
+   - Konkretne liczby, statystyki, fakty
+5. TON: ciepły ekspert, bardzo szczegółowy i wyczerpujący
 
-ODPOWIEDZ TYLKO TREŚCIĄ HTML artykułu - bez tytułu, bez JSON, bez dodatkowych struktur.
-Zacznij od pierwszego akapitu wprowadzającego."""
+ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
+Żadnych tytułów, JSON, cudzysłowów czy dodatkowych struktur."""
         
         user_prompt = f"""Temat artykułu: {topic}
 Kategoria: {category}
@@ -61,28 +71,33 @@ Artykuł musi być praktyczny, użyteczny i zawierać konkretne informacje oraz 
 
 Rozpocznij od akapitu wprowadzającego, następnie rozwijaj temat w 4-5 sekcjach z nagłówkami H2."""
         
-        # Single AI completion with higher token limit
+        # Single AI completion with much higher token limit for detailed articles
         response = get_ai_completion(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=3000,  # Increased for longer articles
+            max_tokens=4000,  # Increased significantly for 1500+ word articles
             temperature=0.7
         )
         
         # Response is pure HTML content - no JSON parsing needed
         content = response.strip()
         
-        # Generate Polish title separately
-        title_prompt = f"""Stwórz chwytliwy tytuł w języku polskim dla artykułu o temacie: {topic}
-        
-        Wymagania:
-        - Tylko język polski
-        - 50-80 znaków
-        - Przydatny dla rodziców i przyszłych rodziców
-        - Konkretny i pomocny
-        
-        Odpowiedz tylko tytułem, bez dodatkowych słów."""
+        # Generate Polish title following exact specifications  
+        title_prompt = f"""Wygeneruj chwytliwy, w pełni po polsku napisany tytuł blogowy na temat: {topic}
+
+WYMAGANIA TYTUŁU:
+- Maksymalnie 60 znaków
+- 100% język polski (zero angielskich słów)
+- Atrakcyjny dla czytelnika
+- Zawiera słowa kluczowe
+- Wzbudza ciekawość
+- Unika clickbaitu
+- Bez cudzysłowów, dwukropków, nawiasów
+
+Kategoria: {category}
+
+Odpowiedz WYŁĄCZNIE tytułem - bez dodatkowych słów, cudzysłowów czy znaków."""
         
         title_response = get_ai_completion(
             system_prompt="Jesteś ekspertem w tworzeniu tytułów artykułów dla polskich rodziców.",
@@ -100,16 +115,31 @@ Rozpocznij od akapitu wprowadzającego, następnie rozwijaj temat w 4-5 sekcjach
             paragraphs = [p.strip() for p in content.split('\n\n') if p.strip()]
             content = '\n\n'.join([f'<p>{p}</p>' for p in paragraphs])
         
-        # Generate excerpt from first paragraph
-        excerpt = ""
-        if '<p>' in content:
-            first_p_start = content.find('<p>') + 3
-            first_p_end = content.find('</p>')
-            if first_p_end > first_p_start:
-                excerpt = content[first_p_start:first_p_end][:160] + "..."
+        # Generate professional excerpt following specifications
+        excerpt_prompt = f"""Napisz krótki lead (excerpt) do artykułu o tytule: {title}
+
+WYMAGANIA EXCERPT:
+- 1-2 zdania po polsku
+- Przyciąga uwagę i zachęca do lektury  
+- Bez zbędnych znaków interpunkcyjnych
+- Bez cudzysłowów czy struktur JSON
+- Nie może być powieleniem pierwszego akapitu
+- Maksymalnie 160 znaków
+
+Temat artykułu: {topic}
+Kategoria: {category}
+
+Odpowiedz WYŁĄCZNIE tekstem excerpt - bez dodatkowych słów."""
+
+        excerpt_response = get_ai_completion(
+            system_prompt="Jesteś ekspertem w tworzeniu przyciągających zajawek dla polskich blogów parentingowych.",
+            user_prompt=excerpt_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=100,
+            temperature=0.5
+        )
         
-        if not excerpt:
-            excerpt = f"Kompleksowy przewodnik dotyczący {topic.lower()} dla świadomych rodziców."
+        excerpt = excerpt_response.strip().replace('"', '').replace('„', '').replace('"', '')
         
         return {
             'title': title,
