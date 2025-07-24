@@ -114,10 +114,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 24, 2025 - WordPress Authentication Fixed & Workflow Validation Complete
+- ✅ **WordPress Publishing Authentication Resolved**: Fixed Application Password for MamaTestuje.com
+  - **OLD Password**: zjmL gaUZ GeEG YPxC qAlb KLF9 (partially functional)
+  - **NEW Password**: xylc IFTY xwwr QTQN suAM N5X6 (fully functional)
+- ✅ **Live Article Publication Success**: Article ID 51 published as WordPress Post ID 2969
+  - **URL**: https://mamatestuje.com/?p=2969
+  - **Status**: Draft with full metadata and featured image
+- ✅ **Complete Workflow Validation**: All workflow requirements successfully tested
+  - **AI Generation**: 584 words Polish content via Claude Sonnet 3.5
+  - **Automatic Images**: Unsplash API integration working
+  - **SEO Metadata**: 6 tags + meta description generated
+  - **Category Assignment**: WordPress category "Planowanie ciąży" (ID: 3)
+  - **Publication**: REST API POST successful with new credentials
+
 ### July 24, 2025 - Complete Multi-Blog System Implementation & Full Activation
 - ✅ **Multi-Blog Architecture Deployed**: System now supports 3 WordPress blogs simultaneously
 - ✅ **ALL BLOGS FULLY OPERATIONAL**: All three blogs authenticated with real WordPress credentials
-  - **MamaTestuje.com**: TomaszKotlinski (zjmL gaUZ GeEG YPxC qAlb KLF9) - 66 categories
+  - **MamaTestuje.com**: TomaszKotlinski (xylc IFTY xwwr QTQN suAM N5X6) - 66 categories
   - **ZnaneKosmetyki.pl**: admin (HQFQ zPo1 E4pj wCp4 sLhu NCR3) - 100 categories  
   - **HomosOnly.pl**: admin (DmDc pWRg upV6 vjMM fbLm OAHU) - 38 categories
 - ✅ **Real Category Synchronization**: 204 total categories synchronized from WordPress APIs
