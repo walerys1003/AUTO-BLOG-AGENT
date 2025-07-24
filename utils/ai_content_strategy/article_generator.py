@@ -27,6 +27,10 @@ def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     Returns:
         Dictionary with 'title' and 'content' keys
     """
+    # Handle None or empty topic
+    if not topic or topic == 'None':
+        topic = f"Praktyczny przewodnik w kategorii {category}"
+    
     logger.info(f"Fast generating article for topic '{topic}' in category '{category}'")
     
     try:
