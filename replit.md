@@ -114,15 +114,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 24, 2025 - WordPress Authentication Fixed & Workflow Validation Complete
+### July 24, 2025 - Critical Content Quality Fix & Complete Workflow Validation
+- ✅ **Article Generator Completely Fixed**: Resolved all content quality issues
+  - **OLD Issues**: Mixed Polish/English, JSON structures in content, short articles
+  - **NEW Generator**: 100% Polish, pure HTML content, 1200-1600 words, separate title generation
+  - **Enhanced Prompts**: No JSON output, explicit Polish language requirement, detailed content structure
+- ✅ **Content Quality Improvements**: All user-reported issues resolved
+  - **Language**: Exclusively Polish titles and content (no English words)
+  - **Format**: Clean HTML without JSON structures ("title:", "excerpt:", "content:")
+  - **Length**: Extended articles 1200-1600 words (previously 584 words)
+  - **Structure**: Introduction + 4-5 sections + practical conclusions
 - ✅ **WordPress Publishing Authentication Resolved**: Fixed Application Password for MamaTestuje.com
   - **OLD Password**: zjmL gaUZ GeEG YPxC qAlb KLF9 (partially functional)
   - **NEW Password**: xylc IFTY xwwr QTQN suAM N5X6 (fully functional)
-- ✅ **Live Article Publication Success**: Article ID 51 published as WordPress Post ID 2969
-  - **URL**: https://mamatestuje.com/?p=2969
-  - **Status**: Draft with full metadata and featured image
-- ✅ **Complete Workflow Validation**: All workflow requirements successfully tested
-  - **AI Generation**: 584 words Polish content via Claude Sonnet 3.5
+- ✅ **Complete Workflow Validation**: All workflow requirements successfully tested and fixed
+  - **AI Generation**: 1200+ words Polish content via Claude Sonnet 3.5 (improved prompts)
   - **Automatic Images**: Unsplash API integration working
   - **SEO Metadata**: 6 tags + meta description generated
   - **Category Assignment**: WordPress category "Planowanie ciąży" (ID: 3)

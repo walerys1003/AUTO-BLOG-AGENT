@@ -1,0 +1,71 @@
+📌 Uwagi dotyczące działania agenta Auto-Blog w Pythonie – analiza publikacji na blogu MamaTestuje
+Po sprawdzeniu ostatnio opublikowanego artykułu na blogu MamaTestuje.pl, zauważam szereg poważnych błędów, które należy natychmiast poprawić w działaniu agenta AI odpowiedzialnego za automatyczne generowanie i publikację treści w WordPressie.
+
+1. Język artykułu
+Tytuł „5 Common Ciąża Mistakes to Avoid” jest częściowo w języku angielskim, częściowo w polskim, co jest niedopuszczalne.
+👉 Wymaganie: Cały artykuł – włącznie z tytułem, treścią, excerptem i metadanymi – musi być tworzony i publikowany wyłącznie w języku polskim.
+
+2. Struktura i jakość danych tekstowych
+Obecnie generowane dane wyglądają następująco:
+
+"title": "…” – tytuł umieszczony w cudzysłowie, często z dodanym dwukropkiem,
+
+"excerpt": "…” – skrót również zawiera niepotrzebne znaki interpunkcyjne i strukturalne,
+
+"content": "…” – główna treść jest zbyt krótka i uboga.
+
+👉 Do poprawy:
+
+Usuń wszystkie niepotrzebne cudzysłowy, dwukropki, nawiasy oraz inne znaki techniczne z treści title, excerpt, content – one są zbędne w końcowej publikacji.
+
+Zadbaj o czystą, poprawnie sformatowaną strukturę tekstu, która wygląda naturalnie, jak w profesjonalnym blogu.
+
+Content powinien mieć realną długość – min. 600–1500 słów (lub ok. 4 stron A4), z podziałem na nagłówki, akapity, listy, cytaty itp.
+
+3. Długość i jakość treści
+Treść artykułu wygląda obecnie jak krótka notatka – to zaledwie kilka zdań. Nie ma struktury, rozwinięcia myśli, wartości edukacyjnej ani zachęty do dalszej lektury.
+
+👉 Wymagania:
+
+Artykuły mają być merytoryczne, obszerne, pogłębione.
+
+Powinny poruszać temat kompleksowo, zawierać nagłówki H2/H3, cytaty, pytania retoryczne, wezwania do działania, a także fragmenty storytellingowe.
+
+Agent powinien generować treść etapowo, np.:
+
+Tytuł
+
+Excerpt
+
+Wprowadzenie
+
+Części główne (sekcje tematyczne)
+
+Podsumowanie + CTA
+
+4. Obraz główny (featured image)
+Brakuje zdjęcia głównego, co znacznie obniża estetykę i atrakcyjność wpisu.
+
+👉 Obowiązkowo:
+
+Artykuł musi zawierać featured image, dobrany na podstawie słów kluczowych (np. przez API Unsplash/Pexels/Pixabay).
+
+Zdjęcie powinno być pobrane automatycznie i przypisane do artykułu w WordPressie jako featured_media.
+
+5. Spójność i synchronizacja na wszystkich blogach
+Takie błędy nie mogą występować tylko lokalnie – system musi działać jednolicie dla wszystkich blogów w ekosystemie (np. MamaTestuje, ZnaneKosmetyki, OceniamyLeki itd.).
+
+👉 Wymagania ogólne dla Auto-Blog Agenta:
+
+Język publikacji – zawsze zgodny z językiem portalu (PL/EN).
+
+Struktura artykułu – czysta, bez artefaktów JSON-owych czy znaczników technicznych.
+
+Długość i jakość contentu – wysoka, zorientowana na SEO i UX.
+
+Automatyczny dobór obrazów – z wiarygodnych źródeł zintegrowanych przez API.
+
+Harmonogram publikacji – zachowany limit dzienny, rotacja kategorii/podkategorii.
+
+Meta tagi, SEO opisy, tagi WordPressa – generowane i przypisywane automatycznie.
+

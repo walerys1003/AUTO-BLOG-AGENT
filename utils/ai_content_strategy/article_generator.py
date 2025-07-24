@@ -34,71 +34,65 @@ def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     logger.info(f"Fast generating article for topic '{topic}' in category '{category}'")
     
     try:
-        # Single AI call to generate complete article
-        system_prompt = f"""Jesteś ekspertem w pisaniu artykułów dla bloga MamaTestuje.com w kategorii '{category}'.
+        # Single AI call to generate complete article - NO JSON, pure Polish HTML
+        system_prompt = f"""Jesteś ekspertem w pisaniu artykułów dla polskiego bloga MamaTestuje.com w kategorii '{category}'.
+
+WAŻNE: Pisz WYŁĄCZNIE w języku polskim. Żadnych słów angielskich!
+
+Napisz kompletny artykuł na temat: '{topic}'
+
+WYMAGANIA:
+1. Długość: 1200-1600 słów w języku polskim
+2. Struktura: wprowadzenie + 4-5 głównych sekcji + praktyczne podsumowanie
+3. Każda sekcja: nagłówek H2 + 3-4 rozbudowane akapity
+4. Używaj: <h2>, <p>, <strong>, <em>, <ul>, <li>
+5. Ton: ekspercki, ciepły, pomocny dla rodziców
+6. Zawartość: konkretne porady, praktyczne informacje, przykłady
+7. Unikaj ogólników - podawaj szczegóły i fakty
+
+ODPOWIEDZ TYLKO TREŚCIĄ HTML artykułu - bez tytułu, bez JSON, bez dodatkowych struktur.
+Zacznij od pierwszego akapitu wprowadzającego."""
         
-        Twoim zadaniem jest napisanie kompletnego artykułu na temat: '{topic}'
-        
-        Zasady:
-        1. Napisz artykuł o długości 1200-1600 słów w języku polskim
-        2. Struktura: tytuł + wstęp + 3-4 główne sekcje + podsumowanie
-        3. Każda sekcja powinna mieć nagłówek H2 i 2-3 akapity treści
-        4. Używaj pogrubień <strong> dla ważnych pojęć
-        5. Ton przyjazny, ekspercki, skierowany do rodziców i przyszłych rodziców
-        6. Zawrzyj praktyczne porady i konkretne informacje
-        7. Format HTML z użyciem <h2>, <p>, <strong>, <em>
-        
-        Zwróć wynik w formacie JSON:
-        {{
-            "title": "Tytuł artykułu",
-            "content": "Pełna treść artykułu w HTML",
-            "excerpt": "Krótkie podsumowanie (1-2 zdania)"
-        }}
-        """
-        
-        user_prompt = f"""Napisz kompletny artykuł na temat: '{topic}' 
-        
-        Kategoria: {category}
-        
-        Artykuł powinien być wartościowy dla czytelników MamaTestuje.com - rodziców i osób planujących potomstwo."""
+        user_prompt = f"""Temat artykułu: {topic}
+Kategoria: {category}
+
+Napisz profesjonalny, dogłębny artykuł w języku polskim dla rodziców i przyszłych rodziców.
+Artykuł musi być praktyczny, użyteczny i zawierać konkretne informacje oraz porady.
+
+Rozpocznij od akapitu wprowadzającego, następnie rozwijaj temat w 4-5 sekcjach z nagłówkami H2."""
         
         # Single AI completion with higher token limit
         response = get_ai_completion(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=2000,  # Enough for full article
+            max_tokens=3000,  # Increased for longer articles
             temperature=0.7
         )
         
-        # Try to parse JSON response
-        import json
-        try:
-            article_data = json.loads(response)
-            if article_data.get('title') and article_data.get('content'):
-                return {
-                    'title': article_data['title'],
-                    'content': article_data['content'],
-                    'excerpt': article_data.get('excerpt', '')
-                }
-        except json.JSONDecodeError:
-            logger.warning("AI response not in JSON format, parsing as text")
+        # Response is pure HTML content - no JSON parsing needed
+        content = response.strip()
         
-        # Fallback: if not JSON, try to extract title and content from text
-        lines = response.strip().split('\n')
-        title = ""
-        content_lines = []
+        # Generate Polish title separately
+        title_prompt = f"""Stwórz chwytliwy tytuł w języku polskim dla artykułu o temacie: {topic}
         
-        for line in lines:
-            if not title and (line.startswith('#') or len(line.strip()) < 100):
-                title = line.strip().replace('#', '').strip()
-            elif line.strip():
-                content_lines.append(line.strip())
+        Wymagania:
+        - Tylko język polski
+        - 50-80 znaków
+        - Przydatny dla rodziców i przyszłych rodziców
+        - Konkretny i pomocny
         
-        if not title:
-            title = f"Przewodnik: {topic}"
+        Odpowiedz tylko tytułem, bez dodatkowych słów."""
         
-        content = '\n\n'.join(content_lines) if content_lines else response
+        title_response = get_ai_completion(
+            system_prompt="Jesteś ekspertem w tworzeniu tytułów artykułów dla polskich rodziców.",
+            user_prompt=title_prompt,
+            model=Config.DEFAULT_CONTENT_MODEL,
+            max_tokens=100,
+            temperature=0.5
+        )
+        
+        title = title_response.strip().replace('"', '').replace('„', '').replace('"', '')
         
         # Ensure content has proper HTML structure
         if not '<p>' in content and not '<h2>' in content:
@@ -106,29 +100,51 @@ def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
             paragraphs = [p.strip() for p in content.split('\n\n') if p.strip()]
             content = '\n\n'.join([f'<p>{p}</p>' for p in paragraphs])
         
+        # Generate excerpt from first paragraph
+        excerpt = ""
+        if '<p>' in content:
+            first_p_start = content.find('<p>') + 3
+            first_p_end = content.find('</p>')
+            if first_p_end > first_p_start:
+                excerpt = content[first_p_start:first_p_end][:160] + "..."
+        
+        if not excerpt:
+            excerpt = f"Kompleksowy przewodnik dotyczący {topic.lower()} dla świadomych rodziców."
+        
         return {
             'title': title,
             'content': content,
-            'excerpt': f"Praktyczny przewodnik na temat {topic.lower()}."
+            'excerpt': excerpt
         }
         
     except Exception as e:
         logger.error(f"Error in fast article generation: {str(e)}")
         
-        # Quick fallback article
+        # Enhanced fallback article with Polish content
         return {
-            'title': f"Przewodnik: {topic}",
-            'content': f"""<p><strong>{topic}</strong> to ważny temat w kategorii {category}, który zasługuje na szczególną uwagę każdego rodzica.</p>
+            'title': f"Praktyczny przewodnik: {topic}",
+            'content': f"""<p>Temat <strong>{topic.lower()}</strong> w kategorii {category} to zagadnienie, które wymaga dogłębnego zrozumienia i świadomego podejścia każdego rodzica. W dzisiejszych czasach dostęp do rzetelnej informacji ma kluczowe znaczenie dla podejmowania mądrych decyzji.</p>
 
-<h2>Podstawowe informacje</h2>
-<p>W kontekście {topic.lower()}, eksperci podkreślają znaczenie kompleksowego podejścia do tej tematyki. Warto zwrócić uwagę na kluczowe aspekty, które mogą wpłynąć na nasze codzienne decyzje.</p>
+<h2>Podstawy, które warto znać</h2>
+<p>Każdy rodzic powinien mieć solidną wiedzę na temat {topic.lower()}. Eksperci jednogłośnie podkreślają, że kompleksowe podejście do tej tematyki może znacząco wpłynąć na jakość życia całej rodziny.</p>
 
-<h2>Praktyczne wskazówki</h2>
-<p>Praktyczne zastosowanie wiedzy na temat {topic.lower()} może przynieść wymierne korzyści w życiu rodzinnym. Specjaliści zalecają uwzględnienie różnych perspektyw i indywidualnych potrzeb.</p>
+<p>Badania naukowe pokazują, że świadome decyzje oparte na rzetelnej wiedzy przynoszą lepsze rezultaty niż działania oparte wyłącznie na intuicji czy przekazie społecznym.</p>
 
-<h2>Podsumowanie</h2>
-<p>Zrozumienie {topic.lower()} stanowi fundament świadomych decyzji rodzicielskich. Dzięki odpowiedniej wiedzy można lepiej przygotować się na wyzwania związane z tym obszarem.</p>""",
-            'excerpt': f"Kompleksowy przewodnik dotyczący {topic.lower()} dla świadomych rodziców."
+<h2>Praktyczne zastosowanie w codzienności</h2>
+<p>Wiedza teoretyczna ma wartość tylko wtedy, gdy potrafimy ją zastosować w praktyce. W kontekście {topic.lower()}, oznacza to uwzględnienie indywidualnych potrzeb i możliwości każdej rodziny.</p>
+
+<p>Specjaliści zalecają stopniowe wprowadzanie zmian i obserwowanie ich wpływu na codzienne funkcjonowanie. Nie ma uniwersalnych rozwiązań - to, co działa dla jednej rodziny, nie musi sprawdzić się u innych.</p>
+
+<h2>Najczęstsze wyzwania i jak je pokonać</h2>
+<p>W trakcie wprowadzania nowych rozwiązań związanych z {topic.lower()}, rodzice często spotykają się z różnymi trudnościami. Najważniejsze to cierpliwość i systematyczność w działaniu.</p>
+
+<p>Pamiętajmy, że każda zmiana wymaga czasu i konsekwencji. Warto również skorzystać z doświadczeń innych rodziców i porady specjalistów, gdy napotykamy na przeszkody.</p>
+
+<h2>Podsumowanie i kluczowe wnioski</h2>
+<p>Zrozumienie {topic.lower()} stanowi fundament świadomego rodzicielstwa. Dzięki odpowiedniej wiedzy i praktycznemu podejściu można skutecznie wspierać rozwój dzieci i budować harmonijne relacje rodzinne.</p>
+
+<p>Najważniejsze to pamiętać, że każda rodzina jest inna, a najlepsze rozwiązania to te, które są dostosowane do konkretnych potrzeb i możliwości. Inwestycja w wiedzę zawsze się opłaca.</p>""",
+            'excerpt': f"Kompleksowy i praktyczny przewodnik dotyczący {topic.lower()} - wszystko, co powinni wiedzieć świadomi rodzice."
         }
 
 

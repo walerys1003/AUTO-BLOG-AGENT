@@ -1,0 +1,102 @@
+✅ 1. Lista promptów i szablonów promptów AI (GPT/Claude)
+📝 A. Tytuł (Title)
+Prompt:
+
+Wygeneruj chwytliwy, w pełni po polsku napisany tytuł blogowy na temat: {temat}. Tytuł powinien mieć maksymalnie 60 znaków, być atrakcyjny dla czytelnika, zawierać słowa kluczowe i wzbudzać ciekawość. Unikaj clickbaitu.
+
+Przykład tematu:
+"5 najczęstszych błędów popełnianych przez kobiety w ciąży"
+
+🧩 B. Zajawka (Excerpt / lead)
+Prompt:
+
+Napisz krótki lead (excerpt) do artykułu o tytule: {tytuł}. Lead powinien mieć 1–2 zdania, przyciągać uwagę, zachęcać do dalszej lektury, być po polsku, bez zbędnych znaków interpunkcyjnych czy cudzysłowów.
+
+📚 C. Treść główna (Content)
+Prompt (etap 1 – struktura):
+
+Zaproponuj strukturę artykułu blogowego na temat: {temat}. Wypisz nagłówki sekcji H2 i H3, które powinny się w nim znaleźć.
+
+Prompt (etap 2 – pełen content):
+
+Napisz rozbudowany, ekspercki artykuł blogowy po polsku na temat: {temat}. Zastosuj zaproponowaną strukturę (H2, H3), używaj przykładów, storytellingu i prostego języka. Artykuł ma mieć min. 1200 słów. Nie dodawaj cudzysłowów do contentu. Uwzględnij frazy SEO: {słowa_kluczowe}.
+
+🖼️ D. Prompt do wyszukiwania obrazu (Unsplash API)
+Prompt (słowo kluczowe do wyszukiwania):
+
+{temat} lub {słowo_kluczowe} – przygotuj jedno główne słowo kluczowe do wyszukania ilustracji, np. "ciąża", "mama z dzieckiem", "badania prenatalne".
+
+✅ 2. Schemat kodu w Pythonie – AI Auto Blog Agent
+Ten agent:
+
+generuje treść z GPT/Claude,
+
+pobiera obraz z Unsplash API,
+
+publikuje wpis przez REST API WordPressa.
+
+📁 Struktura funkcjonalna:
+python
+Kopiuj
+Edytuj
+# main.py
+from openai import OpenAI
+import requests
+from wordpress_xmlrpc import Client, WordPressPost
+from wordpress_xmlrpc.methods.posts import NewPost
+from wordpress_xmlrpc.methods.media import UploadFile
+
+# Konfiguracja
+WP_URL = 'https://twojblog.pl/xmlrpc.php'
+WP_USERNAME = 'admin'
+WP_PASSWORD = 'haslo'
+UNSPLASH_ACCESS_KEY = 'TWÓJ_KLUCZ'
+
+def generate_content(prompt):
+    response = OpenAI().chat_completion(prompt=prompt)
+    return response['choices'][0]['message']['content']
+
+def get_unsplash_image(keyword):
+    url = f'https://api.unsplash.com/photos/random?query={keyword}&client_id={UNSPLASH_ACCESS_KEY}'
+    res = requests.get(url).json()
+    return res['urls']['regular'], res['alt_description']
+
+def publish_post(title, excerpt, content, image_url):
+    wp = Client(WP_URL, WP_USERNAME, WP_PASSWORD)
+
+    # Pobierz obraz i przygotuj jako featured image
+    img_data = requests.get(image_url).content
+    data = {
+        'name': 'featured.jpg',
+        'type': 'image/jpeg',
+        'bits': img_data
+    }
+    response = wp.call(UploadFile(data))
+    image_id = response.id
+
+    # Utwórz post
+    post = WordPressPost()
+    post.title = title
+    post.content = content
+    post.excerpt = excerpt
+    post.post_status = 'publish'
+    post.thumbnail = image_id
+    post.terms_names = {
+        'category': ['Ciąża'],
+        'post_tag': ['ciąża', 'błędy', 'porady']
+    }
+
+    wp.call(NewPost(post))
+✅ 3. Reguły walidacji treści przed publikacją
+Poniżej zestaw reguł, które agent musi sprawdzić przed opublikowaniem artykułu:
+
+Element	Reguła walidacyjna
+Język	Artykuł musi być w pełni po polsku. Brak słów, zdań lub tytułu po angielsku.
+Tytuł	Max. 60 znaków, unikalny, bez cudzysłowów, bez clickbaitu.
+Excerpt	1–2 zdania, bez znaków JSON (", :), nie może być powieleniem pierwszego akapitu.
+Content	Minimum 600 słów (zalecane 1200+), podzielony na sekcje H2, H3, bez placeholderów.
+Obraz główny	Obowiązkowy, pobrany z Unsplash/Pexels, logicznie powiązany z tematem artykułu.
+Kategorie/tagi	Przypisane do istniejących kategorii i tagów w WP – nie puste.
+Duplikacja	Tytuł i content sprawdzane pod kątem duplikacji (opcjonalnie z bazą wewnętrzną).
+Slug/URL	Tworzony automatycznie z tytułu – bez błędów kodowania, bez spacji.
+
