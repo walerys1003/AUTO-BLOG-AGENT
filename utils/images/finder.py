@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional, Union
 import urllib.parse
 
 from utils.images.unsplash import search_unsplash_images, get_unsplash_photo
+from utils.images.pexels import search_pexels_images, get_pexels_photo
 from utils.images.google import search_google_images, search_google_images_api, get_google_image_details
 from utils.images.serpapi import search_google_images_serpapi
 from utils.images.bing import search_bing_images, get_bing_image_details
@@ -25,7 +26,7 @@ def search_images(
     
     Args:
         query: Search query
-        source: Source to search (bing, google, unsplash, all)
+        source: Source to search (bing, google, unsplash, pexels, all)
         per_page: Number of results per page
         page: Page number
         orientation: Optional orientation filter (landscape, portrait, squarish)
@@ -120,6 +121,20 @@ def search_images(
         except Exception as e:
             logger.warning(f"Error searching Unsplash: {str(e)}")
     
+    # Search Pexels if specifically requested (NEW THIRD SOURCE)
+    if (source == 'pexels' or source == 'all') and (len(results) == 0 or source == 'pexels'):
+        try:
+            pexels_results = search_pexels_images(
+                query=query,
+                per_page=per_page,
+                page=page,
+                orientation=orientation
+            )
+            results.extend(pexels_results)
+            logger.info(f"Found {len(pexels_results)} images from Pexels for '{query}'")
+        except Exception as e:
+            logger.warning(f"Error searching Pexels: {str(e)}")
+    
     # Filter results by tags if provided
     if tags and len(tags) > 0:
         filtered_results = []
@@ -162,6 +177,8 @@ def get_image_details(image_id: str, source: str) -> Dict[str, Any]:
             }
     elif source == 'unsplash':
         return get_unsplash_photo(photo_id=image_id)
+    elif source == 'pexels':
+        return get_pexels_photo(photo_id=image_id)
     elif source == 'google':
         try:
             return get_google_image_details(image_id=image_id)

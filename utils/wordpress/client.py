@@ -456,6 +456,82 @@ def publish_wordpress_post(
             featured_media_id=featured_media_id
         )
 
+def download_image_from_url(image_url: str) -> bytes:
+    """
+    Download image binary data from URL (zgodnie z instrukcjami użytkownika)
+    
+    Args:
+        image_url: URL of the image to download
+        
+    Returns:
+        Binary image data
+    """
+    try:
+        response = requests.get(image_url, timeout=30)
+        response.raise_for_status()
+        return response.content
+    except Exception as e:
+        logger.error(f"Error downloading image from {image_url}: {str(e)}")
+        raise
+
+def upload_image_to_wordpress_media(
+    blog_id: int, 
+    image_data: bytes, 
+    filename: str, 
+    alt_text: str = ""
+) -> Tuple[bool, Optional[int], Optional[str]]:
+    """
+    Upload image binary data to WordPress media library (zgodnie z instrukcjami)
+    
+    Args:
+        blog_id: ID of the blog
+        image_data: Binary image data
+        filename: Name for the file
+        alt_text: Alt text for the image
+        
+    Returns:
+        Tuple of (success, media_id, error_message)
+    """
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
+    
+    # Build media upload URL
+    url = build_wp_api_url(api_url, "media")
+    
+    logger.info(f"Uploading media '{filename}' to blog '{blog_name}' (ID: {blog_id})")
+    
+    # Prepare headers for media upload (zgodnie z instrukcjami)
+    headers = {
+        'Content-Disposition': f'attachment; filename="{filename}"',
+        'Content-Type': 'image/jpeg'
+    }
+    
+    # Basic auth
+    auth = (username, token)
+    
+    try:
+        # Upload image to WordPress media library
+        response = requests.post(url, auth=auth, headers=headers, data=image_data)
+        response.raise_for_status()
+        
+        media = response.json()
+        media_id = media.get('id')
+        
+        # Update alt text if provided
+        if alt_text and media_id:
+            try:
+                alt_text_data = {'alt_text': alt_text}
+                alt_url = build_wp_api_url(api_url, f"media/{media_id}")
+                requests.post(alt_url, auth=auth, json=alt_text_data)
+            except:
+                pass  # Alt text update failure shouldn't break the upload
+        
+        logger.info(f"Successfully uploaded image to WordPress media library: ID {media_id}")
+        return True, media_id, None
+        
+    except Exception as e:
+        logger.error(f"Error uploading media to WordPress: {str(e)}")
+        return False, None, str(e)
+
 def upload_media_to_wordpress(
     blog_id: int,
     image_url: str,
@@ -463,7 +539,7 @@ def upload_media_to_wordpress(
     alt_text: str = "",
 ) -> Tuple[bool, Optional[int], Optional[str]]:
     """
-    Upload media to WordPress
+    Download and upload media to WordPress (implementacja zgodnie z instrukcjami)
     
     Args:
         blog_id: ID of the blog

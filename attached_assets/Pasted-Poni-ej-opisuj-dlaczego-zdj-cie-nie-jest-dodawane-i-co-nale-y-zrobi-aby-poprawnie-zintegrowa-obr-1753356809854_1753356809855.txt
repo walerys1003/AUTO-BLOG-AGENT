@@ -1,0 +1,141 @@
+Poniżej opisuję dlaczego zdjęcie nie jest dodawane i co należy zrobić, aby poprawnie zintegrować obraz jako featured image (obraz główny) do posta WordPressowego przez REST API.
+
+✅ Co działa:
+Artykuł jest poprawnie generowany i publikowany na WordPressie.
+
+Agent komunikuje się z API WordPressa.
+
+Tytuł, treść, tagi, kategorie i inne metadane są przesyłane i publikowane.
+
+❌ Co nie działa:
+Brakuje featured image (obrazka głównego) przypisanego do posta, mimo że adres obrazka z Unsplash (lub Pexels/Google Image) jest dostępny.
+
+✅ Instrukcja: Jak dodać zdjęcie z Unsplash i przypisać je jako featured image w WordPressie (REST API)
+1. Krok po kroku – co powinien zrobić agent w Pythonie
+🔁 Krok 1: Pobierz obraz z Unsplash
+Masz link URL, np. https://images.unsplash.com/photo-XYZ. Pobierz ten plik binarnie w Pythonie:
+
+python
+Kopiuj
+Edytuj
+import requests
+
+def download_image(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.content  # zwróci dane binarne obrazu
+    else:
+        raise Exception("Nie udało się pobrać obrazu z Unsplash.")
+☁️ Krok 2: Wyślij obraz do WordPressa jako media (endpoint: /wp-json/wp/v2/media)
+python
+Kopiuj
+Edytuj
+def upload_image_to_wp(image_data, filename, jwt_token):
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Content-Type": "image/jpeg"
+    }
+
+    response = requests.post(
+        "https://twojblog.pl/wp-json/wp/v2/media",
+        headers=headers,
+        data=image_data
+    )
+
+    if response.status_code == 201:
+        return response.json()['id']  # Zwraca ID media
+    else:
+        raise Exception(f"Błąd przesyłania zdjęcia: {response.text}")
+🖼️ Krok 3: Dodaj featured_media do artykułu WordPress
+Po opublikowaniu posta lub przy jego tworzeniu dodaj featured_media:
+
+python
+Kopiuj
+Edytuj
+def create_post(title, content, excerpt, featured_media_id, jwt_token):
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Content-Type": "application/json"
+    }
+
+    post_data = {
+        "title": title,
+        "content": content,
+        "excerpt": excerpt,
+        "status": "publish",
+        "categories": [ID_KATEGORII],
+        "tags": [ID_TAGÓW],
+        "featured_media": featured_media_id
+    }
+
+    response = requests.post("https://twojblog.pl/wp-json/wp/v2/posts", json=post_data, headers=headers)
+
+    if response.status_code == 201:
+        print("✅ Artykuł został opublikowany z obrazkiem.")
+    else:
+        print(f"❌ Błąd publikacji posta: {response.text}")
+🛠️ 2. Pełny przykład – integracja Unsplash + WordPress (dla Replit.com)
+python
+Kopiuj
+Edytuj
+import requests
+
+def download_image(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.content
+    else:
+        raise Exception("Nie udało się pobrać obrazu.")
+
+def upload_image_to_wp(image_data, filename, jwt_token):
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Content-Type": "image/jpeg"
+    }
+
+    res = requests.post("https://twojblog.pl/wp-json/wp/v2/media", headers=headers, data=image_data)
+    if res.status_code == 201:
+        return res.json()['id']
+    else:
+        print(res.text)
+        raise Exception("Błąd wysyłania zdjęcia.")
+
+def create_post(title, content, excerpt, featured_media_id, jwt_token):
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Content-Type": "application/json"
+    }
+
+    post_data = {
+        "title": title,
+        "content": content,
+        "excerpt": excerpt,
+        "status": "publish",
+        "featured_media": featured_media_id,
+        "tags": [],
+        "categories": []
+    }
+
+    res = requests.post("https://twojblog.pl/wp-json/wp/v2/posts", json=post_data, headers=headers)
+    if res.status_code == 201:
+        print("✅ Post opublikowany z obrazkiem.")
+    else:
+        print(f"❌ Błąd publikacji posta: {res.text}")
+📢 Komunikat dla agenta (prompt programistyczny w Replit.com):
+✅ Artykuł został poprawnie opublikowany na blogu przez API WordPressa – tytuł, treść, tagi, kategorie są OK.
+❌ Jednak agent nie przypisuje featured image (obrazka głównego) do artykułu, mimo że pobierany jest z Unsplash, Pexels lub Google Image.
+🔧 Zadanie: zaimplementuj przesyłanie zdjęcia jako media przez endpoint /wp-json/wp/v2/media, pobierz jego ID, a następnie przypisz je do pola featured_media podczas tworzenia posta przez REST API WordPressa.
+
+📌 Alternatywna ścieżka: fallback z Pexels lub Google Images
+Jeśli obraz z Unsplash nie zadziała – możesz zastosować fallback (rezerwowy mechanizm). Wystarczy dodać w kodzie:
+
+python
+Kopiuj
+Edytuj
+try:
+    image_data = download_image(unsplash_url)
+except:
+    print("❌ Unsplash failed, trying Pexels...")
+    image_data = download_image(pexels_url)
