@@ -24,7 +24,10 @@ class Blog(db.Model):
     def get_categories(self):
         """Returns categories as a Python list"""
         if self.categories:
-            return json.loads(self.categories)
+            try:
+                return json.loads(self.categories)
+            except (json.JSONDecodeError, TypeError):
+                return []
         return []
     
     def set_categories(self, categories_list):
