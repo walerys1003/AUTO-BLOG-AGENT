@@ -24,10 +24,13 @@ def run_content_automation():
     Main function to run content automation process.
     This is called by the scheduler periodically.
     """
-    logger.info("Running content automation...")
+    from app import app
     
-    # Get all active automation rules
-    active_rules = AutomationRule.query.filter_by(is_active=True).all()
+    with app.app_context():
+        logger.info("Running content automation...")
+        
+        # Get all active automation rules
+        active_rules = AutomationRule.query.filter_by(is_active=True).all()
     
     for rule in active_rules:
         # Check if the rule should run today
