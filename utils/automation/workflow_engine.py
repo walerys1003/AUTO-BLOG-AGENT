@@ -399,7 +399,12 @@ class WorkflowEngine:
                 else:
                     logger.info("Content validation passed successfully")
                 
-                # Zapisz artykuł w bazie z lepszą obsługą błędów
+                # Generate 12 SEO tags
+                from utils.seo.tag_generator import generate_seo_tags
+                seo_tags = generate_seo_tags(title, content, topic.category)
+                logger.info(f"Generated {len(seo_tags)} SEO tags")
+                
+                # Zapisz artykuł w bazie z lepszą obsługą błędów i 12 tagami
                 try:
                     article = ContentLog()
                     article.blog_id = automation_rule.blog_id
@@ -409,6 +414,9 @@ class WorkflowEngine:
                     article.status = "ready" if automation_rule.auto_publish else "draft"
                     article.category_id = None  # Zostanie ustawione podczas publikacji
                     article.created_at = datetime.utcnow()
+                    
+                    # Set exactly 12 SEO tags
+                    article.set_tags(seo_tags)
                     
                     db.session.add(article)
                     db.session.commit()

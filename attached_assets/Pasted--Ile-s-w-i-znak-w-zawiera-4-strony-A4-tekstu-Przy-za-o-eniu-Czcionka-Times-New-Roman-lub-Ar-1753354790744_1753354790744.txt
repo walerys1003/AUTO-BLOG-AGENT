@@ -1,0 +1,82 @@
+📄 Ile słów i znaków zawiera 4 strony A4 tekstu?
+🔧 Przy założeniu:
+Czcionka: Times New Roman lub Arial
+
+Rozmiar: 12 pt
+
+Interlinia: 1,5
+
+Marginesy standardowe (2,5 cm)
+
+Brak grafik, tabel, podziałów na kolumny
+
+✅ Średnie wartości:
+Jednostka	Średnia dla 1 strony A4	4 strony A4
+Słowa	ok. 300–350 słów	1200–1400 słów
+Znaki (ze spacjami)	ok. 1800–2200 znaków	7200–8800 znaków
+Znaki (bez spacji)	ok. 1500–1900 znaków	6000–7600 znaków
+
+📌 Dla agenta AI możesz ustawić cel:
+min. 1200 słów
+
+ok. 8000 znaków ze spacjami
+
+ok. 6500 znaków bez spacji
+
+Chcesz, żebym dodał tę wartość jako wymóg walidacyjny w kodzie Pythona agenta lub wewnątrz promptów do GPT/Claude?
+
+
+
+
+
+
+
+
+Powiedziałeś(-aś):
+dodał tę wartość jako wymóg walidacyjny w kodzie Pythona agenta lub wewnątrz promptów do GPT/Claude
+
+
+ChatGPT powiedział:
+Świetnie! Poniżej masz:
+
+✅ 1. Wymóg walidacyjny długości artykułu w kodzie Pythona agenta
+Dodajemy prostą funkcję walidującą długość tekstu w słowach i znakach, która będzie wywoływana przed publikacją wpisu na blogu.
+
+📂 validation.py
+python
+Kopiuj
+Edytuj
+def validate_length(title: str, excerpt: str, content: str) -> bool:
+    word_count = len(content.split())
+    char_count = len(content)
+
+    if word_count < 1200:
+        print(f"❌ Za mało słów: {word_count} (min. 1200)")
+        return False
+    if char_count < 8000:
+        print(f"❌ Za mało znaków: {char_count} (min. 8000)")
+        return False
+    print("✅ Artykuł spełnia wymagania długości.")
+    return True
+W main.py:
+
+python
+Kopiuj
+Edytuj
+from validation import validate_length
+
+# Przykład walidacji przed publikacją:
+if validate_length(title, excerpt, content):
+    publish_post(title, excerpt, content, image_url)
+else:
+    print("Artykuł nie został opublikowany z powodu zbyt krótkiej treści.")
+✅ 2. Uzupełnienie promptów dla GPT / Claude o wymagania długości
+🧠 Prompt do GPT lub Claude (content):
+text
+Kopiuj
+Edytuj
+Napisz rozbudowany artykuł blogowy po polsku na temat: "{temat}". Artykuł powinien mieć:
+- minimum 1200 słów,
+- co najmniej 8000 znaków ze spacjami.
+
+Treść powinna być podzielona na sekcje z nagłówkami H2 i H3. Zadbaj o wartość edukacyjną, jasny język, atrakcyjny styl. Zastosuj storytelling, pytania retoryczne, ciekawostki i wezwania do działania (CTA). Unikaj powtórzeń. Nie dodawaj cudzysłowów, nawiasów ani znaczników JSON.

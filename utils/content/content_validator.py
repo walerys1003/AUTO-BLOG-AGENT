@@ -185,23 +185,28 @@ class ContentValidator:
         return errors
     
     def _validate_length(self, title: str, excerpt: str, content: str, category: str) -> List[str]:
-        """Validate minimum content length (1200 words / 4 pages A4)"""
+        """Validate 4 pages A4 content length according to specifications"""
         errors = []
         
-        # Remove HTML tags for word count
+        # Remove HTML tags for accurate word/character count
         text_content = re.sub(r'<[^>]+>', '', content)
         word_count = len(text_content.split())
-        char_count = len(text_content)
+        char_count_with_spaces = len(text_content)
+        char_count_without_spaces = len(text_content.replace(' ', ''))
         
-        # Minimum requirements
-        MIN_WORDS = 800  # Adjusted for Polish (shorter words)
-        MIN_CHARS = 4000  # Approximately 4 pages A4
+        # Official requirements for 4 pages A4 (Times New Roman 12pt, 1.5 spacing)
+        MIN_WORDS = 1200  # 1200-1400 words for 4 pages
+        MIN_CHARS_WITH_SPACES = 7200  # 7200-8800 chars with spaces
+        MIN_CHARS_WITHOUT_SPACES = 6000  # 6000-7600 chars without spaces
         
         if word_count < MIN_WORDS:
-            errors.append(f"Za mało słów: {word_count} (min {MIN_WORDS})")
+            errors.append(f"Za mało słów: {word_count} (min {MIN_WORDS} dla 4 stron A4)")
         
-        if char_count < MIN_CHARS:
-            errors.append(f"Za mało znaków: {char_count} (min {MIN_CHARS})")
+        if char_count_with_spaces < MIN_CHARS_WITH_SPACES:
+            errors.append(f"Za mało znaków ze spacjami: {char_count_with_spaces} (min {MIN_CHARS_WITH_SPACES})")
+        
+        if char_count_without_spaces < MIN_CHARS_WITHOUT_SPACES:
+            errors.append(f"Za mało znaków bez spacji: {char_count_without_spaces} (min {MIN_CHARS_WITHOUT_SPACES})")
         
         return errors
     

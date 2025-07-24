@@ -44,13 +44,17 @@ FUNDAMENTALNE ZASADY:
 
 Napisz ekspercki artykuł na temat: '{topic}'
 
-SZCZEGÓŁOWE WYMAGANIA:
-1. DŁUGOŚĆ: minimum 1500 słów (6000+ znaków) - artykuł ma być bardzo szczegółowy
+SZCZEGÓŁOWE WYMAGANIA (4 STRONY A4):
+1. DŁUGOŚĆ OBOWIĄZKOWA:
+   - minimum 1200 słów (docelowo 1300-1400)
+   - minimum 8000 znaków ze spacjami
+   - minimum 6500 znaków bez spacji
+   - Równowartość 4 stron A4 (Times New Roman 12pt, interlinia 1,5)
 2. STRUKTURA OBOWIĄZKOWA:
-   - Długi akapit wprowadzający (hook + kontekst + znaczenie tematu)
+   - Długi akapit wprowadzający (200+ słów)
    - 5-6 sekcji głównych z nagłówkami H2
-   - Każda sekcja: 4-5 szczegółowych akapitów (min 150 słów na sekcję)
-   - Rozbudowane podsumowanie z praktycznymi wskazówkami (CTA)
+   - Każda sekcja: 4-5 szczegółowych akapitów (min 200 słów na sekcję)
+   - Rozbudowane podsumowanie z praktycznymi wskazówkami (200+ słów)
 3. ELEMENTY HTML: <h2>, <p>, <strong>, <em>, <ul>, <li>
 4. TREŚĆ MERYTORYCZNA:
    - Bardzo szczegółowe porady krok po kroku
@@ -66,17 +70,33 @@ ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
         user_prompt = f"""Temat artykułu: {topic}
 Kategoria: {category}
 
-Napisz profesjonalny, dogłębny artykuł w języku polskim dla rodziców i przyszłych rodziców.
-Artykuł musi być praktyczny, użyteczny i zawierać konkretne informacje oraz porady.
+Napisz profesjonalny, bardzo długi i dogłębny artykuł w języku polskim dla rodziców i przyszłych rodziców.
 
-Rozpocznij od akapitu wprowadzającego, następnie rozwijaj temat w 4-5 sekcjach z nagłówkami H2."""
+BEZWZGLĘDNE WYMAGANIA DŁUGOŚCI (4 STRONY A4):
+- MINIMUM 1300 słów (nie mniej!)
+- MINIMUM 8500 znaków ze spacjami
+- Każda sekcja H2 musi mieć co najmniej 4-5 długich akapitów
+- Bardzo szczegółowy, wyczerpujący i praktyczny
+
+STRUKTURA OBOWIĄZKOWA:
+1. Długie wprowadzenie (250+ słów) - hook, problem, znaczenie tematu
+2. Sekcja 1 z H2 (200+ słów) - podstawowe informacje
+3. Sekcja 2 z H2 (200+ słów) - szczegółowe porady
+4. Sekcja 3 z H2 (200+ słów) - praktyczne przykłady  
+5. Sekcja 4 z H2 (200+ słów) - błędy do uniknięcia
+6. Sekcja 5 z H2 (200+ słów) - plan działania
+7. Długie podsumowanie (150+ słów) - kluczowe wnioski + CTA
+
+Każdy akapit musi być rozbudowany (4-6 zdań). Dodaj liczne przykłady, statystyki, cytaty ekspertów, pytania retoryczne i storytelling.
+
+To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         
-        # Single AI completion with much higher token limit for detailed articles
+        # Single AI completion with maximum token limit for 4-page A4 articles
         response = get_ai_completion(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=4000,  # Increased significantly for 1500+ word articles
+            max_tokens=6000,  # Maximum tokens for 1300+ word articles (4 pages A4)
             temperature=0.7
         )
         
