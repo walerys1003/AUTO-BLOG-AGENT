@@ -173,10 +173,41 @@ class OpenRouterClient:
         # Process successful response
         if response and response.status_code == 200:
             try:
+                # Check if response is actually JSON before parsing
+                response_text = response.text.strip()
+                content_type = response.headers.get('content-type', '').lower()
+                
+                # Validate response is JSON format
+                if not content_type.startswith('application/json') and not response_text.startswith(('{', '[')):
+                    logger.error(f"OpenRouter returned non-JSON response. Content-Type: {content_type}")
+                    logger.error(f"Response text preview: {response_text[:200]}...")
+                    return {
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": "Error: OpenRouter service returned unexpected format. This may be due to rate limiting or temporary service issues. Please try again in a few moments."
+                                }
+                            }
+                        ]
+                    }
+                
                 result = response.json()
                 content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
                 logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
                 return result
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error from OpenRouter response: {str(e)}")
+                logger.error(f"Response text preview: {response.text[:300]}...")
+                return {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": "Error: OpenRouter returned invalid JSON response. This typically indicates service issues or rate limiting. Please try again later."
+                            }
+                        }
+                    ]
+                }
             except Exception as e:
                 logger.error(f"Error processing OpenRouter response: {str(e)}")
                 return {

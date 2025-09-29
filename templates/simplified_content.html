@@ -230,7 +230,8 @@
                     contentTextarea.value = data.content;
                     metricsReport.innerText = data.report;
                     
-                    // Show result container
+                    // Hide error message and show result container
+                    generationError.classList.add('d-none');
                     resultContainer.classList.remove('d-none');
                     
                     // Auto find images if checked
