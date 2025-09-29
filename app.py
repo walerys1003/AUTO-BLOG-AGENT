@@ -31,13 +31,36 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the SQLAlchemy extension
 db.init_app(app)
 
-# Import and register authentication first
-from replit_auth import replit_auth_blueprint
-app.register_blueprint(replit_auth_blueprint, url_prefix="/auth")
+# Import admin authentication system
+from admin_auth import admin_auth, require_admin_login, LOGIN_TEMPLATE
+from flask import render_template_string, request, flash, redirect, url_for, session
 
 # Make sessions permanent for better user experience  
 from datetime import timedelta as td
 app.permanent_session_lifetime = td(days=7)
+
+# Add admin login routes
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        if admin_auth.authenticate(username, password):
+            admin_auth.login_user()
+            next_url = session.pop('next_url', url_for('index'))
+            return redirect(next_url)
+        else:
+            flash('Nieprawidłowy login lub hasło administratora')
+    
+    return render_template_string(LOGIN_TEMPLATE)
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    admin_auth.logout_user()
+    return redirect(url_for('admin_login'))
 
 # Register routes directly here to ensure they're loaded in all circumstances
 from routes import register_routes
