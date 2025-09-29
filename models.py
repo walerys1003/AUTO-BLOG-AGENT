@@ -4,6 +4,41 @@ import json
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import List, Optional, Dict, Any
 import os
+from flask_login import UserMixin
+from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
+from sqlalchemy import UniqueConstraint
+
+# Authentication Models (Required for Replit Auth)
+class User(UserMixin, db.Model):
+    """User model for Replit authentication"""
+    __tablename__ = 'users'
+    id = db.Column(db.String, primary_key=True)
+    email = db.Column(db.String, unique=True, nullable=True)
+    first_name = db.Column(db.String, nullable=True)
+    last_name = db.Column(db.String, nullable=True)
+    profile_image_url = db.Column(db.String, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<User {self.email or 'Unknown'}>"
+
+class OAuth(OAuthConsumerMixin, db.Model):
+    """OAuth model for Replit authentication"""
+    user_id = db.Column(db.String, db.ForeignKey(User.id))
+    browser_session_key = db.Column(db.String, nullable=False)
+    user = db.relationship(User)
+
+    __table_args__ = (UniqueConstraint(
+        'user_id',
+        'browser_session_key',
+        'provider',
+        name='uq_user_browser_session_key_provider',
+    ),)
+
+    def __repr__(self) -> str:
+        return f"<OAuth {self.provider or 'unknown'} - {self.user_id or 'unknown'}>"
 
 class Blog(db.Model):
     """Model for WordPress blog configuration"""
@@ -212,7 +247,7 @@ class SystemSettings(db.Model):
         return default
     
     @classmethod
-    def set(cls, key: str, value: Any, description: str = None) -> 'SystemSettings':
+    def set(cls, key: str, value: Any, description: Optional[str] = None) -> 'SystemSettings':
         """Set a setting value by key"""
         setting = cls.query.filter_by(key=key).first()
         
@@ -703,16 +738,6 @@ class ScheduledPublication(db.Model):
             'created_at': self.created_at.isoformat(),
             'published_at': self.published_at.isoformat() if self.published_at else None
         }
-    notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Define relationships
-    blog = db.relationship('Blog', backref=db.backref('content_calendar', lazy=True))
-    # topic = db.relationship('ArticleTopic', backref=db.backref('calendar_entries', lazy=True))
-    
-    def __repr__(self):
-        return f"<ContentCalendar {self.title} - {self.scheduled_date.strftime('%Y-%m-%d')}>"
 
 class AnalyticsConfig(db.Model):
     """Model for storing Google Analytics configuration per blog"""

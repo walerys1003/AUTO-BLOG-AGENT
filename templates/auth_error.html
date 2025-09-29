@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Błąd Logowania{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white border-danger mt-5">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Błąd Uwierzytelniania
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-3x text-danger mb-3"></i>
+                        <h5>Wystąpił błąd podczas logowania</h5>
+                        <p class="text-muted">
+                            Nie udało się przeprowadzić uwierzytelniania. 
+                            Spróbuj ponownie lub skontaktuj się z administratorem.
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                        <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Spróbuj Ponownie
+                        </a>
+                        <a href="{{ url_for('public_landing') }}" class="btn btn-outline-light">
+                            <i class="fas fa-home me-2"></i>
+                            Strona Główna
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-muted">
+                <small>
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Blog Automation Agent - Bezpieczny System Logowania
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

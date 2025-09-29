@@ -1,8 +1,9 @@
 import os
 import logging
-from flask import Flask
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from datetime import timedelta
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -30,8 +31,16 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the SQLAlchemy extension
 db.init_app(app)
 
+# Import and register authentication first
+from replit_auth import replit_auth_blueprint
+app.register_blueprint(replit_auth_blueprint, url_prefix="/auth")
+
+# Make sessions permanent for better user experience  
+from datetime import timedelta as td
+app.permanent_session_lifetime = td(days=7)
+
 # Register routes directly here to ensure they're loaded in all circumstances
 from routes import register_routes
 register_routes(app)
 
-logger.info("Flask application initialized with routes")
+logger.info("Flask application initialized with authentication and routes")

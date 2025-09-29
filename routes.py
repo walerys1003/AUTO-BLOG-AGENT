@@ -1,6 +1,8 @@
 import logging
 import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask_login import current_user
+from replit_auth import require_login
 from models import (
     Blog, SocialAccount, ContentLog, ArticleTopic, Category, Tag,
     Notification, PublishingSchedule, ContentMetrics, ImageLibrary,
@@ -38,19 +40,31 @@ logger = logging.getLogger(__name__)
 def register_routes(app: Flask):
     """Register all routes with the Flask app"""
     
-    # Add template context processor for datetime
+    # Add template context processor for datetime and user
     @app.context_processor
     def inject_now():
-        return {'now': datetime.now()}
+        return {
+            'now': datetime.now(),
+            'current_user': current_user
+        }
     
     @app.route('/')
     def index():
-        """Dashboard homepage"""
-        return redirect(url_for('dashboard'))
+        """Main route - redirects based on authentication status"""
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('public_landing'))
+    
+    @app.route('/public')
+    def public_landing():
+        """Public landing page for logged-out users"""
+        return render_template('public_landing.html')
     
     @app.route('/dashboard')
+    @require_login
     def dashboard():
-        """Main dashboard view"""
+        """Main dashboard view - requires authentication"""
         # Get statistics
         stats = {
             'total_blogs': Blog.query.count(),
@@ -106,17 +120,20 @@ def register_routes(app: Flask):
         return render_template('dashboard.html', stats=stats, recent_posts=recent_posts, blog_stats=blog_stats)
         
     @app.route('/seo-tools')
+    @require_login
     def seo_tools():
         """SEO tools and content optimization page"""
         return render_template('seo_tools.html')
     
     @app.route('/blogs')
+    @require_login
     def blogs_list():
         """List all blogs"""
         blogs = Blog.query.all()
         return render_template('blogs.html', blogs=blogs)
     
     @app.route('/blogs/add', methods=['GET', 'POST'])
+    @require_login
     def add_blog():
         """Add a new blog"""
         if request.method == 'POST':
@@ -158,6 +175,7 @@ def register_routes(app: Flask):
         return render_template('blog_form.html', blog=None, action='add')
     
     @app.route('/blogs/edit/<int:blog_id>', methods=['GET', 'POST'])
+    @require_login
     def edit_blog(blog_id):
         """Edit a blog"""
         blog = Blog.query.get_or_404(blog_id)
@@ -191,6 +209,7 @@ def register_routes(app: Flask):
         return render_template('blog_form.html', blog=blog, action='edit')
     
     @app.route('/blogs/delete/<int:blog_id>', methods=['POST'])
+    @require_login
     def delete_blog(blog_id):
         """Delete a blog"""
         blog = Blog.query.get_or_404(blog_id)
@@ -230,6 +249,7 @@ def register_routes(app: Flask):
             return redirect(url_for('blogs_list'))
     
     @app.route('/social')
+    @require_login
     def social_accounts():
         """List all social media accounts"""
         accounts = SocialAccount.query.all()
@@ -334,6 +354,7 @@ def register_routes(app: Flask):
             return redirect(url_for('social_accounts'))
     
     @app.route('/logs')
+    @require_login
     def logs():
         """View content logs"""
         # Filter by status
@@ -366,6 +387,7 @@ def register_routes(app: Flask):
         return render_template('logs.html', logs=logs, blogs=blogs, current_status=status, current_blog=blog_id, days=days)
     
     @app.route('/topics')
+    @require_login
     def topics():
         """View and manage article topics"""
         # Filter by status
@@ -393,6 +415,7 @@ def register_routes(app: Flask):
         return render_template('topics.html', topics=topics, blogs=blogs, current_status=status, current_blog=blog_id)
     
     @app.route('/topics/generate', methods=['POST'])
+    @require_login
     def generate_topics():
         """Generate new topics for a blog"""
         blog_id = request.form.get('blog_id')
@@ -442,6 +465,7 @@ def register_routes(app: Flask):
             return redirect(url_for('topics'))
     
     @app.route('/topics/approve/<int:topic_id>', methods=['POST'])
+    @require_login
     def approve_topic(topic_id):
         """Approve a pending topic"""
         topic = ArticleTopic.query.get_or_404(topic_id)
@@ -496,6 +520,7 @@ def register_routes(app: Flask):
             return redirect(url_for('topics'))
     
     @app.route('/api/process_blog/<int:blog_id>', methods=['POST'])
+    @require_login
     def api_process_blog(blog_id):
         """API endpoint to manually process a blog's content pipeline"""
         try:
@@ -524,6 +549,7 @@ def register_routes(app: Flask):
         })
     
     @app.route('/openrouter')
+    @require_login
     def openrouter_config():
         """OpenRouter configuration page"""
         from utils.openrouter import openrouter
