@@ -20,8 +20,9 @@
         }
         .feature-icon {
             font-size: 2.5rem;
-            color: #667eea;
+            color: #1a2332 !important;
             margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
         }
         .login-btn {
             background: linear-gradient(45deg, #667eea, #764ba2);
@@ -63,19 +64,29 @@
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.2);
         }
+        .feature-card h4 {
+            color: #1a1a1a !important;
+            font-weight: 700 !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .feature-card p {
+            color: #2d2d2d !important;
+            font-weight: 600 !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid">
         <div class="row min-vh-100">
             <!-- Left side - Hero -->
-            <div class="col-lg-8 d-flex align-items-center justify-content-center text-white">
+            <div class="col-lg-8 d-flex align-items-center justify-content-center">
                 <div class="text-center">
                     <div class="floating-element mb-4">
-                        <i class="fas fa-robot fa-4x mb-4"></i>
+                        <i class="fas fa-robot fa-4x mb-4" style="color: #1a2332 !important; text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);"></i>
                     </div>
-                    <h1 class="hero-title mb-4">Blog Automation Agent</h1>
-                    <p class="lead mb-5 fs-4">
+                    <h1 class="hero-title mb-4" style="background: none !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); font-weight: 800 !important;">Blog Automation Agent</h1>
+                    <p class="lead mb-5 fs-4" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); font-weight: 700 !important; font-size: 1.4rem !important;">
                         Zaawansowany system automatyzacji blogów WordPress<br>
                         z AI, SEO i integracją social media
                     </p>
@@ -83,23 +94,23 @@
                     <div class="row text-center mt-5">
                         <div class="col-md-4">
                             <div class="feature-card">
-                                <i class="fas fa-magic feature-icon"></i>
-                                <h4>Automatyczna Generacja Treści</h4>
-                                <p>AI tworzy artykuły 2400+ słów z SEO</p>
+                                <i class="fas fa-magic feature-icon" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);"></i>
+                                <h4 style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);">Automatyczna Generacja Treści</h4>
+                                <p style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);">AI tworzy artykuły 2400+ słów z SEO</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="feature-card">
-                                <i class="fas fa-users feature-icon"></i>
-                                <h4>Rotacja Autorów</h4>
-                                <p>Automatyczne przypisywanie realnych autorów</p>
+                                <i class="fas fa-users feature-icon" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);"></i>
+                                <h4 style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);">Rotacja Autorów</h4>
+                                <p style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);">Automatyczne przypisywanie realnych autorów</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="feature-card">
-                                <i class="fas fa-images feature-icon"></i>
-                                <h4>Integracja Obrazów</h4>
-                                <p>Automatyczne znajdowanie i dodawanie zdjęć</p>
+                                <i class="fas fa-images feature-icon" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);"></i>
+                                <h4 style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);">Integracja Obrazów</h4>
+                                <p style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);">Automatyczne znajdowanie i dodawanie zdjęć</p>
                             </div>
                         </div>
                     </div>
@@ -110,27 +121,27 @@
             <div class="col-lg-4 d-flex align-items-center justify-content-center">
                 <div class="login-card p-5 w-100" style="max-width: 400px;">
                     <div class="text-center mb-4">
-                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
-                        <h2 class="h3 text-dark">Dostęp Zabezpieczony</h2>
-                        <p class="text-muted">Zaloguj się, aby uzyskać dostęp do systemu automatyzacji</p>
+                        <i class="fas fa-shield-alt fa-3x mb-3" style="color: #1a1a1a !important;"></i>
+                        <h2 class="h3" style="color: #0a0f1c !important; font-weight: 700 !important;">Dostęp Zabezpieczony</h2>
+                        <p style="color: #1a1a1a !important; font-weight: 500 !important;">Zaloguj się, aby uzyskać dostęp do systemu automatyzacji</p>
                     </div>
                     
                     <div class="text-center">
                         <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary login-btn w-100 mb-4">
                             <i class="fas fa-sign-in-alt me-2"></i>
-                            Zaloguj się przez Replit
+                            Zaloguj się
                         </a>
                         
                         <div class="row text-center mt-4">
                             <div class="col-12">
-                                <small class="text-muted">
-                                    <i class="fas fa-lock me-1"></i>
+                                <small style="color: #1a1a1a !important;">
+                                    <i class="fas fa-lock me-1" style="color: #1a1a1a !important;"></i>
                                     Obsługiwane logowanie przez:
                                 </small>
                                 <div class="d-flex justify-content-center mt-2 gap-3">
-                                    <i class="fab fa-google fa-lg text-muted"></i>
-                                    <i class="fab fa-github fa-lg text-muted"></i>
-                                    <i class="fas fa-envelope fa-lg text-muted"></i>
+                                    <i class="fab fa-google fa-lg" style="color: #1a1a1a !important;"></i>
+                                    <i class="fab fa-github fa-lg" style="color: #1a1a1a !important;"></i>
+                                    <i class="fas fa-envelope fa-lg" style="color: #1a1a1a !important;"></i>
                                 </div>
                             </div>
                         </div>
@@ -139,21 +150,21 @@
                     <div class="border-top mt-4 pt-4 text-center">
                         <div class="row">
                             <div class="col-4">
-                                <div class="text-primary">
-                                    <i class="fas fa-blog fa-2x mb-2"></i>
-                                    <br><small class="text-muted">3 Blogi</small>
+                                <div>
+                                    <i class="fas fa-blog fa-2x mb-2" style="color: #1a2332 !important;"></i>
+                                    <br><small style="color: #1a1a1a !important; font-weight: 600 !important;">+ Wiele Blogów</small>
                                 </div>
                             </div>
                             <div class="col-4">
-                                <div class="text-success">
-                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                    <br><small class="text-muted">Gotowy</small>
+                                <div>
+                                    <i class="fas fa-check-circle fa-2x mb-2" style="color: #287F71 !important;"></i>
+                                    <br><small style="color: #1a1a1a !important; font-weight: 600 !important;">Gotowy</small>
                                 </div>
                             </div>
                             <div class="col-4">
-                                <div class="text-info">
-                                    <i class="fas fa-rocket fa-2x mb-2"></i>
-                                    <br><small class="text-muted">Produkcja</small>
+                                <div>
+                                    <i class="fas fa-rocket fa-2x mb-2" style="color: #1a2332 !important;"></i>
+                                    <br><small style="color: #1a1a1a !important; font-weight: 600 !important;">Produkcja</small>
                                 </div>
                             </div>
                         </div>

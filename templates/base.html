@@ -18,10 +18,11 @@
             --secondary-color: #EB862A;     /* Pomarańczowy - akcent */
             --accent-color: #ABBDD3;        /* Jasny niebieski - akcent dodatkowy */
             --neutral-color: #97A3B6;       /* Szaro-niebieski */
-            --dark-color: #111729;          /* Granatowy - tekst */
+            --dark-color: #0a0f1c;          /* Bardzo ciemny granatowy - tekst */
             --bg-color: #f8f9fa;            /* Tło strony */
             --card-bg: #FFFFFF;             /* Tło kart */
-            --text-color: #111729;          /* Kolor tekstu */
+            --text-color: #0a0f1c;          /* Bardzo ciemny kolor tekstu */
+            --icon-color: #1a2332;          /* Ciemny kolor ikon */
         }
         
         /* Globalne style dla wszystkich funkcji agenta */
@@ -75,6 +76,31 @@
         
         .card a:not(.btn) {
             color: var(--primary-color) !important;
+        }
+
+        /* Ikony - ciemniejszy kolor dla lepszej czytelności */
+        .fa, .fas, .far, .fab, .fal, .fad, .fat, .fass,
+        i[class*="fa-"], .icon {
+            color: var(--icon-color) !important;
+        }
+
+        /* Ikony w przyciskach zachowują kolor przycisku */
+        .btn .fa, .btn .fas, .btn .far, .btn .fab, 
+        .btn .fal, .btn .fad, .btn .fat, .btn .fass,
+        .btn i[class*="fa-"] {
+            color: inherit !important;
+        }
+
+        /* Dodatkowe wzmocnienie kontrastu tekstu */
+        body, p, div, span, li, td, th, label {
+            color: var(--text-color) !important;
+            font-weight: 500 !important;
+        }
+
+        /* Bardzo ciemny tekst w nawigacji */
+        .navbar-brand, .nav-link {
+            color: var(--dark-color) !important;
+            font-weight: 600 !important;
         }
         
         /* Formularze */
@@ -248,141 +274,147 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-blog me-1"></i> Blogs
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-lightbulb me-1"></i> Topics
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-share-alt me-1"></i> Social Media
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}" style="color: black !important;">
-                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('social.social_accounts') %}active{% endif %}" href="{{ url_for('social.social_accounts') }}" style="color: black !important;">
-                                        <i class="fas fa-users-cog me-1"></i> Manage Accounts
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-clipboard-list me-1"></i> Logs
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/seo' in request.path %}active{% endif %}" href="#" id="seoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-search me-1"></i> SEO Tools
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="seoDropdown">
-                                <li>
-                                    <a class="dropdown-item {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: black !important;">
-                                        <i class="fas fa-chart-line me-1"></i> SEO Analytics
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: black !important;">
-                                        <i class="fas fa-magic me-1"></i> SEO Inspirations
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if '/seo/' in request.path %}active{% endif %}" href="{{ url_for('seo.index') }}" style="color: black !important;">
-                                        <i class="fas fa-robot me-1"></i> <strong>Topic Generator</strong>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/content-creator' in request.path or '/content-generator' in request.path %}active{% endif %}" href="#" id="contentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-pen-fancy me-1"></i> Content Creator
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="contentDropdown">
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('content_creator.content_dashboard') %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}" style="color: black !important;">
-                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if '/simplified_content' in request.path %}active{% endif %}" href="{{ url_for('simplified_content.simplified_content_page') }}" style="color: black !important;">
-                                        <i class="fas fa-feather-alt me-1"></i> <strong>Generator Długich Treści</strong>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if '/automation' in request.path %}active{% endif %}" href="{{ url_for('content_creator.automation_dashboard') }}" style="color: black !important;">
-                                        <i class="fas fa-robot me-1"></i> Automation
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/images' in request.path %}active{% endif %}" href="{{ url_for('images.image_library') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-images me-1"></i> Images
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-newspaper me-1"></i> Publishing
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}" style="color: black !important;">
-                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}" style="color: black !important;">
-                                        <i class="fas fa-calendar-alt me-1"></i> Schedule
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}" style="color: black !important;">
-                                        <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}" style="color: black !important;">
-                                        <i class="fas fa-list-ul me-1"></i> Pending Articles
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}" style="color: black !important;">
-                                        <i class="fas fa-history me-1"></i> Publication History
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}" style="color: black !important;">
-                                        <i class="fas fa-cog me-1"></i> Settings
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-chart-line me-1"></i> Analytics
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}" style="color: var(--dark-color) !important;">
-                                <i class="fas fa-brain me-1"></i> AI Models
-                            </a>
-                        </li>
-                    </ul>
+                    <div class="ms-auto">
+                        <!-- Pierwszy rząd -->
+                        <ul class="navbar-nav d-flex flex-wrap justify-content-end" style="max-width: 100%;">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-blog me-1"></i> Blogs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-lightbulb me-1"></i> Topics
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-share-alt me-1"></i> Social Media
+                                </a>
+                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}" style="color: black !important;">
+                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('social.social_accounts') %}active{% endif %}" href="{{ url_for('social.social_accounts') }}" style="color: black !important;">
+                                            <i class="fas fa-users-cog me-1"></i> Manage Accounts
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-clipboard-list me-1"></i> Logs
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if '/seo' in request.path %}active{% endif %}" href="#" id="seoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-search me-1"></i> SEO Tools
+                                </a>
+                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="seoDropdown">
+                                    <li>
+                                        <a class="dropdown-item {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: black !important;">
+                                            <i class="fas fa-chart-line me-1"></i> SEO Analytics
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: black !important;">
+                                            <i class="fas fa-magic me-1"></i> SEO Inspirations
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if '/seo/' in request.path %}active{% endif %}" href="{{ url_for('seo.index') }}" style="color: black !important;">
+                                            <i class="fas fa-robot me-1"></i> <strong>Topic Generator</strong>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if '/content-creator' in request.path or '/content-generator' in request.path %}active{% endif %}" href="#" id="contentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-pen-fancy me-1"></i> Content Creator
+                                </a>
+                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="contentDropdown">
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('content_creator.content_dashboard') %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}" style="color: black !important;">
+                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if '/simplified_content' in request.path %}active{% endif %}" href="{{ url_for('simplified_content.simplified_content_page') }}" style="color: black !important;">
+                                            <i class="fas fa-feather-alt me-1"></i> <strong>Generator Długich Treści</strong>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if '/automation' in request.path %}active{% endif %}" href="{{ url_for('content_creator.automation_dashboard') }}" style="color: black !important;">
+                                            <i class="fas fa-robot me-1"></i> Automation
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <!-- Drugi rząd -->
+                        <ul class="navbar-nav d-flex flex-wrap justify-content-end mt-1" style="max-width: 100%;">
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/images' in request.path %}active{% endif %}" href="{{ url_for('images.image_library') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-images me-1"></i> Images
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-newspaper me-1"></i> Publishing
+                                </a>
+                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}" style="color: black !important;">
+                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}" style="color: black !important;">
+                                            <i class="fas fa-calendar-alt me-1"></i> Schedule
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}" style="color: black !important;">
+                                            <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}" style="color: black !important;">
+                                            <i class="fas fa-list-ul me-1"></i> Pending Articles
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}" style="color: black !important;">
+                                            <i class="fas fa-history me-1"></i> Publication History
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}" style="color: black !important;">
+                                            <i class="fas fa-cog me-1"></i> Settings
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-chart-line me-1"></i> Analytics
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
+                                    <i class="fas fa-brain me-1"></i> AI Models
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>
