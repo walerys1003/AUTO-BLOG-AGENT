@@ -120,7 +120,7 @@ class OpenRouterClient:
                     f"{self.api_base}/chat/completions",
                     headers=self._get_headers(),
                     json=data,
-                    timeout=60  # Zmniejszony timeout do 60 sekund dla szybszego wykrywania błędów
+                    timeout=180  # Zwiększony timeout dla długich artykułów (3 minuty)
                 )
                 response.raise_for_status()
                 # If successful, break out of retry loop
