@@ -20,7 +20,16 @@ logger = logging.getLogger(__name__)
 
 def get_openrouter_api_key():
     """Get OpenRouter API key from environment or config"""
-    # Temporary: Use new API key until environment is updated
+    # Check environment first
+    key = os.environ.get('OPENROUTER_API_KEY')
+    if key:
+        return key
+    
+    # Fallback to config
+    if hasattr(Config, 'OPENROUTER_API_KEY') and Config.OPENROUTER_API_KEY:
+        return Config.OPENROUTER_API_KEY
+    
+    # Last resort fallback
     return "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"
 
 def get_ai_completion(
@@ -60,9 +69,19 @@ def get_ai_completion(
             return response
             
     except Exception as e:
-        logger.warning(f"OpenRouter API call failed: {str(e)}. Falling back to MockAdapter.")
+        error_msg = str(e)
+        logger.warning(f"OpenRouter API call failed: {error_msg}. Using fallback content generation.")
+        
+        # For rate limits, provide user-friendly message
+        if "rate limit" in error_msg.lower():
+            logger.info("Using MockAdapter due to OpenRouter rate limit")
+        elif "temporarily unavailable" in error_msg.lower():
+            logger.info("Using MockAdapter due to OpenRouter service issues")
+        else:
+            logger.info("Using MockAdapter due to OpenRouter API error")
     
-    # If OpenRouter call fails, fallback to mock adapter
+    # If OpenRouter call fails, fallback to mock adapter with enhanced content
+    logger.info("Generating content using fallback MockAdapter")
     mock = MockAdapter()
     return mock.get_completion(
         system_prompt=system_prompt,
@@ -118,18 +137,72 @@ def openrouter_call(
     if response_format:
         data["response_format"] = response_format
     
-    response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers=headers,
-        json=data
-    )
-    
-    if response.status_code != 200:
-        logger.error(f"OpenRouter API error: {response.status_code} {response.text}")
-        raise Exception(f"OpenRouter API error: {response.status_code}")
-    
-    response_data = response.json()
-    return response_data["choices"][0]["message"]["content"]
+    try:
+        logger.info(f"Making OpenRouter API request with model: {model}")
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=120  # 2 minute timeout for long requests
+        )
+        
+        # Check response status
+        if response.status_code != 200:
+            logger.error(f"OpenRouter API error: {response.status_code}")
+            logger.error(f"Response text: {response.text[:500]}")
+            raise Exception(f"OpenRouter API error: {response.status_code}")
+        
+        # Validate response content type and content
+        response_text = response.text.strip()
+        content_type = response.headers.get('content-type', '').lower()
+        
+        # Check if response looks like HTML (common for error pages)
+        if response_text.lower().startswith('<!doctype html') or response_text.lower().startswith('<html'):
+            logger.error(f"OpenRouter returned HTML error page. Status: {response.status_code}")
+            logger.error(f"HTML preview: {response_text[:500]}")
+            if response.status_code == 429:
+                raise Exception("OpenRouter API rate limit exceeded - please try again in a few minutes")
+            elif response.status_code >= 500:
+                raise Exception("OpenRouter service is temporarily unavailable - please try again later")
+            else:
+                raise Exception(f"OpenRouter returned error page (HTTP {response.status_code})")
+        
+        # Check content type
+        if not content_type.startswith('application/json') and not response_text.startswith(('{', '[')):
+            logger.error(f"OpenRouter returned non-JSON response. Content-Type: {content_type}")
+            logger.error(f"Response text preview: {response_text[:300]}")
+            if 'rate limit' in response_text.lower():
+                raise Exception("OpenRouter API rate limit exceeded - please try again in a few minutes")
+            else:
+                raise Exception("OpenRouter returned unexpected response format")
+        
+        # Parse JSON response
+        try:
+            response_data = response.json()
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response from OpenRouter: {str(e)}")
+            logger.error(f"Response text: {response.text[:300]}")
+            raise Exception(f"Invalid JSON response from OpenRouter: {str(e)}")
+        
+        # Extract content
+        if "choices" not in response_data or not response_data["choices"]:
+            logger.error("No choices in OpenRouter response")
+            logger.error(f"Response data: {response_data}")
+            raise Exception("No choices in OpenRouter response")
+        
+        content = response_data["choices"][0]["message"]["content"]
+        logger.info(f"Successfully received response from OpenRouter (length: {len(content)} chars)")
+        return content
+        
+    except requests.exceptions.Timeout:
+        logger.error("OpenRouter API request timed out")
+        raise Exception("OpenRouter API request timed out - please try again")
+    except requests.exceptions.ConnectionError:
+        logger.error("Connection error to OpenRouter API")
+        raise Exception("Connection error to OpenRouter API - please check network")
+    except Exception as e:
+        logger.error(f"OpenRouter API call failed: {str(e)}")
+        raise
 
 def get_default_ai_service():
     """

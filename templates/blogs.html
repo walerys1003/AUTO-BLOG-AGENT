@@ -101,9 +101,9 @@
                                 <a href="{{ url_for('edit_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit Blog">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{{ url_for('api_process_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="Generate Content">
+                                <button type="button" class="btn btn-sm btn-outline-success generate-content-btn" data-blog-id="{{ blog.id }}" data-bs-toggle="tooltip" title="Generate Content">
                                     <i class="fas fa-robot"></i>
-                                </a>
+                                </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger delete-blog-btn" data-blog-id="{{ blog.id }}" data-blog-name="{{ blog.name }}" title="Delete Blog">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -226,6 +226,117 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show the modal
             const modal = new bootstrap.Modal(deleteBlogModal);
             modal.show();
+        });
+    });
+
+    // Generate content button click handlers
+    const generateButtons = document.querySelectorAll('.generate-content-btn');
+    generateButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const blogId = this.getAttribute('data-blog-id');
+            const originalContent = this.innerHTML;
+            
+            // Show loading state
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+            
+            fetch(`/api/process_blog/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    this.classList.remove('btn-outline-success');
+                    this.classList.add('btn-success');
+                    
+                    // Show success toast/alert
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>${data.message || 'Content generation started successfully!'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alertDiv);
+                    
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 5000);
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-outline-success');
+                        this.disabled = false;
+                    }, 3000);
+                } else {
+                    this.innerHTML = '<i class="fas fa-times"></i>';
+                    this.classList.remove('btn-outline-success');
+                    this.classList.add('btn-danger');
+                    
+                    // Show error toast
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-exclamation-circle me-2"></i>${data.message || 'Content generation failed'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alertDiv);
+                    
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 8000);
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-outline-success');
+                        this.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = '<i class="fas fa-times"></i>';
+                this.classList.remove('btn-outline-success');
+                this.classList.add('btn-danger');
+                
+                // Show network error toast
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>Network error - please try again
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 8000);
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalContent;
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-outline-success');
+                    this.disabled = false;
+                }, 3000);
+            });
         });
     });
 });
