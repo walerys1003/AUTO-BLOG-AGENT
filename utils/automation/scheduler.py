@@ -58,18 +58,23 @@ class AutomationScheduler:
         logger.info("Automation scheduler stopped")
     
     def setup_schedules(self):
-        """Konfiguruje harmonogram wykonania zadań"""
+        """Konfiguruje harmonogram wykonania zadań - BATCH GENERATION"""
         
-        # Sprawdzanie reguł co 15 minut
+        # NOWA LOGIKA: Batch generation dla każdego bloga o ustalonych godzinach
+        schedule.every().day.at("07:00").do(self.batch_generate_articles, blog_id=2)  # MamaTestuje - 4 artykuły
+        schedule.every().day.at("08:00").do(self.batch_generate_articles, blog_id=3)  # ZnaneKosmetyki - 3 artykuły  
+        schedule.every().day.at("09:00").do(self.batch_generate_articles, blog_id=4)  # HomosOnly - 2 artykuły
+        
+        # STARA LOGIKA: Sprawdzanie reguł co 15 minut (backup)
         schedule.every(15).minutes.do(self.check_and_execute_rules)
         
         # Czyszczenie nieudanych zadań co godzinę
         schedule.every().hour.do(self.cleanup_failed_rules)
         
-        # Raport dzienny o 8:00
-        schedule.every().day.at("08:00").do(self.generate_daily_report)
+        # Raport dzienny o 10:00 (po wszystkich batch generation)
+        schedule.every().day.at("10:00").do(self.generate_daily_report)
         
-        logger.info("Scheduler configured with automated tasks")
+        logger.info("Scheduler configured with BATCH GENERATION at 07:00, 08:00, 09:00")
     
     def _run_scheduler(self):
         """Główna pętla schedulera"""
@@ -80,6 +85,82 @@ class AutomationScheduler:
             except Exception as e:
                 logger.error(f"Scheduler error: {str(e)}")
                 time.sleep(60)
+    
+    def batch_generate_articles(self, blog_id: int):
+        """
+        NOWA FUNKCJA: Generuje wszystkie artykuły dla danego bloga jedną sesją rano
+        
+        Args:
+            blog_id: ID bloga dla którego generować artykuły
+        """
+        logger.info(f"🚀 BATCH GENERATION START for blog_id={blog_id}")
+        
+        try:
+            with app.app_context():
+                # Znajdź aktywną regułę automatyzacji dla tego bloga
+                rule = AutomationRule.query.filter(
+                    AutomationRule.blog_id == blog_id,
+                    AutomationRule.is_active == True
+                ).first()
+                
+                if not rule:
+                    logger.error(f"No active automation rule found for blog_id={blog_id}")
+                    return
+                
+                # Pobierz informacje o blogu
+                from models import Blog
+                blog = Blog.query.get(blog_id)
+                if not blog or not blog.active:
+                    logger.error(f"Blog {blog_id} not found or inactive")
+                    return
+                
+                logger.info(f"Batch generating {rule.posts_per_day} articles for {blog.name}")
+                
+                # Oznacz rozpoczęcie batch generation
+                rule.last_execution_at = datetime.utcnow()
+                db.session.commit()
+                
+                # BATCH GENERATION: Wygeneruj wszystkie artykuły na raz
+                successful_articles = 0
+                failed_articles = 0
+                
+                for article_num in range(rule.posts_per_day):
+                    logger.info(f"Generating article {article_num + 1}/{rule.posts_per_day} for {blog.name}")
+                    
+                    try:
+                        # Wykonaj workflow dla pojedynczego artykułu
+                        result = execute_automation_rule(rule.id)
+                        
+                        if result.get("success"):
+                            successful_articles += 1
+                            logger.info(f"✅ Article {article_num + 1} generated successfully")
+                        else:
+                            failed_articles += 1
+                            logger.error(f"❌ Article {article_num + 1} failed: {result.get('error', 'Unknown error')}")
+                            
+                    except Exception as e:
+                        failed_articles += 1
+                        logger.error(f"❌ Exception generating article {article_num + 1}: {str(e)}")
+                
+                # Podsumowanie batch generation
+                logger.info(f"🏁 BATCH GENERATION COMPLETE for {blog.name}: {successful_articles} success, {failed_articles} failed")
+                
+                # Ustaw następny czas wykonania (jutro o tej samej godzinie)
+                self._schedule_next_batch_execution(rule)
+                
+                # Aktualizuj countery
+                if successful_articles > 0:
+                    rule.failure_count = 0  # Reset przy sukcesie
+                else:
+                    rule.failure_count += 1
+                    if rule.failure_count >= rule.max_failures:
+                        rule.is_active = False
+                        logger.error(f"Rule {rule.name} disabled due to batch failures")
+                        
+                db.session.commit()
+                
+        except Exception as e:
+            logger.error(f"Critical error in batch_generate_articles for blog_id={blog_id}: {str(e)}")
     
     def check_and_execute_rules(self):
         """Sprawdza i wykonuje gotowe do uruchomienia reguły automatyzacji"""
@@ -189,8 +270,40 @@ class AutomationScheduler:
                         rule.is_active = False
                     db.session.commit()
     
+    def _schedule_next_batch_execution(self, rule: AutomationRule):
+        """
+        NOWA FUNKCJA: Planuje następne batch generation - jutro o tej samej godzinie
+        
+        Args:
+            rule: Reguła automatyzacji dla której planować następne batch generation
+        """
+        try:
+            current_time = datetime.utcnow()
+            
+            # BATCH GENERATION LOGIC: Następny dzień o tej samej godzinie
+            if rule.publishing_time:
+                # Parsuj godzinę z publishing_time (format "HH:MM")
+                time_parts = rule.publishing_time.split(':')
+                target_hour = int(time_parts[0])
+                target_minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+                
+                # Następny dzień o tej samej godzinie
+                tomorrow = current_time.date() + timedelta(days=1)
+                next_execution = datetime.combine(tomorrow, datetime.min.time().replace(hour=target_hour, minute=target_minute))
+            else:
+                # Fallback: 24 godziny od teraz
+                next_execution = current_time + timedelta(days=1)
+                
+            rule.next_execution_at = next_execution
+            db.session.commit()
+            
+            logger.info(f"🗓️ Next BATCH GENERATION for {rule.name} scheduled at: {next_execution} ({rule.posts_per_day} articles)")
+            
+        except Exception as e:
+            logger.error(f"Error scheduling next batch execution for rule {rule.id}: {str(e)}")
+    
     def _schedule_next_execution(self, rule: AutomationRule):
-        """Planuje następne wykonanie reguły - po jednym artykule na sesję"""
+        """STARA FUNKCJA: Planuje następne wykonanie reguły - po jednym artykule na sesję (BACKUP)"""
         try:
             current_time = datetime.utcnow()
             
