@@ -214,6 +214,58 @@ def get_wordpress_tags(blog_id: int) -> List[Dict[str, Any]]:
         logger.error(f"Error getting WordPress tags: {str(e)}")
         return []
 
+def get_or_create_tag_ids(blog_id: int, tag_names: List[str]) -> List[int]:
+    """
+    Convert tag names to WordPress tag IDs, creating tags if they don't exist
+    
+    Args:
+        blog_id: ID of the blog
+        tag_names: List of tag names
+        
+    Returns:
+        List of WordPress tag IDs
+    """
+    api_url, username, token, blog_name = get_wordpress_client(blog_id)
+    auth = (username, token)
+    tag_ids = []
+    
+    for tag_name in tag_names:
+        # Try to find existing tag
+        url = build_wp_api_url(api_url, "tags")
+        try:
+            response = requests.get(url, auth=auth, params={"search": tag_name})
+            response.raise_for_status()
+            existing_tags = response.json()
+            
+            # Check for exact match
+            exact_match = None
+            for tag in existing_tags:
+                if tag['name'].lower() == tag_name.lower():
+                    exact_match = tag
+                    break
+            
+            if exact_match:
+                tag_ids.append(exact_match['id'])
+                logger.info(f"Found existing tag '{tag_name}' with ID {exact_match['id']}")
+            else:
+                # Create new tag
+                create_url = build_wp_api_url(api_url, "tags")
+                create_response = requests.post(
+                    create_url, 
+                    auth=auth, 
+                    json={"name": tag_name}
+                )
+                create_response.raise_for_status()
+                new_tag = create_response.json()
+                tag_ids.append(new_tag['id'])
+                logger.info(f"Created new tag '{tag_name}' with ID {new_tag['id']}")
+                
+        except Exception as e:
+            logger.error(f"Error processing tag '{tag_name}': {str(e)}")
+            continue
+    
+    return tag_ids
+
 def get_wordpress_post(blog_id: int, post_id: int) -> Dict[str, Any]:
     """
     Get a post from WordPress
@@ -291,7 +343,10 @@ def create_wordpress_post(
         post_data["categories"] = [category_id]
     
     if tags:
-        post_data["tags"] = tags
+        # Convert tag names to IDs
+        tag_ids = get_or_create_tag_ids(blog_id, tags)
+        if tag_ids:
+            post_data["tags"] = tag_ids
     
     if featured_media_id:
         post_data["featured_media"] = featured_media_id
@@ -303,6 +358,20 @@ def create_wordpress_post(
         post = response.json()
         
         return True, post["id"], None
+    
+    except requests.exceptions.HTTPError as e:
+        # WordPress API zwraca szczegóły błędu w JSON
+        error_details = "Unknown error"
+        try:
+            error_json = e.response.json()
+            error_details = f"{error_json.get('code', 'unknown')}: {error_json.get('message', str(e))}"
+            logger.error(f"WordPress API error: {error_details}")
+            logger.error(f"Full error response: {error_json}")
+        except:
+            error_details = str(e)
+            logger.error(f"Error creating WordPress post: {error_details}")
+        
+        return False, None, error_details
     
     except Exception as e:
         logger.error(f"Error creating WordPress post: {str(e)}")
@@ -363,7 +432,10 @@ def update_wordpress_post(
         post_data["categories"] = [category_id]
     
     if tags is not None:
-        post_data["tags"] = tags
+        # Convert tag names to IDs
+        tag_ids = get_or_create_tag_ids(blog_id, tags)
+        if tag_ids:
+            post_data["tags"] = tag_ids
     
     if featured_media_id is not None:
         post_data["featured_media"] = featured_media_id
