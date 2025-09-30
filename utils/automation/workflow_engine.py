@@ -479,6 +479,14 @@ class WorkflowEngine:
                 # Ustaw pierwszy obraz jako featured image
                 article.featured_image_url = image_results[0]["url"]
                 
+                # NAPRAWIONE: Zapisz featured image data do content_log
+                import json
+                article.featured_image_data = json.dumps({
+                    'url': image_results[0]["url"],
+                    'title': image_results[0].get("title", article.title),
+                    'source': image_results[0].get("source", "auto")
+                })
+                
                 # Zapisz obrazy w bibliotece
                 for img in image_results:
                     image_entry = ImageLibrary(
