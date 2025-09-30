@@ -125,7 +125,11 @@ class WorkflowEngine:
                 
             # Krok 5: Publikacja na WordPress
             if automation_rule.auto_publish:
-                publish_result = self._execute_wordpress_publishing(article_result["article"], automation_rule)
+                publish_result = self._execute_wordpress_publishing(
+                    article_result["article"], 
+                    automation_rule, 
+                    topic_category=article_result.get("topic_category")
+                )
                 workflow_result["steps_completed"].append(WorkflowStep.WORDPRESS_PUBLISHING.value)
                 
                 if publish_result["success"]:
@@ -428,6 +432,7 @@ class WorkflowEngine:
                         "success": True,
                         "article_id": article.id,
                         "article": article,
+                        "topic_category": topic.category,  # Przekaż kategorię z topic
                         "content_metrics": article_result.get("metrics", {}),
                         "attempts": attempt + 1
                     }
@@ -498,7 +503,7 @@ class WorkflowEngine:
             logger.error(f"Image acquisition failed: {str(e)}")
             return {"success": False, "error": str(e)}
     
-    def _execute_wordpress_publishing(self, article: Article, automation_rule: AutomationRule) -> Dict[str, Any]:
+    def _execute_wordpress_publishing(self, article: Article, automation_rule: AutomationRule, topic_category: str = None) -> Dict[str, Any]:
         """
         Publikuje artykuł na WordPress z automatyczną rotacją autorów i featured image.
         """
@@ -519,9 +524,21 @@ class WorkflowEngine:
                 }
                 logger.info(f"Prepared featured image: {featured_image['url']}")
             
-            # Wybierz kategorię (fallback jeśli brak)
-            category = getattr(article, 'category', 'Planowanie ciąży')
+            # Użyj kategorii z topic (PRIORYTET!) lub pobierz z artykułu
+            category = topic_category if topic_category else getattr(article, 'category', None)
+            
+            if not category:
+                logger.error(f"No category specified for article {article.id}")
+                return {"success": False, "error": "Article has no category"}
+            
+            logger.info(f"Using category: {category} for blog {blog.name}")
             category_id = self._get_wordpress_category_id(blog, category)
+            
+            # CRITICAL: Sprawdź czy kategoria została znaleziona w WordPress
+            if category_id is None:
+                logger.error(f"Category '{category}' not found in WordPress for blog {blog.name}")
+                logger.error(f"Available categories in WordPress: {[c.name for c in Category.query.filter_by(blog_id=blog.id).all()][:10]}")
+                return {"success": False, "error": f"Category '{category}' not found in WordPress"}
             
             # Wygeneruj tagi (użyj zapisanych tagów lub wygeneruj nowe)
             if hasattr(article, 'get_tags') and article.get_tags():
@@ -675,16 +692,16 @@ class WorkflowEngine:
             categories = response.json()
             for cat in categories:
                 if cat['name'].lower() == category_name.lower():
+                    logger.info(f"Found category '{category_name}' with WordPress ID: {cat['id']}")
                     return cat['id']
             
-            # Jeśli nie znaleziono, zwróć standardową kategorię "Planowanie ciąży"
-            response = requests.get(f"{api_url}?search=Planowanie", auth=auth)
-            response.raise_for_status()
-            categories = response.json()
+            # Jeśli nie znaleziono dokładnego dopasowania, spróbuj znaleźć częściowe
             for cat in categories:
-                if 'planowanie' in cat['name'].lower():
+                if category_name.lower() in cat['name'].lower() or cat['name'].lower() in category_name.lower():
+                    logger.info(f"Found similar category '{cat['name']}' for '{category_name}' with WordPress ID: {cat['id']}")
                     return cat['id']
-                    
+            
+            logger.warning(f"Category '{category_name}' not found in WordPress for blog {blog.name}")
             return None
         except Exception as e:
             logger.error(f"Failed to get WordPress category ID: {e}")

@@ -635,9 +635,13 @@ def upload_media_to_wordpress(
         image_response = requests.get(image_url)
         image_response.raise_for_status()
         
+        # Determine content type from response or default to jpeg
+        content_type = image_response.headers.get('Content-Type', 'image/jpeg')
+        
         # Upload to WordPress
         headers = {
             "Content-Disposition": f'attachment; filename="{image_name}"',
+            "Content-Type": content_type
         }
         
         response = requests.post(
