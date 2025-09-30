@@ -267,8 +267,10 @@
         <nav class="navbar navbar-expand-lg navbar-light border-bottom shadow-sm" style="background-color: var(--card-bg) !important;">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-                    <img src="{{ url_for('static', filename='img/muscle-icon-36.png') }}" alt="MASTER AGENT AI" width="36" height="36" class="me-2">
-                    <span style="color: var(--dark-color) !important; font-weight: bold;">MASTER AGENT AI</span>
+                    <div class="logo-icon me-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <i class="fas fa-crown" style="color: #FFD700 !important; font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));"></i>
+                    </div>
+                    <span style="color: var(--dark-color) !important; font-weight: bold; font-size: 1.1rem;">MASTER AGENT AI</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
