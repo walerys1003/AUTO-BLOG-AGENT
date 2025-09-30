@@ -29,22 +29,29 @@ def generate_ai_topics_for_category(category: str, count: int = 20) -> List[str]
     """
     logger.info(f"Generating {count} AI topics for category: {category}")
     
-    system_prompt = """Jesteś ekspertem w tworzeniu pomysłów na artykuły blogowe dla matek i rodzin.
+    system_prompt = """Jesteś ekspertem w tworzeniu pomysłów na artykuły blogowe dla polskich czytelników.
     Twoim zadaniem jest wygenerowanie listy interesujących tematów na artykuły dla podanej kategorii.
     
-    Zasady:
-    1. Tematy powinny być w języku polskim
-    2. Każdy temat powinien być konkretny i szczegółowy
-    3. Tematy powinny być zróżnicowane i obejmować różne aspekty kategorii
-    4. Unikaj ogólnych i zbyt szerokich tematów
-    5. Każdy temat powinien mieć potencjał na artykuł o długości 1200-1600 słów
-    6. Zwróć odpowiedź w formacie JSON z kluczem "tematy" zawierającym listę tematów
+    WAŻNE - KRYTYCZNE ZASADY:
+    1. WSZYSTKIE tematy MUSZĄ być napisane W JĘZYKU POLSKIM - używaj polskich słów, polskiej gramatyki
+    2. NIE używaj języka angielskiego - żadne słowa ani frazy po angielsku
+    3. Każdy temat powinien być konkretny i szczegółowy
+    4. Tematy powinny być zróżnicowane i obejmować różne aspekty kategorii
+    5. Unikaj ogólnych i zbyt szerokich tematów
+    6. Każdy temat powinien mieć potencjał na artykuł o długości 1200-1600 słów
+    7. Zwróć odpowiedź w formacie JSON z kluczem "tematy" zawierającym listę tematów
+    
+    PRZYKŁAD POPRAWNEJ ODPOWIEDZI (w języku polskim):
+    {"tematy": ["Jak wybrać najlepsze buty do biegania dla początkujących", "5 sposobów na poprawę kondycji w domu", "Dlaczego dzieci powinny uprawiać sport - korzyści zdrowotne"]}
     
     Wygeneruj dokładnie tyle tematów, ile zostało określone w zapytaniu.
-    Odpowiedź: {"tematy": ["temat 1", "temat 2", ...]}
+    Pamiętaj: WSZYSTKIE tematy po polsku!
     """
     
-    user_prompt = f"Wygeneruj {count} interesujących i szczegółowych tematów na artykuły blogowe dla kategorii: {category}"
+    user_prompt = f"""Wygeneruj {count} interesujących i szczegółowych tematów na artykuły blogowe dla kategorii: {category}
+
+WAŻNE: Wszystkie tematy muszą być napisane PO POLSKU (Polish language), nie po angielsku!
+Odpowiedź w formacie JSON: {{"tematy": ["temat 1 po polsku", "temat 2 po polsku", ...]}}"""
     
     try:
         # Try to get topics using OpenRouter API
