@@ -55,48 +55,69 @@ class AutomationScheduler:
         Automatyczne odzyskiwanie przegapionych zadań z dzisiaj.
         Sprawdza przy starcie aplikacji czy są zadania batch generation,
         które były zaplanowane na dzisiaj ale zostały pominięte.
+        
+        Używa stałego harmonogramu zamiast next_execution_at z bazy danych.
         """
         logger.info("🔍 Checking for missed batch generation tasks from today...")
         
+        # Stały harmonogram batch generation (UTC time)
+        # blog_id: scheduled_time
+        BATCH_SCHEDULE = {
+            2: "05:00",  # MamaTestuje - 07:00 PL (05:00 UTC)
+            3: "06:00",  # ZnaneKosmetyki - 08:00 PL (06:00 UTC)
+            4: "07:00",  # HomosOnly - 09:00 PL (07:00 UTC)
+        }
+        
         try:
             with app.app_context():
-                # Znajdź początek dzisiejszego dnia
-                today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 current_time = datetime.utcnow()
+                today = current_time.date()
+                missed_tasks = []
                 
-                # Znajdź wszystkie aktywne reguły z przegapionymi wykonaniami
-                missed_rules = AutomationRule.query.filter(
-                    AutomationRule.is_active == True,
-                    AutomationRule.next_execution_at >= today_start,
-                    AutomationRule.next_execution_at < current_time
-                ).all()
+                # Sprawdź każdy blog w harmonogramie
+                for blog_id, scheduled_time in BATCH_SCHEDULE.items():
+                    # Parsuj zaplanowaną godzinę
+                    hour, minute = map(int, scheduled_time.split(':'))
+                    scheduled_datetime = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
+                    scheduled_datetime = scheduled_datetime.replace(tzinfo=None)
+                    
+                    # Sprawdź czy zadanie jest przegapione (zaplanowane dziś, ale już minęło)
+                    if scheduled_datetime < current_time:
+                        # Sprawdź czy blog ma aktywną regułę
+                        rule = AutomationRule.query.filter(
+                            AutomationRule.blog_id == blog_id,
+                            AutomationRule.is_active == True
+                        ).first()
+                        
+                        if rule:
+                            blog = Blog.query.get(blog_id)
+                            if blog and blog.active:
+                                # Sprawdź czy już było wykonane dzisiaj
+                                last_execution = rule.last_execution_at
+                                if not last_execution or last_execution.date() < today:
+                                    missed_tasks.append((blog_id, blog.name, scheduled_time))
                 
-                if not missed_rules:
+                if not missed_tasks:
                     logger.info("✅ No missed tasks found - all caught up!")
                     return
                 
-                logger.info(f"⚠️  Found {len(missed_rules)} missed tasks from today - recovering now...")
+                logger.info(f"⚠️  Found {len(missed_tasks)} missed tasks from today - recovering now...")
                 
                 # Wykonaj każde przegapione zadanie
-                for rule in missed_rules:
+                for blog_id, blog_name, scheduled_time in missed_tasks:
                     try:
-                        blog = Blog.query.get(rule.blog_id)
-                        if not blog:
-                            continue
-                        
-                        missed_time = rule.next_execution_at.strftime('%H:%M')
-                        logger.info(f"🔄 Recovering missed task for {blog.name} (was scheduled at {missed_time})")
+                        logger.info(f"🔄 Recovering missed task for {blog_name} (was scheduled at {scheduled_time} UTC)")
                         
                         # Wykonaj batch generation
-                        self.batch_generate_articles(blog_id=rule.blog_id)
+                        self.batch_generate_articles(blog_id=blog_id)
                         
-                        logger.info(f"✅ Successfully recovered missed task for {blog.name}")
+                        logger.info(f"✅ Successfully recovered missed task for {blog_name}")
                         
                     except Exception as e:
-                        logger.error(f"❌ Failed to recover task for rule {rule.id}: {str(e)}")
+                        logger.error(f"❌ Failed to recover task for {blog_name}: {str(e)}")
                         continue
                 
-                logger.info(f"🎉 Recovery complete - processed {len(missed_rules)} missed tasks")
+                logger.info(f"🎉 Recovery complete - processed {len(missed_tasks)} missed tasks")
                 
         except Exception as e:
             logger.error(f"Error during task recovery: {str(e)}")
@@ -115,10 +136,13 @@ class AutomationScheduler:
     def setup_schedules(self):
         """Konfiguruje harmonogram wykonania zadań - BATCH GENERATION"""
         
-        # NOWA LOGIKA: Batch generation dla każdego bloga o ustalonych godzinach
-        schedule.every().day.at("07:00").do(self.batch_generate_articles, blog_id=2)  # MamaTestuje - 4 artykuły
-        schedule.every().day.at("08:00").do(self.batch_generate_articles, blog_id=3)  # ZnaneKosmetyki - 3 artykuły  
-        schedule.every().day.at("09:00").do(self.batch_generate_articles, blog_id=4)  # HomosOnly - 2 artykuły
+        # BATCH GENERATION: Godziny w UTC (server time) odpowiadają czasowi polskiemu (UTC+2)
+        # 05:00 UTC = 07:00 PL - MamaTestuje
+        # 06:00 UTC = 08:00 PL - ZnaneKosmetyki  
+        # 07:00 UTC = 09:00 PL - HomosOnly
+        schedule.every().day.at("05:00").do(self.batch_generate_articles, blog_id=2)  # MamaTestuje - 4 artykuły (07:00 PL)
+        schedule.every().day.at("06:00").do(self.batch_generate_articles, blog_id=3)  # ZnaneKosmetyki - 3 artykuły (08:00 PL)
+        schedule.every().day.at("07:00").do(self.batch_generate_articles, blog_id=4)  # HomosOnly - 2 artykuły (09:00 PL)
         
         # STARA LOGIKA: Sprawdzanie reguł co 15 minut (backup)
         schedule.every(15).minutes.do(self.check_and_execute_rules)
@@ -126,10 +150,10 @@ class AutomationScheduler:
         # Czyszczenie nieudanych zadań co godzinę
         schedule.every().hour.do(self.cleanup_failed_rules)
         
-        # Raport dzienny o 10:00 (po wszystkich batch generation)
-        schedule.every().day.at("10:00").do(self.generate_daily_report)
+        # Raport dzienny o 08:00 UTC = 10:00 PL (po wszystkich batch generation)
+        schedule.every().day.at("08:00").do(self.generate_daily_report)
         
-        logger.info("Scheduler configured with BATCH GENERATION at 07:00, 08:00, 09:00")
+        logger.info("Scheduler configured with BATCH GENERATION at 05:00 UTC (07:00 PL), 06:00 UTC (08:00 PL), 07:00 UTC (09:00 PL)")
     
     def _run_scheduler(self):
         """Główna pętla schedulera"""
