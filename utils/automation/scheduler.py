@@ -37,6 +37,10 @@ class AutomationScheduler:
             return
             
         self.is_running = True
+        
+        # NOWA FUNKCJA: Odzyskaj przegapione zadania z dzisiaj
+        self.recover_missed_tasks()
+        
         self.setup_schedules()
         
         # Uruchom scheduler w osobnym wątku
@@ -45,6 +49,57 @@ class AutomationScheduler:
         self.scheduler_thread.start()
         
         logger.info("Automation scheduler started")
+    
+    def recover_missed_tasks(self):
+        """
+        Automatyczne odzyskiwanie przegapionych zadań z dzisiaj.
+        Sprawdza przy starcie aplikacji czy są zadania batch generation,
+        które były zaplanowane na dzisiaj ale zostały pominięte.
+        """
+        logger.info("🔍 Checking for missed batch generation tasks from today...")
+        
+        try:
+            with app.app_context():
+                # Znajdź początek dzisiejszego dnia
+                today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = datetime.utcnow()
+                
+                # Znajdź wszystkie aktywne reguły z przegapionymi wykonaniami
+                missed_rules = AutomationRule.query.filter(
+                    AutomationRule.is_active == True,
+                    AutomationRule.next_execution_at >= today_start,
+                    AutomationRule.next_execution_at < current_time
+                ).all()
+                
+                if not missed_rules:
+                    logger.info("✅ No missed tasks found - all caught up!")
+                    return
+                
+                logger.info(f"⚠️  Found {len(missed_rules)} missed tasks from today - recovering now...")
+                
+                # Wykonaj każde przegapione zadanie
+                for rule in missed_rules:
+                    try:
+                        blog = Blog.query.get(rule.blog_id)
+                        if not blog:
+                            continue
+                        
+                        missed_time = rule.next_execution_at.strftime('%H:%M')
+                        logger.info(f"🔄 Recovering missed task for {blog.name} (was scheduled at {missed_time})")
+                        
+                        # Wykonaj batch generation
+                        self.batch_generate_articles(blog_id=rule.blog_id)
+                        
+                        logger.info(f"✅ Successfully recovered missed task for {blog.name}")
+                        
+                    except Exception as e:
+                        logger.error(f"❌ Failed to recover task for rule {rule.id}: {str(e)}")
+                        continue
+                
+                logger.info(f"🎉 Recovery complete - processed {len(missed_rules)} missed tasks")
+                
+        except Exception as e:
+            logger.error(f"Error during task recovery: {str(e)}")
     
     def stop(self):
         """Zatrzymuje scheduler"""
