@@ -978,8 +978,35 @@ class AutomationRule(db.Model):
         self.set_days_list(days_list)
         
     def get_categories(self):
-        """Alias for get_topic_categories, returns categories as a Python list"""
-        return self.get_topic_categories()
+        """
+        Returns category NAMES (not IDs) as a Python list.
+        Converts WordPress IDs from topic_categories to actual category names.
+        """
+        wordpress_ids = self.get_topic_categories()
+        if not wordpress_ids:
+            return []
+        
+        # Import logger here to avoid circular imports
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Convert WordPress IDs to category names
+        category_names = []
+        for wp_id in wordpress_ids:
+            # Find category by wordpress_id
+            category = Category.query.filter_by(
+                blog_id=self.blog_id,
+                wordpress_id=int(wp_id) if str(wp_id).isdigit() else wp_id
+            ).first()
+            
+            if category:
+                category_names.append(category.name)
+            else:
+                # Fallback - use ID if category not found
+                logger.warning(f"Category with wordpress_id={wp_id} not found for blog_id={self.blog_id}")
+                category_names.append(f"Kategoria {wp_id}")
+        
+        return category_names
         
     def set_categories(self, categories_list):
         """Alias for set_topic_categories, sets categories from a Python list"""

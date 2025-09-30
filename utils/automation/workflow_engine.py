@@ -276,6 +276,7 @@ class WorkflowEngine:
                                 new_topic = ArticleTopic()
                                 new_topic.blog_id = automation_rule.blog_id
                                 new_topic.topic = topic_text
+                                new_topic.title = topic_text[:200] if len(topic_text) > 200 else topic_text  # Add required title field
                                 new_topic.category = category_name
                                 new_topic.status = 'approved' if automation_rule.auto_approve_topics else 'pending'
                                 new_topic.priority = 5
@@ -476,7 +477,7 @@ class WorkflowEngine:
                 # Zapisz obrazy w bibliotece
                 for img in image_results:
                     image_entry = ImageLibrary(
-                        blog_id=article.id,
+                        blog_id=automation_rule.blog_id,  # FIX: use blog_id not article.id
                         title=img.get("title", article.title),
                         url=img["url"],
                         source=img.get("source", "auto"),
