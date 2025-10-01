@@ -29,8 +29,8 @@ def get_openrouter_api_key():
     if hasattr(Config, 'OPENROUTER_API_KEY') and Config.OPENROUTER_API_KEY:
         return Config.OPENROUTER_API_KEY
     
-    # Last resort fallback
-    return "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"
+    # No hardcoded key - raise error if not found
+    raise ValueError("OPENROUTER_API_KEY not found in environment or config")
 
 def get_ai_completion(
     system_prompt: str,
