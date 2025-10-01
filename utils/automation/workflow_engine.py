@@ -115,8 +115,11 @@ class WorkflowEngine:
                 
             workflow_result["article_id"] = article_result["article_id"]
             
-            # Krok 4: Pobieranie obrazów
-            image_result = self._execute_image_acquisition(article_result["article"])
+            # Krok 4: Pobieranie obrazów (z kategorią dla lepszego doboru)
+            image_result = self._execute_image_acquisition(
+                article_result["article"],
+                topic_category=article_result.get("topic_category")
+            )
             workflow_result["steps_completed"].append(WorkflowStep.IMAGE_ACQUISITION.value)
             
             if not image_result["success"]:
@@ -461,18 +464,25 @@ class WorkflowEngine:
         
         return {"success": False, "error": "Maximum retries exceeded"}
     
-    def _execute_image_acquisition(self, article: Article) -> Dict[str, Any]:
+    def _execute_image_acquisition(self, article: Article, topic_category: str = None) -> Dict[str, Any]:
         """
-        Pobiera obrazy dla artykułu.
+        Pobiera obrazy dla artykułu używając ulepszonego AI-powered systemu.
         """
         logger.info(f"Acquiring images for article: {article.title}")
         
         try:
-            # Znajdź obrazy dla artykułu
+            # Pobierz tagi z artykułu
+            tags = []
+            if hasattr(article, 'get_tags'):
+                tags = article.get_tags() or []
+            
+            # Znajdź obrazy dla artykułu z AI-enhanced search
             image_results = find_article_images(
                 article_title=article.title,
                 article_content=article.content,
-                max_images=3
+                max_images=3,
+                tags=tags,
+                category=topic_category or ""
             )
             
             if image_results and len(image_results) > 0:

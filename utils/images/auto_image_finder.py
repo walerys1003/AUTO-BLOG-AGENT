@@ -18,6 +18,102 @@ from datetime import datetime
 # Configure logging
 logger = logging.getLogger(__name__)
 
+def compute_image_score(
+    image: Dict[str, Any],
+    context: Dict[str, Any],
+    planner_result: Dict[str, Any] = None
+) -> float:
+    """
+    Compute a relevance score for an image based on article context
+    
+    Args:
+        image: Image metadata dictionary
+        context: Article context with title, tags, category
+        planner_result: AI query planner result with domain_terms, negative keywords
+        
+    Returns:
+        Relevance score (higher is better)
+    """
+    score = 0.0
+    
+    # Combine searchable image text
+    searchable_text = " ".join([
+        str(image.get("description", "")),
+        str(image.get("attribution_text", "")),
+        str(image.get("url", "")),
+        str(image.get("title", ""))
+    ]).lower()
+    
+    # 1. Check for domain terms and tags (positive signals)
+    if planner_result:
+        domain_terms = planner_result.get("domain_terms", [])
+        for term in domain_terms:
+            if term.lower() in searchable_text:
+                score += 2.0
+    
+    # Check article tags
+    tags = context.get("tags", [])
+    for tag in tags[:5]:  # Top 5 tags only
+        if tag.lower() in searchable_text:
+            score += 1.5
+    
+    # Check title keywords
+    title = context.get("title", "")
+    title_words = [w.lower() for w in title.split() if len(w) > 3]
+    for word in title_words[:5]:
+        if word in searchable_text:
+            score += 1.0
+    
+    # 2. Check for negative keywords (penalties)
+    if planner_result:
+        negatives = planner_result.get("negative", [])
+        for neg in negatives:
+            if neg.lower() in searchable_text:
+                score -= 3.0
+    
+    # 3. Orientation preference
+    width = image.get("width", 0)
+    height = image.get("height", 1)  # Avoid division by zero
+    
+    if planner_result:
+        preferred_orientation = planner_result.get("orientation", "landscape")
+    else:
+        preferred_orientation = "landscape"
+    
+    if preferred_orientation == "landscape" and width > height:
+        score += 1.5
+    elif preferred_orientation == "portrait" and height > width:
+        score += 1.5
+    elif preferred_orientation == "square" and abs(width - height) < width * 0.1:
+        score += 1.5
+    
+    # 4. Image size (prefer larger images, minimum 1200px width)
+    if width >= 1200:
+        score += 2.0
+    elif width >= 800:
+        score += 1.0
+    elif width < 600:
+        score -= 1.0
+    
+    # 5. Source quality (prefer licensed/curated sources)
+    source = image.get("source", "").lower()
+    if source in ("unsplash", "pexels"):
+        score += 2.0  # Free, high-quality, licensed
+    elif source == "bing":
+        score += 0.5
+    
+    # 6. Attribution presence (good for licensing)
+    if image.get("attribution_text") or image.get("attribution_url"):
+        score += 0.5
+    
+    # 7. Penalty for adult content keywords (basic filter)
+    adult_keywords = ["sexy", "nude", "porn", "xxx", "adult", "nsfw"]
+    for keyword in adult_keywords:
+        if keyword in searchable_text:
+            score -= 10.0  # Strong penalty
+    
+    return score
+
 def prepare_image_metadata(
     url: str, 
     thumbnail_url: str = None, 
@@ -132,6 +228,112 @@ def extract_content_summary(content: str, max_chars: int = 500) -> str:
             content = content[:last_period + 1]
     
     return content
+
+def find_images_for_article_enhanced(
+    article_title: str,
+    article_content: Optional[str] = None,
+    tags: List[str] = None,
+    category: str = "",
+    num_images: int = 3
+) -> List[Dict[str, Any]]:
+    """
+    Enhanced image search using AI query planning and scoring
+    
+    Args:
+        article_title: Article title
+        article_content: Article content (HTML or text)
+        tags: List of SEO tags
+        category: Article category
+        num_images: Number of images to return
+        
+    Returns:
+        List of best-scored images
+    """
+    try:
+        from utils.images.query_planner import generate_image_queries_with_ai, extract_content_summary
+        
+        # Prepare context
+        content_summary = extract_content_summary(article_content) if article_content else ""
+        context = {
+            "title": article_title,
+            "tags": tags or [],
+            "category": category
+        }
+        
+        # Generate intelligent queries using AI
+        logger.info(f"Generating AI-powered image queries for: {article_title[:60]}...")
+        planner_result = generate_image_queries_with_ai(
+            title=article_title,
+            content=content_summary,
+            tags=tags,
+            category=category
+        )
+        
+        # Collect all queries
+        all_queries = [planner_result["primary_query"]]
+        all_queries.extend(planner_result.get("alternates", []))
+        
+        # Search multiple sources with each query
+        sources = ["bing", "unsplash", "pexels"]  # Prioritize free, licensed sources
+        all_candidates = []
+        
+        for query in all_queries[:3]:  # Use top 3 queries
+            for source in sources:
+                try:
+                    logger.info(f"Searching {source} with query: '{query}'")
+                    images = search_images(
+                        query=query,
+                        source=source,
+                        per_page=10,  # Get multiple candidates
+                        orientation=planner_result.get("orientation", "landscape")
+                    )
+                    
+                    # Add to candidates if not duplicate
+                    for img in images:
+                        img_url = img.get("url", "")
+                        if img_url and not any(c.get("url") == img_url for c in all_candidates):
+                            all_candidates.append(img)
+                    
+                    # If we have enough candidates, can stop early
+                    if len(all_candidates) >= 30:
+                        break
+                        
+                except Exception as e:
+                    logger.warning(f"Error searching {source}: {e}")
+            
+            if len(all_candidates) >= 30:
+                break
+        
+        if not all_candidates:
+            logger.warning(f"No images found for '{article_title}'")
+            return []
+        
+        # Score all candidates
+        logger.info(f"Scoring {len(all_candidates)} image candidates...")
+        scored_images = []
+        for img in all_candidates:
+            score = compute_image_score(img, context, planner_result)
+            scored_images.append((score, img))
+        
+        # Sort by score (descending)
+        scored_images.sort(key=lambda x: x[0], reverse=True)
+        
+        # Log top scores
+        for i, (score, img) in enumerate(scored_images[:5]):
+            logger.info(f"  #{i+1}: score={score:.1f} - {img.get('description', 'No desc')[:60]}")
+        
+        # Return top N images
+        best_images = [img for score, img in scored_images[:num_images]]
+        return best_images
+        
+    except Exception as e:
+        logger.error(f"Error in enhanced image search: {e}")
+        # Fallback to original method
+        return find_images_for_article(
+            article_title=article_title,
+            article_content=article_content,
+            num_images=num_images
+        )
 
 def find_images_for_article(
     article_title: str, 
@@ -262,24 +464,46 @@ def save_image_to_library(image_data: Dict[str, Any]) -> Optional[ImageLibrary]:
         logger.error(f"Error saving image to library: {str(e)}")
         return None
 
-def find_article_images(article_title: str, article_content: str = "", max_images: int = 3) -> List[Dict[str, Any]]:
+def find_article_images(
+    article_title: str,
+    article_content: str = "",
+    max_images: int = 3,
+    tags: List[str] = None,
+    category: str = ""
+) -> List[Dict[str, Any]]:
     """
     Main function to find images for an article - compatibility wrapper for workflow engine.
+    Uses enhanced AI-powered image search when tags/category available, falls back to basic search.
     
     Args:
         article_title: Title of the article
         article_content: Content of the article (optional)
         max_images: Maximum number of images to return
+        tags: List of SEO tags (optional)
+        category: Article category (optional)
         
     Returns:
         List of image dictionaries with url, title, source, tags
     """
     try:
-        images = find_images_for_article(
-            article_title=article_title,
-            article_content=article_content,
-            num_images=max_images
-        )
+        # Try enhanced search if we have tags or category
+        if tags or category:
+            logger.info(f"Using AI-enhanced image search for: {article_title[:60]}...")
+            images = find_images_for_article_enhanced(
+                article_title=article_title,
+                article_content=article_content,
+                tags=tags,
+                category=category,
+                num_images=max_images
+            )
+        else:
+            # Fall back to original search
+            logger.info(f"Using standard image search for: {article_title[:60]}...")
+            images = find_images_for_article(
+                article_title=article_title,
+                article_content=article_content,
+                num_images=max_images
+            )
         
         # Convert to expected format for workflow engine
         result = []
@@ -296,7 +520,25 @@ def find_article_images(article_title: str, article_content: str = "", max_image
         
     except Exception as e:
         logger.error(f"Error finding article images: {str(e)}")
-        return []
+        # Ultimate fallback - try basic search
+        try:
+            images = find_images_for_article(
+                article_title=article_title,
+                article_content=article_content,
+                num_images=max_images
+            )
+            result = []
+            for img in images:
+                result.append({
+                    'url': img.get('url', ''),
+                    'title': img.get('description', article_title),
+                    'source': img.get('source', 'auto'),
+                    'tags': '',
+                    'thumbnail_url': img.get('thumb_url', '')
+                })
+            return result
+        except:
+            return []
 
 def find_and_associate_images(
     article: Article, 
