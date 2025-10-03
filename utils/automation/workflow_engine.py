@@ -757,22 +757,21 @@ class WorkflowEngine:
             
             authors = response.json()
             
-            # Filtruj tylko użytkowników którzy mogą publikować posty
+            # Zbierz wszystkich użytkowników jako potencjalnych autorów
+            # WordPress API nie zawsze zwraca roles, więc akceptujemy wszystkich
             valid_authors = []
             for author in authors:
-                # WordPress role check - Author, Editor, Administrator mogą publikować
-                if any(role in ['author', 'editor', 'administrator'] for role in author.get('roles', [])):
-                    valid_authors.append({
-                        'id': author['id'],
-                        'name': author['name'],
-                        'slug': author['slug']
-                    })
+                valid_authors.append({
+                    'id': author['id'],
+                    'name': author['name'],
+                    'slug': author.get('slug', author['name'].lower().replace(' ', '-'))
+                })
             
             if valid_authors:
                 self.available_authors = valid_authors
                 logger.info(f"Loaded {len(valid_authors)} authors from WordPress: {[a['name'] for a in valid_authors]}")
             else:
-                logger.warning("No valid authors found in WordPress")
+                logger.warning("No authors found in WordPress")
                 
             return valid_authors
             
