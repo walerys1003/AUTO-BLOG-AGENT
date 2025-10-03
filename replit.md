@@ -16,13 +16,14 @@ Preferred communication style: Simple, everyday language.
 - **Task Scheduling**: APScheduler.
 
 ### Core Features
-- **Content Generation Engine**: AI-powered topic suggestion, article writing (paragraph-based, configurable length), SEO optimization (meta descriptions, keywords), and automatic image sourcing (Unsplash, Google Images, Pexels).
+- **Content Generation Engine**: AI-powered topic suggestion, article writing (paragraph-based, configurable length), SEO optimization (meta descriptions, keywords), and automatic image sourcing (Unsplash, Google Images, Pexels). Enhanced with sentence completion validation ensuring all articles end with complete sentences and proper HTML tag closure.
 - **Publishing System**: WordPress integration with scheduling, draft management, and automatic category/tag assignment. Features include 4-page A4 article generation (minimum 1200 words), exactly 12 SEO tags per article, and automated featured image integration.
 - **Social Media Automation**: Multi-platform support (Facebook, Twitter, LinkedIn, Instagram, TikTok) for auto-posting, content adaptation, and engagement tracking.
 - **SEO and Analytics**: Google Trends for topic discovery, SerpAPI for keyword research, content metrics tracking, and optimization suggestions.
 - **Multi-Blog Management**: Supports simultaneous content generation and publishing across multiple WordPress blogs with independent configurations and author rotation.
 - **Workflow Engine**: Orchestrates the entire content lifecycle, including topic management, article generation, image integration, validation, and publication with retry mechanisms and error handling.
-- **Author Rotation System**: Manages real WordPress authors, rotating them for content assignments based on categories and specializations.
+- **Category Rotation System**: Ensures diversity in batch generation - each consecutive article uses a different category, cycling through all available categories before repeating.
+- **Author Rotation System**: Automatically rotates through WordPress authors for batch generation. Fetches real authors from WordPress API and assigns them cyclically to ensure balanced content distribution across the editorial team.
 
 ### System Design Choices
 - **Database Schema**: Includes tables for Blog configurations, ContentLog, ArticleTopic, Category/Tag, SocialAccount, AutomationRule, and Newsletter.
