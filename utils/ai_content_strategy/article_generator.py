@@ -7,6 +7,7 @@ using AI models (Claude 3.5 Sonnet via OpenRouter API), with paragraph-based app
 import logging
 import os
 import json
+import re
 from typing import Dict, List, Optional
 
 from config import Config
@@ -15,6 +16,72 @@ from utils.content.long_paragraph_generator import generate_long_paragraph
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+
+def ensure_complete_ending(content: str, topic: str) -> str:
+    """
+    Ensure article content ends with a complete sentence and proper HTML tag closure.
+    
+    Args:
+        content: The article content to check
+        topic: The topic of the article (for context if completion needed)
+        
+    Returns:
+        Content with complete ending
+    """
+    if not content:
+        return content
+    
+    # Check if content ends with complete </p> tag
+    if not content.rstrip().endswith('</p>'):
+        logger.warning("Content doesn't end with </p> tag - fixing")
+        
+        # Find last complete </p> tag
+        last_p_close = content.rfind('</p>')
+        if last_p_close > 0:
+            # Truncate to last complete paragraph
+            content = content[:last_p_close + 4]
+            logger.info("Truncated to last complete </p> tag")
+        else:
+            # Add closing tag if missing
+            content = content.rstrip() + '</p>'
+    
+    # Check if last sentence is complete (ends with punctuation)
+    # Extract text from last paragraph
+    last_p_match = re.search(r'<p>([^<]+)</p>\s*$', content)
+    if last_p_match:
+        last_text = last_p_match.group(1).strip()
+        # Check if ends with proper punctuation
+        if not re.search(r'[.!?]$', last_text):
+            logger.warning(f"Last sentence incomplete: '{last_text[-50:]}'")
+            
+            # Try to complete the sentence using AI
+            try:
+                completion_prompt = f"Dokończ to zdanie naturalnie i poprawnie gramatycznie (odpowiedz TYLKO dokończeniem, bez żadnych dodatkowych słów): {last_text[-100:]}"
+                completion = get_ai_completion(
+                    system_prompt="Jesteś ekspertem w dokańczaniu zdań po polsku. Odpowiadasz TYLKO dokończeniem zdania.",
+                    user_prompt=completion_prompt,
+                    model=Config.DEFAULT_CONTENT_MODEL,
+                    max_tokens=50,
+                    temperature=0.3
+                )
+                
+                # Remove the incomplete sentence and add completed version
+                completed_text = last_text + ' ' + completion.strip()
+                # Ensure it ends with punctuation
+                if not re.search(r'[.!?]$', completed_text):
+                    completed_text += '.'
+                
+                # Replace in content
+                content = re.sub(r'<p>([^<]+)</p>\s*$', f'<p>{completed_text}</p>', content)
+                logger.info("Completed incomplete sentence using AI")
+                
+            except Exception as e:
+                logger.error(f"Failed to complete sentence: {e}")
+                # Fallback: just add period
+                content = re.sub(r'<p>([^<]+)</p>\s*$', lambda m: f'<p>{m.group(1).strip()}.</p>', content)
+    
+    return content
 
 def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     """
@@ -106,12 +173,12 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         content_parts = []
         
         # Generate introduction (300+ words)
-        intro_prompt = f"Napisz bardzo długie wprowadzenie (minimum 300 słów) do artykułu o temacie: {topic}. Kategoria: {category}. Użyj storytelling, statystyk, hook'a dla czytelnika. Format: czysty HTML z tagami <p>."
+        intro_prompt = f"Napisz bardzo długie wprowadzenie (minimum 300 słów) do artykułu o temacie: {topic}. Kategoria: {category}. Użyj storytelling, statystyk, hook'a dla czytelnika. Format: czysty HTML z tagami <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
         intro_response = get_ai_completion(
-            system_prompt="Jesteś ekspertem w pisaniu długich wprowadzeń do artykułów.",
+            system_prompt="Jesteś ekspertem w pisaniu długich wprowadzeń do artykułów. ZAWSZE kończ pełnym zdaniem z kropką i zamkniętym tagiem </p>.",
             user_prompt=intro_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=1200,
+            max_tokens=1500,
             temperature=0.7
         )
         content_parts.append(intro_response.strip())
@@ -126,23 +193,23 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         ]
         
         for i, section_topic in enumerate(sections, 1):
-            section_prompt = f"Napisz bardzo długą sekcję artykułu (minimum 250 słów) na temat: {section_topic}. Dodaj nagłówek H2, szczegółowe akapity z przykładami, statystykami, poradami. Format: HTML z <h2> i <p>."
+            section_prompt = f"Napisz bardzo długą sekcję artykułu (minimum 250 słów) na temat: {section_topic}. Dodaj nagłówek H2, szczegółowe akapity z przykładami, statystykami, poradami. Format: HTML z <h2> i <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
             section_response = get_ai_completion(
-                system_prompt="Jesteś ekspertem w pisaniu długich, szczegółowych sekcji artykułów.",
+                system_prompt="Jesteś ekspertem w pisaniu długich, szczegółowych sekcji artykułów. ZAWSZE kończ pełnym zdaniem z kropką i zamkniętym tagiem </p>.",
                 user_prompt=section_prompt,
                 model=Config.DEFAULT_CONTENT_MODEL,
-                max_tokens=1000,
+                max_tokens=1200,
                 temperature=0.7
             )
             content_parts.append(section_response.strip())
         
         # Generate conclusion (200+ words)
-        conclusion_prompt = f"Napisz bardzo długie podsumowanie (minimum 200 słów) do artykułu o {topic}. Zawrzyj kluczowe wnioski, call-to-action, praktyczne wskazówki. Format: HTML z <p>."
+        conclusion_prompt = f"Napisz bardzo długie podsumowanie (minimum 200 słów) do artykułu o {topic}. Zawrzyj kluczowe wnioski, call-to-action, praktyczne wskazówki. Format: HTML z <p>. MUSISZ ZAKOŃCZYĆ PEŁNYM ZDANIEM Z KROPKĄ I ZAMKNIĘTYM TAGIEM </p> - to bardzo ważne!"
         conclusion_response = get_ai_completion(
-            system_prompt="Jesteś ekspertem w pisaniu długich podsumowań artykułów.",
+            system_prompt="Jesteś ekspertem w pisaniu długich podsumowań artykułów. KRYTYCZNIE WAŻNE: ZAWSZE kończ tekst pełnym zdaniem z kropką i zamkniętym tagiem </p>. NIE PRZERYWAJ w połowie zdania!",
             user_prompt=conclusion_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=800,
+            max_tokens=1000,
             temperature=0.7
         )
         content_parts.append(conclusion_response.strip())
@@ -152,6 +219,9 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         
         # Response is pure HTML content - no JSON parsing needed
         content = response.strip()
+        
+        # FIX: Ensure content ends with complete sentence and closed tag
+        content = ensure_complete_ending(content, topic)
         
         # Generate Polish title following exact specifications  
         title_prompt = f"""Wygeneruj chwytliwy, w pełni po polsku napisany tytuł blogowy na temat: {topic}
