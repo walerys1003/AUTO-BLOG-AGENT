@@ -304,6 +304,7 @@ def create_wordpress_post(
     category_id: Optional[int] = None,
     tags: Optional[List[str]] = None,
     featured_media_id: Optional[int] = None,
+    author_id: Optional[int] = None,
 ) -> Tuple[bool, Optional[int], Optional[str]]:
     """
     Create a new post in WordPress
@@ -317,6 +318,7 @@ def create_wordpress_post(
         category_id: Category ID
         tags: List of tag names
         featured_media_id: Featured media ID
+        author_id: Author ID for post
         
     Returns:
         Tuple of (success, post_id, error_message)
@@ -350,6 +352,10 @@ def create_wordpress_post(
     
     if featured_media_id:
         post_data["featured_media"] = featured_media_id
+    
+    if author_id:
+        post_data["author"] = author_id
+        logger.info(f"Setting post author to ID: {author_id}")
     
     try:
         response = requests.post(url, auth=auth, json=post_data)
@@ -387,6 +393,7 @@ def update_wordpress_post(
     category_id: Optional[int] = None,
     tags: Optional[List[str]] = None,
     featured_media_id: Optional[int] = None,
+    author_id: Optional[int] = None,
 ) -> Tuple[bool, Optional[int], Optional[str]]:
     """
     Update an existing post in WordPress
@@ -401,6 +408,7 @@ def update_wordpress_post(
         category_id: Category ID
         tags: List of tag names
         featured_media_id: Featured media ID
+        author_id: Author ID for post
         
     Returns:
         Tuple of (success, post_id, error_message)
@@ -440,6 +448,10 @@ def update_wordpress_post(
     if featured_media_id is not None:
         post_data["featured_media"] = featured_media_id
     
+    if author_id is not None:
+        post_data["author"] = author_id
+        logger.info(f"Setting post author to ID: {author_id}")
+    
     try:
         response = requests.post(url, auth=auth, json=post_data)
         response.raise_for_status()
@@ -462,6 +474,7 @@ def publish_wordpress_post(
     tags: Optional[List[str]] = None,
     featured_image: Optional[Dict[str, Any]] = None,
     scheduled_date: Optional[datetime] = None,
+    author_id: Optional[int] = None,
 ) -> Tuple[bool, Optional[int], Optional[str]]:
     """
     Publish a post to WordPress
@@ -478,6 +491,7 @@ def publish_wordpress_post(
         tags: List of tag names
         featured_image: Featured image data
         scheduled_date: Date to schedule the post for
+        author_id: Author ID for post
         
     Returns:
         Tuple of (success, post_id, error_message)
@@ -514,7 +528,8 @@ def publish_wordpress_post(
             status=status,
             category_id=category_id,
             tags=tags,
-            featured_media_id=featured_media_id
+            featured_media_id=featured_media_id,
+            author_id=author_id
         )
     else:
         return create_wordpress_post(
@@ -525,7 +540,8 @@ def publish_wordpress_post(
             status=status,
             category_id=category_id,
             tags=tags,
-            featured_media_id=featured_media_id
+            featured_media_id=featured_media_id,
+            author_id=author_id
         )
 
 def download_image_from_url(image_url: str) -> bytes:

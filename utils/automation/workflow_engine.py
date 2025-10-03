@@ -54,6 +54,10 @@ class WorkflowEngine:
         self.ai_service = get_default_ai_service()
         self.current_step = None
         self.workflow_id = None
+        # Rotacja kategorii i autorów dla batch generation
+        self.used_categories = []  # Lista użytych kategorii w tej sesji batch
+        self.available_authors = []  # Lista autorów z WordPress
+        self.current_author_index = 0  # Indeks aktualnego autora w rotacji
         
     def execute_full_cycle(self, automation_rule: AutomationRule) -> Dict[str, Any]:
         """
@@ -307,33 +311,69 @@ class WorkflowEngine:
     
     def _select_topic_for_article(self, automation_rule: AutomationRule) -> Optional[ArticleTopic]:
         """
-        Wybiera najlepszy temat do wygenerowania artykułu.
+        Wybiera najlepszy temat do wygenerowania artykułu z rotacją kategorii.
+        Każdy kolejny artykuł będzie z innej kategorii.
         """
-        logger.info("Selecting topic for article generation")
+        logger.info("Selecting topic for article generation with category rotation")
         
         try:
-            # Znajdź zatwierdzone tematy dla tej reguły
-            available_topics = ArticleTopic.query.filter_by(
-                blog_id=automation_rule.blog_id,
-                status='approved',
-                used=False
-            ).filter(
-                ArticleTopic.category.in_(automation_rule.get_categories())
-            ).order_by(ArticleTopic.priority.desc(), ArticleTopic.created_at.asc()).all()
+            available_categories = automation_rule.get_categories()
             
-            if not available_topics:
+            # ROTACJA KATEGORII: Wybierz kategorię która jeszcze nie była użyta w tej sesji batch
+            unused_categories = [cat for cat in available_categories if cat not in self.used_categories]
+            
+            # Jeśli wszystkie kategorie były użyte, zresetuj listę użytych
+            if not unused_categories:
+                logger.info("All categories used, resetting rotation")
+                self.used_categories = []
+                unused_categories = available_categories
+            
+            # Znajdź zatwierdzone tematy preferując nieużyte kategorie
+            selected_topic = None
+            
+            # Najpierw spróbuj z nieużytymi kategoriami
+            for preferred_category in unused_categories:
+                topics = ArticleTopic.query.filter_by(
+                    blog_id=automation_rule.blog_id,
+                    status='approved',
+                    used=False,
+                    category=preferred_category
+                ).order_by(ArticleTopic.priority.desc(), ArticleTopic.created_at.asc()).all()
+                
+                if topics:
+                    selected_topic = topics[0]
+                    # Dodaj kategorię do listy użytych
+                    self.used_categories.append(preferred_category)
+                    logger.info(f"Selected topic from unused category: {preferred_category}")
+                    break
+            
+            # Jeśli nie znaleziono w nieużytych, weź dowolny dostępny
+            if not selected_topic:
+                available_topics = ArticleTopic.query.filter_by(
+                    blog_id=automation_rule.blog_id,
+                    status='approved',
+                    used=False
+                ).filter(
+                    ArticleTopic.category.in_(available_categories)
+                ).order_by(ArticleTopic.priority.desc(), ArticleTopic.created_at.asc()).all()
+                
+                if available_topics:
+                    selected_topic = available_topics[0]
+                    if selected_topic.category not in self.used_categories:
+                        self.used_categories.append(selected_topic.category)
+                    logger.info(f"Selected topic from any available category: {selected_topic.category}")
+            
+            if not selected_topic:
                 logger.warning("No approved topics available")
                 return None
-                
-            # Wybierz pierwszy (najwyższy priorytet, najstarszy)
-            selected_topic = available_topics[0]
             
             # Oznacz jako używany
             selected_topic.used = True
             selected_topic.used_at = datetime.utcnow()
             db.session.commit()
             
-            logger.info(f"Selected topic: {selected_topic.title}")
+            logger.info(f"Selected topic: {selected_topic.title} (Category: {selected_topic.category})")
+            logger.info(f"Used categories so far: {self.used_categories}")
             return selected_topic
             
         except Exception as e:
@@ -564,6 +604,9 @@ class WorkflowEngine:
             else:
                 tag_names = self._generate_tags_for_category(category)[:6]
             
+            # ROTACJA AUTORÓW: Pobierz następnego autora w rotacji
+            author_id = self._get_next_author_id(blog)
+            
             # Użyj publish_wordpress_post z utils/wordpress/client.py dla właściwego uploadu featured image
             from utils.wordpress.client import publish_wordpress_post
             
@@ -574,7 +617,8 @@ class WorkflowEngine:
                 excerpt=article.excerpt,
                 category_id=category_id,
                 tags=tag_names,
-                featured_image=featured_image
+                featured_image=featured_image,
+                author_id=author_id
             )
             
             if success:
@@ -692,6 +736,66 @@ class WorkflowEngine:
         except Exception as e:
             logger.error(f"Metrics update failed: {str(e)}")
             return {"error": str(e)}
+    
+    def _get_wordpress_authors(self, blog: Blog) -> List[Dict[str, Any]]:
+        """
+        Pobiera listę autorów z WordPress API dla rotacji.
+        """
+        try:
+            from utils.wordpress.client import build_wp_api_url
+            
+            # Cache autorów jeśli już zostali pobrani
+            if self.available_authors:
+                return self.available_authors
+            
+            api_url = build_wp_api_url(blog.api_url, "users")
+            auth = (blog.username, blog.api_token)
+            
+            # Pobierz wszystkich autorów
+            response = requests.get(f"{api_url}?per_page=100", auth=auth)
+            response.raise_for_status()
+            
+            authors = response.json()
+            
+            # Filtruj tylko użytkowników którzy mogą publikować posty
+            valid_authors = []
+            for author in authors:
+                # WordPress role check - Author, Editor, Administrator mogą publikować
+                if any(role in ['author', 'editor', 'administrator'] for role in author.get('roles', [])):
+                    valid_authors.append({
+                        'id': author['id'],
+                        'name': author['name'],
+                        'slug': author['slug']
+                    })
+            
+            if valid_authors:
+                self.available_authors = valid_authors
+                logger.info(f"Loaded {len(valid_authors)} authors from WordPress: {[a['name'] for a in valid_authors]}")
+            else:
+                logger.warning("No valid authors found in WordPress")
+                
+            return valid_authors
+            
+        except Exception as e:
+            logger.error(f"Failed to get WordPress authors: {e}")
+            return []
+    
+    def _get_next_author_id(self, blog: Blog) -> Optional[int]:
+        """
+        Zwraca ID następnego autora w rotacji.
+        """
+        authors = self._get_wordpress_authors(blog)
+        
+        if not authors:
+            logger.warning("No authors available for rotation")
+            return None
+        
+        # Rotacja autorów
+        author = authors[self.current_author_index % len(authors)]
+        self.current_author_index += 1
+        
+        logger.info(f"Selected author for rotation: {author['name']} (ID: {author['id']}) - index {self.current_author_index-1}/{len(authors)}")
+        return author['id']
     
     def _get_wordpress_category_id(self, blog: Blog, category_name: str) -> Optional[int]:
         """
