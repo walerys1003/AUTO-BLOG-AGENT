@@ -199,7 +199,10 @@ class AutomationScheduler:
                 rule.last_execution_at = datetime.utcnow()
                 db.session.commit()
                 
-                # BATCH GENERATION: Wygeneruj wszystkie artykuły na raz
+                # BATCH GENERATION: Użyj jednej instancji WorkflowEngine dla rotacji kategorii i autorów
+                from utils.automation.workflow_engine import WorkflowEngine
+                batch_engine = WorkflowEngine()
+                
                 successful_articles = 0
                 failed_articles = 0
                 
@@ -207,8 +210,8 @@ class AutomationScheduler:
                     logger.info(f"Generating article {article_num + 1}/{rule.posts_per_day} for {blog.name}")
                     
                     try:
-                        # Wykonaj workflow dla pojedynczego artykułu
-                        result = execute_automation_rule(rule.id)
+                        # Wykonaj workflow dla pojedynczego artykułu używając wspólnego engine
+                        result = execute_automation_rule(rule.id, engine=batch_engine)
                         
                         if result.get("success"):
                             successful_articles += 1

@@ -540,7 +540,7 @@ class WorkflowEngine:
                 # Zapisz obrazy w bibliotece
                 for img in image_results:
                     image_entry = ImageLibrary(
-                        blog_id=automation_rule.blog_id,  # FIX: use blog_id not article.id
+                        blog_id=article.blog_id,  # Używamy blog_id z artykułu
                         title=img.get("title", article.title),
                         url=img["url"],
                         source=img.get("source", "auto"),
@@ -715,22 +715,9 @@ class WorkflowEngine:
                 "timestamp": datetime.utcnow().isoformat()
             }
             
-            # Zapisz metryki w bazie (jeśli artykuł został utworzony)
-            if workflow_result["article_id"]:
-                content_metrics = ContentMetrics(
-                    blog_id=automation_rule.blog_id,
-                    article_id=workflow_result["article_id"],
-                    automation_rule_id=automation_rule.id,
-                    workflow_id=workflow_result["workflow_id"],
-                    execution_time=execution_time,
-                    steps_completed=len(workflow_result["steps_completed"]),
-                    success=workflow_result["status"] == WorkflowStatus.COMPLETED.value,
-                    error_details="; ".join(workflow_result["errors"]) if workflow_result["errors"] else None,
-                    created_at=datetime.utcnow()
-                )
-                db.session.add(content_metrics)
-                db.session.commit()
-                
+            # Metryki są zwracane jako słownik (nie zapisujemy do bazy - ContentMetrics jest tylko dla Google Analytics)
+            logger.info(f"Workflow metrics: execution_time={execution_time:.2f}s, success_rate={metrics['success_rate']:.1f}%")
+            
             return metrics
             
         except Exception as e:
@@ -946,7 +933,7 @@ class WorkflowEngine:
                 title=title,
                 message=message,
                 type=type,
-                read=False,
+                is_read=False,
                 created_at=datetime.utcnow()
             )
             db.session.add(notification)
@@ -955,12 +942,13 @@ class WorkflowEngine:
         except Exception as e:
             logger.error(f"Failed to create notification: {str(e)}")
 
-def execute_automation_rule(automation_rule_id: int) -> Dict[str, Any]:
+def execute_automation_rule(automation_rule_id: int, engine: Optional['WorkflowEngine'] = None) -> Dict[str, Any]:
     """
     Funkcja pomocnicza do wykonania reguły automatyzacji.
     
     Args:
         automation_rule_id: ID reguły automatyzacji
+        engine: Opcjonalna instancja WorkflowEngine (dla batch generation z rotacją)
         
     Returns:
         Wynik wykonania workflow
@@ -973,8 +961,10 @@ def execute_automation_rule(automation_rule_id: int) -> Dict[str, Any]:
         if not automation_rule.active:
             return {"success": False, "error": f"Automation rule {automation_rule_id} is not active"}
             
-        # Utwórz silnik workflow i wykonaj
-        engine = WorkflowEngine()
+        # Użyj przekazanego engine lub utwórz nowy
+        if engine is None:
+            engine = WorkflowEngine()
+        
         result = engine.execute_full_cycle(automation_rule)
         
         return {"success": True, "workflow_result": result}
