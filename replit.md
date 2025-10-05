@@ -3,6 +3,13 @@
 ## Overview
 This project is a comprehensive Flask-based blog automation system designed to manage the entire content lifecycle. It automates content creation from topic generation to publication and social media promotion. The system integrates with various AI models via OpenRouter API, manages publishing to WordPress sites, and handles social media distribution, aiming to provide a fully autonomous content generation and marketing solution.
 
+**Current Configuration (Updated October 5, 2025):**
+- **Daily Article Production**: 9 articles total (3 per blog)
+  - MAMATESTUJE.COM: 3 articles/day
+  - ZNANEKOSMETYKI.PL: 3 articles/day
+  - HOMOSONLY.PL: 3 articles/day
+- **Publication Schedule**: Polish business hours (07:00, 08:00, 09:00 AM UTC+1)
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
