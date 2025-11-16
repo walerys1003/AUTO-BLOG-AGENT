@@ -34,9 +34,9 @@ class Config:
     PUBLISHING_TIMES = os.environ.get("PUBLISHING_TIMES", "08:00,12:00,16:00,20:00").split(",")
     
     # Default models
-    DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "anthropic/claude-3.5-haiku")
-    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-3.5-sonnet")
-    DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "anthropic/claude-3.5-haiku")
+    DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "deepseek/deepseek-chat-v3-0324:free")
+    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "deepseek/deepseek-chat-v3-0324:free")
+    DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "deepseek/deepseek-chat-v3-0324:free")
     
     # Database Retention (days)
     LOG_RETENTION_DAYS = int(os.environ.get("LOG_RETENTION_DAYS", 30))

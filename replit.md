@@ -3,12 +3,13 @@
 ## Overview
 This project is a comprehensive Flask-based blog automation system designed to manage the entire content lifecycle. It automates content creation from topic generation to publication and social media promotion. The system integrates with various AI models via OpenRouter API, manages publishing to WordPress sites, and handles social media distribution, aiming to provide a fully autonomous content generation and marketing solution.
 
-**Current Configuration (Updated October 5, 2025):**
+**Current Configuration (Updated November 16, 2025):**
 - **Daily Article Production**: 9 articles total (3 per blog)
   - MAMATESTUJE.COM: 3 articles/day
   - ZNANEKOSMETYKI.PL: 3 articles/day
   - HOMOSONLY.PL: 3 articles/day
 - **Publication Schedule**: Polish business hours (07:00, 08:00, 09:00 AM UTC+1)
+- **AI Model**: DeepSeek V3 0324 (deepseek/deepseek-chat-v3-0324:free) - free model for all content generation
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -18,7 +19,7 @@ Preferred communication style: Simple, everyday language.
 ### Technical Stack
 - **Backend**: Flask (Python) with SQLAlchemy ORM, SQLite (PostgreSQL for production).
 - **Frontend**: Jinja2 templates, Bootstrap 5.3.2, custom CSS (Consist UI color scheme), Vanilla JS, Font Awesome 6.4.0.
-- **AI Integration**: OpenRouter API for Claude Sonnet 3.5 and GPT-4.
+- **AI Integration**: OpenRouter API with DeepSeek V3 0324 (free model) for all content generation.
 - **CMS Integration**: WordPress REST API.
 - **Task Scheduling**: APScheduler.
 
@@ -41,7 +42,7 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### AI Services
-- **OpenRouter API**: For Claude Sonnet 3.5, GPT-4.
+- **OpenRouter API**: Primary AI service using DeepSeek V3 0324 (free model) for all content generation, topic generation, and social media content.
 - **Anthropic API**: Direct Claude access (fallback).
 - **OpenAI API**: Direct GPT access (fallback).
 
