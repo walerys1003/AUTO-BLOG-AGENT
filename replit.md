@@ -8,8 +8,11 @@ This project is a comprehensive Flask-based blog automation system designed to m
   - MAMATESTUJE.COM: 3 articles/day
   - ZNANEKOSMETYKI.PL: 3 articles/day
   - HOMOSONLY.PL: 3 articles/day
-- **Publication Schedule**: Polish business hours (07:00, 08:00, 09:00 AM UTC+1)
-- **AI Model**: DeepSeek V3 0324 (deepseek/deepseek-chat-v3-0324:free) - free model for all content generation
+- **Publication Schedule**: Polish business hours (06:00, 07:00, 08:00 UTC / 07:00, 08:00, 09:00 PL)
+- **AI Model**: Meta Llama 3.1 8B Instruct (meta-llama/llama-3.1-8b-instruct)
+  - Ultra-low cost: ~$0.0001 per article
+  - Monthly cost: ~$0.027 for 270 articles
+  - 131k token context window
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -19,7 +22,7 @@ Preferred communication style: Simple, everyday language.
 ### Technical Stack
 - **Backend**: Flask (Python) with SQLAlchemy ORM, SQLite (PostgreSQL for production).
 - **Frontend**: Jinja2 templates, Bootstrap 5.3.2, custom CSS (Consist UI color scheme), Vanilla JS, Font Awesome 6.4.0.
-- **AI Integration**: OpenRouter API with DeepSeek V3 0324 (free model) for all content generation.
+- **AI Integration**: OpenRouter API with Meta Llama 3.1 8B Instruct (ultra-low cost model).
 - **CMS Integration**: WordPress REST API.
 - **Task Scheduling**: APScheduler.
 
@@ -42,7 +45,7 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### AI Services
-- **OpenRouter API**: Primary AI service using DeepSeek V3 0324 (free model) for all content generation, topic generation, and social media content.
+- **OpenRouter API**: Primary AI service using Meta Llama 3.1 8B Instruct for all content generation, topic generation, and social media content. Cost-effective solution at ~$0.027/month for 270 articles.
 - **Anthropic API**: Direct Claude access (fallback).
 - **OpenAI API**: Direct GPT access (fallback).
 
