@@ -41,7 +41,8 @@ def get_ai_completion(
     response_format: Optional[Dict[str, str]] = None,
 ) -> str:
     """
-    Get completion from AI model, with fallback to mock responses if needed.
+    Get completion from AI model. In production, raises exception on API failure.
+    MockAdapter is DISABLED by default to prevent publishing placeholder content.
     
     Args:
         system_prompt: System instructions for the AI
@@ -53,9 +54,15 @@ def get_ai_completion(
         
     Returns:
         Generated text as string
+        
+    Raises:
+        Exception: If OpenRouter API fails and MockAdapter is disabled (production mode)
     """
+    # Check if MockAdapter is explicitly enabled (for testing only)
+    use_mock = os.environ.get('USE_MOCK_ADAPTER', 'false').lower() == 'true'
+    
     try:
-        # First try OpenRouter API
+        # Try OpenRouter API
         response = openrouter_call(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
@@ -70,9 +77,16 @@ def get_ai_completion(
             
     except Exception as e:
         error_msg = str(e)
-        logger.warning(f"OpenRouter API call failed: {error_msg}. Using fallback content generation.")
+        logger.error(f"🚨 OpenRouter API call failed: {error_msg}")
         
-        # For rate limits, provide user-friendly message
+        # In production (MockAdapter disabled), re-raise the exception
+        if not use_mock:
+            logger.error("❌ PRODUCTION MODE: MockAdapter is DISABLED. Stopping workflow to prevent publishing placeholder content.")
+            logger.error("💡 To enable MockAdapter for testing, set USE_MOCK_ADAPTER=true environment variable.")
+            raise Exception(f"OpenRouter API failed and MockAdapter is disabled in production: {error_msg}")
+        
+        # Only use MockAdapter if explicitly enabled (testing)
+        logger.warning("⚠️ TESTING MODE: Using MockAdapter (USE_MOCK_ADAPTER=true)")
         if "rate limit" in error_msg.lower():
             logger.info("Using MockAdapter due to OpenRouter rate limit")
         elif "temporarily unavailable" in error_msg.lower():
@@ -80,7 +94,7 @@ def get_ai_completion(
         else:
             logger.info("Using MockAdapter due to OpenRouter API error")
     
-    # If OpenRouter call fails, fallback to mock adapter with enhanced content
+    # MockAdapter fallback (only in testing mode)
     logger.info("Generating content using fallback MockAdapter")
     mock = MockAdapter()
     return mock.get_completion(

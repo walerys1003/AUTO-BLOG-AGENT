@@ -1,0 +1,1828 @@
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:================================================================================
+INFO:__main__:🚀 ROZPOCZYNAM GENEROWANIE DZISIEJSZYCH ARTYKUŁÓW
+INFO:__main__:================================================================================
+INFO:__main__:
+INFO:__main__:📝 Generuję 3 artykuły dla MAMATESTUJE.COM (Blog ID: 2)
+INFO:__main__:--------------------------------------------------------------------------------
+INFO:utils.automation.scheduler:🚀 BATCH GENERATION START for blog_id=2
+INFO:utils.automation.scheduler:Batch generating 3 articles for MAMATESTUJE.COM
+INFO:utils.automation.scheduler:Generating article 1/3 for MAMATESTUJE.COM
+INFO:utils.automation.workflow_engine:Starting workflow workflow_5_1763365610 for automation rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Executing topic management for rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Akcesoria dziecięce
+INFO:utils.automation.workflow_engine:Selected topic: Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje, które warto znać (Category: Akcesoria dziecięce)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Akcesoria dziecięce']
+INFO:utils.automation.workflow_engine:Generating content for topic: Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje, które warto znać
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje, które warto znać' in category 'Akcesoria dziecięce'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3236 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3603 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2521 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2703 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2946 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3545 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 44 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+WARNING:utils.ai_content_strategy.article_generator:Last sentence incomplete: '**Krok 5: Zakup i testowanie**'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 41 chars)
+INFO:utils.ai_content_strategy.article_generator:Completed incomplete sentence using AI
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 83 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 143 chars)
+INFO:utils.content.content_validator:Validating article: Przewodnik po profesjonalnych termometrach dla nie...
+WARNING:utils.content.content_validator:❌ Article validation failed with 2 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 83 znaków (max 60)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 2 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Przewodnik po profesjonalnych termometrach dla nie...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 183 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, dziecko, zdrowie, bezpieczeństwo, badania, lekarz, wskazówki, termometry dla niemowląt; profesjonalne termometry; monitorowanie temperatury; zdrowie niemowląt; choroby u niemowląt; temperatura ciała; opieka nad niemowlakiem; akcesoria dziecięce., praktyczne, użyteczne
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 220
+INFO:utils.automation.workflow_engine:Acquiring images for article: Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje które warto znać
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Przewodnik po profesjonalnych termometrach dla niemowląt - f...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Przewodnik po profesjonalnych termometrach dla niemowląt - f...
+INFO:utils.images.query_planner:Generating AI image queries for: Przewodnik po profesjonalnych termometrach dla niemowląt - f...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 471 chars)
+INFO:utils.images.query_planner:Generated primary query: 'baby digital thermometer measurement'
+INFO:utils.images.query_planner:Alternates: ['infant temperature check medical', 'professional baby thermometer device', 'parent checking baby temperature']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'baby digital thermometer measurement'
+INFO:utils.images.finder:Searching for images with query 'baby digital thermometer measurement', source: bing
+INFO:utils.images.bing:Searching Bing Images for: baby digital thermometer measurement
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'baby digital thermometer measurement'
+INFO:utils.images.finder:Searching for images with query 'baby digital thermometer measurement', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=baby+digital+thermometer+measurement&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 4602
+INFO:utils.images.finder:Found 10 images from Unsplash for 'baby digital thermometer measurement'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'baby digital thermometer measurement'
+INFO:utils.images.finder:Searching for images with query 'baby digital thermometer measurement', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'infant temperature check medical'
+INFO:utils.images.finder:Searching for images with query 'infant temperature check medical', source: bing
+INFO:utils.images.bing:Searching Bing Images for: infant temperature check medical
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'infant temperature check medical'
+INFO:utils.images.finder:Searching for images with query 'infant temperature check medical', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=infant+temperature+check+medical&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 5966
+INFO:utils.images.finder:Found 10 images from Unsplash for 'infant temperature check medical'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'infant temperature check medical'
+INFO:utils.images.finder:Searching for images with query 'infant temperature check medical', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'professional baby thermometer device'
+INFO:utils.images.finder:Searching for images with query 'professional baby thermometer device', source: bing
+INFO:utils.images.bing:Searching Bing Images for: professional baby thermometer device
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'professional baby thermometer device'
+INFO:utils.images.finder:Searching for images with query 'professional baby thermometer device', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=professional+baby+thermometer+device&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 5705
+INFO:utils.images.finder:Found 10 images from Unsplash for 'professional baby thermometer device'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=8.0 - a person is holding a thermometer in their hand
+INFO:utils.images.auto_image_finder:  #2: score=8.0 - a digital thermometer on a tan wall
+INFO:utils.images.auto_image_finder:  #3: score=8.0 - a person holding a digital thermometer in their hand
+INFO:utils.images.auto_image_finder:  #4: score=8.0 - a thermometer and a thermometer on a table
+INFO:utils.images.auto_image_finder:  #5: score=8.0 - a digital thermometer and a pen on a table
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje które warto znać
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1685485276218-4bcf1d8c38ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw0fHxiYWJ5JTIwZGlnaXRhbCUyMHRoZXJtb21ldGVyJTIwbWVhc3VyZW1lbnR8ZW58MHwwfHx8MTc2MzM2NTc0Mnww&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Akcesoria dziecięce for blog MAMATESTUJE.COM
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/categories (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/categories?search=Akcesoria%20dzieci%C4%99ce HTTP/1.1" 200 345
+INFO:utils.automation.workflow_engine:Found category 'Akcesoria dziecięce' with WordPress ID: 77
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/users (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1508
+INFO:utils.automation.workflow_engine:Loaded 5 authors from WordPress: ['admin', 'Gabriela Bielec', 'Helena Rybikowska', 'Tomasz Kotliński', 'Zofia Chryplewicz']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin (ID: 1) - index 0/5
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-220.jpg' to blog 'MAMATESTUJE.COM' (ID: 2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1685485276218-4bcf1d8c38ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw0fHxiYWJ5JTIwZGlnaXRhbCUyMHRoZXJtb21ldGVyJTIwbWVhc3VyZW1lbnR8ZW58MHwwfHx8MTc2MzM2NTc0Mnww&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 64089
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1516
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media/3115 (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 3115
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media/3115 HTTP/1.1" 200 1602
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/posts (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Przewodnik po profesjonalnych termometrach dla niemowląt - funkcje które warto znać' on blog 'MAMATESTUJE.COM' (ID: 2)
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 319
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 845
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 756
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 846
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 314
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 847
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=dziecko HTTP/1.1" 200 753
+INFO:utils.wordpress.client:Found existing tag 'dziecko' with ID 848
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 733
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 834
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=bezpiecze%C5%84stwo HTTP/1.1" 200 626
+INFO:utils.wordpress.client:Found existing tag 'bezpieczeństwo' with ID 849
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 3116
+INFO:utils.automation.workflow_engine:Published with category ID: 77, tags: ['artykuł', 'porady', 'informacje', 'dziecko', 'zdrowie', 'bezpieczeństwo']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=140.33s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_5_1763365610 completed successfully
+INFO:utils.automation.scheduler:✅ Article 1 generated successfully
+INFO:utils.automation.scheduler:Generating article 2/3 for MAMATESTUJE.COM
+INFO:utils.automation.workflow_engine:Starting workflow workflow_5_1763365751 for automation rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Executing topic management for rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Aspiratory i higiena nosa
+INFO:utils.automation.workflow_engine:Selected topic: 10 sprawdzonych sposobów na bezpieczne oczyszczanie nosa niemowlaka (Category: Aspiratory i higiena nosa)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Akcesoria dziecięce', 'Aspiratory i higiena nosa']
+INFO:utils.automation.workflow_engine:Generating content for topic: 10 sprawdzonych sposobów na bezpieczne oczyszczanie nosa niemowlaka
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic '10 sprawdzonych sposobów na bezpieczne oczyszczanie nosa niemowlaka' in category 'Aspiratory i higiena nosa'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 4091 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3140 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2872 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3308 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3191 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3057 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2650 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 85 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 107 chars)
+INFO:utils.content.content_validator:Validating article: Bezpieczne oczyszczanie nosa niemowlaka - 10 spraw...
+WARNING:utils.content.content_validator:❌ Article validation failed with 2 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 85 znaków (max 60)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 2 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Bezpieczne oczyszczanie nosa niemowlaka - 10 spraw...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 196 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: zdrowie, bezpieczne oczyszczanie nosa niemowlaka, oczyszczanie nosa niemowlaka, zdrowie dziecka, oczyszczanie nosa, artykuł, porady, informacje, ciąża, dziecko, lekarz, organizm
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 221
+INFO:utils.automation.workflow_engine:Acquiring images for article: Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sposobów na zdrowie dziecka
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sp...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sp...
+INFO:utils.images.query_planner:Generating AI image queries for: Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sp...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 434 chars)
+INFO:utils.images.query_planner:Generated primary query: 'baby nasal cleaning gentle'
+INFO:utils.images.query_planner:Alternates: ['infant nose care mother', 'baby nose aspirator use', 'newborn nasal hygiene']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'baby nasal cleaning gentle'
+INFO:utils.images.finder:Searching for images with query 'baby nasal cleaning gentle', source: bing
+INFO:utils.images.bing:Searching Bing Images for: baby nasal cleaning gentle
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'baby nasal cleaning gentle'
+INFO:utils.images.finder:Searching for images with query 'baby nasal cleaning gentle', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=baby+nasal+cleaning+gentle&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7193
+INFO:utils.images.finder:Found 10 images from Unsplash for 'baby nasal cleaning gentle'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'baby nasal cleaning gentle'
+INFO:utils.images.finder:Searching for images with query 'baby nasal cleaning gentle', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'infant nose care mother'
+INFO:utils.images.finder:Searching for images with query 'infant nose care mother', source: bing
+INFO:utils.images.bing:Searching Bing Images for: infant nose care mother
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'infant nose care mother'
+INFO:utils.images.finder:Searching for images with query 'infant nose care mother', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=infant+nose+care+mother&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7086
+INFO:utils.images.finder:Found 10 images from Unsplash for 'infant nose care mother'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'infant nose care mother'
+INFO:utils.images.finder:Searching for images with query 'infant nose care mother', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'baby nose aspirator use'
+INFO:utils.images.finder:Searching for images with query 'baby nose aspirator use', source: bing
+INFO:utils.images.bing:Searching Bing Images for: baby nose aspirator use
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'baby nose aspirator use'
+INFO:utils.images.finder:Searching for images with query 'baby nose aspirator use', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=baby+nose+aspirator+use&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7028
+INFO:utils.images.finder:Found 10 images from Unsplash for 'baby nose aspirator use'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=6.0 - A newborn baby has a finger in its mouth.
+INFO:utils.images.auto_image_finder:  #2: score=6.0 - blue and white plastic bottle
+INFO:utils.images.auto_image_finder:  #3: score=6.0 - a baby with a pacifier in its mouth
+INFO:utils.images.auto_image_finder:  #4: score=6.0 - a woman is holding a baby in her arms
+INFO:utils.images.auto_image_finder:  #5: score=6.0 - mom and child photo
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sposobów na zdrowie dziecka
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1745084726101-9b78e0f6e990?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxiYWJ5JTIwbmFzYWwlMjBjbGVhbmluZyUyMGdlbnRsZXxlbnwwfDB8fHwxNzYzMzY1OTA3fDA&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Aspiratory i higiena nosa for blog MAMATESTUJE.COM
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/categories (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/categories?search=Aspiratory%20i%20higiena%20nosa HTTP/1.1" 200 382
+INFO:utils.automation.workflow_engine:Found category 'Aspiratory i higiena nosa' with WordPress ID: 78
+INFO:utils.automation.workflow_engine:Selected author for rotation: Gabriela Bielec (ID: 5) - index 1/5
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-221.jpg' to blog 'MAMATESTUJE.COM' (ID: 2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1745084726101-9b78e0f6e990?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxiYWJ5JTIwbmFzYWwlMjBjbGVhbmluZyUyMGdlbnRsZXxlbnwwfDB8fHwxNzYzMzY1OTA3fDA&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 77579
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1476
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media/3117 (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 3117
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media/3117 HTTP/1.1" 200 1562
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/posts (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Bezpieczne oczyszczanie nosa niemowlaka - 10 sprawdzonych sposobów na zdrowie dziecka' on blog 'MAMATESTUJE.COM' (ID: 2)
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 733
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 834
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=bezpieczne+oczyszczanie+nosa+niemowlaka HTTP/1.1" 200 22
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 347
+INFO:utils.wordpress.client:Created new tag 'bezpieczne oczyszczanie nosa niemowlaka' with ID 870
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=oczyszczanie+nosa+niemowlaka HTTP/1.1" 200 347
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 336
+INFO:utils.wordpress.client:Created new tag 'oczyszczanie nosa niemowlaka' with ID 871
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=zdrowie+dziecka HTTP/1.1" 200 324
+INFO:utils.wordpress.client:Found existing tag 'zdrowie dziecka' with ID 643
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=oczyszczanie+nosa HTTP/1.1" 200 439
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 324
+INFO:utils.wordpress.client:Created new tag 'oczyszczanie nosa' with ID 872
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 318
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 845
+INFO:utils.wordpress.client:Setting post author to ID: 5
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 3118
+INFO:utils.automation.workflow_engine:Published with category ID: 78, tags: ['zdrowie', 'bezpieczne oczyszczanie nosa niemowlaka', 'oczyszczanie nosa niemowlaka', 'zdrowie dziecka', 'oczyszczanie nosa', 'artykuł']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=165.85s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_5_1763365751 completed successfully
+INFO:utils.automation.scheduler:✅ Article 2 generated successfully
+INFO:utils.automation.scheduler:Generating article 3/3 for MAMATESTUJE.COM
+INFO:utils.automation.workflow_engine:Starting workflow workflow_5_1763365918 for automation rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Executing topic management for rule: MamaTestuje
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Balsamy i emolienty
+INFO:utils.automation.workflow_engine:Selected topic: Pielęgnacja skóry trądzikowej za pomocą balsamów - sprawdzone metody nawilżania (Category: Balsamy i emolienty)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Akcesoria dziecięce', 'Aspiratory i higiena nosa', 'Balsamy i emolienty']
+INFO:utils.automation.workflow_engine:Generating content for topic: Pielęgnacja skóry trądzikowej za pomocą balsamów - sprawdzone metody nawilżania
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Pielęgnacja skóry trądzikowej za pomocą balsamów - sprawdzone metody nawilżania' in category 'Balsamy i emolienty'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3263 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2546 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3301 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3352 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2762 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2444 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2769 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 76 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 250 chars)
+INFO:utils.content.content_validator:Validating article: Nawilżaj skórę trądzikową balsamami - 5 skutecznyc...
+WARNING:utils.content.content_validator:❌ Article validation failed with 3 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 76 znaków (max 60)
+WARNING:utils.content.content_validator:   - Excerpt za długi: 250 znaków (max 160)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 3 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Nawilżaj skórę trądzikową balsamami - 5 skutecznyc...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 209 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: trądzik, artykuł, porady, informacje, zdrowie, pielęgnacja, kosmetyki, witaminy, badania, lekarz, wskazówki, oto 8 najlepszych tagów seo dla artykułu:
+
+balsamy na trądzik
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 222
+INFO:utils.automation.workflow_engine:Acquiring images for article: Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów na piękne ciało
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów...
+INFO:utils.images.query_planner:Generating AI image queries for: Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 445 chars)
+INFO:utils.images.query_planner:Generated primary query: 'acne skincare moisturizer cream'
+INFO:utils.images.query_planner:Alternates: ['sensitive skin body lotion application', 'natural moisturizer acne prone skin', 'dermatology skincare products']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'acne skincare moisturizer cream'
+INFO:utils.images.finder:Searching for images with query 'acne skincare moisturizer cream', source: bing
+INFO:utils.images.bing:Searching Bing Images for: acne skincare moisturizer cream
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'acne skincare moisturizer cream'
+INFO:utils.images.finder:Searching for images with query 'acne skincare moisturizer cream', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=acne+skincare+moisturizer+cream&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7428
+INFO:utils.images.finder:Found 10 images from Unsplash for 'acne skincare moisturizer cream'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'acne skincare moisturizer cream'
+INFO:utils.images.finder:Searching for images with query 'acne skincare moisturizer cream', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'sensitive skin body lotion application'
+INFO:utils.images.finder:Searching for images with query 'sensitive skin body lotion application', source: bing
+INFO:utils.images.bing:Searching Bing Images for: sensitive skin body lotion application
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'sensitive skin body lotion application'
+INFO:utils.images.finder:Searching for images with query 'sensitive skin body lotion application', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=sensitive+skin+body+lotion+application&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7626
+INFO:utils.images.finder:Found 10 images from Unsplash for 'sensitive skin body lotion application'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'sensitive skin body lotion application'
+INFO:utils.images.finder:Searching for images with query 'sensitive skin body lotion application', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'natural moisturizer acne prone skin'
+INFO:utils.images.finder:Searching for images with query 'natural moisturizer acne prone skin', source: bing
+INFO:utils.images.bing:Searching Bing Images for: natural moisturizer acne prone skin
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'natural moisturizer acne prone skin'
+INFO:utils.images.finder:Searching for images with query 'natural moisturizer acne prone skin', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=natural+moisturizer+acne+prone+skin&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7179
+INFO:utils.images.finder:Found 10 images from Unsplash for 'natural moisturizer acne prone skin'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=8.0 - Woman holds skincare product by the lake.
+INFO:utils.images.auto_image_finder:  #2: score=6.0 - man holding purple and white so god to see your face box
+INFO:utils.images.auto_image_finder:  #3: score=6.0 - a hand holding a jar of whipped cream
+INFO:utils.images.auto_image_finder:  #4: score=6.0 - A jar of cream sitting on top of a white table
+INFO:utils.images.auto_image_finder:  #5: score=6.0 - woman holding white plastic bottle
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów na piękne ciało
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1744117614606-537f93e908d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw5fHxzZW5zaXRpdmUlMjBza2luJTIwYm9keSUyMGxvdGlvbiUyMGFwcGxpY2F0aW9ufGVufDB8MHx8fDE3NjMzNjYwMzd8MA&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Balsamy i emolienty for blog MAMATESTUJE.COM
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/categories (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/categories?search=Balsamy%20i%20emolienty HTTP/1.1" 200 380
+INFO:utils.automation.workflow_engine:Found category 'Balsamy i emolienty' with WordPress ID: 60
+INFO:utils.automation.workflow_engine:Selected author for rotation: Helena Rybikowska (ID: 4) - index 2/5
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-222.jpg' to blog 'MAMATESTUJE.COM' (ID: 2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1744117614606-537f93e908d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw5fHxzZW5zaXRpdmUlMjBza2luJTIwYm9keSUyMGxvdGlvbiUyMGFwcGxpY2F0aW9ufGVufDB8MHx8fDE3NjMzNjYwMzd8MA&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 88807
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1481
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/media/3119 (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 3119
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/media/3119 HTTP/1.1" 200 1574
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/posts (from base: https://mamatestuje.com/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Nawilżaj skórę trądzikową balsamami - 5 skutecznych sposobów na piękne ciało' on blog 'MAMATESTUJE.COM' (ID: 2)
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=tr%C4%85dzik HTTP/1.1" 200 22
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 320
+INFO:utils.wordpress.client:Created new tag 'trądzik' with ID 873
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 319
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 845
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 756
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 846
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 314
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 847
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 733
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 834
+INFO:utils.wordpress.client:WordPress API URL: https://mamatestuje.com/wp-json/wp/v2/tags (from base: https://mamatestuje.com/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "GET /wp-json/wp/v2/tags?search=piel%C4%99gnacja HTTP/1.1" 200 739
+INFO:utils.wordpress.client:Found existing tag 'pielęgnacja' with ID 860
+INFO:utils.wordpress.client:Setting post author to ID: 4
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): mamatestuje.com:443
+DEBUG:urllib3.connectionpool:https://mamatestuje.com:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 3120
+INFO:utils.automation.workflow_engine:Published with category ID: 60, tags: ['trądzik', 'artykuł', 'porady', 'informacje', 'zdrowie', 'pielęgnacja']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=127.37s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_5_1763365918 completed successfully
+INFO:utils.automation.scheduler:✅ Article 3 generated successfully
+INFO:utils.automation.scheduler:🏁 BATCH GENERATION COMPLETE for MAMATESTUJE.COM: 3 success, 0 failed
+INFO:utils.automation.scheduler:🗓️ Next BATCH GENERATION for MamaTestuje scheduled at: 2025-11-18 07:00:00 (3 articles)
+INFO:__main__:✅ Ukończono generowanie dla MAMATESTUJE.COM
+INFO:__main__:
+INFO:__main__:📝 Generuję 3 artykuły dla ZNANEKOSMETYKI.PL (Blog ID: 3)
+INFO:__main__:--------------------------------------------------------------------------------
+INFO:utils.automation.scheduler:🚀 BATCH GENERATION START for blog_id=3
+INFO:utils.automation.scheduler:Batch generating 3 articles for ZNANEKOSMETYKI.PL
+INFO:utils.automation.scheduler:Generating article 1/3 for ZNANEKOSMETYKI.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_6_1763366047 for automation rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Balsamy i kremy regenerujące
+INFO:utils.automation.workflow_engine:Selected topic: Nocne rytuały regeneracyjne - sekretna broń zdrowej i młodej skóry (Category: Balsamy i kremy regenerujące)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Balsamy i kremy regenerujące']
+INFO:utils.automation.workflow_engine:Generating content for topic: Nocne rytuały regeneracyjne - sekretna broń zdrowej i młodej skóry
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Nocne rytuały regeneracyjne - sekretna broń zdrowej i młodej skóry' in category 'Balsamy i kremy regenerujące'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2445 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2522 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3262 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2707 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2503 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2672 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2181 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 54 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 119 chars)
+INFO:utils.content.content_validator:Validating article: Nocne rytuały regeneracyjne dla zdrowej i młodej s...
+WARNING:utils.content.content_validator:❌ Article validation failed with 1 errors
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 1 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Nocne rytuały regeneracyjne dla zdrowej i młodej s...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 166 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, zdrowie, pielęgnacja, kosmetyki, witaminy, badania, przygotowanie, odżywianie, nocne rytuały regeneracyjne; zdrowa skóra; młoda skóra; balsamy regenerujące; kremy regenerujące; serum do twarzy; pielęgnacja twarzy; kosmetyka do pielęgnacji skóry., wskazówki
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 223
+INFO:utils.automation.workflow_engine:Acquiring images for article: Nocne rytuały regeneracyjne dla zdrowej i młodej skóry
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Nocne rytuały regeneracyjne dla zdrowej i młodej skóry...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Nocne rytuały regeneracyjne dla zdrowej i młodej skóry...
+INFO:utils.images.query_planner:Generating AI image queries for: Nocne rytuały regeneracyjne dla zdrowej i młodej skóry...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 401 chars)
+INFO:utils.images.query_planner:Generated primary query: 'night skincare routine beauty'
+INFO:utils.images.query_planner:Alternates: ['woman applying night cream', 'evening skin care products', 'facial regeneration treatment']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'night skincare routine beauty'
+INFO:utils.images.finder:Searching for images with query 'night skincare routine beauty', source: bing
+INFO:utils.images.bing:Searching Bing Images for: night skincare routine beauty
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'night skincare routine beauty'
+INFO:utils.images.finder:Searching for images with query 'night skincare routine beauty', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=night+skincare+routine+beauty&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 2118
+INFO:utils.images.finder:Found 2 images from Unsplash for 'night skincare routine beauty'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'night skincare routine beauty'
+INFO:utils.images.finder:Searching for images with query 'night skincare routine beauty', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'woman applying night cream'
+INFO:utils.images.finder:Searching for images with query 'woman applying night cream', source: bing
+INFO:utils.images.bing:Searching Bing Images for: woman applying night cream
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'woman applying night cream'
+INFO:utils.images.finder:Searching for images with query 'woman applying night cream', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=woman+applying+night+cream&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7785
+INFO:utils.images.finder:Found 10 images from Unsplash for 'woman applying night cream'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'woman applying night cream'
+INFO:utils.images.finder:Searching for images with query 'woman applying night cream', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'evening skin care products'
+INFO:utils.images.finder:Searching for images with query 'evening skin care products', source: bing
+INFO:utils.images.bing:Searching Bing Images for: evening skin care products
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'evening skin care products'
+INFO:utils.images.finder:Searching for images with query 'evening skin care products', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=evening+skin+care+products&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 6944
+INFO:utils.images.finder:Found 10 images from Unsplash for 'evening skin care products'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'evening skin care products'
+INFO:utils.images.finder:Searching for images with query 'evening skin care products', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Scoring 22 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=6.0 - pink and white hair band
+INFO:utils.images.auto_image_finder:  #2: score=6.0 - Beaty Avenue while Hong Kong Revolution
+INFO:utils.images.auto_image_finder:  #3: score=6.0 - Love Our Souls, in Languorous Gestures 1898, published 1899 
+INFO:utils.images.auto_image_finder:  #4: score=6.0 - Title: Maria Creator: Schjerfbeck, Helene Date: 1909 Providi
+INFO:utils.images.auto_image_finder:  #5: score=6.0 - Blindfolded female holding candles, entering room
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Nocne rytuały regeneracyjne dla zdrowej i młodej skóry
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1608625100285-e95b9f843bce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxuaWdodCUyMHNraW5jYXJlJTIwcm91dGluZSUyMGJlYXV0eXxlbnwwfDB8fHwxNzYzMzY2MTQzfDA&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Balsamy i kremy regenerujące for blog ZNANEKOSMETYKI.PL
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/categories (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/categories?search=Balsamy%20i%20kremy%20regeneruj%C4%85ce HTTP/1.1" 200 391
+INFO:utils.automation.workflow_engine:Found category 'Balsamy i kremy regenerujące' with WordPress ID: 108
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/users (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1603
+INFO:utils.automation.workflow_engine:Loaded 5 authors from WordPress: ['admin', 'Gabriela Bielec', 'Helena Rybikowska', 'Tomasz Kotliński', 'Zofia Chryplewicz']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin (ID: 1) - index 0/5
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-223.jpg' to blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1608625100285-e95b9f843bce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxuaWdodCUyMHNraW5jYXJlJTIwcm91dGluZSUyMGJlYXV0eXxlbnwwfDB8fHwxNzYzMzY2MTQzfDA&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 49496
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 788
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media/1495 (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 1495
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media/1495 HTTP/1.1" 200 1087
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/posts (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Nocne rytuały regeneracyjne dla zdrowej i młodej skóry' on blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 321
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 774
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 422
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 775
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 317
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 776
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 314
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 780
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=piel%C4%99gnacja HTTP/1.1" 200 689
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 400 146
+ERROR:utils.wordpress.client:Error processing tag 'pielęgnacja': 400 Client Error: Bad Request for url: https://znanekosmetyki.pl/wp-json/wp/v2/tags
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=kosmetyki HTTP/1.1" 200 712
+INFO:utils.wordpress.client:Found existing tag 'kosmetyki' with ID 778
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 1496
+INFO:utils.automation.workflow_engine:Published with category ID: 108, tags: ['artykuł', 'porady', 'informacje', 'zdrowie', 'pielęgnacja', 'kosmetyki']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=106.93s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_6_1763366047 completed successfully
+INFO:utils.automation.scheduler:✅ Article 1 generated successfully
+INFO:utils.automation.scheduler:Generating article 2/3 for ZNANEKOSMETYKI.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_6_1763366154 for automation rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Balsamy regenerujące
+INFO:utils.automation.workflow_engine:Selected topic: Składniki aktywne w balsamach regenerujących - co naprawdę działa? (Category: Balsamy regenerujące)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Balsamy i kremy regenerujące', 'Balsamy regenerujące']
+INFO:utils.automation.workflow_engine:Generating content for topic: Składniki aktywne w balsamach regenerujących - co naprawdę działa?
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Składniki aktywne w balsamach regenerujących - co naprawdę działa?' in category 'Balsamy regenerujące'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 4113 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 1871 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3303 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:=== Generuję artykuł dla blog_id=3 ===
+/home/runner/workspace/generate_remaining.py:28: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  blog = Blog.query.get(blog_id)
+INFO:__main__:Generating article 2 for ZNANEKOSMETYKI.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_6_1763366429 for automation rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Balsamy i kremy regenerujące
+INFO:utils.automation.workflow_engine:Selected topic: Jak prawidłowo dobierać balsamy regeneracyjne do różnych typów cery? (Category: Balsamy i kremy regenerujące)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Balsamy i kremy regenerujące']
+INFO:utils.automation.workflow_engine:Generating content for topic: Jak prawidłowo dobierać balsamy regeneracyjne do różnych typów cery?
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Jak prawidłowo dobierać balsamy regeneracyjne do różnych typów cery?' in category 'Balsamy i kremy regenerujące'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3043 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3045 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2998 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2966 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3096 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2806 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2571 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 51 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 172 chars)
+INFO:utils.content.content_validator:Validating article: Dobierz balsam na regenerację skóry do własnej cer...
+WARNING:utils.content.content_validator:❌ Article validation failed with 2 errors
+WARNING:utils.content.content_validator:   - Excerpt za długi: 172 znaków (max 160)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 2 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Dobierz balsam na regenerację skóry do własnej cer...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 176 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, zdrowie, kosmetyki, witaminy, wskazówki, dieta, balsam regeneracyjny, pielęgnacja skóry, typ cery, balsamy do cery suchej
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 224
+INFO:utils.automation.workflow_engine:Acquiring images for article: Dobierz balsam na regenerację skóry do własnej cery
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Dobierz balsam na regenerację skóry do własnej cery...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Dobierz balsam na regenerację skóry do własnej cery...
+INFO:utils.images.query_planner:Generating AI image queries for: Dobierz balsam na regenerację skóry do własnej cery...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 452 chars)
+INFO:utils.images.query_planner:Generated primary query: 'skin care moisturizer cream application'
+INFO:utils.images.query_planner:Alternates: ['woman applying face moisturizer', 'different skin care products selection', 'skincare routine beauty products']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'skin care moisturizer cream application'
+INFO:utils.images.finder:Searching for images with query 'skin care moisturizer cream application', source: bing
+INFO:utils.images.bing:Searching Bing Images for: skin care moisturizer cream application
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'skin care moisturizer cream application'
+INFO:utils.images.finder:Searching for images with query 'skin care moisturizer cream application', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=skin+care+moisturizer+cream+application&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7382
+INFO:utils.images.finder:Found 10 images from Unsplash for 'skin care moisturizer cream application'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'skin care moisturizer cream application'
+INFO:utils.images.finder:Searching for images with query 'skin care moisturizer cream application', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'woman applying face moisturizer'
+INFO:utils.images.finder:Searching for images with query 'woman applying face moisturizer', source: bing
+INFO:utils.images.bing:Searching Bing Images for: woman applying face moisturizer
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'woman applying face moisturizer'
+INFO:utils.images.finder:Searching for images with query 'woman applying face moisturizer', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=woman+applying+face+moisturizer&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 6575
+INFO:utils.images.finder:Found 10 images from Unsplash for 'woman applying face moisturizer'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'woman applying face moisturizer'
+INFO:utils.images.finder:Searching for images with query 'woman applying face moisturizer', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'different skin care products selection'
+INFO:utils.images.finder:Searching for images with query 'different skin care products selection', source: bing
+INFO:utils.images.bing:Searching Bing Images for: different skin care products selection
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'different skin care products selection'
+INFO:utils.images.finder:Searching for images with query 'different skin care products selection', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=different+skin+care+products+selection&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 6953
+INFO:utils.images.finder:Found 10 images from Unsplash for 'different skin care products selection'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=10.0 - Woman at spa using cream
+INFO:utils.images.auto_image_finder:  #2: score=8.0 - A jar of cream sitting on top of a white table
+INFO:utils.images.auto_image_finder:  #3: score=8.0 - A jar of cream with daisies on a white wooden table
+INFO:utils.images.auto_image_finder:  #4: score=8.0 - A jar of cream next to a green leaf
+INFO:utils.images.auto_image_finder:  #5: score=8.0 - makeup & skincare 
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Dobierz balsam na regenerację skóry do własnej cery
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1629380108574-40c083555579?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw2fHxza2luJTIwY2FyZSUyMG1vaXN0dXJpemVyJTIwY3JlYW0lMjBhcHBsaWNhdGlvbnxlbnwwfDB8fHwxNzYzMzY2NTE2fDA&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Balsamy i kremy regenerujące for blog ZNANEKOSMETYKI.PL
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/categories (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/categories?search=Balsamy%20i%20kremy%20regeneruj%C4%85ce HTTP/1.1" 200 391
+INFO:utils.automation.workflow_engine:Found category 'Balsamy i kremy regenerujące' with WordPress ID: 108
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/users (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1603
+INFO:utils.automation.workflow_engine:Loaded 5 authors from WordPress: ['admin', 'Gabriela Bielec', 'Helena Rybikowska', 'Tomasz Kotliński', 'Zofia Chryplewicz']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin (ID: 1) - index 0/5
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-224.jpg' to blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1629380108574-40c083555579?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw2fHxza2luJTIwY2FyZSUyMG1vaXN0dXJpemVyJTIwY3JlYW0lMjBhcHBsaWNhdGlvbnxlbnwwfDB8fHwxNzYzMzY2NTE2fDA&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 48304
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1502
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media/1497 (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 1497
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media/1497 HTTP/1.1" 200 1503
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/posts (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Dobierz balsam na regenerację skóry do własnej cery' on blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 321
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 774
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 422
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 775
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 317
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 776
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 314
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 780
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=kosmetyki HTTP/1.1" 200 712
+INFO:utils.wordpress.client:Found existing tag 'kosmetyki' with ID 778
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=witaminy HTTP/1.1" 200 381
+INFO:utils.wordpress.client:Found existing tag 'witaminy' with ID 790
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 1498
+INFO:utils.automation.workflow_engine:Published with category ID: 108, tags: ['artykuł', 'porady', 'informacje', 'zdrowie', 'kosmetyki', 'witaminy']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=95.81s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_6_1763366429 completed successfully
+INFO:__main__:✅ Article 2 completed for ZNANEKOSMETYKI.PL
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:=== Generuję artykuł dla blog_id=3 ===
+/home/runner/workspace/generate_remaining.py:28: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  blog = Blog.query.get(blog_id)
+INFO:__main__:Generating article 3 for ZNANEKOSMETYKI.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_6_1763366541 for automation rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog ZnaneKosmetyki
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Balsamy i kremy regenerujące
+INFO:utils.automation.workflow_engine:Selected topic: Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego (Category: Balsamy i kremy regenerujące)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Balsamy i kremy regenerujące']
+INFO:utils.automation.workflow_engine:Generating content for topic: Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego' in category 'Balsamy i kremy regenerujące'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 11029 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2681 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2026 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3018 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2420 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2365 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2671 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 64 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 122 chars)
+INFO:utils.content.content_validator:Validating article: Domowe sposoby na przygotowanie odżywczego kremu r...
+WARNING:utils.content.content_validator:❌ Article validation failed with 2 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 64 znaków (max 60)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 2 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Domowe sposoby na przygotowanie odżywczego kremu r...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 157 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, kosmetyki, witaminy, badania, lekarz, wskazówki, przygotowanie, dieta, krem regeneracyjny; krem na zmarszczki; krem na rozstępy; krem na trądzik; krem na skórę; domowy krem regeneracyjny; kosmetyki naturalne; skóra regenerująca., praktyczne
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 225
+INFO:utils.automation.workflow_engine:Acquiring images for article: Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Domowe sposoby na przygotowanie odżywczego kremu regeneracyj...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Domowe sposoby na przygotowanie odżywczego kremu regeneracyj...
+INFO:utils.images.query_planner:Generating AI image queries for: Domowe sposoby na przygotowanie odżywczego kremu regeneracyj...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 471 chars)
+INFO:utils.images.query_planner:Generated primary query: 'homemade natural face cream preparation'
+INFO:utils.images.query_planner:Alternates: ['organic skincare ingredients kitchen', 'diy moisturizer cream making process', 'natural cosmetics preparation workspace']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'homemade natural face cream preparation'
+INFO:utils.images.finder:Searching for images with query 'homemade natural face cream preparation', source: bing
+INFO:utils.images.bing:Searching Bing Images for: homemade natural face cream preparation
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'homemade natural face cream preparation'
+INFO:utils.images.finder:Searching for images with query 'homemade natural face cream preparation', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=homemade+natural+face+cream+preparation&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7316
+INFO:utils.images.finder:Found 10 images from Unsplash for 'homemade natural face cream preparation'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'homemade natural face cream preparation'
+INFO:utils.images.finder:Searching for images with query 'homemade natural face cream preparation', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'organic skincare ingredients kitchen'
+INFO:utils.images.finder:Searching for images with query 'organic skincare ingredients kitchen', source: bing
+INFO:utils.images.bing:Searching Bing Images for: organic skincare ingredients kitchen
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'organic skincare ingredients kitchen'
+INFO:utils.images.finder:Searching for images with query 'organic skincare ingredients kitchen', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=organic+skincare+ingredients+kitchen&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 8106
+INFO:utils.images.finder:Found 10 images from Unsplash for 'organic skincare ingredients kitchen'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'organic skincare ingredients kitchen'
+INFO:utils.images.finder:Searching for images with query 'organic skincare ingredients kitchen', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'diy moisturizer cream making process'
+INFO:utils.images.finder:Searching for images with query 'diy moisturizer cream making process', source: bing
+INFO:utils.images.bing:Searching Bing Images for: diy moisturizer cream making process
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'diy moisturizer cream making process'
+INFO:utils.images.finder:Searching for images with query 'diy moisturizer cream making process', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=diy+moisturizer+cream+making+process&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 6382
+INFO:utils.images.finder:Found 10 images from Unsplash for 'diy moisturizer cream making process'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=6.0 - a glass bowl filled with cream on top of a table
+INFO:utils.images.auto_image_finder:  #2: score=6.0 - Handcrafted and traditional processing of real mozzarella fr
+INFO:utils.images.auto_image_finder:  #3: score=6.0 - Handcrafted and traditional processing of real mozzarella fr
+INFO:utils.images.auto_image_finder:  #4: score=6.0 - Handcrafted and traditional processing of real mozzarella fr
+INFO:utils.images.auto_image_finder:  #5: score=6.0 - a close up of a jar of cream next to limes
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1633893215271-f7e1fca081ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxob21lbWFkZSUyMG5hdHVyYWwlMjBmYWNlJTIwY3JlYW0lMjBwcmVwYXJhdGlvbnxlbnwwfDB8fHwxNzYzMzY2NjgyfDA&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Balsamy i kremy regenerujące for blog ZNANEKOSMETYKI.PL
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/categories (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/categories?search=Balsamy%20i%20kremy%20regeneruj%C4%85ce HTTP/1.1" 200 391
+INFO:utils.automation.workflow_engine:Found category 'Balsamy i kremy regenerujące' with WordPress ID: 108
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/users (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1603
+INFO:utils.automation.workflow_engine:Loaded 5 authors from WordPress: ['admin', 'Gabriela Bielec', 'Helena Rybikowska', 'Tomasz Kotliński', 'Zofia Chryplewicz']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin (ID: 1) - index 0/5
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-225.jpg' to blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1633893215271-f7e1fca081ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxob21lbWFkZSUyMG5hdHVyYWwlMjBmYWNlJTIwY3JlYW0lMjBwcmVwYXJhdGlvbnxlbnwwfDB8fHwxNzYzMzY2NjgyfDA&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 35003
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 787
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/media/1499 (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 1499
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/media/1499 HTTP/1.1" 200 1086
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/posts (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Domowe sposoby na przygotowanie odżywczego kremu regeneracyjnego' on blog 'ZNANEKOSMETYKI.PL' (ID: 3)
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 320
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 774
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 421
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 775
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 316
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 776
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=kosmetyki HTTP/1.1" 200 713
+INFO:utils.wordpress.client:Found existing tag 'kosmetyki' with ID 778
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=witaminy HTTP/1.1" 200 382
+INFO:utils.wordpress.client:Found existing tag 'witaminy' with ID 790
+INFO:utils.wordpress.client:WordPress API URL: https://znanekosmetyki.pl/wp-json/wp/v2/tags (from base: https://znanekosmetyki.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "GET /wp-json/wp/v2/tags?search=badania HTTP/1.1" 200 313
+INFO:utils.wordpress.client:Found existing tag 'badania' with ID 779
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): znanekosmetyki.pl:443
+DEBUG:urllib3.connectionpool:https://znanekosmetyki.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 1500
+INFO:utils.automation.workflow_engine:Published with category ID: 108, tags: ['artykuł', 'porady', 'informacje', 'kosmetyki', 'witaminy', 'badania']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=149.19s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_6_1763366541 completed successfully
+INFO:__main__:✅ Article 3 completed for ZNANEKOSMETYKI.PL
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:=== Generuję artykuł dla blog_id=4 ===
+/home/runner/workspace/generate_remaining.py:28: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  blog = Blog.query.get(blog_id)
+INFO:__main__:Generating article 1 for HOMOSONLY.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_7_1763366708 for automation rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Eksploracja Seksualna
+INFO:utils.automation.workflow_engine:Selected topic: Międzynarodowe standardy w Eksploracja Seksualna - część 1 (Category: Eksploracja Seksualna)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Eksploracja Seksualna']
+INFO:utils.automation.workflow_engine:Generating content for topic: Międzynarodowe standardy w Eksploracja Seksualna - część 1
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Międzynarodowe standardy w Eksploracja Seksualna - część 1' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 31 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 70 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3333 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 102 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3271 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3503 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3027 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 33 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 282 chars)
+INFO:utils.content.content_validator:Validating article: Oczywiście, nie mogę pomóc w tym....
+WARNING:utils.content.content_validator:❌ Article validation failed with 7 errors
+WARNING:utils.content.content_validator:   - Excerpt za długi: 282 znaków (max 160)
+WARNING:utils.content.content_validator:   - Za mało nagłówków H2: 2 (min 3)
+WARNING:utils.content.content_validator:   - Za mało akapitów: 4 (min 8)
+WARNING:utils.content.content_validator:   - Za mało słów: 888 (min 1200 dla 4 stron A4)
+WARNING:utils.content.content_validator:   - Za mało znaków ze spacjami: 6733 (min 7200)
+WARNING:utils.content.content_validator:   - Za mało znaków bez spacji: 5874 (min 6000)
+WARNING:utils.content.content_validator:   - Treść powinna zaczynać się od <p>
+WARNING:utils.automation.workflow_engine:Content validation failed with 7 errors, retrying (1/2)
+WARNING:utils.automation.workflow_engine:   - Excerpt za długi: 282 znaków (max 160)
+WARNING:utils.automation.workflow_engine:   - Za mało nagłówków H2: 2 (min 3)
+WARNING:utils.automation.workflow_engine:   - Za mało akapitów: 4 (min 8)
+INFO:utils.automation.workflow_engine:Content generation attempt 2/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Międzynarodowe standardy w Eksploracja Seksualna - część 1' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 1952 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 21 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 94 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 41 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3146 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 21 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 335 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 109 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 204 chars)
+INFO:utils.content.content_validator:Validating article: Międzynarodowe standardy w Eksploracji Seksualnej ...
+WARNING:utils.content.content_validator:❌ Article validation failed with 7 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 109 znaków (max 60)
+WARNING:utils.content.content_validator:   - Excerpt za długi: 204 znaków (max 160)
+WARNING:utils.content.content_validator:   - Za mało nagłówków H2: 0 (min 3)
+WARNING:utils.content.content_validator:   - Za mało akapitów: 4 (min 8)
+WARNING:utils.content.content_validator:   - Za mało słów: 166 (min 1200 dla 4 stron A4)
+WARNING:utils.content.content_validator:   - Za mało znaków ze spacjami: 1244 (min 7200)
+WARNING:utils.content.content_validator:   - Za mało znaków bez spacji: 1082 (min 6000)
+WARNING:utils.automation.workflow_engine:Content validation failed with 7 errors, retrying (2/2)
+WARNING:utils.automation.workflow_engine:   - Tytuł za długi: 109 znaków (max 60)
+WARNING:utils.automation.workflow_engine:   - Excerpt za długi: 204 znaków (max 160)
+WARNING:utils.automation.workflow_engine:   - Za mało nagłówków H2: 0 (min 3)
+INFO:utils.automation.workflow_engine:Content generation attempt 3/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Międzynarodowe standardy w Eksploracja Seksualna - część 1' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 62 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 60 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3558 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 75 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3333 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 29 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 120 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 66 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 154 chars)
+INFO:utils.content.content_validator:Validating article: Międzynarodowe standardy w seksualności dzieci - j...
+WARNING:utils.content.content_validator:❌ Article validation failed with 6 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 66 znaków (max 60)
+WARNING:utils.content.content_validator:   - Za mało nagłówków H2: 1 (min 3)
+WARNING:utils.content.content_validator:   - Za mało słów: 449 (min 1200 dla 4 stron A4)
+WARNING:utils.content.content_validator:   - Za mało znaków ze spacjami: 3515 (min 7200)
+WARNING:utils.content.content_validator:   - Za mało znaków bez spacji: 3082 (min 6000)
+WARNING:utils.content.content_validator:   - Treść powinna zaczynać się od <p>
+WARNING:utils.automation.workflow_engine:Content validation failed but using anyway after 2 attempts
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Międzynarodowe standardy w seksualności dzieci - j...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 216 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, wskazówki, międzynarodowe standardy seksualności; eksploracja seksualna; ochrona zdrowia; bezpieczeństwo seksualne; seksualność dzieci; porady seksualne; międzynarodowe normy; seksualność w dzieciństwie; bezpieczna seksualność., praktyczne, użyteczne, eksperckie, sprawdzone, skuteczne, pomocne, ważne
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 226
+INFO:utils.automation.workflow_engine:Acquiring images for article: Międzynarodowe standardy w seksualności dzieci - jakie są granice?
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Międzynarodowe standardy w seksualności dzieci - jakie są gr...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Międzynarodowe standardy w seksualności dzieci - jakie są gr...
+INFO:utils.images.query_planner:Generating AI image queries for: Międzynarodowe standardy w seksualności dzieci - jakie są gr...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 589 chars)
+INFO:utils.images.query_planner:Generated primary query: 'child protection education classroom'
+INFO:utils.images.query_planner:Alternates: ['school safety guidelines', 'kids personal boundaries education', 'child safeguarding professional meeting']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'child protection education classroom'
+INFO:utils.images.finder:Searching for images with query 'child protection education classroom', source: bing
+INFO:utils.images.bing:Searching Bing Images for: child protection education classroom
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'child protection education classroom'
+INFO:utils.images.finder:Searching for images with query 'child protection education classroom', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=child+protection+education+classroom&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 6968
+INFO:utils.images.finder:Found 10 images from Unsplash for 'child protection education classroom'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'child protection education classroom'
+INFO:utils.images.finder:Searching for images with query 'child protection education classroom', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'school safety guidelines'
+INFO:utils.images.finder:Searching for images with query 'school safety guidelines', source: bing
+INFO:utils.images.bing:Searching Bing Images for: school safety guidelines
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'school safety guidelines'
+INFO:utils.images.finder:Searching for images with query 'school safety guidelines', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=school+safety+guidelines&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7714
+INFO:utils.images.finder:Found 10 images from Unsplash for 'school safety guidelines'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'school safety guidelines'
+INFO:utils.images.finder:Searching for images with query 'school safety guidelines', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'kids personal boundaries education'
+INFO:utils.images.finder:Searching for images with query 'kids personal boundaries education', source: bing
+INFO:utils.images.bing:Searching Bing Images for: kids personal boundaries education
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'kids personal boundaries education'
+INFO:utils.images.finder:Searching for images with query 'kids personal boundaries education', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=kids+personal+boundaries+education&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 8614
+INFO:utils.images.finder:Found 10 images from Unsplash for 'kids personal boundaries education'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=8.0 - Children sitting at desks in a classroom
+INFO:utils.images.auto_image_finder:  #2: score=8.0 - a classroom filled with desks and a chalkboard
+INFO:utils.images.auto_image_finder:  #3: score=8.0 - a group of children sitting at desks in a classroom
+INFO:utils.images.auto_image_finder:  #4: score=8.0 - a black and white photo of a classroom full of children
+INFO:utils.images.auto_image_finder:  #5: score=8.0 - Anjuman Mat. hr. Sec. School boy's section smart classroom
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Międzynarodowe standardy w seksualności dzieci - jakie są granice?
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1761208663343-ecaf76563308?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxjaGlsZCUyMHByb3RlY3Rpb24lMjBlZHVjYXRpb24lMjBjbGFzc3Jvb218ZW58MHwwfHx8MTc2MzM2Njg1MXww&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Eksploracja Seksualna for blog HOMOSONLY.PL
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/categories (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/categories?search=Eksploracja%20Seksualna HTTP/1.1" 200 369
+INFO:utils.automation.workflow_engine:Found category 'Eksploracja Seksualna' with WordPress ID: 65
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/users (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1824
+INFO:utils.automation.workflow_engine:Loaded 7 authors from WordPress: ['admin_64275', 'Kacper Krupa', 'Kacper Zając', 'krupek', 'Marcin Mazur', 'Oliwier Pawłowski', 'Valerio Romano']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin_64275 (ID: 1) - index 0/7
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-226.jpg' to blog 'HOMOSONLY.PL' (ID: 4)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1761208663343-ecaf76563308?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxjaGlsZCUyMHByb3RlY3Rpb24lMjBlZHVjYXRpb24lMjBjbGFzc3Jvb218ZW58MHwwfHx8MTc2MzM2Njg1MXww&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 160382
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1379
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media/2529 (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 2529
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media/2529 HTTP/1.1" 200 1464
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/posts (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Międzynarodowe standardy w seksualności dzieci - jakie są granice?' on blog 'HOMOSONLY.PL' (ID: 4)
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 374
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 1021
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 307
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 750
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 311
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 1022
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=wskaz%C3%B3wki HTTP/1.1" 200 319
+INFO:utils.wordpress.client:Found existing tag 'wskazówki' with ID 1024
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=mi%C4%99dzynarodowe+standardy+seksualno%C5%9Bci%3B+eksploracja+seksualna%3B+ochrona+zdrowia%3B+bezpiecze%C5%84stwo+seksualne%3B+seksualno%C5%9B%C4%87+dzieci%3B+porady+seksualne%3B+mi%C4%99dzynarodowe+normy%3B+seksualno%C5%9B%C4%87+w+dzieci%C5%84stwie%3B+bezpieczna+seksualno%C5%9B%C4%87. HTTP/1.1" 200 22
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 500 227
+ERROR:utils.wordpress.client:Error processing tag 'międzynarodowe standardy seksualności; eksploracja seksualna; ochrona zdrowia; bezpieczeństwo seksualne; seksualność dzieci; porady seksualne; międzynarodowe normy; seksualność w dzieciństwie; bezpieczna seksualność.': 500 Server Error: Internal Server Error for url: https://homosonly.pl/wp-json/wp/v2/tags
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=praktyczne HTTP/1.1" 200 22
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 311
+INFO:utils.wordpress.client:Created new tag 'praktyczne' with ID 1034
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 2530
+INFO:utils.automation.workflow_engine:Published with category ID: 65, tags: ['artykuł', 'porady', 'informacje', 'wskazówki', 'międzynarodowe standardy seksualności; eksploracja seksualna; ochrona zdrowia; bezpieczeństwo seksualne; seksualność dzieci; porady seksualne; międzynarodowe normy; seksualność w dzieciństwie; bezpieczna seksualność.', 'praktyczne']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=151.33s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_7_1763366708 completed successfully
+INFO:__main__:✅ Article 1 completed for HOMOSONLY.PL
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:=== Generuję artykuł dla blog_id=4 ===
+/home/runner/workspace/generate_remaining.py:28: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  blog = Blog.query.get(blog_id)
+INFO:__main__:Generating article 2 for HOMOSONLY.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_7_1763366876 for automation rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Eksploracja Seksualna
+INFO:utils.automation.workflow_engine:Selected topic: Międzynarodowe standardy w Eksploracja Seksualna (Category: Eksploracja Seksualna)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Eksploracja Seksualna']
+INFO:utils.automation.workflow_engine:Generating content for topic: Międzynarodowe standardy w Eksploracja Seksualna
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Międzynarodowe standardy w Eksploracja Seksualna' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 4380 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 96 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 117 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2973 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 105 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 32 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+ERROR:utils.content.ai_adapter:OpenRouter API request timed out
+ERROR:utils.content.ai_adapter:🚨 OpenRouter API call failed: OpenRouter API request timed out - please try again
+ERROR:utils.content.ai_adapter:❌ PRODUCTION MODE: MockAdapter is DISABLED. Stopping workflow to prevent publishing placeholder content.
+ERROR:utils.content.ai_adapter:💡 To enable MockAdapter for testing, set USE_MOCK_ADAPTER=true environment variable.
+ERROR:utils.ai_content_strategy.article_generator:Error in fast article generation: OpenRouter API failed and MockAdapter is disabled in production: OpenRouter API request timed out - please try again
+INFO:utils.content.content_validator:Validating article: Praktyczny przewodnik: Międzynarodowe standardy w ...
+WARNING:utils.content.content_validator:❌ Article validation failed with 5 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 71 znaków (max 60)
+WARNING:utils.content.content_validator:   - Tytuł zawiera niedozwolony znak: :
+WARNING:utils.content.content_validator:   - Za mało słów: 263 (min 1200 dla 4 stron A4)
+WARNING:utils.content.content_validator:   - Za mało znaków ze spacjami: 2061 (min 7200)
+WARNING:utils.content.content_validator:   - Za mało znaków bez spacji: 1811 (min 6000)
+WARNING:utils.automation.workflow_engine:Content validation failed with 5 errors, retrying (1/2)
+WARNING:utils.automation.workflow_engine:   - Tytuł za długi: 71 znaków (max 60)
+WARNING:utils.automation.workflow_engine:   - Tytuł zawiera niedozwolony znak: :
+WARNING:utils.automation.workflow_engine:   - Za mało słów: 263 (min 1200 dla 4 stron A4)
+INFO:utils.automation.workflow_engine:Content generation attempt 2/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Międzynarodowe standardy w Eksploracja Seksualna' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 4248 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3945 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 59 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3388 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3280 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 116 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2917 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 81 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 110 chars)
+INFO:utils.content.content_validator:Validating article: Odpowiedź:
+Międzynarodowe standardy w edukacji sek...
+WARNING:utils.content.content_validator:❌ Article validation failed with 3 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 81 znaków (max 60)
+WARNING:utils.content.content_validator:   - Tytuł zawiera niedozwolony znak: :
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 3 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Odpowiedź:
+Międzynarodowe standardy w edukacji sek...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 230 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: artykuł, porady, informacje, zdrowie, bezpieczeństwo, edukacja, badania, lekarz, międzynarodowe standardy edukacji seksualnej; edukacja seksualna dzieci; edukacja seksualna młodzieży; eksploracja seksualna; seksualność dzieci; seksualność młodzieży; edukacja seksualna w xxi wieku; seksualność w społeczeństwie., wskazówki, praktyczne, użyteczne
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 227
+INFO:utils.automation.workflow_engine:Acquiring images for article: Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dla dzieci i młodzieży.
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dl...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dl...
+INFO:utils.images.query_planner:Generating AI image queries for: Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dl...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 632 chars)
+INFO:utils.images.query_planner:Generated primary query: 'sex education classroom teenagers'
+INFO:utils.images.query_planner:Alternates: ['students learning biology class', 'school health education workshop', 'teacher explaining reproductive health']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'sex education classroom teenagers'
+INFO:utils.images.finder:Searching for images with query 'sex education classroom teenagers', source: bing
+INFO:utils.images.bing:Searching Bing Images for: sex education classroom teenagers
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'sex education classroom teenagers'
+INFO:utils.images.finder:Searching for images with query 'sex education classroom teenagers', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=sex+education+classroom+teenagers&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 8370
+INFO:utils.images.finder:Found 10 images from Unsplash for 'sex education classroom teenagers'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'sex education classroom teenagers'
+INFO:utils.images.finder:Searching for images with query 'sex education classroom teenagers', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'students learning biology class'
+INFO:utils.images.finder:Searching for images with query 'students learning biology class', source: bing
+INFO:utils.images.bing:Searching Bing Images for: students learning biology class
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'students learning biology class'
+INFO:utils.images.finder:Searching for images with query 'students learning biology class', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=students+learning+biology+class&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7872
+INFO:utils.images.finder:Found 10 images from Unsplash for 'students learning biology class'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'students learning biology class'
+INFO:utils.images.finder:Searching for images with query 'students learning biology class', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'school health education workshop'
+INFO:utils.images.finder:Searching for images with query 'school health education workshop', source: bing
+INFO:utils.images.bing:Searching Bing Images for: school health education workshop
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'school health education workshop'
+INFO:utils.images.finder:Searching for images with query 'school health education workshop', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=school+health+education+workshop&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 8235
+INFO:utils.images.finder:Found 10 images from Unsplash for 'school health education workshop'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=10.0 - Fifth graders in their classroom at school
+INFO:utils.images.auto_image_finder:  #2: score=10.0 - a man standing in front of a classroom full of students
+INFO:utils.images.auto_image_finder:  #3: score=10.0 - Anjuman Mat. hr. Sec. School boy's section smart classroom
+INFO:utils.images.auto_image_finder:  #4: score=10.0 - Students are taking a test in a classroom.
+INFO:utils.images.auto_image_finder:  #5: score=10.0 - The explosion of information and knowledge has made our job 
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dla dzieci i młodzieży.
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1581726707445-75cbe4efc586?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw5fHxzZXglMjBlZHVjYXRpb24lMjBjbGFzc3Jvb20lMjB0ZWVuYWdlcnN8ZW58MHwwfHx8MTc2MzM2NzA5N3ww&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Eksploracja Seksualna for blog HOMOSONLY.PL
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/categories (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/categories?search=Eksploracja%20Seksualna HTTP/1.1" 200 368
+INFO:utils.automation.workflow_engine:Found category 'Eksploracja Seksualna' with WordPress ID: 65
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/users (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1824
+INFO:utils.automation.workflow_engine:Loaded 7 authors from WordPress: ['admin_64275', 'Kacper Krupa', 'Kacper Zając', 'krupek', 'Marcin Mazur', 'Oliwier Pawłowski', 'Valerio Romano']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin_64275 (ID: 1) - index 0/7
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-227.jpg' to blog 'HOMOSONLY.PL' (ID: 4)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1581726707445-75cbe4efc586?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHw5fHxzZXglMjBlZHVjYXRpb24lMjBjbGFzc3Jvb20lMjB0ZWVuYWdlcnN8ZW58MHwwfHx8MTc2MzM2NzA5N3ww&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 83609
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1392
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media/2531 (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 2531
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media/2531 HTTP/1.1" 200 1488
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/posts (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Odpowiedź:
+Międzynarodowe standardy w edukacji seksualnej dla dzieci i młodzieży.' on blog 'HOMOSONLY.PL' (ID: 4)
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 374
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 1021
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 307
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 750
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 311
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 1022
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=zdrowie HTTP/1.1" 200 622
+INFO:utils.wordpress.client:Found existing tag 'zdrowie' with ID 680
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=bezpiecze%C5%84stwo HTTP/1.1" 200 536
+INFO:utils.wordpress.client:Found existing tag 'bezpieczeństwo' with ID 725
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=edukacja HTTP/1.1" 200 676
+INFO:utils.wordpress.client:Found existing tag 'edukacja' with ID 288
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 8373
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 2532
+INFO:utils.automation.workflow_engine:Published with category ID: 65, tags: ['artykuł', 'porady', 'informacje', 'zdrowie', 'bezpieczeństwo', 'edukacja']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=228.80s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_7_1763366876 completed successfully
+INFO:__main__:✅ Article 2 completed for HOMOSONLY.PL
+INFO:utils.seo.monkey_patch:Applying compatibility patches...
+INFO:utils.seo.monkey_patch:Successfully patched pytrends.request.TrendReq to avoid method_whitelist issue
+INFO:utils.seo:Successfully applied SEO module patches
+INFO:utils.seo.trends:Using PatchedTrendReq for Google Trends API
+INFO:app:Flask application initialized with authentication and routes
+INFO:__main__:=== Generuję artykuł dla blog_id=4 ===
+/home/runner/workspace/generate_remaining.py:28: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  blog = Blog.query.get(blog_id)
+INFO:__main__:Generating article 3 for HOMOSONLY.PL
+INFO:utils.automation.workflow_engine:Starting workflow workflow_7_1763367120 for automation rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Executing topic management for rule: Blog HomosOnly
+INFO:utils.automation.workflow_engine:Selecting topic for article generation with category rotation
+INFO:utils.automation.workflow_engine:Selected topic from unused category: Eksploracja Seksualna
+INFO:utils.automation.workflow_engine:Selected topic: Przyszłość Eksploracja Seksualna - trendy i prognozy - część 1 (Category: Eksploracja Seksualna)
+INFO:utils.automation.workflow_engine:Used categories so far: ['Eksploracja Seksualna']
+INFO:utils.automation.workflow_engine:Generating content for topic: Przyszłość Eksploracja Seksualna - trendy i prognozy - część 1
+INFO:utils.automation.workflow_engine:Content generation attempt 1/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Przyszłość Eksploracja Seksualna - trendy i prognozy - część 1' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3275 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3283 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2261 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+ERROR:utils.content.ai_adapter:OpenRouter API call failed: Response ended prematurely
+ERROR:utils.content.ai_adapter:🚨 OpenRouter API call failed: Response ended prematurely
+ERROR:utils.content.ai_adapter:❌ PRODUCTION MODE: MockAdapter is DISABLED. Stopping workflow to prevent publishing placeholder content.
+ERROR:utils.content.ai_adapter:💡 To enable MockAdapter for testing, set USE_MOCK_ADAPTER=true environment variable.
+ERROR:utils.ai_content_strategy.article_generator:Error in fast article generation: OpenRouter API failed and MockAdapter is disabled in production: Response ended prematurely
+INFO:utils.content.content_validator:Validating article: Praktyczny przewodnik: Przyszłość Eksploracja Seks...
+WARNING:utils.content.content_validator:❌ Article validation failed with 5 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 85 znaków (max 60)
+WARNING:utils.content.content_validator:   - Tytuł zawiera niedozwolony znak: :
+WARNING:utils.content.content_validator:   - Za mało słów: 288 (min 1200 dla 4 stron A4)
+WARNING:utils.content.content_validator:   - Za mało znaków ze spacjami: 2131 (min 7200)
+WARNING:utils.content.content_validator:   - Za mało znaków bez spacji: 1856 (min 6000)
+WARNING:utils.automation.workflow_engine:Content validation failed with 5 errors, retrying (1/2)
+WARNING:utils.automation.workflow_engine:   - Tytuł za długi: 85 znaków (max 60)
+WARNING:utils.automation.workflow_engine:   - Tytuł zawiera niedozwolony znak: :
+WARNING:utils.automation.workflow_engine:   - Za mało słów: 288 (min 1200 dla 4 stron A4)
+INFO:utils.automation.workflow_engine:Content generation attempt 2/3
+INFO:utils.ai_content_strategy.article_generator:Fast generating article for topic 'Przyszłość Eksploracja Seksualna - trendy i prognozy - część 1' in category 'Eksploracja Seksualna'
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 4574 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3539 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3454 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 3576 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2390 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2864 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 2974 chars)
+WARNING:utils.ai_content_strategy.article_generator:Content doesn't end with </p> tag - fixing
+INFO:utils.ai_content_strategy.article_generator:Truncated to last complete </p> tag
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 72 chars)
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 142 chars)
+INFO:utils.content.content_validator:Validating article: Przyszłość Eksploracji Seksualnej - trendy i progn...
+WARNING:utils.content.content_validator:❌ Article validation failed with 2 errors
+WARNING:utils.content.content_validator:   - Tytuł za długi: 72 znaków (max 60)
+WARNING:utils.content.content_validator:   - Niezamknięte tagi <p>
+INFO:utils.automation.workflow_engine:Minor content issues detected: 2 warnings
+INFO:utils.seo.tag_generator:Generating 12 SEO tags for article: Przyszłość Eksploracji Seksualnej - trendy i progn...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: meta-llama/llama-3.1-8b-instruct
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 195 chars)
+INFO:utils.seo.tag_generator:Generated 12 tags: przyszłość, trendy, prognozy, artykuł, porady, informacje, zdrowie, rozwój, bezpieczeństwo, edukacja, badania, oto 8 najlepszych tagów seo dla artykułu:
+
+eksploracja seksualna
+INFO:utils.automation.workflow_engine:Generated 12 SEO tags
+INFO:utils.automation.workflow_engine:Article created successfully with ID: 228
+INFO:utils.automation.workflow_engine:Acquiring images for article: Przyszłość Eksploracji Seksualnej - trendy i prognozy na najbliższe lata
+INFO:utils.images.auto_image_finder:Using AI-enhanced image search for: Przyszłość Eksploracji Seksualnej - trendy i prognozy na naj...
+INFO:utils.images.auto_image_finder:Generating AI-powered image queries for: Przyszłość Eksploracji Seksualnej - trendy i prognozy na naj...
+INFO:utils.images.query_planner:Generating AI image queries for: Przyszłość Eksploracji Seksualnej - trendy i prognozy na naj...
+INFO:utils.content.ai_adapter:Making OpenRouter API request with model: anthropic/claude-3.5-sonnet
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openrouter.ai:443
+DEBUG:urllib3.connectionpool:https://openrouter.ai:443 "POST /api/v1/chat/completions HTTP/1.1" 200 None
+INFO:utils.content.ai_adapter:Successfully received response from OpenRouter (length: 444 chars)
+INFO:utils.images.query_planner:Generated primary query: 'sexual health education modern'
+INFO:utils.images.query_planner:Alternates: ['relationship counseling professional', 'intimate wellness consultation', 'sex education classroom abstract']
+INFO:utils.images.auto_image_finder:Searching bing with query: 'sexual health education modern'
+INFO:utils.images.finder:Searching for images with query 'sexual health education modern', source: bing
+INFO:utils.images.bing:Searching Bing Images for: sexual health education modern
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'sexual health education modern'
+INFO:utils.images.finder:Searching for images with query 'sexual health education modern', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=sexual+health+education+modern&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 7987
+INFO:utils.images.finder:Found 10 images from Unsplash for 'sexual health education modern'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'sexual health education modern'
+INFO:utils.images.finder:Searching for images with query 'sexual health education modern', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'relationship counseling professional'
+INFO:utils.images.finder:Searching for images with query 'relationship counseling professional', source: bing
+INFO:utils.images.bing:Searching Bing Images for: relationship counseling professional
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'relationship counseling professional'
+INFO:utils.images.finder:Searching for images with query 'relationship counseling professional', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=relationship+counseling+professional&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 5977
+INFO:utils.images.finder:Found 10 images from Unsplash for 'relationship counseling professional'
+INFO:utils.images.auto_image_finder:Searching pexels with query: 'relationship counseling professional'
+INFO:utils.images.finder:Searching for images with query 'relationship counseling professional', source: pexels
+WARNING:utils.images.finder:Error searching Pexels: PEXELS_API_KEY environment variable not set
+INFO:utils.images.auto_image_finder:Searching bing with query: 'intimate wellness consultation'
+INFO:utils.images.finder:Searching for images with query 'intimate wellness consultation', source: bing
+INFO:utils.images.bing:Searching Bing Images for: intimate wellness consultation
+WARNING:utils.images.bing:No Bing Search API key found. Set BING_SEARCH_API_KEY environment variable.
+INFO:utils.images.auto_image_finder:Searching unsplash with query: 'intimate wellness consultation'
+INFO:utils.images.finder:Searching for images with query 'intimate wellness consultation', source: unsplash
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://api.unsplash.com:443 "GET /search/photos?query=intimate+wellness+consultation&per_page=10&page=1&client_id=d9yFnsiRnaH8sNuz2n5H7TZDx74n3phXA_PYco4TKe0&orientation=landscape HTTP/1.1" 200 8374
+INFO:utils.images.finder:Found 10 images from Unsplash for 'intimate wellness consultation'
+INFO:utils.images.auto_image_finder:Scoring 30 image candidates...
+INFO:utils.images.auto_image_finder:  #1: score=6.0 - OFFICIAL - Brisbane Women’s March 4 Justice King George Squa
+INFO:utils.images.auto_image_finder:  #2: score=6.0 - A wooden table topped with scrabble letters spelling love an
+INFO:utils.images.auto_image_finder:  #3: score=6.0 - Pink
+INFO:utils.images.auto_image_finder:  #4: score=6.0 - Sexuality
+INFO:utils.images.auto_image_finder:  #5: score=6.0 - a couple of people standing next to each other
+INFO:utils.automation.workflow_engine:Found 3 images for article
+INFO:utils.automation.workflow_engine:Publishing article to WordPress: Przyszłość Eksploracji Seksualnej - trendy i prognozy na najbliższe lata
+INFO:utils.automation.workflow_engine:Prepared featured image: https://images.unsplash.com/photo-1615852761522-0c5a1bacd15e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxzZXh1YWwlMjBoZWFsdGglMjBlZHVjYXRpb24lMjBtb2Rlcm58ZW58MHwwfHx8MTc2MzM2NzM3Mnww&ixlib=rb-4.1.0&q=80&w=1080
+INFO:utils.automation.workflow_engine:Using category: Eksploracja Seksualna for blog HOMOSONLY.PL
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/categories (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/categories?search=Eksploracja%20Seksualna HTTP/1.1" 200 370
+INFO:utils.automation.workflow_engine:Found category 'Eksploracja Seksualna' with WordPress ID: 65
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/users (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/users?per_page=100 HTTP/1.1" 200 1824
+INFO:utils.automation.workflow_engine:Loaded 7 authors from WordPress: ['admin_64275', 'Kacper Krupa', 'Kacper Zając', 'krupek', 'Marcin Mazur', 'Oliwier Pawłowski', 'Valerio Romano']
+INFO:utils.automation.workflow_engine:Selected author for rotation: admin_64275 (ID: 1) - index 0/7
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Uploading media 'featured-228.jpg' to blog 'HOMOSONLY.PL' (ID: 4)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): images.unsplash.com:443
+DEBUG:urllib3.connectionpool:https://images.unsplash.com:443 "GET /photo-1615852761522-0c5a1bacd15e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDI2MjZ8MHwxfHNlYXJjaHwxfHxzZXh1YWwlMjBoZWFsdGglMjBlZHVjYXRpb24lMjBtb2Rlcm58ZW58MHwwfHx8MTc2MzM2NzM3Mnww&ixlib=rb-4.1.0&q=80&w=1080 HTTP/1.1" 200 120357
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media HTTP/1.1" 201 1374
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/media/2533 (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Setting alt text for media ID 2533
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/media/2533 HTTP/1.1" 200 1464
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/posts (from base: https://homosonly.pl/wp-json/wp/v2)
+INFO:utils.wordpress.client:Creating WordPress post titled 'Przyszłość Eksploracji Seksualnej - trendy i prognozy na najbliższe lata' on blog 'HOMOSONLY.PL' (ID: 4)
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=przysz%C5%82o%C5%9B%C4%87 HTTP/1.1" 200 421
+INFO:utils.wordpress.client:Found existing tag 'przyszłość' with ID 731
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=trendy HTTP/1.1" 200 506
+INFO:utils.wordpress.client:Found existing tag 'trendy' with ID 714
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=prognozy HTTP/1.1" 200 22
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/tags HTTP/1.1" 201 310
+INFO:utils.wordpress.client:Created new tag 'prognozy' with ID 1035
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=artyku%C5%82 HTTP/1.1" 200 374
+INFO:utils.wordpress.client:Found existing tag 'artykuł' with ID 1021
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=porady HTTP/1.1" 200 307
+INFO:utils.wordpress.client:Found existing tag 'porady' with ID 750
+INFO:utils.wordpress.client:WordPress API URL: https://homosonly.pl/wp-json/wp/v2/tags (from base: https://homosonly.pl/wp-json/wp/v2)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "GET /wp-json/wp/v2/tags?search=informacje HTTP/1.1" 200 311
+INFO:utils.wordpress.client:Found existing tag 'informacje' with ID 1022
+INFO:utils.wordpress.client:Setting post author to ID: 1
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): homosonly.pl:443
+DEBUG:urllib3.connectionpool:https://homosonly.pl:443 "POST /wp-json/wp/v2/posts HTTP/1.1" 201 None
+INFO:utils.automation.workflow_engine:Article published to WordPress with ID: 2534
+INFO:utils.automation.workflow_engine:Published with category ID: 65, tags: ['przyszłość', 'trendy', 'prognozy', 'artykuł', 'porady', 'informacje']
+INFO:utils.automation.workflow_engine:Featured image: ✅ UPLOADED
+INFO:utils.automation.workflow_engine:Updating workflow metrics
+INFO:utils.automation.workflow_engine:Workflow metrics: execution_time=260.08s, success_rate=71.4%
+INFO:utils.automation.workflow_engine:Workflow workflow_7_1763367120 completed successfully
+INFO:__main__:✅ Article 3 completed for HOMOSONLY.PL
