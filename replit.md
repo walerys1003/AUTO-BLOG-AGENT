@@ -3,7 +3,7 @@
 ## Overview
 This project is a comprehensive Flask-based blog automation system designed to manage the entire content lifecycle. It automates content creation from topic generation to publication and social media promotion. The system integrates with various AI models via OpenRouter API, manages publishing to WordPress sites, and handles social media distribution, aiming to provide a fully autonomous content generation and marketing solution.
 
-**Current Configuration (Updated November 16, 2025):**
+**Current Configuration (Updated November 17, 2025):**
 - **Daily Article Production**: 9 articles total (3 per blog)
   - MAMATESTUJE.COM: 3 articles/day
   - ZNANEKOSMETYKI.PL: 3 articles/day
@@ -13,6 +13,7 @@ This project is a comprehensive Flask-based blog automation system designed to m
   - Ultra-low cost: ~$0.0001 per article
   - Monthly cost: ~$0.027 for 270 articles
   - 131k token context window
+- **Production Safety**: MockAdapter disabled by default to prevent publishing placeholder content. Set USE_MOCK_ADAPTER=true for testing only.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
