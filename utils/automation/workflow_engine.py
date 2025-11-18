@@ -392,24 +392,34 @@ class WorkflowEngine:
                 
                 blog = Blog.query.get(automation_rule.blog_id)
                 
-                # Timeout protection - max 3 minutes per article
+                # Timeout protection - max 10 minutes per article (increased for multi-section AI generation)
                 import signal
                 import threading
                 
                 def timeout_handler():
-                    raise TimeoutError("Article generation timeout after 3 minutes")
+                    raise TimeoutError("Article generation timeout after 10 minutes")
                 
-                timer = threading.Timer(180.0, timeout_handler)  # 3 minutes
+                timer = threading.Timer(600.0, timeout_handler)  # 10 minutes (7 AI calls need more time)
                 timer.start()
                 
                 try:
+                    # Log start time for debugging
+                    import time
+                    start_time = time.time()
+                    logger.info(f"Starting article generation at {datetime.utcnow()}")
+                    
                     # Generuj artykuł z timeout protection
                     article_result = generate_article_from_topic(
                         category=topic.category,
                         topic=topic.title
                     )
+                    
+                    # Log completion time
+                    elapsed_time = time.time() - start_time
+                    logger.info(f"Article generation completed in {elapsed_time:.1f} seconds")
                 finally:
                     timer.cancel()
+                    logger.debug("Timeout timer cancelled")
                 
                 if not article_result or not article_result.get("title"):
                     if attempt < max_retries:
