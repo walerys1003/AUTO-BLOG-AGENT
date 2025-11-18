@@ -15,7 +15,10 @@ This project is a comprehensive Flask-based blog automation system designed to m
   - 200k token context window
   - Superior writing quality, reasoning, and structure
   - Extended thinking mode for complex content
+  - Multi-section generation: 7 AI calls per article (intro + 5 sections + conclusion)
+  - Average generation time: 4-7 minutes per article
 - **Production Safety**: MockAdapter disabled by default to prevent publishing placeholder content. Set USE_MOCK_ADAPTER=true for testing only.
+- **Recent Fixes (Nov 18, 2025)**: Increased article generation timeout from 3 to 10 minutes to accommodate Claude Haiku 4.5's multi-section generation process, ensuring full 1200+ word articles with complete image integration.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -35,7 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Social Media Automation**: Multi-platform support (Facebook, Twitter, LinkedIn, Instagram, TikTok) for auto-posting, content adaptation, and engagement tracking.
 - **SEO and Analytics**: Google Trends for topic discovery, SerpAPI for keyword research, content metrics tracking, and optimization suggestions.
 - **Multi-Blog Management**: Supports simultaneous content generation and publishing across multiple WordPress blogs with independent configurations and author rotation.
-- **Workflow Engine**: Orchestrates the entire content lifecycle, including topic management, article generation, image integration, validation, and publication with retry mechanisms and error handling.
+- **Workflow Engine**: Orchestrates the entire content lifecycle, including topic management, article generation, image integration, validation, and publication with retry mechanisms and error handling. Features 10-minute timeout for multi-section AI generation (7 sequential API calls per article) ensuring complete content delivery.
 - **Category Rotation System**: Ensures diversity in batch generation - each consecutive article uses a different category, cycling through all available categories before repeating.
 - **Author Rotation System**: Automatically rotates through WordPress authors for batch generation. Fetches real authors from WordPress API and assigns them cyclically to ensure balanced content distribution across the editorial team.
 
