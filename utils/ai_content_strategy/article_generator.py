@@ -18,6 +18,26 @@ from utils.content.long_paragraph_generator import generate_long_paragraph
 logger = logging.getLogger(__name__)
 
 
+def clean_markdown_artifacts(content: str) -> str:
+    """
+    Remove markdown code block artifacts from AI-generated content.
+    
+    Args:
+        content: The content to clean
+        
+    Returns:
+        Content without markdown artifacts
+    """
+    if not content:
+        return content
+    
+    # Remove markdown code blocks (```html ... ```)
+    content = re.sub(r'^```html\s*\n?', '', content, flags=re.MULTILINE)
+    content = re.sub(r'\n?```\s*$', '', content, flags=re.MULTILINE)
+    content = re.sub(r'^```\s*\n?', '', content, flags=re.MULTILINE)
+    
+    return content.strip()
+
 def ensure_complete_ending(content: str, topic: str) -> str:
     """
     Ensure article content ends with a complete sentence and proper HTML tag closure.
@@ -219,6 +239,9 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         
         # Response is pure HTML content - no JSON parsing needed
         content = response.strip()
+        
+        # CRITICAL FIX: Remove markdown artifacts (```html ... ```)
+        content = clean_markdown_artifacts(content)
         
         # FIX: Ensure content ends with complete sentence and closed tag
         content = ensure_complete_ending(content, topic)
