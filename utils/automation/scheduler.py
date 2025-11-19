@@ -5,9 +5,11 @@ System harmonogramowania i automatycznego wykonywania reguł automatyzacji treś
 Integruje się z workflow engine i zarządza cyklicznym wykonywaniem zadań.
 """
 import logging
+import logging.handlers
 import time
 import schedule
 import threading
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from concurrent.futures import ThreadPoolExecutor
@@ -16,8 +18,22 @@ from app import app, db
 from models import AutomationRule, Blog
 from utils.automation.workflow_engine import execute_automation_rule
 
-# Configure logging
+# Configure logging with file handler
 logger = logging.getLogger(__name__)
+
+# Ensure logs directory exists
+os.makedirs('logs/automation', exist_ok=True)
+
+# Add file handler for persistent logs
+file_handler = logging.handlers.RotatingFileHandler(
+    'logs/automation/scheduler.log',
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+file_handler.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
 class AutomationScheduler:
     """
@@ -207,22 +223,39 @@ class AutomationScheduler:
                 failed_articles = 0
                 
                 for article_num in range(rule.posts_per_day):
-                    logger.info(f"Generating article {article_num + 1}/{rule.posts_per_day} for {blog.name}")
+                    article_start_time = datetime.utcnow()
+                    logger.info(f"=" * 80)
+                    logger.info(f"📝 ARTICLE {article_num + 1}/{rule.posts_per_day} - {blog.name}")
+                    logger.info(f"   Started at: {article_start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                    logger.info(f"=" * 80)
                     
                     try:
                         # Wykonaj workflow dla pojedynczego artykułu używając wspólnego engine
                         result = execute_automation_rule(rule.id, engine=batch_engine)
                         
+                        article_duration = (datetime.utcnow() - article_start_time).total_seconds()
+                        
                         if result.get("success"):
                             successful_articles += 1
-                            logger.info(f"✅ Article {article_num + 1} generated successfully")
+                            logger.info(f"✅ Article {article_num + 1} SUCCESS ({article_duration:.1f}s)")
+                            logger.info(f"   Article ID: {result.get('article_id', 'N/A')}")
+                            logger.info(f"   WordPress ID: {result.get('wordpress_post_id', 'N/A')}")
+                            logger.info(f"   Steps completed: {result.get('steps_completed', [])}")
                         else:
                             failed_articles += 1
-                            logger.error(f"❌ Article {article_num + 1} failed: {result.get('error', 'Unknown error')}")
+                            error_msg = result.get('error', 'Unknown error')
+                            logger.error(f"❌ Article {article_num + 1} FAILED ({article_duration:.1f}s)")
+                            logger.error(f"   Error: {error_msg}")
+                            logger.error(f"   Steps completed: {result.get('steps_completed', [])}")
+                            logger.error(f"   All errors: {result.get('errors', [])}")
                             
                     except Exception as e:
                         failed_articles += 1
-                        logger.error(f"❌ Exception generating article {article_num + 1}: {str(e)}")
+                        article_duration = (datetime.utcnow() - article_start_time).total_seconds()
+                        logger.error(f"❌ Article {article_num + 1} EXCEPTION ({article_duration:.1f}s)")
+                        logger.error(f"   Exception: {str(e)}")
+                        import traceback
+                        logger.error(f"   Traceback: {traceback.format_exc()}")
                 
                 # Podsumowanie batch generation
                 logger.info(f"🏁 BATCH GENERATION COMPLETE for {blog.name}: {successful_articles} success, {failed_articles} failed")

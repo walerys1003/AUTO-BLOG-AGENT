@@ -5,6 +5,8 @@ Centralny silnik zarządzający całym cyklem automatycznego generowania i publi
 Integruje wszystkie komponenty systemu w jeden spójny workflow.
 """
 import logging
+import logging.handlers
+import os
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -24,8 +26,22 @@ from social.autopost import post_article_to_social_media
 import requests
 from utils.content.ai_adapter import get_default_ai_service
 
-# Configure logging
+# Configure logging with file handler
 logger = logging.getLogger(__name__)
+
+# Ensure logs directory exists
+os.makedirs('logs/automation', exist_ok=True)
+
+# Add file handler for persistent logs
+file_handler = logging.handlers.RotatingFileHandler(
+    'logs/automation/workflow_engine.log',
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+file_handler.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
 class WorkflowStatus(Enum):
     """Status możliwych stanów workflow"""
@@ -514,62 +530,86 @@ class WorkflowEngine:
         
         return {"success": False, "error": "Maximum retries exceeded"}
     
-    def _execute_image_acquisition(self, article: Article, topic_category: str = None) -> Dict[str, Any]:
+    def _execute_image_acquisition(self, article: Article, topic_category: str = None, max_retries: int = 2) -> Dict[str, Any]:
         """
-        Pobiera obrazy dla artykułu używając ulepszonego AI-powered systemu.
+        Pobiera obrazy dla artykułu używając ulepszonego AI-powered systemu z retry mechanism.
         """
-        logger.info(f"Acquiring images for article: {article.title}")
+        logger.info(f"🖼️  IMAGE ACQUISITION START for article: {article.title}")
+        logger.info(f"   Category: {topic_category}")
         
-        try:
-            # Pobierz tagi z artykułu
-            tags = []
-            if hasattr(article, 'get_tags'):
-                tags = article.get_tags() or []
-            
-            # Znajdź obrazy dla artykułu z AI-enhanced search
-            image_results = find_article_images(
-                article_title=article.title,
-                article_content=article.content,
-                max_images=3,
-                tags=tags,
-                category=topic_category or ""
-            )
-            
-            if image_results and len(image_results) > 0:
-                # Ustaw pierwszy obraz jako featured image
-                article.featured_image_url = image_results[0]["url"]
+        for attempt in range(max_retries + 1):
+            try:
+                logger.info(f"   Attempt {attempt + 1}/{max_retries + 1}")
                 
-                # NAPRAWIONE: Zapisz featured image data do content_log
-                import json
-                article.featured_image_data = json.dumps({
-                    'url': image_results[0]["url"],
-                    'title': image_results[0].get("title", article.title),
-                    'source': image_results[0].get("source", "auto")
-                })
+                # Pobierz tagi z artykułu
+                tags = []
+                if hasattr(article, 'get_tags'):
+                    tags = article.get_tags() or []
+                    logger.info(f"   Article tags: {tags[:5]}")  # Log first 5 tags
                 
-                # Zapisz obrazy w bibliotece
-                for img in image_results:
-                    image_entry = ImageLibrary(
-                        blog_id=article.blog_id,  # Używamy blog_id z artykułu
-                        title=img.get("title", article.title),
-                        url=img["url"],
-                        source=img.get("source", "auto"),
-                        tags=img.get("tags", ""),
-                        created_at=datetime.utcnow()
-                    )
-                    db.session.add(image_entry)
+                # Znajdź obrazy dla artykułu z AI-enhanced search
+                logger.info(f"   Searching images across multiple sources...")
+                image_results = find_article_images(
+                    article_title=article.title,
+                    article_content=article.content,
+                    max_images=3,
+                    tags=tags,
+                    category=topic_category or ""
+                )
                 
-                db.session.commit()
-                logger.info(f"Found {len(image_results)} images for article")
-                
-                return {"success": True, "images_found": len(image_results)}
-            else:
-                logger.warning("No images found for article")
-                return {"success": False, "error": "No images found"}
-                
-        except Exception as e:
-            logger.error(f"Image acquisition failed: {str(e)}")
-            return {"success": False, "error": str(e)}
+                if image_results and len(image_results) > 0:
+                    logger.info(f"   ✅ Found {len(image_results)} images!")
+                    for idx, img in enumerate(image_results):
+                        logger.info(f"      Image {idx+1}: {img.get('source', 'unknown')} - {img.get('url', 'no url')[:80]}")
+                    
+                    # Ustaw pierwszy obraz jako featured image
+                    article.featured_image_url = image_results[0]["url"]
+                    
+                    # NAPRAWIONE: Zapisz featured image data do content_log
+                    import json
+                    article.featured_image_data = json.dumps({
+                        'url': image_results[0]["url"],
+                        'title': image_results[0].get("title", article.title),
+                        'source': image_results[0].get("source", "auto")
+                    })
+                    logger.info(f"   Featured image set: {image_results[0]['url'][:80]}")
+                    
+                    # Zapisz obrazy w bibliotece
+                    for img in image_results:
+                        image_entry = ImageLibrary(
+                            blog_id=article.blog_id,  # Używamy blog_id z artykułu
+                            title=img.get("title", article.title),
+                            url=img["url"],
+                            source=img.get("source", "auto"),
+                            tags=img.get("tags", ""),
+                            created_at=datetime.utcnow()
+                        )
+                        db.session.add(image_entry)
+                    
+                    db.session.commit()
+                    logger.info(f"✅ IMAGE ACQUISITION SUCCESS")
+                    
+                    return {"success": True, "images_found": len(image_results)}
+                else:
+                    logger.warning(f"   ⚠️  No images found (attempt {attempt + 1}/{max_retries + 1})")
+                    if attempt < max_retries:
+                        logger.info(f"   Retrying image search...")
+                        time.sleep(2)  # Wait 2 seconds before retry
+                        continue
+                    else:
+                        logger.error("❌ IMAGE ACQUISITION FAILED - No images found after all retries")
+                        return {"success": False, "error": "No images found after retries"}
+                        
+            except Exception as e:
+                logger.error(f"   ❌ Image acquisition error (attempt {attempt + 1}): {str(e)}")
+                logger.error(f"   Traceback: {traceback.format_exc()}")
+                if attempt < max_retries:
+                    logger.info(f"   Retrying after exception...")
+                    time.sleep(2)
+                    continue
+                else:
+                    logger.error("❌ IMAGE ACQUISITION FAILED - Exception after all retries")
+                    return {"success": False, "error": f"Image acquisition exception: {str(e)}"}
     
     def _execute_wordpress_publishing(self, article: Article, automation_rule: AutomationRule, topic_category: str = None) -> Dict[str, Any]:
         """
