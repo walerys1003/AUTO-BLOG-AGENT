@@ -103,7 +103,7 @@ def ensure_complete_ending(content: str, topic: str) -> str:
     
     return content
 
-def generate_article_from_topic(category: str, topic: str, blog_name: str = None) -> Dict[str, str]:
+def generate_article_from_topic(category: str, topic: str, blog_name: Optional[str] = None) -> Dict[str, str]:
     """
     Generate a complete article in a single AI call for maximum speed.
     

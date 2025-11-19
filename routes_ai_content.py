@@ -92,14 +92,20 @@ def generate_article():
         return redirect(url_for('ai_content.index'))
     
     try:
-        # Generate article content using AI
-        article_data = generate_article_from_topic(category, topic)
-        
+        # Get blog name for specialized prompts (if blog selected)
+        blog_name = None
+        blog = None
         if blog_id:
-            # Save to database if blog selected
             blog = Blog.query.get(blog_id)
             if blog:
-                article = Article(
+                blog_name = blog.name
+        
+        # Generate article content using AI with blog-specific prompt
+        article_data = generate_article_from_topic(category, topic, blog_name=blog_name)
+        
+        if blog_id and blog:
+            # Save to database
+            article = Article(
                     title=article_data['title'],
                     content=article_data['content'],
                     blog_id=blog_id,
@@ -111,10 +117,10 @@ def generate_article():
                         'generated_at': datetime.now().isoformat()
                     })
                 )
-                db.session.add(article)
-                db.session.commit()
-                
-                flash(f'Artykuł "{article_data["title"]}" został wygenerowany i zapisany', 'success')
+            db.session.add(article)
+            db.session.commit()
+            
+            flash(f'Artykuł "{article_data["title"]}" został wygenerowany i zapisany', 'success')
         else:
             flash(f'Artykuł "{article_data["title"]}" został wygenerowany. Wybierz blog, aby zapisać', 'info')
         

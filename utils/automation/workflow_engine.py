@@ -407,6 +407,9 @@ class WorkflowEngine:
                 logger.info(f"Content generation attempt {attempt + 1}/{max_retries + 1}")
                 
                 blog = Blog.query.get(automation_rule.blog_id)
+                if not blog:
+                    logger.error(f"Blog with ID {automation_rule.blog_id} not found")
+                    return {"success": False, "error": f"Blog {automation_rule.blog_id} not found"}
                 
                 # Timeout protection - max 10 minutes per article (increased for multi-section AI generation)
                 import signal
@@ -422,12 +425,13 @@ class WorkflowEngine:
                     # Log start time for debugging
                     import time
                     start_time = time.time()
-                    logger.info(f"Starting article generation at {datetime.utcnow()}")
+                    logger.info(f"Starting article generation at {datetime.utcnow()} for blog: {blog.name}")
                     
-                    # Generuj artykuł z timeout protection
+                    # Generuj artykuł z timeout protection i blog-specific prompt
                     article_result = generate_article_from_topic(
                         category=topic.category,
-                        topic=topic.title
+                        topic=topic.title,
+                        blog_name=blog.name  # Pass blog name for specialized prompts
                     )
                     
                     # Log completion time
