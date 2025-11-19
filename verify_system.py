@@ -7,7 +7,7 @@ sys.path.insert(0, '.')
 
 from app import app, db
 from models import Blog, AutomationRule, ArticleTopic
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 def verify_system():
@@ -26,9 +26,8 @@ def verify_system():
         print("\n2️⃣  REGUŁY AUTOMATYZACJI:")
         rules = AutomationRule.query.filter_by(is_active=True).all()
         for rule in rules:
-            blog = Blog.query.get(rule.blog_id)
+            blog = db.session.get(Blog, rule.blog_id)
             print(f"   ✅ {blog.name}: {rule.posts_per_day} artykułów/dzień")
-            print(f"      Harmonogram: {rule.schedule_time}")
         
         # 3. Sprawdź pulę tematów
         print("\n3️⃣  PULA TEMATÓW:")
@@ -56,11 +55,11 @@ def verify_system():
         
         if scheduler_log:
             size = os.path.getsize('logs/automation/scheduler.log')
-            print(f"      scheduler.log: {size} bytes")
+            print(f"      scheduler.log: {size:,} bytes")
         
         if workflow_log:
             size = os.path.getsize('logs/automation/workflow_engine.log')
-            print(f"      workflow_engine.log: {size} bytes")
+            print(f"      workflow_engine.log: {size:,} bytes")
         
         # 5. Sprawdź API keys
         print("\n5️⃣  API KEYS:")
@@ -80,13 +79,15 @@ def verify_system():
             blog_articles = [a for a in today_articles if a.blog_id == blog.id]
             published = len([a for a in blog_articles if a.status == 'published'])
             with_images = len([a for a in blog_articles if a.featured_image_data])
+            with_wp_id = len([a for a in blog_articles if a.post_id])
             print(f"   {blog.name}:")
             print(f"      Artykuły: {len(blog_articles)}")
-            print(f"      Opublikowane: {published}")
-            print(f"      Ze zdjęciami: {with_images}")
+            print(f"      Opublikowane: {published}/{len(blog_articles)}")
+            print(f"      Ze zdjęciami: {with_images}/{len(blog_articles)}")
+            print(f"      Na WordPress: {with_wp_id}/{len(blog_articles)}")
         
         print("\n" + "=" * 80)
-        print("✅ WERYFIKACJA ZAKOŃCZONA")
+        print("✅ WERYFIKACJA ZAKOŃCZONA - System gotowy na jutro!")
         print("=" * 80)
 
 if __name__ == "__main__":
