@@ -1,4 +1,4 @@
-modules = ["python-3.11", "postgresql-16", "python3"]
+modules = ["python-3.11", "python3", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
@@ -38,6 +38,10 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 34559
+externalPort = 3001
 
 [[ports]]
 localPort = 42617
