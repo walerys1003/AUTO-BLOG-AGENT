@@ -447,12 +447,32 @@ class WorkflowEngine:
                         continue
                     return {"success": False, "error": "Failed to generate article content after retries"}
                 
-                # Enhanced content validation using the new validator
-                from utils.content.content_validator import validate_before_publication
-                
+                # Extract article data
                 title = article_result.get("title", "")
                 excerpt = article_result.get("excerpt", "")
                 content = article_result.get("content", "")
+                
+                # CHECK 1: Blog-specific length validation (NEW SYSTEM)
+                validation_result = article_result.get("validation")
+                if validation_result:
+                    logger.info(f"Blog-specific length validation:")
+                    logger.info(f"  - Valid: {validation_result['valid']}")
+                    logger.info(f"  - Word count: {validation_result['word_count']}/{validation_result['min_words_required']}")
+                    logger.info(f"  - Target percentage: {validation_result['percentage_of_target']}%")
+                    
+                    # Reject if doesn't meet minimum requirements
+                    if not validation_result['valid']:
+                        if attempt < max_retries:
+                            logger.warning(f"Article doesn't meet blog-specific length requirements, retrying ({attempt + 1}/{max_retries})")
+                            logger.warning(f"  Issues: {', '.join(validation_result['issues'])}")
+                            continue
+                        else:
+                            logger.error(f"Article still doesn't meet requirements after {max_retries} attempts")
+                            logger.error(f"  Final word count: {validation_result['word_count']}/{validation_result['min_words_required']}")
+                            return {"success": False, "error": f"Article too short: {validation_result['word_count']} words (required: {validation_result['min_words_required']})"}
+                
+                # CHECK 2: Enhanced content validation using the existing validator
+                from utils.content.content_validator import validate_before_publication
                 
                 # Basic length check first
                 if len(content) < 200:
@@ -495,6 +515,27 @@ class WorkflowEngine:
                     
                     # Set exactly 12 SEO tags
                     article.set_tags(seo_tags)
+                    
+                    # Save validation metrics to seo_metadata
+                    if validation_result:
+                        import json
+                        metadata = {
+                            'validation': {
+                                'word_count': validation_result['word_count'],
+                                'chars_with_spaces': validation_result['chars_with_spaces'],
+                                'chars_no_spaces': validation_result['chars_no_spaces'],
+                                'min_words_required': validation_result['min_words_required'],
+                                'target_words': validation_result['target_words'],
+                                'percentage_of_target': validation_result['percentage_of_target'],
+                                'valid': validation_result['valid'],
+                                'meets_word_count': validation_result['meets_word_count'],
+                                'meets_char_count': validation_result['meets_char_count']
+                            },
+                            'blog_type': blog.name,
+                            'generation_attempts': attempt + 1
+                        }
+                        article.seo_metadata = json.dumps(metadata)
+                        logger.info(f"Saved validation metrics to database: {validation_result['word_count']} words ({validation_result['percentage_of_target']}% of target)")
                     
                     db.session.add(article)
                     db.session.commit()

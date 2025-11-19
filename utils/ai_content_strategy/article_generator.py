@@ -8,7 +8,7 @@ import logging
 import os
 import json
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from config import Config
 from utils.content.ai_adapter import get_ai_completion, MockAdapter
@@ -16,6 +16,133 @@ from utils.content.long_paragraph_generator import generate_long_paragraph
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Blog-specific configuration mapping
+BLOG_CONFIGS = {
+    2: {  # MAMATESTUJE.COM
+        'name': 'MAMATESTUJE.COM',
+        'type': 'parenting',
+        'min_words': 2000,
+        'target_words': 2200,
+        'min_chars_with_spaces': 13000,
+        'min_chars_no_spaces': 10500
+    },
+    3: {  # ZNANEKOSMETYKI.PL
+        'name': 'ZNANEKOSMETYKI.PL',
+        'type': 'cosmetics',
+        'min_words': 2500,
+        'target_words': 3000,
+        'min_chars_with_spaces': 17000,
+        'min_chars_no_spaces': 14000
+    },
+    4: {  # HOMOSONLY.PL
+        'name': 'HOMOSONLY.PL',
+        'type': 'lifestyle',
+        'min_words': 1800,
+        'target_words': 2000,
+        'min_chars_with_spaces': 12000,
+        'min_chars_no_spaces': 9500
+    }
+}
+
+def get_blog_config_by_name(blog_name: Optional[str]) -> Dict:
+    """Get blog configuration by name with fallback to default."""
+    if not blog_name:
+        return {
+            'type': 'default',
+            'min_words': 1800,
+            'target_words': 2000,
+            'min_chars_with_spaces': 12000,
+            'min_chars_no_spaces': 9500
+        }
+    
+    # Match by name substring
+    blog_upper = blog_name.upper()
+    for blog_id, config in BLOG_CONFIGS.items():
+        if config['name'] in blog_upper or any(word in blog_upper for word in config['name'].split('.')):
+            return config
+    
+    # Default fallback
+    return {
+        'type': 'default',
+        'min_words': 1800,
+        'target_words': 2000,
+        'min_chars_with_spaces': 12000,
+        'min_chars_no_spaces': 9500
+    }
+
+
+def validate_article_length(content: str, blog_config: Dict) -> Dict[str, Any]:
+    """
+    Validate article length against blog-specific requirements.
+    
+    Args:
+        content: The article HTML content
+        blog_config: Blog configuration with min/target word counts
+        
+    Returns:
+        Dictionary with validation results:
+        {
+            'valid': bool,
+            'word_count': int,
+            'chars_with_spaces': int,
+            'chars_no_spaces': int,
+            'min_words_required': int,
+            'target_words': int,
+            'meets_word_count': bool,
+            'meets_char_count': bool,
+            'percentage_of_target': float,
+            'issues': List[str]
+        }
+    """
+    # Strip HTML tags to get plain text for word counting
+    plain_text = re.sub(r'<[^>]+>', ' ', content)
+    plain_text = re.sub(r'\s+', ' ', plain_text).strip()
+    
+    # Calculate metrics
+    word_count = len(plain_text.split())
+    chars_with_spaces = len(plain_text)
+    chars_no_spaces = len(plain_text.replace(' ', ''))
+    
+    # Check requirements
+    min_words = blog_config.get('min_words', 1800)
+    target_words = blog_config.get('target_words', 2000)
+    min_chars_with_spaces = blog_config.get('min_chars_with_spaces', 12000)
+    min_chars_no_spaces = blog_config.get('min_chars_no_spaces', 9500)
+    
+    meets_word_count = word_count >= min_words
+    meets_char_count = (chars_with_spaces >= min_chars_with_spaces and 
+                        chars_no_spaces >= min_chars_no_spaces)
+    
+    percentage = (word_count / target_words * 100) if target_words > 0 else 0
+    
+    issues = []
+    if not meets_word_count:
+        shortage = min_words - word_count
+        issues.append(f"Za mało słów: {word_count}/{min_words} (brakuje {shortage} słów)")
+    
+    if not meets_char_count:
+        if chars_with_spaces < min_chars_with_spaces:
+            shortage = min_chars_with_spaces - chars_with_spaces
+            issues.append(f"Za mało znaków ze spacjami: {chars_with_spaces}/{min_chars_with_spaces} (brakuje {shortage})")
+        if chars_no_spaces < min_chars_no_spaces:
+            shortage = min_chars_no_spaces - chars_no_spaces
+            issues.append(f"Za mało znaków bez spacji: {chars_no_spaces}/{min_chars_no_spaces} (brakuje {shortage})")
+    
+    valid = meets_word_count and meets_char_count
+    
+    return {
+        'valid': valid,
+        'word_count': word_count,
+        'chars_with_spaces': chars_with_spaces,
+        'chars_no_spaces': chars_no_spaces,
+        'min_words_required': min_words,
+        'target_words': target_words,
+        'meets_word_count': meets_word_count,
+        'meets_char_count': meets_char_count,
+        'percentage_of_target': round(percentage, 1),
+        'issues': issues
+    }
 
 
 def clean_markdown_artifacts(content: str) -> str:
@@ -122,13 +249,16 @@ def generate_article_from_topic(category: str, topic: str, blog_name: Optional[s
     logger.info(f"Fast generating article for topic '{topic}' in category '{category}' (blog: {blog_name})")
     
     try:
-        # Determine blog type and adjust prompts accordingly
-        blog_upper = blog_name.upper() if blog_name else ""
+        # Get blog configuration
+        blog_config = get_blog_config_by_name(blog_name)
+        blog_type = blog_config['type']
+        
+        logger.info(f"Using blog type: {blog_type} (min words: {blog_config['min_words']}, target: {blog_config['target_words']})")
         
         # ==========================================
         # PROMPT 1: ZNANEKOSMETYKI.PL - Blog Kosmetyczny
         # ==========================================
-        if 'KOSMETYKI' in blog_upper:
+        if blog_type == 'cosmetics':
             system_prompt = f"""Jesteś ekspertem kosmetologiem i dermatologiem piszącym dla profesjonalnego bloga kosmetycznego ZnaneKosmetyki.pl w kategorii '{category}'.
 
 FUNDAMENTALNE ZASADY BLOGA KOSMETYCZNEGO:
@@ -192,7 +322,7 @@ ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
         # ==========================================
         # PROMPT 2: MAMATESTUJE.COM - Blog Parentingowy
         # ==========================================
-        elif 'MAMA' in blog_upper:
+        elif blog_type == 'parenting':
             system_prompt = f"""Jesteś ekspertem w rodzicielstwie, psychologii dziecięcej i rozwoju niemowląt piszącym dla bloga MamaTestuje.com w kategorii '{category}'.
 
 FUNDAMENTALNE ZASADY BLOGA PARENTINGOWEGO:
@@ -256,7 +386,7 @@ ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
         # ==========================================
         # PROMPT 3: HOMOSONLY.PL - Blog Lifestyle/LGBTQ+
         # ==========================================
-        elif 'HOMOS' in blog_upper:
+        elif blog_type == 'lifestyle':
             system_prompt = f"""Jesteś ekspertem w kulturze, lifestyle i tematyce LGBTQ+ piszącym dla bloga HomosOnly.pl w kategorii '{category}'.
 
 FUNDAMENTALNE ZASADY BLOGA LIFESTYLE:
@@ -380,7 +510,7 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
             section_words = 500
             max_intro_tokens = 2000
             max_section_tokens = 2500
-        elif 'MAMA' in blog_upper:
+        elif blog_type == 'parenting':
             intro_words = 350
             section_words = 400
             max_intro_tokens = 1800
@@ -412,7 +542,7 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
                 f"Najczęstsze błędy w stosowaniu {topic} i jak ich unikać",
                 f"Rekomendacje produktów dla różnych typów skóry w kontekście {topic}"
             ]
-        elif 'MAMA' in blog_upper:
+        elif blog_type == 'parenting':
             sections = [
                 f"Podstawy i etapy rozwoju w kontekście {topic}",
                 f"Praktyczne porady krok po kroku dotyczące {topic}",
@@ -421,7 +551,7 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
                 f"Bezpieczeństwo i normy certyfikacji w {topic}",
                 f"Najczęstsze pytania rodziców o {topic}"
             ]
-        elif 'HOMOS' in blog_upper:
+        elif blog_type == 'lifestyle':
             sections = [
                 f"Kontekst historyczny i społeczny {topic}",
                 f"Jak {topic} wygląda współcześnie - praktyczne porady",
@@ -530,10 +660,28 @@ Odpowiedz WYŁĄCZNIE tekstem excerpt - bez dodatkowych słów."""
         
         excerpt = excerpt_response.strip().replace('"', '').replace('„', '').replace('"', '')
         
+        # Validate article length before returning
+        validation_result = validate_article_length(content, blog_config)
+        
+        # Log validation results
+        logger.info(f"Article validation for blog type '{blog_type}':")
+        logger.info(f"  - Word count: {validation_result['word_count']}/{validation_result['target_words']} ({validation_result['percentage_of_target']}% of target)")
+        logger.info(f"  - Characters (with spaces): {validation_result['chars_with_spaces']}/{blog_config['min_chars_with_spaces']}")
+        logger.info(f"  - Characters (no spaces): {validation_result['chars_no_spaces']}/{blog_config['min_chars_no_spaces']}")
+        logger.info(f"  - Meets word count: {validation_result['meets_word_count']}")
+        logger.info(f"  - Meets char count: {validation_result['meets_char_count']}")
+        logger.info(f"  - Overall valid: {validation_result['valid']}")
+        
+        if validation_result['issues']:
+            logger.warning(f"Article validation issues:")
+            for issue in validation_result['issues']:
+                logger.warning(f"  - {issue}")
+        
         return {
             'title': title,
             'content': content,
-            'excerpt': excerpt
+            'excerpt': excerpt,
+            'validation': validation_result  # Include validation result for workflow
         }
         
     except Exception as e:
