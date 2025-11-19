@@ -7,7 +7,10 @@ sys.path.insert(0, '.')
 
 from app import app, db
 from models import ContentLog, Blog, AutomationRule
-from utils.automation.workflow_engine import WorkflowEngine
+import requests
+import base64
+import json
+from datetime import datetime
 
 def publish_ready_articles():
     with app.app_context():
@@ -22,32 +25,14 @@ def publish_ready_articles():
             print(f"\n📤 Publishing: {article.title[:60]}")
             print(f"   Article ID: {article.id}, Blog ID: {article.blog_id}")
             
-            # Pobierz blog i automation rule
+            # Pobierz blog
             blog = db.session.get(Blog, article.blog_id)
             if not blog:
                 print(f"   ❌ Blog not found")
                 continue
-                
-            automation_rule = AutomationRule.query.filter_by(blog_id=blog.id, is_active=True).first()
-            if not automation_rule:
-                print(f"   ❌ Automation rule not found")
-                continue
-            
-            # Użyj workflow engine do publikacji
-            engine = WorkflowEngine()
-            
-            # UWAGA: Musimy przekonwertować ContentLog -> Article
-            # Ale workflow engine używa modelu Article, nie ContentLog
-            # Więc zrobimy to ręcznie używając WordPress client
-            
-            from utils.wordpress.client import build_wp_api_url
-            import requests
-            import base64
-            import json
             
             try:
-                # Przygotuj dane do publikacji
-                wp_url = build_wp_api_url(blog.url)
+                # Przygotuj credentials
                 credentials = f"{blog.username}:{blog.api_token}"
                 auth_token = base64.b64encode(credentials.encode()).decode('utf-8')
                 
@@ -61,7 +46,8 @@ def publish_ready_articles():
                 tags = []
                 if article.tags:
                     try:
-                        tags = json.loads(article.tags)
+                        tags_data = json.loads(article.tags)
+                        tags = tags_data if isinstance(tags_data, list) else []
                     except:
                         tags = article.tags.split(',') if article.tags else []
                 
@@ -109,6 +95,7 @@ def publish_ready_articles():
                 create_url = f"{blog.url}/wp-json/wp/v2/posts"
                 headers = {'Authorization': f'Basic {auth_token}', 'Content-Type': 'application/json'}
                 
+                print(f"   Publishing to WordPress...")
                 response = requests.post(
                     create_url,
                     headers=headers,
@@ -123,7 +110,7 @@ def publish_ready_articles():
                     # Zaktualizuj ContentLog
                     article.status = 'published'
                     article.post_id = post_id
-                    article.published_at = db.func.now()
+                    article.published_at = datetime.utcnow()
                     db.session.commit()
                 else:
                     print(f"   ❌ Failed to publish: {response.status_code}")
@@ -132,7 +119,7 @@ def publish_ready_articles():
             except Exception as e:
                 print(f"   ❌ Error: {str(e)}")
                 import traceback
-                print(f"   Traceback: {traceback.format_exc()[:300]}")
+                print(f"   Traceback: {traceback.format_exc()[:500]}")
         
         print("\n✅ Done publishing ready articles")
 
