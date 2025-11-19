@@ -505,7 +505,7 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         content_parts = []
         
         # Dostosuj długość intro i sekcje w zależności od bloga
-        if 'KOSMETYKI' in blog_upper:
+        if blog_type == 'cosmetics':
             intro_words = 400
             section_words = 500
             max_intro_tokens = 2000
@@ -533,7 +533,7 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         content_parts.append(intro_response.strip())
         
         # Sekcje specyficzne dla każdego bloga
-        if 'KOSMETYKI' in blog_upper:
+        if blog_type == 'cosmetics':
             sections = [
                 f"Jak {topic} działa na poziomie skóry - biochemia i mechanizmy działania",
                 f"Kluczowe składniki aktywne w {topic} - analiza INCI, stężenia, synergie",
