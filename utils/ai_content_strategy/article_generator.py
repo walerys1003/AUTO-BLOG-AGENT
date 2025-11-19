@@ -103,13 +103,14 @@ def ensure_complete_ending(content: str, topic: str) -> str:
     
     return content
 
-def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
+def generate_article_from_topic(category: str, topic: str, blog_name: str = None) -> Dict[str, str]:
     """
     Generate a complete article in a single AI call for maximum speed.
     
     Args:
         category: The category for which to generate content
         topic: The specific topic to create content for
+        blog_name: Optional blog name for specialized prompts
         
     Returns:
         Dictionary with 'title' and 'content' keys
@@ -118,41 +119,222 @@ def generate_article_from_topic(category: str, topic: str) -> Dict[str, str]:
     if not topic or topic == 'None':
         topic = f"Praktyczny przewodnik w kategorii {category}"
     
-    logger.info(f"Fast generating article for topic '{topic}' in category '{category}'")
+    logger.info(f"Fast generating article for topic '{topic}' in category '{category}' (blog: {blog_name})")
     
     try:
-        # Enhanced Polish-only article generation following exact specifications
-        system_prompt = f"""Jesteś ekspertem w pisaniu artykułów dla polskiego bloga MamaTestuje.com w kategorii '{category}'.
+        # Determine blog type and adjust prompts accordingly
+        blog_upper = blog_name.upper() if blog_name else ""
+        
+        # ==========================================
+        # PROMPT 1: ZNANEKOSMETYKI.PL - Blog Kosmetyczny
+        # ==========================================
+        if 'KOSMETYKI' in blog_upper:
+            system_prompt = f"""Jesteś ekspertem kosmetologiem i dermatologiem piszącym dla profesjonalnego bloga kosmetycznego ZnaneKosmetyki.pl w kategorii '{category}'.
+
+FUNDAMENTALNE ZASADY BLOGA KOSMETYCZNEGO:
+- WYŁĄCZNIE język polski (zero słów angielskich, tłumacz nazwy składników)
+- Głęboka analiza naukowa i dermatologiczna
+- Szczegółowe omówienie składników aktywnych (INCI, stężenia, mechanizmy działania)
+- Profesjonalny ton jak w czasopiśmie dermatologicznym, ale przystępny
+- Konkretne produkty, marki, porównania składów
+- Czysta treść HTML bez artefaktów markdown
+
+Napisz BARDZO ZAAWANSOWANY, DOGŁĘBNY artykuł ekspercki na temat: '{topic}'
+
+SZCZEGÓŁOWE WYMAGANIA (6-7 STRON A4):
+1. DŁUGOŚĆ EKSTREMALNA (artykuł kosmetyczny musi być kompleksowy):
+   - MINIMUM 2500 SŁÓW (docelowo 3000-3500 słów)
+   - MINIMUM 17000 ZNAKÓW ZE SPACJAMI  
+   - MINIMUM 14000 ZNAKÓW BEZ SPACJI
+   - Równowartość 6-7 stron A4 tekstu naukowego
+
+2. STRUKTURA ZAAWANSOWANA (kosmetologia):
+   - Wstęp naukowy (350-400 słów): problematyka skórna, statystyki, badania
+   - Sekcja biochemiczna (400+ słów): jak działa na poziomie komórkowym
+   - Sekcja składników (500+ słów): szczegółowa analiza INCI, stężenia, synergie
+   - Sekcja procedur (400+ słów): instrukcje aplikacji krok po kroku
+   - Sekcja porównawcza (350+ słów): porównanie produktów, marek, technologii
+   - Sekcja błędów (300+ słów): częste błędy w pielęgnacji
+   - Sekcja rekomendacji (400+ słów): konkretne produkty z uzasadnieniem
+   - Podsumowanie naukowe (300+ słów): wnioski, plan pielęgnacji
+
+3. ELEMENTY ZAAWANSOWANE:
+   - <h2> dla głównych sekcji
+   - <h3> dla podsekcji (składniki, produkty)
+   - <p> dla długich, rozbudowanych akapitów (8-12 zdań każdy)
+   - <strong> dla nazw składników, produktów, stężeń
+   - <em> dla uwag dermatologicznych
+   - <ul>, <li> dla list składników, kroków aplikacji
+   - Tabele porównawcze w HTML (opcjonalnie)
+
+4. TREŚĆ KOSMETOLOGICZNA (KLUCZOWE):
+   - Nazwy składników po polsku + INCI w nawiasach
+   - Stężenia procentowe składników aktywnych
+   - Mechanizmy działania na poziomie molekularnym
+   - pH produktów, tekstury, wykończenia
+   - Typy skóry (sucha, tłusta, mieszana, wrażliwa, dojrzała)
+   - Konkretne marki i produkty (aptekarskie, dermokosmetyki, luksusowe)
+   - Badania kliniczne, publikacje dermatologiczne
+   - Porównania przed/po, rezultaty czasowe
+   - Interakcje składników, synergie, przeciwwskazania
+   - Pory roku, temperatura, warunki stosowania
+
+5. TON PROFESJONALNY:
+   - Naukowy ale przystępny
+   - Konkretny i merytoryczny
+   - Oparty na faktach i badaniach
+   - Bez pustych frazesów marketingowych
+   - Z przykładami produktów i składników
+
+ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
+Żadnych znaczników markdown, JSON, cudzysłowów. Samo HTML."""
+        
+        # ==========================================
+        # PROMPT 2: MAMATESTUJE.COM - Blog Parentingowy
+        # ==========================================
+        elif 'MAMA' in blog_upper:
+            system_prompt = f"""Jesteś ekspertem w rodzicielstwie, psychologii dziecięcej i rozwoju niemowląt piszącym dla bloga MamaTestuje.com w kategorii '{category}'.
+
+FUNDAMENTALNE ZASADY BLOGA PARENTINGOWEGO:
+- WYŁĄCZNIE język polski (zero słów angielskich)
+- Ciepły, wspierający ton dla rodziców i przyszłych rodziców
+- Praktyczne porady oparte na badaniach i doświadczeniu
+- Empatia, zrozumienie wyzwań rodzicielskich
+- Czysta treść HTML bez artefaktów markdown
+
+Napisz KOMPLEKSOWY, PRAKTYCZNY artykuł ekspercki na temat: '{topic}'
+
+SZCZEGÓŁOWE WYMAGANIA (5-6 STRON A4):
+1. DŁUGOŚĆ ROZBUDOWANA (artykuł parentingowy musi być wyczerpujący):
+   - MINIMUM 2000 SŁÓW (docelowo 2200-2500 słów)
+   - MINIMUM 13000 ZNAKÓW ZE SPACJAMI
+   - MINIMUM 10500 ZNAKÓW BEZ SPACJI
+   - Równowartość 5-6 stron A4
+
+2. STRUKTURA DLA RODZICÓW:
+   - Wprowadzenie empatyczne (350+ słów): relacja z problemem, hook emocjonalny
+   - Sekcja bazowa (350+ słów): podstawy, co warto wiedzieć, etapy rozwoju
+   - Sekcja praktyczna (400+ słów): konkretne porady krok po kroku
+   - Sekcja produktowa (350+ słów): rekomendacje produktów, wyposażenia
+   - Sekcja problemowa (300+ słów): częste trudności i jak sobie radzić
+   - Sekcja bezpieczeństwa (300+ słów): aspekty bezpieczeństwa, normy, certyfikaty
+   - Sekcja FAQ (250+ słów): najczęstsze pytania rodziców
+   - Podsumowanie wspierające (300+ słów): kluczowe wnioski, wsparcie
+
+3. ELEMENTY PRAKTYCZNE:
+   - <h2> dla głównych sekcji
+   - <h3> dla pod-tematów (etapy wieku, produkty)
+   - <p> dla ciepłych, wspierających akapitów (6-10 zdań)
+   - <strong> dla kluczowych rad, produktów, norm bezpieczeństwa
+   - <em> dla uwag psychologicznych, wskazówek ekspertów
+   - <ul>, <li> dla list kontrolnych, kroków, wyposażenia
+   - Tabele porównawcze produktów (opcjonalnie)
+
+4. TREŚĆ PARENTINGOWA (KLUCZOWE):
+   - Konkretne zakresy wiekowe (0-3 miesiące, 3-6 miesięcy, etc.)
+   - Kamienie milowe rozwoju dziecka
+   - Konkretne produkty i marki (Chicco, BabyOno, Lansinoh, etc.)
+   - Normy bezpieczeństwa (CE, badania dermatologiczne)
+   - Opinie pediatrów, psychologów dziecięcych
+   - Prawdziwe historie rodziców, case studies
+   - Porównania przed/po, rezultaty
+   - Porady dla różnych sytuacji (karmienie piersią, butelką, etc.)
+   - Budget-friendly vs premium opcje
+   - Sezonowość (lato, zima) jeśli relevantne
+
+5. TON WSPIERAJĄCY:
+   - Ciepły i empatyczny
+   - "Jesteśmy razem" zamiast "musisz"
+   - Praktyczny, bez osądzania
+   - Oparty na nauce ale przystępny
+   - Z real-life przykładami
+   - Bez perfekcjonizmu - normalizacja trudności
+
+ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
+Żadnych znaczników markdown, JSON, cudzysłowów. Samo HTML."""
+        
+        # ==========================================
+        # PROMPT 3: HOMOSONLY.PL - Blog Lifestyle/LGBTQ+
+        # ==========================================
+        elif 'HOMOS' in blog_upper:
+            system_prompt = f"""Jesteś ekspertem w kulturze, lifestyle i tematyce LGBTQ+ piszącym dla bloga HomosOnly.pl w kategorii '{category}'.
+
+FUNDAMENTALNE ZASADY BLOGA LIFESTYLE:
+- WYŁĄCZNIE język polski (zero słów angielskich)
+- Inkluzywny, otwarty ton bez uprzedzeń
+- Kulturalne, społeczne i lifestyle'owe podejście
+- Współczesność, trendy, życie w społeczności
+- Czysta treść HTML bez artefaktów markdown
+
+Napisz ANGAŻUJĄCY, KULTURALNY artykuł na temat: '{topic}'
+
+SZCZEGÓŁOWE WYMAGANIA (4-5 STRON A4):
+1. DŁUGOŚĆ ANGAŻUJĄCA:
+   - MINIMUM 1800 SŁÓW (docelowo 2000-2200 słów)
+   - MINIMUM 12000 ZNAKÓW ZE SPACJAMI
+   - MINIMUM 9500 ZNAKÓW BEZ SPACJI
+   - Równowartość 4-5 stron A4
+
+2. STRUKTURA LIFESTYLE:
+   - Wprowadzenie angażujące (300+ słów): context społeczny, trendy, hook
+   - Sekcja historyczna/kontekstowa (300+ słów): tło, ewolucja, znaczenie
+   - Sekcja praktyczna (350+ słów): jak to działa dzisiaj, porady
+   - Sekcja kulturowa (300+ słów): reprezentacja w mediach, sztuce, popkulturze
+   - Sekcja społeczna (300+ słów): aspekty prawne, społeczne, wyzwania
+   - Sekcja zasobów (250+ słów): gdzie szukać wsparcia, informacji
+   - Podsumowanie inspirujące (250+ słów): przyszłość, pozytywne wnioski
+
+3. ELEMENTY ANGAŻUJĄCE:
+   - <h2> dla głównych tematów
+   - <h3> dla subtematów (trendy, osoby, miejsca)
+   - <p> dla narratywnych akapitów (6-10 zdań)
+   - <strong> dla kluczowych pojęć, nazwisk, tytułów
+   - <em> dla cytatów, refleksji, uwag kulturowych
+   - <ul>, <li> dla list zasobów, rekomendacji
+   - Cytaty z wywiadów, ekspertów
+
+4. TREŚĆ KULTURALNA (KLUCZOWE):
+   - Kontekst społeczno-kulturowy
+   - Reprezentacja w filmach, serialach, książkach
+   - Konkretne tytuły, nazwiska, wydarzenia
+   - Aspekty prawne (w Polsce i świecie)
+   - Organizacje wspierające
+   - Statystyki, badania społeczne
+   - Historie osobiste, wywiady
+   - Międzynarodowe porównania
+   - Trendy i przemiany społeczne
+   - Pozytywne przykłady zmian
+
+5. TON INKLUZYWNY:
+   - Otwarty i wspierający
+   - Bez uprzedzeń i stereotypów
+   - Edukacyjny ale przystępny
+   - Z poczuciem humoru gdzie pasuje
+   - Celebrujący różnorodność
+   - Empowerment i pozytywne nastawienie
+
+ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
+Żadnych znaczników markdown, JSON, cudzysłowów. Samo HTML."""
+        
+        # ==========================================
+        # PROMPT DOMYŚLNY (fallback)
+        # ==========================================
+        else:
+            system_prompt = f"""Jesteś ekspertem w pisaniu artykułów w kategorii '{category}'.
 
 FUNDAMENTALNE ZASADY:
-- WYŁĄCZNIE język polski (zero słów angielskich)
-- Czysta treść HTML bez artefaktów JSON
-- Profesjonalna jakość jak w magazynie dla rodziców
+- WYŁĄCZNIE język polski
+- Czysta treść HTML bez artefaktów
+- Profesjonalna jakość
 
 Napisz ekspercki artykuł na temat: '{topic}'
 
-SZCZEGÓŁOWE WYMAGANIA (4 STRONY A4):
-1. DŁUGOŚĆ OBOWIĄZKOWA:
-   - minimum 1200 słów (docelowo 1300-1400)
-   - minimum 8000 znaków ze spacjami
-   - minimum 6500 znaków bez spacji
-   - Równowartość 4 stron A4 (Times New Roman 12pt, interlinia 1,5)
-2. STRUKTURA OBOWIĄZKOWA:
-   - Długi akapit wprowadzający (200+ słów)
-   - 5-6 sekcji głównych z nagłówkami H2
-   - Każda sekcja: 4-5 szczegółowych akapitów (min 200 słów na sekcję)
-   - Rozbudowane podsumowanie z praktycznymi wskazówkami (200+ słów)
-3. ELEMENTY HTML: <h2>, <p>, <strong>, <em>, <ul>, <li>
-4. TREŚĆ MERYTORYCZNA:
-   - Bardzo szczegółowe porady krok po kroku
-   - Liczne przykłady z życia wzięte
-   - Odwołania do badań i opinii ekspertów
-   - Storytelling, pytania retoryczne, porównania
-   - Konkretne liczby, statystyki, fakty
-5. TON: ciepły ekspert, bardzo szczegółowy i wyczerpujący
+WYMAGANIA:
+- Minimum 1800 słów, 12000 znaków ze spacjami
+- Struktura z H2, długie akapity
+- Szczegółowe, praktyczne porady
 
-ODPOWIEDZ TYLKO CZYSTĄ TREŚCIĄ HTML - od pierwszego <p> do ostatniego </p>.
-Żadnych tytułów, JSON, cudzysłowów czy dodatkowych struktur."""
+ODPOWIEDZ TYLKO HTML - od <p> do </p>."""
         
         user_prompt = f"""Temat artykułu: {topic}
 Kategoria: {category}
@@ -192,33 +374,77 @@ To musi być bardzo długi, szczegółowy artykuł - nie oszczędzaj słów!"""
         # Multiple AI calls to guarantee length - paragraph by paragraph approach
         content_parts = []
         
-        # Generate introduction (300+ words)
-        intro_prompt = f"Napisz bardzo długie wprowadzenie (minimum 300 słów) do artykułu o temacie: {topic}. Kategoria: {category}. Użyj storytelling, statystyk, hook'a dla czytelnika. Format: czysty HTML z tagami <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
+        # Dostosuj długość intro i sekcje w zależności od bloga
+        if 'KOSMETYKI' in blog_upper:
+            intro_words = 400
+            section_words = 500
+            max_intro_tokens = 2000
+            max_section_tokens = 2500
+        elif 'MAMA' in blog_upper:
+            intro_words = 350
+            section_words = 400
+            max_intro_tokens = 1800
+            max_section_tokens = 2000
+        else:
+            intro_words = 300
+            section_words = 350
+            max_intro_tokens = 1500
+            max_section_tokens = 1800
+        
+        # Generate introduction
+        intro_prompt = f"Napisz bardzo długie wprowadzenie (minimum {intro_words} słów) do artykułu o temacie: {topic}. Kategoria: {category}. Użyj storytelling, statystyk, hook'a dla czytelnika. Format: czysty HTML z tagami <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
         intro_response = get_ai_completion(
             system_prompt="Jesteś ekspertem w pisaniu długich wprowadzeń do artykułów. ZAWSZE kończ pełnym zdaniem z kropką i zamkniętym tagiem </p>.",
             user_prompt=intro_prompt,
             model=Config.DEFAULT_CONTENT_MODEL,
-            max_tokens=1500,
+            max_tokens=max_intro_tokens,
             temperature=0.7
         )
         content_parts.append(intro_response.strip())
         
-        # Generate 5 main sections (250+ words each)
-        sections = [
-            f"Podstawowe informacje o {topic}",
-            f"Szczegółowe porady i wskazówki dotyczące {topic}",
-            f"Praktyczne przykłady i przypadki z życia związane z {topic}",
-            f"Najczęstsze błędy i jak ich unikać w kontekście {topic}",
-            f"Plan działania i następne kroki dla {topic}"
-        ]
+        # Sekcje specyficzne dla każdego bloga
+        if 'KOSMETYKI' in blog_upper:
+            sections = [
+                f"Jak {topic} działa na poziomie skóry - biochemia i mechanizmy działania",
+                f"Kluczowe składniki aktywne w {topic} - analiza INCI, stężenia, synergie",
+                f"Procedury i instrukcje aplikacji {topic} - techniki, częstotliwość, porady dermatologiczne",
+                f"Porównanie produktów i marek związanych z {topic} - dermokosmetyki, apteczne, luksusowe",
+                f"Najczęstsze błędy w stosowaniu {topic} i jak ich unikać",
+                f"Rekomendacje produktów dla różnych typów skóry w kontekście {topic}"
+            ]
+        elif 'MAMA' in blog_upper:
+            sections = [
+                f"Podstawy i etapy rozwoju w kontekście {topic}",
+                f"Praktyczne porady krok po kroku dotyczące {topic}",
+                f"Rekomendacje produktów i wyposażenia dla {topic}",
+                f"Częste trudności i jak sobie z nimi radzić w {topic}",
+                f"Bezpieczeństwo i normy certyfikacji w {topic}",
+                f"Najczęstsze pytania rodziców o {topic}"
+            ]
+        elif 'HOMOS' in blog_upper:
+            sections = [
+                f"Kontekst historyczny i społeczny {topic}",
+                f"Jak {topic} wygląda współcześnie - praktyczne porady",
+                f"Reprezentacja {topic} w kulturze i mediach",
+                f"Aspekty prawne i społeczne {topic} w Polsce i świecie",
+                f"Zasoby, wsparcie i społeczność związana z {topic}"
+            ]
+        else:
+            sections = [
+                f"Podstawowe informacje o {topic}",
+                f"Szczegółowe porady i wskazówki dotyczące {topic}",
+                f"Praktyczne przykłady i przypadki z życia związane z {topic}",
+                f"Najczęstsze błędy i jak ich unikać w kontekście {topic}",
+                f"Plan działania i następne kroki dla {topic}"
+            ]
         
         for i, section_topic in enumerate(sections, 1):
-            section_prompt = f"Napisz bardzo długą sekcję artykułu (minimum 250 słów) na temat: {section_topic}. Dodaj nagłówek H2, szczegółowe akapity z przykładami, statystykami, poradami. Format: HTML z <h2> i <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
+            section_prompt = f"Napisz bardzo długą sekcję artykułu (minimum {section_words} słów) na temat: {section_topic}. Dodaj nagłówek H2, szczegółowe akapity z przykładami, statystykami, poradami. Format: HTML z <h2> i <p>. ZAKOŃCZ PEŁNYM ZDANIEM I ZAMKNIĘTYM TAGIEM </p>."
             section_response = get_ai_completion(
                 system_prompt="Jesteś ekspertem w pisaniu długich, szczegółowych sekcji artykułów. ZAWSZE kończ pełnym zdaniem z kropką i zamkniętym tagiem </p>.",
                 user_prompt=section_prompt,
                 model=Config.DEFAULT_CONTENT_MODEL,
-                max_tokens=1200,
+                max_tokens=max_section_tokens,
                 temperature=0.7
             )
             content_parts.append(section_response.strip())
