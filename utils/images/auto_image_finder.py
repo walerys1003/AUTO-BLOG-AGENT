@@ -435,9 +435,14 @@ def save_image_to_library(image_data: Dict[str, Any]) -> Optional[ImageLibrary]:
             logger.info(f"Image already exists in library: {cleaned_data['url']}")
             return existing_image
         
-        # Create new image record
+        # Create new image record with truncated title to prevent DB errors
+        image_title = cleaned_data.get('description', '')
+        if len(image_title) > 250:
+            image_title = image_title[:247] + '...'
+            logger.debug(f"Truncated long image title to 250 characters")
+        
         image = ImageLibrary(
-            title=cleaned_data.get('description', ''),
+            title=image_title,
             url=cleaned_data['url'],
             thumbnail_url=cleaned_data.get('thumb_url', ''),
             source=cleaned_data.get('source', 'unknown'),
