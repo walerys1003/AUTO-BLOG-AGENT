@@ -18,7 +18,9 @@ This project is a comprehensive Flask-based blog automation system designed to m
   - Multi-section generation: 7 AI calls per article (intro + 5 sections + conclusion)
   - Average generation time: 4-7 minutes per article
 - **Production Safety**: MockAdapter disabled by default to prevent publishing placeholder content. Set USE_MOCK_ADAPTER=true for testing only.
-- **Recent Fixes (Nov 18, 2025)**: Increased article generation timeout from 3 to 10 minutes to accommodate Claude Haiku 4.5's multi-section generation process, ensuring full 1200+ word articles with complete image integration.
+- **Recent Fixes**:
+  - **Nov 20, 2025**: Fixed critical batch generation bug - added exception re-raise instead of fallback content, implemented retry mechanism with exponential backoff (3 attempts: 2s, 5s, 12s) for API rate limiting, and fixed image title truncation bug (>255 chars from Unsplash).
+  - **Nov 18, 2025**: Increased article generation timeout from 3 to 10 minutes to accommodate Claude Haiku 4.5's multi-section generation process, ensuring full 1200+ word articles with complete image integration.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
