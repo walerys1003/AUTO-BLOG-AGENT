@@ -685,34 +685,22 @@ Odpowiedz WYŁĄCZNIE tekstem excerpt - bez dodatkowych słów."""
         }
         
     except Exception as e:
-        logger.error(f"Error in fast article generation: {str(e)}")
+        # CRITICAL: Log full exception details with traceback
+        import traceback
+        logger.error("=" * 80)
+        logger.error("🚨 CRITICAL: Article generation FAILED - Exception caught!")
+        logger.error(f"Topic: {topic}")
+        logger.error(f"Category: {category}")
+        logger.error(f"Blog: {blog_name}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Exception message: {str(e)}")
+        logger.error("Full traceback:")
+        logger.error(traceback.format_exc())
+        logger.error("=" * 80)
         
-        # Enhanced fallback article with Polish content
-        return {
-            'title': f"Praktyczny przewodnik: {topic}",
-            'content': f"""<p>Temat <strong>{topic.lower()}</strong> w kategorii {category} to zagadnienie, które wymaga dogłębnego zrozumienia i świadomego podejścia każdego rodzica. W dzisiejszych czasach dostęp do rzetelnej informacji ma kluczowe znaczenie dla podejmowania mądrych decyzji.</p>
-
-<h2>Podstawy, które warto znać</h2>
-<p>Każdy rodzic powinien mieć solidną wiedzę na temat {topic.lower()}. Eksperci jednogłośnie podkreślają, że kompleksowe podejście do tej tematyki może znacząco wpłynąć na jakość życia całej rodziny.</p>
-
-<p>Badania naukowe pokazują, że świadome decyzje oparte na rzetelnej wiedzy przynoszą lepsze rezultaty niż działania oparte wyłącznie na intuicji czy przekazie społecznym.</p>
-
-<h2>Praktyczne zastosowanie w codzienności</h2>
-<p>Wiedza teoretyczna ma wartość tylko wtedy, gdy potrafimy ją zastosować w praktyce. W kontekście {topic.lower()}, oznacza to uwzględnienie indywidualnych potrzeb i możliwości każdej rodziny.</p>
-
-<p>Specjaliści zalecają stopniowe wprowadzanie zmian i obserwowanie ich wpływu na codzienne funkcjonowanie. Nie ma uniwersalnych rozwiązań - to, co działa dla jednej rodziny, nie musi sprawdzić się u innych.</p>
-
-<h2>Najczęstsze wyzwania i jak je pokonać</h2>
-<p>W trakcie wprowadzania nowych rozwiązań związanych z {topic.lower()}, rodzice często spotykają się z różnymi trudnościami. Najważniejsze to cierpliwość i systematyczność w działaniu.</p>
-
-<p>Pamiętajmy, że każda zmiana wymaga czasu i konsekwencji. Warto również skorzystać z doświadczeń innych rodziców i porady specjalistów, gdy napotykamy na przeszkody.</p>
-
-<h2>Podsumowanie i kluczowe wnioski</h2>
-<p>Zrozumienie {topic.lower()} stanowi fundament świadomego rodzicielstwa. Dzięki odpowiedniej wiedzy i praktycznemu podejściu można skutecznie wspierać rozwój dzieci i budować harmonijne relacje rodzinne.</p>
-
-<p>Najważniejsze to pamiętać, że każda rodzina jest inna, a najlepsze rozwiązania to te, które są dostosowane do konkretnych potrzeb i możliwości. Inwestycja w wiedzę zawsze się opłaca.</p>""",
-            'excerpt': f"Kompleksowy i praktyczny przewodnik dotyczący {topic.lower()} - wszystko, co powinni wiedzieć świadomi rodzice."
-        }
+        # RE-RAISE exception instead of returning fallback content
+        # This forces workflow_engine to retry or fail instead of publishing placeholder
+        raise Exception(f"Article generation failed for '{topic}': {str(e)}") from e
 
 
 def generate_article_title_and_plan(category: str, topic: str) -> tuple:

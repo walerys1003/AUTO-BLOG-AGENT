@@ -39,9 +39,11 @@ def get_ai_completion(
     max_tokens: int = 2000,
     temperature: float = 0.7,
     response_format: Optional[Dict[str, str]] = None,
+    max_retries: int = 3,
 ) -> str:
     """
-    Get completion from AI model. In production, raises exception on API failure.
+    Get completion from AI model with retry mechanism for rate limiting.
+    In production, raises exception on API failure after all retries exhausted.
     MockAdapter is DISABLED by default to prevent publishing placeholder content.
     
     Args:
@@ -51,48 +53,72 @@ def get_ai_completion(
         max_tokens: Maximum tokens to generate
         temperature: Temperature for generation
         response_format: Optional response format specification (e.g. {"type": "json_object"})
+        max_retries: Maximum number of retries for rate limiting (default: 3)
         
     Returns:
         Generated text as string
         
     Raises:
-        Exception: If OpenRouter API fails and MockAdapter is disabled (production mode)
+        Exception: If OpenRouter API fails after all retries and MockAdapter is disabled
     """
+    import time
+    
     # Check if MockAdapter is explicitly enabled (for testing only)
     use_mock = os.environ.get('USE_MOCK_ADAPTER', 'false').lower() == 'true'
     
-    try:
-        # Try OpenRouter API
-        response = openrouter_call(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            response_format=response_format
-        )
-        
-        if response:
-            return response
+    # Retry mechanism with exponential backoff
+    for attempt in range(max_retries):
+        try:
+            # Try OpenRouter API
+            response = openrouter_call(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                response_format=response_format
+            )
             
-    except Exception as e:
-        error_msg = str(e)
-        logger.error(f"🚨 OpenRouter API call failed: {error_msg}")
-        
-        # In production (MockAdapter disabled), re-raise the exception
-        if not use_mock:
-            logger.error("❌ PRODUCTION MODE: MockAdapter is DISABLED. Stopping workflow to prevent publishing placeholder content.")
-            logger.error("💡 To enable MockAdapter for testing, set USE_MOCK_ADAPTER=true environment variable.")
-            raise Exception(f"OpenRouter API failed and MockAdapter is disabled in production: {error_msg}")
-        
-        # Only use MockAdapter if explicitly enabled (testing)
-        logger.warning("⚠️ TESTING MODE: Using MockAdapter (USE_MOCK_ADAPTER=true)")
-        if "rate limit" in error_msg.lower():
-            logger.info("Using MockAdapter due to OpenRouter rate limit")
-        elif "temporarily unavailable" in error_msg.lower():
-            logger.info("Using MockAdapter due to OpenRouter service issues")
-        else:
-            logger.info("Using MockAdapter due to OpenRouter API error")
+            if response:
+                if attempt > 0:
+                    logger.info(f"✅ OpenRouter API succeeded on retry attempt {attempt + 1}/{max_retries}")
+                return response
+                
+        except Exception as e:
+            error_msg = str(e)
+            is_rate_limit = "rate limit" in error_msg.lower() or "429" in error_msg
+            is_server_error = "503" in error_msg or "502" in error_msg or "temporarily unavailable" in error_msg.lower()
+            is_timeout = "timeout" in error_msg.lower()
+            
+            # Check if error is retryable
+            is_retryable = is_rate_limit or is_server_error or is_timeout
+            
+            if is_retryable and attempt < max_retries - 1:
+                # Exponential backoff: 2s, 5s, 12s
+                wait_time = 2 ** (attempt + 1)
+                logger.warning(f"⚠️  OpenRouter API error (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                logger.warning(f"⏳ Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+                continue
+            else:
+                # Last attempt or non-retryable error
+                logger.error(f"🚨 OpenRouter API call failed after {attempt + 1} attempts: {error_msg}")
+                
+                # In production (MockAdapter disabled), re-raise the exception
+                if not use_mock:
+                    logger.error("❌ PRODUCTION MODE: MockAdapter is DISABLED. Stopping workflow to prevent publishing placeholder content.")
+                    logger.error("💡 To enable MockAdapter for testing, set USE_MOCK_ADAPTER=true environment variable.")
+                    raise Exception(f"OpenRouter API failed after {attempt + 1} retries and MockAdapter is disabled: {error_msg}")
+                
+                # Only use MockAdapter if explicitly enabled (testing)
+                logger.warning("⚠️ TESTING MODE: Using MockAdapter (USE_MOCK_ADAPTER=true)")
+                if is_rate_limit:
+                    logger.info("Using MockAdapter due to OpenRouter rate limit")
+                elif is_server_error:
+                    logger.info("Using MockAdapter due to OpenRouter service issues")
+                else:
+                    logger.info("Using MockAdapter due to OpenRouter API error")
+                break
     
     # MockAdapter fallback (only in testing mode)
     logger.info("Generating content using fallback MockAdapter")
