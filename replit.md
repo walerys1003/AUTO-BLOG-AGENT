@@ -3,12 +3,13 @@
 ## Overview
 This project is a comprehensive Flask-based blog automation system designed to manage the entire content lifecycle. It automates content creation from topic generation to publication and social media promotion. The system integrates with various AI models via OpenRouter API, manages publishing to WordPress sites, and handles social media distribution, aiming to provide a fully autonomous content generation and marketing solution.
 
-**Current Configuration (Updated November 18, 2025):**
-- **Daily Article Production**: 9 articles total (3 per blog)
-  - MAMATESTUJE.COM: 3 articles/day
-  - ZNANEKOSMETYKI.PL: 3 articles/day
-  - HOMOSONLY.PL: 3 articles/day
-- **Publication Schedule**: Polish business hours (06:00, 07:00, 08:00 UTC / 07:00, 08:00, 09:00 PL)
+**Current Configuration (Updated November 21, 2025):**
+- **AUTOMATIC GENERATION: DISABLED** - Scheduler wyłączony na żądanie użytkownika (Nov 21, 2025)
+- **Daily Article Production**: 9 articles total (3 per blog) - TYLKO MANUALNE GENEROWANIE
+  - MAMATESTUJE.COM: 3 articles/day (manual only)
+  - ZNANEKOSMETYKI.PL: 3 articles/day (manual only)
+  - HOMOSONLY.PL: 3 articles/day (manual only)
+- **Publication Schedule**: Wyłączony - brak automatycznej publikacji o 06:00, 07:00, 08:00 UTC
 - **AI Model**: Anthropic Claude Haiku 4.5 (anthropic/claude-haiku-4.5)
   - Premium quality, cost-effective: ~$0.01-0.10 per article
   - Monthly cost: ~$10-30 for 270 articles

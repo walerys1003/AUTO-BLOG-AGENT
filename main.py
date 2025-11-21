@@ -32,11 +32,12 @@ with app.app_context():
     start_scheduler()
     
     # Start automation scheduler for workflow management
-    try:
-        start_automation_scheduler()
-        logger.info("Automation scheduler started")
-    except Exception as e:
-        logger.error(f"Error starting automation scheduler: {str(e)}")
+    # DISABLED: Scheduler wyłączony na żądanie użytkownika (Nov 20, 2025)
+    # try:
+    #     start_automation_scheduler()
+    #     logger.info("Automation scheduler started")
+    # except Exception as e:
+    #     logger.error(f"Error starting automation scheduler: {str(e)}")
     
     # Initialize SEO module with Google Trends and SerpAPI
     try:
