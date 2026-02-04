@@ -1,14 +1,10 @@
-# 📘 MASTER AGENT AI - Pełna Instrukcja Obsługi Systemu
+Ciociu Krystyno,
 
-## 🎯 CO TO JEST?
+z okazji Nowego Roku życzę Ci przede wszystkim zdrowia, spokoju i codziennej pogody ducha. Niech 2026 przyniesie Ci dużo dobrych chwil: życzliwych ludzi wokół, spokojnych poranków, powodów do uśmiechu i poczucia, że wszystko układa się dokładnie tak, jak powinno.
 
-**MASTER AGENT AI** to inteligentny system do automatycznego tworzenia i publikowania artykułów na blogach WordPress. System działa 24/7 i samodzielnie:
-- Wymyśla tematy artykułów
-- Pisze długie artykuły (2400+ słów)
-- Znajduje obrazy
-- Dodaje tagi SEO
-- Publikuje na WordPress
-- Udostępnia w mediach społecznościowych
+A jako emerytowanej nauczycielce języka rosyjskiego życzę Ci, by Nowy Rok nadal otwierał przed Tobą nowe „lekcje” – już nie w szkolnej klasie, tylko w życiu: piękne spotkania, ciekawe rozmowy i małe odkrycia, które cieszą jak pierwsze zrozumiane słowo w obcym języku.
+
+Szczęśliwego Nowego Roku! 🥂✨
 
 ---
 
