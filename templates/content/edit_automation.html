@@ -73,6 +73,7 @@
   </div>
 
   <form method="post" action="" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="ea-wrap" style="margin: 0;">
 
       <section class="ea-section">

@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 simplified_content_bp = Blueprint("simplified_content", __name__)
 
 @simplified_content_bp.route("/simplified_content", methods=["GET"])
+@login_required
 def simplified_content_page():
     """Render the simplified content generation page"""
     blogs = Blog.query.all()

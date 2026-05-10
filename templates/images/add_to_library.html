@@ -91,6 +91,7 @@
             <div class="tab-panel" id="upload-panel" role="tabpanel" aria-labelledby="upload-tab" hidden>
                 <form method="POST" action="{{ url_for('images.add_to_library') }}"
                       enctype="multipart/form-data" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="source_type" value="upload">
 
                     <div class="form-group">

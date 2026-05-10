@@ -224,6 +224,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="publishForm" method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h3 class="modal-title">Publikuj posty w social media</h3>
                     <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>

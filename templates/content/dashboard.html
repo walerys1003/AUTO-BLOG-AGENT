@@ -112,6 +112,7 @@
                         </a>
                         <form method="POST" action="{{ url_for('content_creator.delete_content', content_id=c.id) }}" style="display:inline;"
                               data-confirm="Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--danger-700);" title="Usuń">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -142,6 +143,7 @@
 <div class="modal" id="topicPickerModal" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-lg">
         <form method="POST" action="{{ url_for('content_creator.generate_content') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header">
                 <h3 class="modal-title">Generuj artykuł z tematu</h3>
                 <button type="button" class="modal-close" data-close-modal="topicPicker"><i class="fas fa-xmark"></i></button>

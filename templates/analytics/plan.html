@@ -21,6 +21,7 @@
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('generate_content_plan') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="blog_id" class="form-label">Blog</label>
                             <select class="form-select" id="blog_id" name="blog_id" required>

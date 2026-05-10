@@ -135,6 +135,7 @@
 
 <form method="POST" action="{{ url_for('publishing.edit_article', content_id=content.id) }}"
       id="edit-form" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="edit-layout">
     <!-- Lewa kolumna: edytor -->
     <div>

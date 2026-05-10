@@ -114,6 +114,7 @@
                             <form method="POST"
                                   action="{{ url_for('images.change_article_image', content_id=content.id) }}"
                                   style="margin:0;width:100%;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="image_type" value="library">
                                 <input type="hidden" name="image_id" value="{{ image.id }}">
                                 <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">
@@ -137,6 +138,7 @@
                 <form method="POST"
                       action="{{ url_for('images.change_article_image', content_id=content.id) }}"
                       enctype="multipart/form-data" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="image_type" value="upload">
 
                     <div class="form-group">

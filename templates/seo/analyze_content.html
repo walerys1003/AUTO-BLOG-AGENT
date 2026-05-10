@@ -38,6 +38,7 @@
         </header>
         <div class="card-body">
             <form action="{{ url_for('seo.analyze_content_page') }}" method="POST" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="primary_keyword" class="form-label">
                         Główne słowo kluczowe <span style="color:var(--danger-700);">*</span>

@@ -16,6 +16,7 @@
     <div class="card">
         <div class="card-body">
             <form action="{{ url_for('edit_calendar_entry', entry_id=entry.id) if entry else url_for('add_calendar_entry') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="blog_id" class="form-label">Blog</label>
@@ -88,6 +89,7 @@
                     {# Inline delete form z globalnym data-confirm handlerem - DRY, brak duplikatu modala #}
                     <form action="{{ url_for('delete_calendar_entry') }}" method="post" style="margin:0;"
                           data-confirm="Czy na pewno chcesz usunąć ten wpis ({{ entry.title }}) z kalendarza treści? Tej operacji nie można cofnąć.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="entry_id" value="{{ entry.id }}">
                         <button type="submit" class="btn btn-outline-danger">
                             <i class="fas fa-trash"></i> Usuń wpis

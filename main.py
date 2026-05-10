@@ -7,6 +7,7 @@ keeping a single source of truth for the app's URL map.
 """
 
 import logging
+import os
 
 from app import app, db
 from routes import register_routes  # noqa: F401 - registered via app.py
@@ -14,8 +15,7 @@ from utils.scheduler import start_scheduler
 from utils.seo.analyzer import initialize_seo_module
 from models import Blog  # noqa: F401 - imported to ensure model is loaded
 
-# Setup logging
-logging.basicConfig(level=logging.DEBUG)
+# Logging is already configured in app.py — just get the logger here
 logger = logging.getLogger(__name__)
 
 
@@ -75,4 +75,9 @@ with app.app_context():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Production should use gunicorn. Local dev: FLASK_DEBUG=1 enables debugger.
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    port = int(os.environ.get("PORT", "5000"))
+    host = os.environ.get("HOST", "0.0.0.0")
+    logger.info("Starting Flask dev server on %s:%s (debug=%s)", host, port, debug)
+    app.run(host=host, port=port, debug=debug)

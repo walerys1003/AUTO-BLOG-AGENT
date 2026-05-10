@@ -21,6 +21,7 @@ newsletter_bp = Blueprint('newsletter', __name__, url_prefix='/newsletter')
 
 # Newsletter Dashboard
 @newsletter_bp.route('/')
+@login_required
 def dashboard():
     """Newsletter dashboard view"""
     # Get all blogs with newsletter config
@@ -67,6 +68,7 @@ def dashboard():
 
 # Subscribers Management
 @newsletter_bp.route('/subscribers')
+@login_required
 def subscribers():
     """View and manage subscribers"""
     subscribers = Subscriber.query.order_by(Subscriber.created_at.desc()).all()
@@ -244,6 +246,7 @@ def newsletter_config(blog_id):
 
 # Newsletter Management
 @newsletter_bp.route('/newsletters')
+@login_required
 def newsletters():
     """View and manage newsletters"""
     newsletters = Newsletter.query.order_by(desc(Newsletter.created_at)).all()
@@ -334,6 +337,7 @@ def create_newsletter(blog_id):
     )
 
 @newsletter_bp.route('/preview/<int:newsletter_id>')
+@login_required
 def preview_newsletter(newsletter_id):
     """Preview a newsletter"""
     newsletter = Newsletter.query.get(newsletter_id)

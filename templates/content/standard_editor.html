@@ -77,6 +77,7 @@
   </div>
 
   <form id="editor-form" method="post" action="{{ url_for('content_creator.edit_content', content_id=content_log.id if content_log else 0) }}" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="se-grid">
       <div style="display: grid; gap: 1.25rem;">
         <div class="se-card">

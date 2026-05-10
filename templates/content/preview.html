@@ -133,6 +133,7 @@
                     {% if content_log.status == 'ready_to_publish' %}
                     <form action="{{ url_for('content_creator.publish_content', content_id=content_log.id) }}"
                           method="post" data-confirm="Na pewno opublikować ten artykuł?" style="margin-top:1rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="topic_id" value="{{ topic.id if topic else '' }}">
                         <button type="submit" class="btn btn-success btn--block">
                             <i class="fas fa-paper-plane" aria-hidden="true"></i> Opublikuj teraz

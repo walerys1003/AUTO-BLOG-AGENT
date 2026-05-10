@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 scheduling_bp = Blueprint('scheduling', __name__, url_prefix='/scheduling')
 
 @scheduling_bp.route('/dashboard')
+@login_required
 def scheduling_dashboard():
     """Dashboard for publication scheduling management"""
     try:
@@ -251,6 +252,7 @@ def get_scheduling_analytics(blog_id: int):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/calendar/<int:blog_id>')
+@login_required
 def calendar_view(blog_id: int):
     """Calendar view of scheduled publications"""
     try:

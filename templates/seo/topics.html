@@ -36,6 +36,7 @@
     </header>
     <div class="card-body">
         <form action="{{ url_for('seo.generate_topics') }}" method="POST" class="gen-form" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group" style="grid-column:span 5;">
                 <label for="blog_id" class="form-label">Blog <span style="color:var(--danger-700);">*</span></label>
                 <select class="form-control" id="blog_id" name="blog_id" required>
@@ -93,6 +94,7 @@
     </header>
     <div class="card-body">
         <form action="{{ url_for('seo.approve_all_topics') }}" method="POST" class="bulk-form" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group" style="flex:1;">
                 <label for="bulk_blog_id" class="form-label">Wybierz blog <span style="color:var(--danger-700);">*</span></label>
                 <select class="form-control" id="bulk_blog_id" name="blog_id" required>
@@ -161,11 +163,13 @@
                         <td style="text-align:right;white-space:nowrap;">
                             {% if section.key == 'pending' %}
                             <form action="{{ url_for('seo.approve_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-ghost btn-success-ghost" title="Zatwierdź" aria-label="Zatwierdź">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
                             <form action="{{ url_for('seo.reject_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-ghost btn-danger-ghost" title="Odrzuć" aria-label="Odrzuć">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -173,6 +177,7 @@
                             {% else %}
                             <form action="{{ url_for('seo.delete_topic', topic_id=topic.id) }}" method="POST" style="display:inline;"
                                   data-confirm="Czy na pewno chcesz usunąć ten temat?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-ghost btn-danger-ghost" title="Usuń" aria-label="Usuń">
                                     <i class="fas fa-trash"></i>
                                 </button>

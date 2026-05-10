@@ -169,6 +169,7 @@
                                               method="post"
                                               data-confirm="Czy na pewno chcesz usunąć ten temat?"
                                               style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit"
                                                     class="dropdown-item dropdown-item--danger"
                                                     role="menuitem">
@@ -220,6 +221,7 @@
             </button>
         </header>
         <form action="{{ url_for('seo_inspiration.generate_inspirations') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-body">
                 <div class="form-group">
                     <label for="gen_blog_id" class="form-label">Blog</label>
@@ -271,6 +273,7 @@
             </button>
         </header>
         <form action="{{ url_for('seo_inspiration.add_manual_topic') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-body">
                 <div class="form-group">
                     <label for="manual_blog_id" class="form-label">Blog <span class="required">*</span></label>

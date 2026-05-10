@@ -23,6 +23,7 @@
       Edycja postu — {{ p_meta.label }}
     </h1>
     <form action="{{ url_for('social.regenerate_post', content_id=content.id, platform=platform) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-secondary">
         <i class="fas fa-sync-alt"></i> Wygeneruj ponownie
       </button>
@@ -37,6 +38,7 @@
       <h2 class="card-title"><i class="fas fa-pen"></i> Treść postu</h2>
     </header>
     <form action="{{ url_for('social.edit_post', content_id=content.id, platform=platform) }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="card-body stack-md">
         <div class="field">
           <label class="field-label" for="content">Treść <span class="text-danger">*</span></label>

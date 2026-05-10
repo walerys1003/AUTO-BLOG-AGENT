@@ -18,6 +18,7 @@ seo_inspiration_bp = Blueprint('seo_inspiration', __name__)
 
 
 @seo_inspiration_bp.route('/seo-inspirations')
+@login_required
 def seo_inspirations():
     """SEO inspirations dashboard view"""
     # Get all blogs

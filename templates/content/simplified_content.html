@@ -98,6 +98,7 @@
                               action="{{ url_for('content_creator.publish_content', content_id=content.id) }}"
                               data-confirm="Na pewno opublikować ten artykuł?"
                               style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fas fa-paper-plane" aria-hidden="true"></i> Publikuj
                             </button>

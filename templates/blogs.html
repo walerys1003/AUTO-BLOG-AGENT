@@ -245,6 +245,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
                 <form id="deleteBlogForm" action="{{ url_for('delete_blog', blog_id=0) }}" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Usuń blog
                     </button>

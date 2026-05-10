@@ -9,11 +9,13 @@ from auth import login_required
 monitoring_bp = Blueprint('monitoring', __name__)
 
 @monitoring_bp.route('/', methods=['GET'])
+@login_required
 def metrics_dashboard():
     """Główny panel monitorowania"""
     return redirect(url_for('monitoring.show_metrics'))
 
 @monitoring_bp.route('/metrics', methods=['GET'])
+@login_required
 def show_metrics():
     """Wyświetla panel monitorowania z metrykami generowania treści"""
     days = request.args.get('days', 7, type=int)

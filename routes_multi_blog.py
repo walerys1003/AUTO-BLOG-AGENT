@@ -1,3 +1,4 @@
+import logging
 from flask import request, jsonify, render_template, Blueprint
 from app import db
 from models import Blog, Category, AutomationRule, ContentLog
@@ -7,10 +8,13 @@ import requests
 from requests.auth import HTTPBasicAuth
 from auth import login_required
 
+logger = logging.getLogger(__name__)
+
 # Create blueprint for multi-blog management
 multi_blog_bp = Blueprint('multi_blog', __name__)
 
 @multi_blog_bp.route('/multi-blog')
+@login_required
 def multi_blog_management():
     """Multi-blog management interface"""
     return render_template('multi_blog_management.html')
@@ -422,7 +426,7 @@ def create_default_automation_rule(blog_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating default automation rule: {e}")
+        logger.error("Error creating default automation rule: %s", e)
         return False
 
 

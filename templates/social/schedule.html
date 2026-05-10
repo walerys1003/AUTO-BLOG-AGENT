@@ -448,6 +448,7 @@
         </button>
       </header>
       <form action="{{ url_for('social.update_schedule_settings') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
 
           <div class="settings-section">
@@ -559,6 +560,7 @@
         </button>
       </header>
       <form action="{{ url_for('social.schedule_post') }}" method="post" data-validate id="schedulePostForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <div class="form-grid form-grid--2">
             <div class="form-group">
@@ -664,6 +666,7 @@
         </button>
       </header>
       <form action="" method="post" id="deleteScheduledForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p style="margin: 0 0 var(--space-3);">Czy na pewno chcesz usunąć ten zaplanowany post?</p>
           <div class="alert alert-warning" style="margin: 0;">

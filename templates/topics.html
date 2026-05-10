@@ -109,12 +109,14 @@
                         <div style="display:inline-flex;gap:.25rem;">
                         {% if topic.status == 'pending' %}
                             <form action="{{ url_for('approve_topic', topic_id=topic.id) }}" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Zaakceptuj"
                                         style="color:var(--status-success-fg);">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
                             <form action="{{ url_for('reject_topic', topic_id=topic.id) }}" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Odrzuć"
                                         style="color:var(--status-warning-fg);">
                                     <i class="fas fa-xmark"></i>
@@ -123,6 +125,7 @@
                         {% endif %}
                         <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="post" style="display:inline;"
                               data-confirm="Czy na pewno chcesz usunąć ten temat?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Usuń temat"
                                     style="color:var(--status-danger-fg);">
                                 <i class="fas fa-trash"></i>
@@ -189,6 +192,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="{{ url_for('generate_topics') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h3 class="modal-title">Generowanie nowych tematów</h3>
                     <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>

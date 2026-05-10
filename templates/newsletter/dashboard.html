@@ -179,6 +179,7 @@
                                 {% if newsletter.status != 'sent' %}
                                 <form action="{{ url_for('newsletter.send_newsletter', newsletter_id=newsletter.id) }}"
                                       method="post" data-confirm="Na pewno wysłać ten newsletter?" style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm btn-success" title="Wyślij" aria-label="Wyślij newsletter">
                                         <i class="fas fa-paper-plane" aria-hidden="true"></i>
                                     </button>

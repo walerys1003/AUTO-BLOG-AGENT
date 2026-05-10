@@ -38,6 +38,7 @@
 {% block content %}
 
 <form id="editorForm" method="POST" action="{{ url_for('content_creator.edit_content', content_id=content_log.id) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="action" id="formAction" value="save">
     <input type="hidden" name="topic_id" value="{{ topic_id or '' }}">
 
@@ -261,6 +262,7 @@
                 <div class="card-footer" style="background:var(--danger-50);justify-content:flex-start;">
                     <form method="POST" action="{{ url_for('content_creator.delete_content', content_id=content_log.id) }}"
                           data-confirm="Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć." style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger-700);">
                             <i class="fas fa-trash"></i> Usuń artykuł
                         </button>

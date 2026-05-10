@@ -251,6 +251,7 @@
 
     <!-- Formularz edycji -->
     <form method="POST" class="edit-form" id="edit-form" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <!-- Zawartość artykułu -->
       <section class="editor-section">
         <header class="editor-section__head">
@@ -517,6 +518,7 @@
         </button>
       </header>
       <form id="cancel-form" method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p style="margin: 0 0 var(--space-3);">Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
           <div class="alert alert-warning" style="margin: 0;">

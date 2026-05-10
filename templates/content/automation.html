@@ -86,6 +86,7 @@
                                     <form method="post"
                                           action="{{ url_for('content_creator.toggle_automation_rule', rule_id=rule.id) }}"
                                           data-confirm="Czy na pewno chcesz wyłączyć tę regułę?" style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-ghost"
                                                 title="Wyłącz" aria-label="Wyłącz regułę">
                                             <i class="fas fa-pause" aria-hidden="true"></i>
@@ -94,6 +95,7 @@
                                     <form method="post"
                                           action="{{ url_for('content_creator.run_automation_rule', rule_id=rule.id) }}"
                                           data-confirm="Uruchomić tę regułę teraz?" style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-success-ghost"
                                                 title="Uruchom teraz" aria-label="Uruchom regułę teraz">
                                             <i class="fas fa-play" aria-hidden="true"></i>
@@ -102,6 +104,7 @@
                                     <form method="post"
                                           action="{{ url_for('content_creator.delete_automation_rule', rule_id=rule.id) }}"
                                           data-confirm="Czy na pewno chcesz usunąć tę regułę? Tej akcji nie można cofnąć." style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger-ghost"
                                                 title="Usuń" aria-label="Usuń regułę">
                                             <i class="fas fa-trash-alt" aria-hidden="true"></i>
@@ -173,6 +176,7 @@
                                     <form method="post"
                                           action="{{ url_for('content_creator.toggle_automation_rule', rule_id=rule.id) }}"
                                           data-confirm="Aktywować tę regułę?" style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-success-ghost"
                                                 title="Aktywuj" aria-label="Aktywuj regułę">
                                             <i class="fas fa-play" aria-hidden="true"></i>
@@ -181,6 +185,7 @@
                                     <form method="post"
                                           action="{{ url_for('content_creator.delete_automation_rule', rule_id=rule.id) }}"
                                           data-confirm="Czy na pewno chcesz usunąć tę regułę? Tej akcji nie można cofnąć." style="display:inline;margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger-ghost"
                                                 title="Usuń" aria-label="Usuń regułę">
                                             <i class="fas fa-trash-alt" aria-hidden="true"></i>

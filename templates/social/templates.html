@@ -392,6 +392,7 @@
         </button>
       </header>
       <form action="{{ url_for('social.add_template') }}" method="post" data-validate id="addTemplateForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <div class="form-grid form-grid--2">
             <div class="form-group">
@@ -473,6 +474,7 @@
         </button>
       </header>
       <form action="" method="post" data-validate id="editTemplateForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <div class="form-grid form-grid--2">
             <div class="form-group">
@@ -548,6 +550,7 @@
         </button>
       </header>
       <form action="" method="post" id="deleteTemplateForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p style="margin: 0 0 var(--space-3);">
             Czy na pewno chcesz usunąć szablon <strong id="deleteTemplateName">—</strong>?

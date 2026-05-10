@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 automation_bp = Blueprint('automation', __name__, url_prefix='/automation')
 
 @automation_bp.route('/dashboard')
+@login_required
 def dashboard():
     """Dashboard automatyzacji treści"""
     try:
@@ -314,6 +315,7 @@ def api_stats_overview():
         }), 500
 
 @automation_bp.route('/topics')
+@login_required
 def topics_management():
     """Strona zarządzania tematami"""
     try:
@@ -354,6 +356,7 @@ def topics_management():
         return redirect(url_for('automation.dashboard'))
 
 @automation_bp.route('/logs')
+@login_required
 def execution_logs():
     """Strona logów wykonania automatyzacji"""
     try:

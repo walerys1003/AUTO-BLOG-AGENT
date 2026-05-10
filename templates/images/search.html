@@ -145,6 +145,7 @@
             </button>
         </header>
         <form id="image-selection-form" method="POST" action="" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-body">
                 <input type="hidden" name="image_type" value="search">
                 <input type="hidden" name="image_data" id="selected-image-data">

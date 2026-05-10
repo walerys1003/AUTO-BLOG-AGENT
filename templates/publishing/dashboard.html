@@ -270,6 +270,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
                 <form id="publishForm" method="POST" action="" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publikuj teraz</button>
                 </form>
             </div>
@@ -297,6 +298,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-modal-close>Pozostaw w harmonogramie</button>
                 <form id="cancelForm" method="POST" action="" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger"><i class="fas fa-xmark"></i> Anuluj publikację</button>
                 </form>
             </div>

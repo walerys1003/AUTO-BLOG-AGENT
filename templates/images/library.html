@@ -91,6 +91,7 @@
                               action="{{ url_for('images.delete_from_library', image_id=image.id) }}"
                               data-confirm="Czy na pewno chcesz usunąć ten obraz z biblioteki?"
                               style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-danger-ghost"
                                     title="Usuń obraz" aria-label="Usuń obraz">
                                 <i class="fas fa-trash-alt" aria-hidden="true"></i>

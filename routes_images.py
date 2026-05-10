@@ -24,11 +24,13 @@ from utils.images.finder import search_images as find_images, get_image_details
 from auth import login_required
 
 @images_bp.route('/')
+@login_required
 def index():
     """Images dashboard"""
     return redirect(url_for('images.image_library'))
 
 @images_bp.route('/search')
+@login_required
 def search_images():
     """Search for images from various sources"""
     query = request.args.get('query', '')
@@ -61,6 +63,7 @@ def search_images():
     )
 
 @images_bp.route('/library')
+@login_required
 def image_library():
     """View image library"""
     selected_blog_id = request.args.get('blog_id', '')
@@ -226,6 +229,7 @@ def delete_from_library(image_id):
         return redirect(url_for('images.image_library'))
 
 @images_bp.route('/article/<int:content_id>')
+@login_required
 def preview_article_image(content_id):
     """Preview article image"""
     content = ContentLog.query.get_or_404(content_id)

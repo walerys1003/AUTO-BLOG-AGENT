@@ -18,6 +18,7 @@ social_bp = Blueprint('social', __name__)
 logger = logging.getLogger(__name__)
 
 @social_bp.route('/social/dashboard')
+@login_required
 def social_dashboard():
     """Social media dashboard"""
     # Get blogs for filter
@@ -85,6 +86,7 @@ def social_dashboard():
     )
 
 @social_bp.route('/social/accounts')
+@login_required
 def social_accounts():
     """Social media accounts management"""
     # Get all social accounts
@@ -337,6 +339,7 @@ def publish_posts(content_id):
         return redirect(url_for('social.social_dashboard'))
 
 @social_bp.route('/social/posts/<int:content_id>/preview', methods=['GET'])
+@login_required
 def preview_posts(content_id):
     """Preview social media posts"""
     # Get content
@@ -436,6 +439,7 @@ def get_post_status(content_id):
 
 
 @social_bp.route('/social/statistics')
+@login_required
 def social_statistics():
     """Social media statistics dashboard"""
     # Get date range parameters
@@ -583,6 +587,7 @@ def social_statistics():
     )
 
 @social_bp.route('/social/templates')
+@login_required
 def social_templates():
     """Social media content templates"""
     # Get templates from database
@@ -698,6 +703,7 @@ def delete_template(template_id):
     return redirect(url_for('social.social_templates'))
 
 @social_bp.route('/social/schedule')
+@login_required
 def social_schedule():
     """Social media scheduling calendar"""
     # Get scheduled posts

@@ -30,6 +30,7 @@ def split_filter(value, delimiter=' '):
 
 
 @content_creator_bp.route('/content-creator')
+@login_required
 def content_dashboard():
     """Content creation dashboard view"""
     # Get all blogs
@@ -404,6 +405,7 @@ def edit_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/preview/<int:content_id>')
+@login_required
 def preview_content(content_id):
     """Preview content before publishing"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -839,6 +841,7 @@ def generate_dynamic_paragraph():
 # Automation routes
 
 @content_creator_bp.route('/content-creator/automation')
+@login_required
 def automation_dashboard():
     """Content automation dashboard view"""
     # Get all blogs

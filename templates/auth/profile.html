@@ -47,6 +47,7 @@
                 </div>
             </div>
             <form method="POST" action="{{ url_for('auth.update_profile') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-body">
                     <div class="grid grid-cols-2" style="gap: var(--space-4);">
                         <div class="form-group" style="margin:0;">
@@ -75,6 +76,7 @@
                 </div>
             </div>
             <form method="POST" action="{{ url_for('auth.update_profile') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-body">
                     <div class="form-group">
                         <label class="form-label" for="current_password">Aktualne hasło</label>

@@ -26,6 +26,7 @@
         </header>
         <div class="card-body">
             <form action="{{ url_for('custom_report') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="blog_id" class="form-label">Blog <span style="color:var(--danger-700);">*</span></label>
                     <select class="form-control" id="blog_id" name="blog_id" required>

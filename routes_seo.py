@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 seo_bp = Blueprint('seo', __name__, url_prefix='/seo')
 
 @seo_bp.route('/')
+@login_required
 def index():
     """SEO dashboard page"""
     # Get stats for topics
@@ -83,6 +84,7 @@ def index():
         return render_template('seo/dashboard.html')
 
 @seo_bp.route('/trends')
+@login_required
 def trends():
     """View current trends"""
     try:
@@ -94,11 +96,13 @@ def trends():
         return render_template('seo/trends.html', trends=[])
 
 @seo_bp.route('/keywords')
+@login_required
 def keywords():
     """Keyword research and analysis"""
     return render_template('seo/keywords.html')
 
 @seo_bp.route('/topics')
+@login_required
 def topics():
     """View and manage article topics"""
     # Get topics with join to Blog

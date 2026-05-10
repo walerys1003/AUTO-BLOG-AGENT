@@ -70,6 +70,7 @@
                         {% if current_user and u.id != current_user.id %}
                         <form method="POST" action="{{ url_for('auth.delete_user', user_id=u.id) }}" style="display:inline;"
                               data-confirm="Czy na pewno chcesz usunąć użytkownika {{ u.username }}? Tej operacji nie można cofnąć.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--status-danger-fg);">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -98,6 +99,7 @@
 <div class="modal" id="createUserModal" role="dialog" aria-modal="true">
     <div class="modal-dialog">
         <form method="POST" action="{{ url_for('auth.create_user') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header">
                 <h3 class="modal-title">Nowy użytkownik</h3>
                 <button type="button" class="modal-close" aria-label="Zamknij"
@@ -149,6 +151,7 @@
 <div class="modal" id="editUser-{{ u.id }}" role="dialog" aria-modal="true">
     <div class="modal-dialog">
         <form method="POST" action="{{ url_for('auth.update_user', user_id=u.id) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header">
                 <h3 class="modal-title">Edytuj: {{ u.username }}</h3>
                 <button type="button" class="modal-close" aria-label="Zamknij"
