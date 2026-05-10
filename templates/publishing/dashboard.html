@@ -1,337 +1,334 @@
 {% extends "base.html" %}
+{% block title %}Publikacje — MasterContentAI{% endblock %}
 
-{% block title %}Publishing Dashboard - BLOG AUTOMATION MASTER{% endblock %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('dashboard') }}">Pulpit</a></li>
+    <li class="breadcrumb-separator"></li>
+    <li>Publikacje</li>
+</ol>
+{% endblock %}
+
+{% block page_title %}Publikacje{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj publikacją artykułów na blogach WordPress.</p>{% endblock %}
+
+{% block page_actions %}
+    <form method="get" style="display:inline;">
+        <select name="blog_id" class="form-control" style="min-width:200px;" onchange="this.form.submit()">
+            <option value="">Wszystkie blogi</option>
+            {% for blog in blogs %}
+                <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-primary">
+        <i class="fas fa-calendar-days"></i> Kalendarz
+    </a>
+{% endblock %}
 
 {% block content %}
-<section class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="h2 mb-1">WordPress Publishing Dashboard</h1>
-            <p class="text-muted">Manage content publication to WordPress blogs</p>
+
+{# ─────────────────── KARTY STATYSTYK ─────────────────── #}
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--brand-50);color:var(--brand-600);">
+            <i class="fas fa-clock"></i>
         </div>
-        <div class="col-auto">
-            <form id="blog-filter-form" class="row g-3">
-                <div class="col-auto">
-                    <select name="blog_id" id="blog-filter" class="form-select" onchange="this.form.submit()">
-                        <option value="">All Blogs</option>
-                        {% for blog in blogs %}
-                        <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </form>
+        <div>
+            <div class="stat-card-value">{{ pending_count }}</div>
+            <div class="stat-card-label">Zaplanowane do publikacji</div>
+            <a href="{{ url_for('publishing.pending_articles', status='scheduled') }}"
+               style="font-size:.75rem;color:var(--brand-600);text-decoration:none;">
+                Zobacz wszystkie →
+            </a>
         </div>
     </div>
-
-    <!-- Status Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card border-primary h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-25 p-3 rounded-3 me-3">
-                            <i class="fas fa-calendar-alt text-primary fa-2x"></i>
-                        </div>
-                        <div>
-                            <h5 class="card-title mb-0">Scheduled</h5>
-                            <p class="text-muted small mb-0">Pending publication</p>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-0">{{ pending_count }}</h2>
-                    <div class="mt-3">
-                        <a href="{{ url_for('publishing.pending_articles', status='scheduled') }}" class="btn btn-sm btn-outline-primary">View All</a>
-                    </div>
-                </div>
-            </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--success-50);color:var(--success-700);">
+            <i class="fas fa-circle-check"></i>
         </div>
-        <div class="col-md-4">
-            <div class="card border-success h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-success bg-opacity-25 p-3 rounded-3 me-3">
-                            <i class="fas fa-check-circle text-success fa-2x"></i>
-                        </div>
-                        <div>
-                            <h5 class="card-title mb-0">Published</h5>
-                            <p class="text-muted small mb-0">Successfully published</p>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-0">{{ published_count }}</h2>
-                    <div class="mt-3">
-                        <a href="{{ url_for('publishing.publication_history', status='published') }}" class="btn btn-sm btn-outline-success">View History</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-danger h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-danger bg-opacity-25 p-3 rounded-3 me-3">
-                            <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
-                        </div>
-                        <div>
-                            <h5 class="card-title mb-0">Failed</h5>
-                            <p class="text-muted small mb-0">Publication errors</p>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-0">{{ failed_count }}</h2>
-                    <div class="mt-3">
-                        <a href="{{ url_for('publishing.publication_history', status='failed') }}" class="btn btn-sm btn-outline-danger">View Errors</a>
-                    </div>
-                </div>
-            </div>
+        <div>
+            <div class="stat-card-value">{{ published_count }}</div>
+            <div class="stat-card-label">Opublikowane</div>
+            <a href="{{ url_for('publishing.publication_history', status='published') }}"
+               style="font-size:.75rem;color:var(--success-700);text-decoration:none;">
+                Zobacz historię →
+            </a>
         </div>
     </div>
-
-    <!-- Quick Links -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Quick Actions</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-primary">
-                            <i class="fas fa-calendar-alt me-2"></i> Publication Schedule
-                        </a>
-                        <a href="{{ url_for('publishing.workload_visualization') }}" class="btn btn-primary">
-                            <i class="fas fa-chart-bar me-2"></i> Workload Visualization
-                        </a>
-                        <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-info">
-                            <i class="fas fa-list-ul me-2"></i> Pending Articles
-                        </a>
-                        <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-secondary">
-                            <i class="fas fa-history me-2"></i> Publication History
-                        </a>
-                        <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-dark">
-                            <i class="fas fa-pen-fancy me-2"></i> Create New Content
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--danger-50);color:var(--danger-700);">
+            <i class="fas fa-circle-exclamation"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ failed_count }}</div>
+            <div class="stat-card-label">Nieudane publikacje</div>
+            <a href="{{ url_for('publishing.publication_history', status='failed') }}"
+               style="font-size:.75rem;color:var(--danger-700);text-decoration:none;">
+                Zobacz błędy →
+            </a>
         </div>
     </div>
+</div>
 
-    <!-- Recent Articles -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Articles</h5>
-                    <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-sm btn-outline-secondary">View All</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Title</th>
-                                <th>Blog</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for article in recent_articles %}
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold text-truncate" style="max-width: 300px;">{{ article.title }}</div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-dark">{{ article.blog.name }}</span>
-                                </td>
-                                <td>
-                                    {% if article.status == 'published' %}
-                                    <span class="badge bg-success">Published</span>
-                                    {% elif article.status == 'scheduled' %}
-                                    <span class="badge bg-info">Scheduled</span>
-                                    {% elif article.status == 'draft' %}
-                                    <span class="badge bg-secondary">Draft</span>
-                                    {% elif article.status == 'pending_review' %}
-                                    <span class="badge bg-warning">Pending Review</span>
-                                    {% elif article.status == 'failed' %}
-                                    <span class="badge bg-danger">Failed</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">{{ article.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if article.publish_date %}
-                                    <span data-bs-toggle="tooltip" title="{{ article.publish_date.strftime('%Y-%m-%d %H:%M') }}">
-                                        {{ article.publish_date.strftime('%b %d, %Y') }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted">--</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}" class="btn btn-outline-primary" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{{ url_for('publishing.preview_article', content_id=article.id) }}" class="btn btn-outline-info" title="Preview">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if article.status == 'scheduled' %}
-                                        <button type="button" class="btn btn-outline-danger cancel-publication" data-id="{{ article.id }}" data-bs-toggle="modal" data-bs-target="#cancelModal" title="Cancel">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        {% elif article.status == 'draft' or article.status == 'pending_review' %}
-                                        <button type="button" class="btn btn-outline-success publish-now" data-id="{{ article.id }}" data-bs-toggle="modal" data-bs-target="#publishModal" title="Publish">
-                                            <i class="fas fa-paper-plane"></i>
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
+{# ─────────────────── SZYBKIE AKCJE ─────────────────── #}
+<div class="card mb-6">
+    <div class="card-header"><h3 class="card-title">Szybkie akcje</h3></div>
+    <div class="card-body" style="display:flex;flex-wrap:wrap;gap:.5rem;">
+        <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-calendar-days"></i> Harmonogram publikacji
+        </a>
+        <a href="{{ url_for('publishing.workload_visualization') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-chart-column"></i> Wizualizacja obciążenia
+        </a>
+        <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-list-check"></i> Artykuły oczekujące
+        </a>
+        <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-ghost btn-sm">
+            <i class="fas fa-clock-rotate-left"></i> Historia publikacji
+        </a>
+        <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-accent btn-sm">
+            <i class="fas fa-pen-nib"></i> Utwórz nowy artykuł
+        </a>
+    </div>
+</div>
+
+{# ─────────────────── DWIE KOLUMNY: tabela + harmonogram ─────────────────── #}
+{%- set status_pl = {
+    'published':'Opublikowany',
+    'scheduled':'Zaplanowany',
+    'draft':'Wersja robocza',
+    'pending_review':'Do akceptacji',
+    'failed':'Błąd',
+    'ready_to_publish':'Gotowy do publikacji'
+} -%}
+{%- set status_badge = {
+    'published':'success',
+    'scheduled':'info',
+    'draft':'neutral',
+    'pending_review':'warning',
+    'failed':'danger',
+    'ready_to_publish':'info'
+} -%}
+
+<div class="grid grid-cols-3 gap-6">
+
+    {# Ostatnie artykuły (2/3 szerokości) #}
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3 class="card-title">Ostatnie artykuły</h3>
+            <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-ghost btn-sm">Wszystkie</a>
+        </div>
+
+        {% if recent_articles %}
+        <div class="table-wrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Tytuł</th>
+                        <th>Blog</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th class="text-right">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in recent_articles %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;color:var(--text-primary);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ article.title }}
+                            </div>
+                        </td>
+                        <td><span class="badge badge-neutral">{{ article.blog.name }}</span></td>
+                        <td>
+                            <span class="badge badge-{{ status_badge.get(article.status, 'neutral') }}">
+                                {{ status_pl.get(article.status, article.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if article.publish_date %}
+                                <span title="{{ article.publish_date.strftime('%Y-%m-%d %H:%M') }}"
+                                      style="color:var(--text-secondary);font-size:.8125rem;">
+                                    {{ article.publish_date.strftime('%d.%m.%Y') }}
+                                </span>
                             {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center py-3">
-                                    <div class="text-muted">
-                                        <i class="fas fa-info-circle me-2"></i> No recent articles found
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                <span style="color:var(--text-tertiary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <div style="display:inline-flex;gap:.25rem;">
+                                <a href="{{ url_for('publishing.edit_article', content_id=article.id) }}"
+                                   class="btn btn-ghost btn-icon btn-sm" title="Edytuj" aria-label="Edytuj">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <a href="{{ url_for('publishing.preview_article', content_id=article.id) }}"
+                                   class="btn btn-ghost btn-icon btn-sm" title="Podgląd" aria-label="Podgląd">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if article.status == 'scheduled' %}
+                                    <button type="button" class="btn btn-ghost btn-icon btn-sm js-cancel-pub"
+                                            data-id="{{ article.id }}"
+                                            data-title="{{ article.title }}"
+                                            title="Anuluj publikację" aria-label="Anuluj"
+                                            style="color:var(--danger-700);">
+                                        <i class="fas fa-xmark"></i>
+                                    </button>
+                                {% elif article.status in ['draft','pending_review','ready_to_publish'] %}
+                                    <button type="button" class="btn btn-ghost btn-icon btn-sm js-publish-now"
+                                            data-id="{{ article.id }}"
+                                            data-title="{{ article.title }}"
+                                            title="Opublikuj teraz" aria-label="Opublikuj"
+                                            style="color:var(--success-700);">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        
-        <!-- Upcoming Schedule -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Upcoming Publications</h5>
-                    <div>
-                        <a href="{{ url_for('publishing.workload_visualization') }}" class="btn btn-sm btn-outline-primary me-1">
-                            <i class="fas fa-chart-bar"></i>
-                        </a>
-                        <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-sm btn-outline-secondary">
-                            Calendar View
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for item in schedule_summary %}
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1 text-truncate" style="max-width: 200px;">
-                                    {% set content = item.content %}
-                                    {% if content %}
-                                    {{ content.title }}
-                                    {% else %}
-                                    Untitled
-                                    {% endif %}
-                                </h6>
-                                <small>
-                                    {{ item.publish_date.strftime('%b %d') }}
-                                    <span class="ms-1 badge {% if item.publish_time.hour < 12 %}bg-warning{% else %}bg-info{% endif %}">
-                                        {{ item.publish_time.strftime('%I:%M %p') }}
-                                    </span>
-                                </small>
+        {% else %}
+        <div class="empty-state" style="padding:2rem;">
+            <div class="empty-state-icon"><i class="fas fa-newspaper"></i></div>
+            <h4 class="empty-state-title">Brak artykułów</h4>
+            <p class="empty-state-description">Utwórz pierwszy artykuł, aby zobaczyć tu listę publikacji.</p>
+            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Utwórz artykuł
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Najbliższe publikacje (1/3) #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Najbliższe publikacje</h3>
+            <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-ghost btn-sm" title="Kalendarz">
+                <i class="fas fa-calendar"></i>
+            </a>
+        </div>
+        <div class="card-body" style="padding:.25rem;">
+            {% if schedule_summary %}
+                <div class="stack">
+                {% for item in schedule_summary %}
+                    {% set content = item.content %}
+                    <div style="padding:.75rem;border-bottom:1px solid var(--border-subtle);">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.25rem;">
+                            <div style="font-weight:600;color:var(--text-primary);font-size:.875rem;line-height:1.3;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ content.title if content else 'Bez tytułu' }}
                             </div>
-                            <p class="mb-1">
-                                <span class="badge bg-dark">{{ item.blog.name }}</span>
-                            </p>
-                            <small>
-                                {% if content %}
-                                {% if content.status == 'published' %}
-                                <span class="text-success"><i class="fas fa-check-circle me-1"></i> Published</span>
-                                {% elif content.status == 'scheduled' %}
-                                <span class="text-info"><i class="fas fa-clock me-1"></i> Scheduled</span>
-                                {% elif content.status == 'draft' %}
-                                <span class="text-secondary"><i class="fas fa-file-alt me-1"></i> Draft</span>
-                                {% elif content.status == 'pending_review' %}
-                                <span class="text-warning"><i class="fas fa-user-edit me-1"></i> Pending Review</span>
-                                {% elif content.status == 'failed' %}
-                                <span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i> Failed</span>
-                                {% else %}
-                                <span class="text-muted">{{ content.status }}</span>
-                                {% endif %}
-                                {% else %}
-                                <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Content not found</span>
-                                {% endif %}
-                            </small>
-                        </div>
-                        {% else %}
-                        <div class="list-group-item text-center py-4">
-                            <div class="text-muted">
-                                <i class="fas fa-calendar-day fa-2x mb-3"></i>
-                                <p>No upcoming publications</p>
+                            <div style="font-size:.6875rem;color:var(--text-tertiary);white-space:nowrap;">
+                                {{ item.publish_date.strftime('%d.%m') }}
+                                <span class="badge badge-{{ 'warning' if item.publish_time.hour < 12 else 'info' }}" style="font-size:.625rem;margin-left:.25rem;">
+                                    {{ item.publish_time.strftime('%H:%M') }}
+                                </span>
                             </div>
                         </div>
-                        {% endfor %}
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:.75rem;">
+                            <span class="badge badge-neutral">{{ item.blog.name }}</span>
+                            {% if content %}
+                                <span class="badge badge-{{ status_badge.get(content.status, 'neutral') }}">{{ status_pl.get(content.status, content.status) }}</span>
+                            {% else %}
+                                <span class="badge badge-danger">Brak treści</span>
+                            {% endif %}
+                        </div>
                     </div>
+                {% endfor %}
                 </div>
-            </div>
+            {% else %}
+                <div class="empty-state" style="padding:2rem 1rem;">
+                    <div class="empty-state-icon" style="font-size:2rem;"><i class="fas fa-calendar-day"></i></div>
+                    <p style="color:var(--text-secondary);font-size:.875rem;margin:0;">Brak zaplanowanych publikacji.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
-</section>
+</div>
 
-<!-- Publish Modal -->
-<div class="modal fade" id="publishModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+{# ─────────────────── MODAL: PUBLIKUJ TERAZ ─────────────────── #}
+<div class="modal" id="publishModal" aria-hidden="true">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Publish Now</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h3 class="modal-title">Publikuj teraz</h3>
+                <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to publish this article immediately?</p>
-                <p class="text-muted small">This will bypass any scheduled date and publish the article right now.</p>
+                <p>Czy na pewno chcesz natychmiast opublikować artykuł?</p>
+                <p style="color:var(--text-secondary);font-size:.875rem;">
+                    <strong id="publishTitle">—</strong>
+                </p>
+                <div class="alert alert-info">
+                    <span class="alert-icon"><i class="fas fa-circle-info"></i></span>
+                    <div class="alert-body">Zaplanowana data zostanie pominięta i artykuł trafi do bloga natychmiast.</div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="publish-form" method="POST" action="">
-                    <button type="submit" class="btn btn-success">Publish Now</button>
+                <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+                <form id="publishForm" method="POST" action="" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publikuj teraz</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Cancel Modal -->
-<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+{# ─────────────────── MODAL: ANULUJ PUBLIKACJĘ ─────────────────── #}
+<div class="modal" id="cancelModal" aria-hidden="true">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cancel Publication</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h3 class="modal-title">Anuluj publikację</h3>
+                <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to cancel the scheduled publication?</p>
-                <p class="text-muted small">This will remove the article from the publication schedule and set its status to draft.</p>
+                <p>Czy na pewno chcesz anulować zaplanowaną publikację?</p>
+                <p style="color:var(--text-secondary);font-size:.875rem;"><strong id="cancelTitle">—</strong></p>
+                <div class="alert alert-warning">
+                    <span class="alert-icon"><i class="fas fa-triangle-exclamation"></i></span>
+                    <div class="alert-body">Artykuł zostanie usunięty z harmonogramu i wróci do statusu <em>wersja robocza</em>.</div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Scheduled</button>
-                <form id="cancel-form" method="POST" action="">
-                    <button type="submit" class="btn btn-danger">Cancel Publication</button>
+                <button type="button" class="btn btn-ghost" data-modal-close>Pozostaw w harmonogramie</button>
+                <form id="cancelForm" method="POST" action="" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-xmark"></i> Anuluj publikację</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set up publish modal
-    document.querySelectorAll('.publish-now').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const contentId = this.getAttribute('data-id');
-            document.getElementById('publish-form').action = "{{ url_for('publishing.publish_now', content_id=0) }}".replace('0', contentId);
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.js-publish-now').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const title = btn.getAttribute('data-title');
+            document.getElementById('publishForm').action =
+                "{{ url_for('publishing.publish_now', content_id=0) }}".replace('/0', '/' + id);
+            document.getElementById('publishTitle').textContent = title;
+            Modal.open('publishModal');
         });
     });
-    
-    // Set up cancel modal
-    document.querySelectorAll('.cancel-publication').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const contentId = this.getAttribute('data-id');
-            document.getElementById('cancel-form').action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('0', contentId);
+    document.querySelectorAll('.js-cancel-pub').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const title = btn.getAttribute('data-title');
+            document.getElementById('cancelForm').action =
+                "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('/0', '/' + id);
+            document.getElementById('cancelTitle').textContent = title;
+            Modal.open('cancelModal');
         });
     });
 });

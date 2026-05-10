@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Automation Dashboard{% endblock %}
+{% block title %}Automatyzacja — MasterContentAI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
@@ -172,7 +172,7 @@
                                     {% if execution.failure_count > 0 %}
                                         <span class="badge bg-danger">{{ execution.failure_count }} failures</span>
                                     {% else %}
-                                        <span class="badge bg-success">Success</span>
+                                        <span class="badge bg-success">Sukces</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -182,7 +182,7 @@
                     {% else %}
                     <div class="text-center py-4">
                         <i class="fas fa-history text-muted mb-2"></i>
-                        <p class="text-muted mb-0">No recent executions</p>
+                        <p class="text-muted mb-0">Brak ostatnich wykonan</p>
                     </div>
                     {% endif %}
                 </div>
@@ -192,25 +192,33 @@
 </div>
 
 <script>
-// Refresh topics for specific blog
+// Odswiezenie tematow dla wybranego bloga
 function refreshTopics(blogId) {
-    fetch(`/automation/api/topics/refresh/${blogId}`, {
+    var btn = (typeof event !== 'undefined' && event.target) ? event.target.closest('button') : null;
+    var originalHtml = btn ? btn.innerHTML : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Odswiezanie...';
+    }
+    fetch('/automation/api/topics/refresh/' + encodeURIComponent(blogId), {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' }
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
         if (data.success) {
-            alert(data.message || 'Topics refreshed successfully');
-            location.reload();
+            if (window.Toast && Toast.success) Toast.success(data.message || 'Tematy odswiezone pomyslnie.');
+            setTimeout(function(){ location.reload(); }, 600);
         } else {
-            alert(data.error || 'Failed to refresh topics');
+            var msg = data.error || 'Nie udalo sie odswiezyc tematow.';
+            if (window.Toast && Toast.error) Toast.error(msg); else alert(msg);
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
         }
     })
-    .catch(error => {
-        alert('Network error occurred');
+    .catch(function() {
+        var msg = 'Wystapil blad sieci. Sprobuj ponownie.';
+        if (window.Toast && Toast.error) Toast.error(msg); else alert(msg);
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
     });
 }
 </script>

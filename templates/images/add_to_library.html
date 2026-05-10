@@ -1,166 +1,245 @@
 {% extends 'base.html' %}
 
-{% block title %}Add to Image Library{% endblock %}
+{# Dodaj do biblioteki obrazów — MasterContentAI #}
+
+{% block title %}Dodaj do biblioteki obrazów — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Add to Image Library</h1>
+<div class="page-shell">
+
+    <header class="page-header">
         <div>
-            <a href="{{ url_for('images.image_library') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Library
+            <h1 class="page-title">
+                <i class="fas fa-image" aria-hidden="true" style="color:var(--brand-700);"></i>
+                Dodaj obraz do biblioteki
+            </h1>
+            <p class="page-subtitle">
+                Znajdź obraz w wyszukiwarce lub prześlij własny plik z dysku.
+            </p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ url_for('images.image_library') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Powrót do biblioteki
             </a>
         </div>
-    </div>
-    
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Add New Image</h5>
-        </div>
+    </header>
+
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">Nowy obraz</h2>
+        </header>
         <div class="card-body">
-            <ul class="nav nav-tabs" id="addImageTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" 
-                            type="button" role="tab" aria-controls="search" aria-selected="true">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" 
-                            type="button" role="tab" aria-controls="upload" aria-selected="false">
-                        <i class="fas fa-upload"></i> Upload
-                    </button>
-                </li>
-            </ul>
-            
-            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="addImageTabsContent">
-                <!-- Search Tab -->
-                <div class="tab-pane fade show active" id="search" role="tabpanel" aria-labelledby="search-tab">
-                    <div class="mb-4">
-                        <form id="image-search-form" method="GET" action="{{ url_for('images.search_images') }}" target="_blank">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="search-query">Search Query</label>
-                                        <input type="text" class="form-control" id="search-query" name="query" 
-                                               required placeholder="Enter keywords...">
-                                        <input type="hidden" name="return_url" 
-                                               value="{{ url_for('images.add_to_library') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group mb-3">
-                                        <label for="search-source">Source</label>
-                                        <select class="form-control" id="search-source" name="source">
-                                            <option value="unsplash">Unsplash</option>
-                                            <option value="google">Google</option>
-                                            <option value="all">All Sources</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group mb-3">
-                                        <label for="search-orientation">Orientation</label>
-                                        <select class="form-control" id="search-orientation" name="orientation">
-                                            <option value="">Any</option>
-                                            <option value="landscape">Landscape</option>
-                                            <option value="portrait">Portrait</option>
-                                            <option value="squarish">Square</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> Search Images
-                            </button>
-                        </form>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        Click the Search button to browse images. Once you select an image, you'll be redirected back 
-                        to this page with your selection.
-                    </div>
-                </div>
-                
-                <!-- Upload Tab -->
-                <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
-                    <form method="POST" action="{{ url_for('images.add_to_library') }}" 
-                          enctype="multipart/form-data">
-                        <input type="hidden" name="source_type" value="upload">
-                        
-                        <div class="mb-3">
-                            <label for="blog-id" class="form-label">Blog</label>
-                            <select class="form-select" id="blog-id" name="blog_id" required>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}">{{ blog.name }}</option>
-                                {% endfor %}
+
+            {# ---------- Tabs (natywne, ARIA) ---------- #}
+            <div class="tabs" role="tablist" aria-label="Sposoby dodania obrazu">
+                <button type="button" class="tab is-active"
+                        role="tab" id="search-tab"
+                        aria-selected="true" aria-controls="search-panel"
+                        data-tab-target="search-panel">
+                    <i class="fas fa-search" aria-hidden="true"></i> Wyszukaj online
+                </button>
+                <button type="button" class="tab"
+                        role="tab" id="upload-tab"
+                        aria-selected="false" aria-controls="upload-panel"
+                        data-tab-target="upload-panel" tabindex="-1">
+                    <i class="fas fa-upload" aria-hidden="true"></i> Prześlij plik
+                </button>
+            </div>
+
+            {# ---------- Panel: Wyszukiwanie ---------- #}
+            <div class="tab-panel" id="search-panel" role="tabpanel" aria-labelledby="search-tab">
+                <form id="image-search-form" method="GET"
+                      action="{{ url_for('images.search_images') }}" target="_blank"
+                      data-validate>
+                    <div class="form-grid">
+                        <div class="form-group form-group--wide">
+                            <label for="search-query" class="form-label">Zapytanie <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="search-query" name="query"
+                                   required placeholder="np. krajobraz górski, biuro, technologia…">
+                            <input type="hidden" name="return_url" value="{{ url_for('images.add_to_library') }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="search-source" class="form-label">Źródło</label>
+                            <select class="form-select" id="search-source" name="source">
+                                <option value="unsplash">Unsplash</option>
+                                <option value="google">Google</option>
+                                <option value="all">Wszystkie źródła</option>
                             </select>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="image-title" class="form-label">Image Title</label>
-                            <input type="text" class="form-control" id="image-title" name="title" 
-                                   placeholder="Give your image a descriptive title">
+                        <div class="form-group">
+                            <label for="search-orientation" class="form-label">Orientacja</label>
+                            <select class="form-select" id="search-orientation" name="orientation">
+                                <option value="">Dowolna</option>
+                                <option value="landscape">Pozioma</option>
+                                <option value="portrait">Pionowa</option>
+                                <option value="squarish">Kwadratowa</option>
+                            </select>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="image-file" class="form-label">Select Image File</label>
-                            <input class="form-control" type="file" id="image-file" name="image_file" accept="image/*" required>
-                            <div class="form-text">
-                                Accepted formats: JPG, PNG, GIF, WEBP. Max file size: 5MB.
-                            </div>
-                        </div>
-                        
-                        <div id="image-preview-container" class="mb-3 d-none">
-                            <label class="form-label">Preview</label>
-                            <div class="text-center p-3 bg-light rounded">
-                                <img id="image-preview" src="#" alt="Image Preview" class="img-fluid" style="max-height: 300px;">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="image-tags" class="form-label">Tags (comma separated)</label>
-                            <input type="text" class="form-control" id="image-tags" name="tags" 
-                                   placeholder="nature, landscape, mountains">
-                            <div class="form-text">
-                                Tags help you organize and find images later.
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload"></i> Upload to Library
-                        </button>
-                    </form>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search" aria-hidden="true"></i> Wyszukaj obrazy
+                    </button>
+                </form>
+
+                <div class="alert alert-info" style="margin-top:1.25rem;">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Kliknij <strong>Wyszukaj obrazy</strong>, aby przeglądać dostępne zdjęcia. Po wybraniu zostaniesz przekierowany z powrotem do tej strony.
                 </div>
             </div>
+
+            {# ---------- Panel: Upload ---------- #}
+            <div class="tab-panel" id="upload-panel" role="tabpanel" aria-labelledby="upload-tab" hidden>
+                <form method="POST" action="{{ url_for('images.add_to_library') }}"
+                      enctype="multipart/form-data" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="source_type" value="upload">
+
+                    <div class="form-group">
+                        <label for="blog-id" class="form-label">Blog <span class="required">*</span></label>
+                        <select class="form-select" id="blog-id" name="blog_id" required>
+                            {% for blog in blogs %}
+                            <option value="{{ blog.id }}">{{ blog.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-title" class="form-label">Tytuł obrazu</label>
+                        <input type="text" class="form-control" id="image-title" name="title"
+                               placeholder="Krótki, opisowy tytuł" maxlength="255">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-file" class="form-label">Wybierz plik <span class="required">*</span></label>
+                        <input class="form-control" type="file" id="image-file" name="image_file"
+                               accept="image/*" required>
+                        <small class="form-hint">Akceptowane formaty: JPG, PNG, GIF, WEBP. Maksymalny rozmiar: 5 MB.</small>
+                    </div>
+
+                    <div id="image-preview-container" class="form-group" hidden>
+                        <label class="form-label">Podgląd</label>
+                        <div class="image-preview">
+                            <img id="image-preview" src="" alt="Podgląd obrazu">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-tags" class="form-label">Tagi</label>
+                        <input type="text" class="form-control" id="image-tags" name="tags"
+                               placeholder="np. natura, krajobraz, góry">
+                        <small class="form-hint">Oddziel przecinkami — pomogą Ci później szybko znaleźć obraz.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload" aria-hidden="true"></i> Prześlij do biblioteki
+                    </button>
+                </form>
+            </div>
+
         </div>
-    </div>
+    </section>
+
 </div>
+
+<style>
+.page-shell{display:flex;flex-direction:column;gap:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+.page-title{margin:0;font-size:1.625rem;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.page-subtitle{margin:.375rem 0 0;color:var(--text-3);font-size:.9375rem;max-width:60ch;}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+.card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;overflow:hidden;}
+.card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.card-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);}
+.card-body{padding:1.5rem;}
+
+/* Tabs */
+.tabs{display:flex;gap:.25rem;border-bottom:1px solid var(--border-1);margin-bottom:1.25rem;flex-wrap:wrap;}
+.tab{padding:.625rem 1rem;background:transparent;border:none;border-bottom:2px solid transparent;font-size:.9375rem;font-weight:500;color:var(--text-3);cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;margin-bottom:-1px;transition:all .15s ease;}
+.tab:hover{color:var(--text-1);}
+.tab.is-active{color:var(--brand-700);border-bottom-color:var(--brand-600);}
+.tab[aria-selected="true"]{color:var(--brand-700);border-bottom-color:var(--brand-600);}
+.tab-panel[hidden]{display:none;}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem;}
+.form-group{margin-bottom:1rem;}
+.form-group--wide{grid-column:span 2;}
+@media (max-width: 600px){.form-group--wide{grid-column:span 1;}}
+.form-label{display:block;margin-bottom:.375rem;font-size:.875rem;font-weight:500;color:var(--text-2);}
+.required{color:var(--danger-700);}
+.form-control,.form-select{width:100%;padding:.5rem .75rem;font-size:.9375rem;color:var(--text-1);background:var(--surface-1);border:1px solid var(--border-2);border-radius:.5rem;transition:border-color .15s ease,box-shadow .15s ease;}
+.form-control:focus,.form-select:focus{outline:none;border-color:var(--brand-600);box-shadow:0 0 0 3px var(--brand-50);}
+.form-hint{display:block;margin-top:.25rem;font-size:.8125rem;color:var(--text-3);}
+
+/* Image preview */
+.image-preview{padding:1rem;background:var(--surface-2);border:1px dashed var(--border-2);border-radius:.5rem;text-align:center;}
+.image-preview img{max-height:300px;max-width:100%;border-radius:.375rem;}
+
+/* Alert */
+.alert{display:flex;align-items:flex-start;gap:.5rem;padding:.75rem 1rem;border-radius:.5rem;font-size:.875rem;}
+.alert-info{background:var(--info-50);color:var(--info-700);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;font-size:.875rem;font-weight:500;border-radius:.5rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s ease;}
+.btn-primary{background:var(--brand-600);color:#fff;border-color:var(--brand-600);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700);}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text-1);}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle file upload preview
-    const fileInput = document.getElementById('image-file');
-    const previewContainer = document.getElementById('image-preview-container');
-    const preview = document.getElementById('image-preview');
-    
-    fileInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                previewContainer.classList.remove('d-none');
-            }
-            
-            reader.readAsDataURL(this.files[0]);
-        } else {
-            previewContainer.classList.add('d-none');
-        }
+(function(){
+    'use strict';
+
+    // ----- Tabs -----
+    var tabs = document.querySelectorAll('.tab[data-tab-target]');
+    tabs.forEach(function(tab){
+        tab.addEventListener('click', function(){
+            var targetId = tab.dataset.tabTarget;
+            tabs.forEach(function(t){
+                t.classList.remove('is-active');
+                t.setAttribute('aria-selected', 'false');
+                t.setAttribute('tabindex', '-1');
+            });
+            tab.classList.add('is-active');
+            tab.setAttribute('aria-selected', 'true');
+            tab.setAttribute('tabindex', '0');
+            document.querySelectorAll('.tab-panel').forEach(function(panel){
+                panel.hidden = (panel.id !== targetId);
+            });
+        });
+        // Keyboard arrow navigation
+        tab.addEventListener('keydown', function(e){
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+            var arr = Array.prototype.slice.call(tabs);
+            var i = arr.indexOf(tab);
+            var next = e.key === 'ArrowRight' ? (i + 1) % arr.length : (i - 1 + arr.length) % arr.length;
+            arr[next].focus();
+            arr[next].click();
+        });
     });
-});
+
+    // ----- File preview -----
+    var fileInput = document.getElementById('image-file');
+    var previewContainer = document.getElementById('image-preview-container');
+    var preview = document.getElementById('image-preview');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(){
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e){
+                    preview.src = e.target.result;
+                    previewContainer.hidden = false;
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                previewContainer.hidden = true;
+            }
+        });
+    }
+})();
 </script>
 {% endblock %}

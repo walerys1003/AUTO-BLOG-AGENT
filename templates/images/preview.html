@@ -1,74 +1,134 @@
 {% extends 'base.html' %}
 
-{% block title %}Image Preview{% endblock %}
+{# Podgląd obrazu artykułu — MasterContentAI #}
+
+{% block title %}Podgląd obrazu artykułu — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Article Image Preview</h1>
+<div class="page-shell">
+
+    <header class="page-header">
         <div>
+            <h1 class="page-title">
+                <i class="fas fa-image" aria-hidden="true" style="color:var(--brand-700);"></i>
+                Podgląd obrazu artykułu
+            </h1>
+            <p class="page-subtitle">{{ content.title }}</p>
+        </div>
+        <div class="page-actions">
             <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Change Image
+                <i class="fas fa-edit" aria-hidden="true"></i> Zmień obraz
             </a>
-            <a href="{{ url_for('content.edit', content_id=content.id) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Article
+            <a href="{{ url_for('content_creator.edit_content', content_id=content.id) }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Powrót do artykułu
             </a>
         </div>
-    </div>
-    
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">{{ content.title }}</h5>
-        </div>
+    </header>
+
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">{{ content.title }}</h2>
+        </header>
         <div class="card-body">
             {% if image %}
-            <div class="row">
-                <div class="col-md-8">
-                    <img src="{{ image.url }}" class="img-fluid rounded" alt="{{ content.title }}">
-                </div>
-                <div class="col-md-4">
-                    <h5 class="border-bottom pb-2">Image Details</h5>
-                    
-                    <div class="mb-3">
-                        <strong>Source:</strong> 
-                        <span class="badge bg-info">{{ image.source|capitalize }}</span>
+            <div class="preview-grid">
+                <figure class="preview-media">
+                    <img src="{{ image.url }}" alt="{{ content.title }}" loading="lazy">
+                </figure>
+                <aside class="preview-meta">
+                    <h3 class="preview-meta__title">Szczegóły obrazu</h3>
+
+                    <div class="meta-row">
+                        <span class="meta-row__label">Źródło:</span>
+                        <span class="pill pill-info">{{ image.source|capitalize }}</span>
                     </div>
-                    
+
                     {% if image.width and image.height %}
-                    <div class="mb-3">
-                        <strong>Dimensions:</strong> {{ image.width }} × {{ image.height }}
+                    <div class="meta-row">
+                        <span class="meta-row__label">Wymiary:</span>
+                        <span>{{ image.width }} × {{ image.height }} px</span>
                     </div>
                     {% endif %}
-                    
+
                     {% if image.attribution_text %}
-                    <div class="mb-3">
-                        <strong>Attribution:</strong><br>
-                        {% if image.attribution_url %}
-                        <a href="{{ image.attribution_url }}" target="_blank">{{ image.attribution_text }}</a>
-                        {% else %}
-                        {{ image.attribution_text }}
-                        {% endif %}
+                    <div class="meta-row">
+                        <span class="meta-row__label">Autor / atrybucja:</span>
+                        <span>
+                            {% if image.attribution_url %}
+                                <a href="{{ image.attribution_url }}" target="_blank" rel="noopener"
+                                   style="color:var(--brand-700);">
+                                    {{ image.attribution_text }}
+                                </a>
+                            {% else %}
+                                {{ image.attribution_text }}
+                            {% endif %}
+                        </span>
                     </div>
                     {% endif %}
-                    
-                    <div class="mt-4">
+
+                    <div class="preview-meta__actions">
                         <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary">
-                            <i class="fas fa-exchange-alt"></i> Change Image
+                            <i class="fas fa-exchange-alt" aria-hidden="true"></i> Zmień obraz
                         </a>
                     </div>
-                </div>
+                </aside>
             </div>
             {% else %}
             <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> No featured image has been set for this article.
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                Ten artykuł nie ma jeszcze ustawionego obrazu wyróżniającego.
             </div>
-            <div class="text-center my-4">
-                <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-plus-circle"></i> Add Featured Image
+            <div class="empty-state">
+                <i class="fas fa-image empty-state__icon" aria-hidden="true"></i>
+                <h3 class="empty-state__title">Brak obrazu wyróżniającego</h3>
+                <p class="empty-state__text">Dodaj atrakcyjny obraz, by zwiększyć zaangażowanie czytelników.</p>
+                <a href="{{ url_for('images.change_article_image', content_id=content.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i> Dodaj obraz wyróżniający
                 </a>
             </div>
             {% endif %}
         </div>
-    </div>
+    </section>
+
 </div>
+
+<style>
+.page-shell{display:flex;flex-direction:column;gap:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+.page-title{margin:0;font-size:1.625rem;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.page-subtitle{margin:.375rem 0 0;color:var(--text-3);font-size:.9375rem;max-width:60ch;}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+.card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;overflow:hidden;}
+.card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.card-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);}
+.card-body{padding:1.5rem;}
+
+.preview-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;}
+@media (max-width: 768px){.preview-grid{grid-template-columns:1fr;}}
+.preview-media{margin:0;border-radius:.625rem;overflow:hidden;background:var(--surface-2);border:1px solid var(--border-1);}
+.preview-media img{width:100%;height:auto;display:block;}
+.preview-meta{display:flex;flex-direction:column;gap:.875rem;}
+.preview-meta__title{margin:0 0 .25rem;padding-bottom:.625rem;border-bottom:1px solid var(--border-1);font-size:1rem;font-weight:600;color:var(--text-1);}
+.preview-meta__actions{margin-top:.5rem;}
+.meta-row{font-size:.9375rem;color:var(--text-2);}
+.meta-row__label{display:inline-block;font-weight:600;color:var(--text-1);margin-right:.375rem;}
+
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.1875rem .625rem;font-size:.75rem;font-weight:600;border-radius:999px;}
+.pill-info{background:var(--info-50);color:var(--info-700);}
+
+.alert{display:flex;align-items:flex-start;gap:.5rem;padding:.75rem 1rem;border-radius:.5rem;font-size:.875rem;margin-bottom:1.25rem;}
+.alert-warning{background:var(--warning-50);color:var(--warning-700);}
+
+.empty-state{padding:2rem 1.5rem;text-align:center;}
+.empty-state__icon{font-size:2.5rem;color:var(--text-3);margin-bottom:1rem;}
+.empty-state__title{margin:0 0 .375rem;font-size:1.125rem;font-weight:600;color:var(--text-1);}
+.empty-state__text{margin:0 0 1.25rem;color:var(--text-3);}
+
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;font-size:.875rem;font-weight:500;border-radius:.5rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s ease;}
+.btn-primary{background:var(--brand-600);color:#fff;border-color:var(--brand-600);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700);}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text-1);}
+</style>
 {% endblock %}

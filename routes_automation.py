@@ -13,6 +13,7 @@ from models import AutomationRule, ArticleTopic, Blog, ContentMetrics, Notificat
 from utils.automation.workflow_engine import WorkflowEngine, execute_automation_rule
 from utils.automation.topic_manager import get_topic_manager
 from utils.automation.scheduler import get_automation_scheduler
+from auth import login_required
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 automation_bp = Blueprint('automation', __name__, url_prefix='/automation')
 
 @automation_bp.route('/dashboard')
+@login_required
 def dashboard():
     """Dashboard automatyzacji treści"""
     try:
@@ -67,6 +69,7 @@ def dashboard():
         return redirect(url_for('index'))
 
 @automation_bp.route('/api/execute/<int:rule_id>', methods=['POST'])
+@login_required
 def api_execute_rule(rule_id):
     """API endpoint do ręcznego wykonania reguły automatyzacji"""
     try:
@@ -102,6 +105,7 @@ def api_execute_rule(rule_id):
         }), 500
 
 @automation_bp.route('/api/topics/pending')
+@login_required
 def api_pending_topics():
     """API endpoint do pobierania tematów oczekujących na zatwierdzenie"""
     try:
@@ -137,6 +141,7 @@ def api_pending_topics():
         }), 500
 
 @automation_bp.route('/api/topics/approve', methods=['POST'])
+@login_required
 def api_approve_topics():
     """API endpoint do masowego zatwierdzania tematów"""
     try:
@@ -162,6 +167,7 @@ def api_approve_topics():
         }), 500
 
 @automation_bp.route('/api/topics/reject', methods=['POST'])
+@login_required
 def api_reject_topics():
     """API endpoint do masowego odrzucania tematów"""
     try:
@@ -188,6 +194,7 @@ def api_reject_topics():
         }), 500
 
 @automation_bp.route('/api/topics/refresh/<int:blog_id>', methods=['POST'])
+@login_required
 def api_refresh_topics(blog_id):
     """API endpoint do odświeżania puli tematów dla bloga"""
     try:
@@ -206,6 +213,7 @@ def api_refresh_topics(blog_id):
         }), 500
 
 @automation_bp.route('/api/scheduler/status')
+@login_required
 def api_scheduler_status():
     """API endpoint do pobierania statusu schedulera"""
     try:
@@ -225,6 +233,7 @@ def api_scheduler_status():
         }), 500
 
 @automation_bp.route('/api/rules/<int:rule_id>/toggle', methods=['POST'])
+@login_required
 def api_toggle_rule(rule_id):
     """API endpoint do przełączania aktywności reguły"""
     try:
@@ -250,6 +259,7 @@ def api_toggle_rule(rule_id):
         }), 500
 
 @automation_bp.route('/api/stats/overview')
+@login_required
 def api_stats_overview():
     """API endpoint do pobierania statystyk systemu automatyzacji"""
     try:
@@ -305,6 +315,7 @@ def api_stats_overview():
         }), 500
 
 @automation_bp.route('/topics')
+@login_required
 def topics_management():
     """Strona zarządzania tematami"""
     try:
@@ -345,6 +356,7 @@ def topics_management():
         return redirect(url_for('automation.dashboard'))
 
 @automation_bp.route('/logs')
+@login_required
 def execution_logs():
     """Strona logów wykonania automatyzacji"""
     try:
@@ -368,6 +380,7 @@ def execution_logs():
         return redirect(url_for('automation.dashboard'))
 
 @automation_bp.route('/api/workflow/test', methods=['POST'])
+@login_required
 def api_test_workflow():
     """API endpoint do testowania workflow engine"""
     try:

@@ -14,6 +14,7 @@ from models import Blog, ArticleTopic, ContentLog, AutomationRule, Article
 from utils.writing import content_generator
 from utils.automation import content_automation
 from utils.images.auto_image_finder import find_and_associate_images
+from auth import login_required
 
 # Create Blueprint
 content_creator_bp = Blueprint('content_creator', __name__)
@@ -29,6 +30,7 @@ def split_filter(value, delimiter=' '):
 
 
 @content_creator_bp.route('/content-creator')
+@login_required
 def content_dashboard():
     """Content creation dashboard view"""
     # Get all blogs
@@ -82,61 +84,53 @@ def content_dashboard():
     )
 
 @content_creator_bp.route('/content-generator')
+@login_required
 def content_generator_page():
-    """Content generator page with static topic selection and dynamic editor"""
-    # Get all blogs for dropdown
-    blogs = Blog.query.filter_by(active=True).all()
-    
-    # Check if there are any blogs
-    if not blogs:
-        flash('No active blogs found. Please create a blog first.', 'warning')
-        return redirect(url_for('content_creator.content_dashboard'))
-    
-    return render_template('content/simple_topic_selector.html', 
-                          title="Content Generator",
-                          blogs=blogs)
+    """Legacy route - redirects to consolidated content dashboard.
+
+    The standalone topic selector page has been removed; topic picking is
+    now handled inside the content dashboard modal.
+    """
+    return redirect(url_for('content_creator.content_dashboard'))
+
 
 @content_creator_bp.route('/standard-editor')
+@login_required
 def standard_editor_page():
-    """Standard editor page with WYSIWYG editor"""
-    # Get all blogs for dropdown
-    blogs = Blog.query.filter_by(active=True).all()
-    
-    # Check if there are any blogs
-    if not blogs:
-        flash('No active blogs found. Please create a blog first.', 'warning')
-        return redirect(url_for('content_creator.content_dashboard'))
-    
-    # Get topic ID if passed as query parameter
+    """Legacy route - redirects to the unified editor.
+
+    If a topic_id is provided, create a draft and open the new editor.
+    Otherwise redirect to the content dashboard where the user can pick a topic.
+    """
     topic_id = request.args.get('topic_id')
-    topic = None
-    if topic_id:
-        try:
-            topic = ArticleTopic.query.get(int(topic_id))
-        except (ValueError, TypeError):
-            flash('Invalid topic ID', 'warning')
-    
-    # Create a blank content log for the editor
-    content_log = None
-    if topic:
-        content_log = ContentLog(
-            blog_id=topic.blog_id,
-            title=topic.title,
-            status='draft',
-            created_at=datetime.utcnow()
-        )
-        db.session.add(content_log)
-        db.session.commit()
-        logger.info(f"Created new draft for standard editor: {content_log.id}")
-    
-    return render_template('content/standard_editor.html', 
-                          title="Standard Editor",
-                          blogs=blogs,
-                          topic=topic,
-                          content_log=content_log)
+
+    if not topic_id:
+        return redirect(url_for('content_creator.content_dashboard'))
+
+    try:
+        topic = ArticleTopic.query.get(int(topic_id))
+    except (ValueError, TypeError):
+        topic = None
+
+    if not topic:
+        flash('Nie znaleziono podanego tematu.', 'warning')
+        return redirect(url_for('content_creator.content_dashboard'))
+
+    content_log = ContentLog(
+        blog_id=topic.blog_id,
+        title=topic.title,
+        status='draft',
+        created_at=datetime.utcnow()
+    )
+    db.session.add(content_log)
+    db.session.commit()
+    logger.info(f"Created new draft from legacy /standard-editor: {content_log.id}")
+
+    return redirect(url_for('content_creator.edit_content', content_id=content_log.id))
 
 
 @content_creator_bp.route('/content-creator/generate', methods=['POST'])
+@login_required
 def generate_content():
     """Generate content from a topic"""
     topic_id = request.form.get('topic_id')
@@ -206,6 +200,7 @@ def generate_content():
 
 
 @content_creator_bp.route('/content-creator/edit/<int:content_id>', methods=['GET', 'POST'])
+@login_required
 def edit_content(content_id):
     """Edit content before publishing"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -410,6 +405,7 @@ def edit_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/preview/<int:content_id>')
+@login_required
 def preview_content(content_id):
     """Preview content before publishing"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -459,6 +455,7 @@ def preview_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/publish/<int:content_id>', methods=['POST'])
+@login_required
 def publish_content(content_id):
     """Publish content to WordPress"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -516,6 +513,7 @@ def publish_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/delete/<int:content_id>', methods=['POST'])
+@login_required
 def delete_content(content_id):
     """Delete a draft content log"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -539,6 +537,7 @@ def delete_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/regenerate/<int:content_id>', methods=['POST'])
+@login_required
 def regenerate_content(content_id):
     """Regenerate content with different settings"""
     content_log = ContentLog.query.get_or_404(content_id)
@@ -583,6 +582,7 @@ def regenerate_content(content_id):
 
 
 @content_creator_bp.route('/content-creator/generate-metadata', methods=['POST'])
+@login_required
 def generate_metadata():
     """Generate metadata from content"""
     content = request.form.get('content', '')
@@ -609,6 +609,7 @@ def generate_metadata():
 # Dynamic Content Generation API Endpoints
 
 @content_creator_bp.route('/content-creator/api/plan', methods=['POST'])
+@login_required
 def generate_article_plan_api():
     """Generate article plan API endpoint for dynamic content generation"""
     logger.info("Article plan generation API called")
@@ -658,6 +659,7 @@ def generate_article_plan_api():
         })
 
 @content_creator_bp.route('/content-creator/api/create-draft-content', methods=['POST'])
+@login_required
 def api_create_draft_content_v2():
     """Enhanced API endpoint to create a draft content entry and return its ID"""
     try:
@@ -726,6 +728,7 @@ def api_create_draft_content_v2():
 
 
 @content_creator_bp.route('/content-creator/api/paragraph', methods=['POST'])
+@login_required
 def generate_single_paragraph_api():
     """Generate single paragraph API endpoint for dynamic content generation"""
     logger.info("Paragraph generation API called")
@@ -784,6 +787,7 @@ def generate_single_paragraph_api():
         })
     
 @content_creator_bp.route('/api/dynamic/paragraph', methods=['POST'])
+@login_required
 def generate_dynamic_paragraph():
     """API endpoint for dynamic paragraph generation with real-time updates"""
     topic = request.form.get('topic', '')
@@ -837,6 +841,7 @@ def generate_dynamic_paragraph():
 # Automation routes
 
 @content_creator_bp.route('/content-creator/automation')
+@login_required
 def automation_dashboard():
     """Content automation dashboard view"""
     # Get all blogs
@@ -863,6 +868,7 @@ def automation_dashboard():
 
 
 @content_creator_bp.route('/content-creator/automation/create', methods=['GET', 'POST'])
+@login_required
 def create_automation_rule():
     """Create a new automation rule"""
     # If GET request, render the create form
@@ -938,6 +944,7 @@ def create_automation_rule():
 
 
 @content_creator_bp.route('/content-creator/automation/edit/<int:rule_id>', methods=['GET', 'POST'])
+@login_required
 def edit_automation_rule(rule_id):
     """Edit an existing automation rule"""
     rule = AutomationRule.query.get_or_404(rule_id)
@@ -989,6 +996,7 @@ def edit_automation_rule(rule_id):
 
 
 @content_creator_bp.route('/content-creator/automation/toggle/<int:rule_id>', methods=['POST'])
+@login_required
 def toggle_automation_rule(rule_id):
     """Toggle an automation rule active status"""
     rule = AutomationRule.query.get_or_404(rule_id)
@@ -1010,6 +1018,7 @@ def toggle_automation_rule(rule_id):
 
 
 @content_creator_bp.route('/content-creator/automation/delete/<int:rule_id>', methods=['POST'])
+@login_required
 def delete_automation_rule(rule_id):
     """Delete an automation rule"""
     rule = AutomationRule.query.get_or_404(rule_id)
@@ -1029,6 +1038,7 @@ def delete_automation_rule(rule_id):
 
 
 @content_creator_bp.route('/content-creator/automation/run/<int:rule_id>', methods=['POST'])
+@login_required
 def run_automation_rule(rule_id):
     """Manually run an automation rule"""
     rule = AutomationRule.query.get_or_404(rule_id)
@@ -1050,6 +1060,7 @@ def run_automation_rule(rule_id):
 
 
 @content_creator_bp.route('/api/blogs/<int:blog_id>/categories')
+@login_required
 def get_blog_categories(blog_id):
     """API endpoint to get categories for a blog"""
     logger.info(f"Fetching categories for blog ID: {blog_id}")
@@ -1095,6 +1106,7 @@ def get_blog_categories(blog_id):
         })
 
 @content_creator_bp.route('/content-creator/api/topics', endpoint='get_all_topics')
+@login_required
 def get_all_topics():
     """API endpoint to get approved topics for all blogs or a specific blog"""
     logger.info("API endpoint get_all_topics called")
@@ -1158,6 +1170,7 @@ def get_all_topics():
 
 
 @content_creator_bp.route('/content-creator/api/blog/<int:blog_id>/topics')
+@login_required
 def get_blog_topics(blog_id):
     """API endpoint to get approved topics for a blog"""
     try:
@@ -1206,12 +1219,14 @@ def get_blog_topics(blog_id):
 # Note: This endpoint is replaced by /content-creator/api/create-draft-content
 # But we're keeping it for backwards compatibility with a redirect
 @content_creator_bp.route('/content-creator/api/create-draft', methods=['POST'])
+@login_required
 def api_create_draft_content_legacy():
     """Legacy API endpoint for compatibility"""
     return redirect(url_for('content_creator.api_create_draft_content_v2'))
 
 
 @content_creator_bp.route('/content-creator/api/generate-plan', methods=['POST'])
+@login_required
 def generate_article_plan_existing():
     """API endpoint to generate an article plan with paragraph topics (existing endpoint)"""
     try:
@@ -1240,6 +1255,7 @@ def generate_article_plan_existing():
 
 
 @content_creator_bp.route('/content-creator/api/generate-paragraph', methods=['POST'])
+@login_required
 def generate_paragraph_existing():
     """API endpoint to generate a single paragraph for dynamic content creation (existing endpoint)"""
     try:
@@ -1285,6 +1301,7 @@ def generate_paragraph_existing():
 
 
 @content_creator_bp.route('/content-creator/api/dynamic-paragraph-v2', methods=['POST'])
+@login_required
 def generate_dynamic_paragraph_v2():
     """Enhanced API endpoint for dynamic paragraph generation with real-time updates"""
     try:

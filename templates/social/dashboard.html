@@ -1,389 +1,345 @@
 {% extends 'base.html' %}
+{% block title %}Social media — MasterContentAI{% endblock %}
 
-{% block title %}Social Media Dashboard{% endblock %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('dashboard') }}">Pulpit</a></li>
+    <li class="breadcrumb-separator"></li>
+    <li>Social media</li>
+</ol>
+{% endblock %}
+
+{% block page_title %}Social media{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj postami na Facebooku, X (Twitter), LinkedIn i Instagramie.</p>{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('social.social_templates') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-file-lines"></i> Szablony
+    </a>
+    <a href="{{ url_for('social.social_schedule') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-calendar-days"></i> Harmonogram
+    </a>
+    <a href="{{ url_for('social.social_accounts') }}" class="btn btn-primary">
+        <i class="fas fa-user-gear"></i> Konta social
+    </a>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">Social Media Dashboard</h1>
-            <div>
-                <a href="{{ url_for('social.social_accounts') }}" class="btn btn-primary">
-                    <i class="fas fa-users-cog me-1"></i> Manage Accounts
-                </a>
+
+{%- macro pct(p, t) -%}
+    {%- if t and t > 0 -%}{{ ((p / t) * 100)|round|int }}{%- else -%}0{%- endif -%}
+{%- endmacro -%}
+
+{# ─────────────────── KARTY PLATFORM ─────────────────── #}
+<div class="grid grid-cols-4 gap-4 mb-6">
+    {# Facebook #}
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:#E7F0FF;color:#1877F2;">
+            <i class="fab fa-facebook-f"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="stat-card-label">Facebook</div>
+            <div class="stat-card-value">{{ platform_stats.facebook.published }} <span style="font-size:.875rem;color:var(--text-tertiary);font-weight:500;">/ {{ platform_stats.facebook.total }}</span></div>
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar" style="width:{{ pct(platform_stats.facebook.published, platform_stats.facebook.total) }}%;background:#1877F2;"></div>
+            </div>
+        </div>
+    </div>
+
+    {# X / Twitter #}
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:#E8F5FE;color:#0F1419;">
+            <i class="fab fa-x-twitter"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="stat-card-label">X (Twitter)</div>
+            <div class="stat-card-value">{{ platform_stats.twitter.published }} <span style="font-size:.875rem;color:var(--text-tertiary);font-weight:500;">/ {{ platform_stats.twitter.total }}</span></div>
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar" style="width:{{ pct(platform_stats.twitter.published, platform_stats.twitter.total) }}%;background:#0F1419;"></div>
+            </div>
+        </div>
+    </div>
+
+    {# LinkedIn #}
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:#E7F0F8;color:#0A66C2;">
+            <i class="fab fa-linkedin-in"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="stat-card-label">LinkedIn</div>
+            <div class="stat-card-value">{{ platform_stats.linkedin.published }} <span style="font-size:.875rem;color:var(--text-tertiary);font-weight:500;">/ {{ platform_stats.linkedin.total }}</span></div>
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar" style="width:{{ pct(platform_stats.linkedin.published, platform_stats.linkedin.total) }}%;background:#0A66C2;"></div>
+            </div>
+        </div>
+    </div>
+
+    {# Instagram #}
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:linear-gradient(135deg,#FCE5C9,#FBC2EB);color:#E4405F;">
+            <i class="fab fa-instagram"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="stat-card-label">Instagram</div>
+            <div class="stat-card-value">{{ platform_stats.instagram.published }} <span style="font-size:.875rem;color:var(--text-tertiary);font-weight:500;">/ {{ platform_stats.instagram.total }}</span></div>
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar" style="width:{{ pct(platform_stats.instagram.published, platform_stats.instagram.total) }}%;background:linear-gradient(90deg,#F58529,#DD2A7B);"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Stats cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-primary p-3 me-3">
-                        <i class="fab fa-facebook-f text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Facebook</h5>
-                        <h6 class="mb-0 text-black">{{ platform_stats.facebook.published }} / {{ platform_stats.facebook.total }}</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-primary" role="progressbar" 
-                        style="width: {{ (platform_stats.facebook.published / platform_stats.facebook.total * 100) if platform_stats.facebook.total > 0 else 0 }}%;" 
-                        aria-valuenow="{{ platform_stats.facebook.published }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="{{ platform_stats.facebook.total }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-info p-3 me-3">
-                        <i class="fab fa-twitter text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Twitter</h5>
-                        <h6 class="mb-0 text-black">{{ platform_stats.twitter.published }} / {{ platform_stats.twitter.total }}</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-info" role="progressbar" 
-                        style="width: {{ (platform_stats.twitter.published / platform_stats.twitter.total * 100) if platform_stats.twitter.total > 0 else 0 }}%;" 
-                        aria-valuenow="{{ platform_stats.twitter.published }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="{{ platform_stats.twitter.total }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-success p-3 me-3">
-                        <i class="fab fa-linkedin-in text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">LinkedIn</h5>
-                        <h6 class="mb-0 text-black">{{ platform_stats.linkedin.published }} / {{ platform_stats.linkedin.total }}</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                        style="width: {{ (platform_stats.linkedin.published / platform_stats.linkedin.total * 100) if platform_stats.linkedin.total > 0 else 0 }}%;" 
-                        aria-valuenow="{{ platform_stats.linkedin.published }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="{{ platform_stats.linkedin.total }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 bg-danger text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-danger p-3 me-3">
-                        <i class="fab fa-instagram text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Instagram</h5>
-                        <h6 class="mb-0 text-black">{{ platform_stats.instagram.published }} / {{ platform_stats.instagram.total }}</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                        style="width: {{ (platform_stats.instagram.published / platform_stats.instagram.total * 100) if platform_stats.instagram.total > 0 else 0 }}%;" 
-                        aria-valuenow="{{ platform_stats.instagram.published }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="{{ platform_stats.instagram.total }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Filter by blog -->
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0 fw-bold">Filter Content</h5>
-    </div>
-    <div class="card-body">
-        <form action="{{ url_for('social.social_dashboard') }}" method="get" class="row g-3">
-            <div class="col-md-6">
-                <label for="blog_id" class="form-label">Select Blog</label>
-                <select name="blog_id" id="blog_id" class="form-select">
-                    <option value="">All Blogs</option>
-                    {% for blog in blogs %}
-                    <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>
-                        {{ blog.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary">Apply Filter</button>
-            </div>
+{# ─────────────────── FILTR + TABELA ─────────────────── #}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Ostatnie posty social media</h3>
+        <form action="{{ url_for('social.social_dashboard') }}" method="get" style="display:flex;gap:.5rem;align-items:center;">
+            <select name="blog_id" class="form-control" style="min-width:180px;" onchange="this.form.submit()">
+                <option value="">Wszystkie blogi</option>
+                {% for blog in blogs %}
+                    <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                {% endfor %}
+            </select>
         </form>
     </div>
-</div>
 
-<!-- Social media posts table -->
-<div class="card">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 fw-bold">Recent Social Media Posts</h5>
-    </div>
-    <div class="card-body p-0">
-        {% if social_data %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Article Title</th>
-                        <th>Blog</th>
-                        <th>Platforms</th>
-                        <th>Created</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in social_data %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="ms-2">
-                                    <h6 class="mb-0">{{ item.title }}</h6>
-                                    {% if item.url %}
-                                    <a href="{{ item.url }}" target="_blank" class="text-muted small">
-                                        <i class="fas fa-external-link-alt me-1"></i>View Article
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ item.blog_name }}</td>
-                        <td>
-                            <div class="d-flex">
-                                {% if 'facebook' in item.social_posts %}
-                                <div class="platform-icon me-2" data-bs-toggle="tooltip" title="Facebook">
-                                    <i class="fab fa-facebook-f text-primary"></i>
-                                </div>
-                                {% endif %}
-                                {% if 'twitter' in item.social_posts %}
-                                <div class="platform-icon me-2" data-bs-toggle="tooltip" title="Twitter">
-                                    <i class="fab fa-twitter text-info"></i>
-                                </div>
-                                {% endif %}
-                                {% if 'linkedin' in item.social_posts %}
-                                <div class="platform-icon me-2" data-bs-toggle="tooltip" title="LinkedIn">
-                                    <i class="fab fa-linkedin-in text-success"></i>
-                                </div>
-                                {% endif %}
-                                {% if 'instagram' in item.social_posts %}
-                                <div class="platform-icon me-2" data-bs-toggle="tooltip" title="Instagram">
-                                    <i class="fab fa-instagram text-danger"></i>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            <div id="status-{{ item.content_id }}">
-                                {% set all_published = true %}
-                                {% set has_error = false %}
-                                {% set has_pending = false %}
-                                {% for platform, post in item.social_posts.items() %}
-                                    {% if post.get('status') != 'published' %}
-                                        {% set all_published = false %}
-                                    {% endif %}
-                                    {% if post.get('status') == 'error' %}
-                                        {% set has_error = true %}
-                                    {% endif %}
-                                    {% if post.get('status') == 'pending' %}
-                                        {% set has_pending = true %}
-                                    {% endif %}
-                                {% endfor %}
-                                
-                                {% if all_published %}
-                                    <span class="badge bg-success">Published</span>
-                                {% elif has_error %}
-                                    <span class="badge bg-danger">Error</span>
-                                {% elif has_pending %}
-                                    <span class="badge bg-warning">Scheduled</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Draft</span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{{ url_for('social.preview_posts', content_id=item.content_id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye me-1"></i>Preview
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="visually-hidden">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
+    {% if social_data %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width:34%;">Tytuł artykułu</th>
+                    <th style="width:14%;">Blog</th>
+                    <th style="width:16%;">Platformy</th>
+                    <th style="width:13%;">Utworzono</th>
+                    <th style="width:11%;">Status</th>
+                    <th style="width:12%;" class="text-right">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- set platform_meta = {
+                    'facebook':  {'icon':'fab fa-facebook-f',  'color':'#1877F2', 'label':'Facebook'},
+                    'twitter':   {'icon':'fab fa-x-twitter',   'color':'#0F1419', 'label':'X'},
+                    'linkedin':  {'icon':'fab fa-linkedin-in', 'color':'#0A66C2', 'label':'LinkedIn'},
+                    'instagram': {'icon':'fab fa-instagram',   'color':'#E4405F', 'label':'Instagram'}
+                } -%}
+                {% for item in social_data %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600;color:var(--text-primary);">{{ item.title }}</div>
+                        {% if item.url %}
+                        <a href="{{ item.url }}" target="_blank" rel="noopener"
+                           style="font-size:.75rem;color:var(--text-tertiary);text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;margin-top:.125rem;">
+                            <i class="fas fa-arrow-up-right-from-square" style="font-size:.625rem;"></i> Zobacz artykuł
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-neutral">{{ item.blog_name }}</span></td>
+                    <td>
+                        <div style="display:flex;gap:.375rem;">
+                        {% for platform, post in item.social_posts.items() %}
+                            {%- set meta = platform_meta.get(platform, {'icon':'fas fa-share','color':'#64748B','label':platform}) -%}
+                            <span title="{{ meta.label }}" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:rgba(0,0,0,0.04);color:{{ meta.color }};font-size:.75rem;">
+                                <i class="{{ meta.icon }}"></i>
+                            </span>
+                        {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <span style="color:var(--text-tertiary);font-size:.8125rem;">
+                            {{ item.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div id="status-{{ item.content_id }}">
+                            {%- set all_published = true -%}
+                            {%- set has_error = false -%}
+                            {%- set has_pending = false -%}
+                            {%- for platform, post in item.social_posts.items() -%}
+                                {%- if post.get('status') != 'published' %}{% set all_published = false %}{% endif -%}
+                                {%- if post.get('status') == 'error' %}{% set has_error = true %}{% endif -%}
+                                {%- if post.get('status') == 'pending' %}{% set has_pending = true %}{% endif -%}
+                            {%- endfor -%}
+                            {% if all_published %}
+                                <span class="badge badge-success">Opublikowany</span>
+                            {% elif has_error %}
+                                <span class="badge badge-danger">Błąd</span>
+                            {% elif has_pending %}
+                                <span class="badge badge-warning">Zaplanowany</span>
+                            {% else %}
+                                <span class="badge badge-neutral">Wersja robocza</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <div style="display:inline-flex;gap:.25rem;">
+                            <a href="{{ url_for('social.preview_posts', content_id=item.content_id) }}"
+                               class="btn btn-ghost btn-icon btn-sm" title="Podgląd" aria-label="Podgląd">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm js-publish-btn"
+                                    data-content-id="{{ item.content_id }}"
+                                    data-title="{{ item.title }}"
+                                    title="Opublikuj" aria-label="Opublikuj"
+                                    style="color:var(--status-success-fg);">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <details style="position:relative;display:inline-block;">
+                                <summary style="list-style:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;color:var(--text-tertiary);">
+                                    <i class="fas fa-ellipsis-vertical"></i>
+                                </summary>
+                                <div style="position:absolute;right:0;top:calc(100% + .25rem);min-width:180px;background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xl);padding:.25rem;z-index:50;">
                                     {% for platform, post in item.social_posts.items() %}
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url_for('social.edit_post', content_id=item.content_id, platform=platform) }}">
-                                            <i class="fab fa-{{ platform.lower() }} me-1"></i>Edit {{ platform|capitalize }}
+                                        {%- set meta = platform_meta.get(platform, {'icon':'fas fa-share','color':'#64748B','label':platform}) -%}
+                                        <a href="{{ url_for('social.edit_post', content_id=item.content_id, platform=platform) }}"
+                                           style="display:flex;align-items:center;gap:.5rem;padding:.5rem .625rem;color:var(--text-primary);text-decoration:none;border-radius:6px;font-size:.875rem;">
+                                            <i class="{{ meta.icon }}" style="color:{{ meta.color }};width:14px;"></i>
+                                            Edytuj {{ meta.label }}
                                         </a>
-                                    </li>
                                     {% endfor %}
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item text-success" href="#" data-bs-toggle="modal" data-bs-target="#publishModal" data-content-id="{{ item.content_id }}">
-                                            <i class="fas fa-paper-plane me-1"></i>Publish Now
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center p-5">
-            <div class="mb-3">
-                <i class="fas fa-share-alt fa-4x text-muted"></i>
-            </div>
-            <h5>No Social Media Posts Found</h5>
-            <p class="text-muted">No social media posts have been created yet.</p>
-        </div>
-        {% endif %}
+                                </div>
+                            </details>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="fas fa-share-nodes"></i></div>
+        <h4 class="empty-state-title">Brak postów w social media</h4>
+        <p class="empty-state-description">Wygeneruj artykuł, a my automatycznie zaproponujemy posty dla wybranych platform.</p>
+        <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-pen-nib"></i> Utwórz artykuł
+        </a>
+    </div>
+    {% endif %}
 </div>
 
-<!-- Publish Modal -->
-<div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
+{# ─────────────────── MODAL: PUBLIKUJ POSTY ─────────────────── #}
+<div class="modal" id="publishModal" aria-hidden="true">
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="publishModalLabel">Publish Social Media Posts</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="publishForm" action="" method="post">
+            <form id="publishForm" method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h3 class="modal-title">Publikuj posty w social media</h3>
+                    <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>
+                </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Platforms to Publish</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="facebook" name="platforms" id="platform-facebook">
-                            <label class="form-check-label" for="platform-facebook">
-                                <i class="fab fa-facebook-f text-primary me-1"></i> Facebook
+                    <p style="color:var(--text-secondary);font-size:.875rem;margin-bottom:.75rem;">
+                        Artykuł: <strong id="publishTitle" style="color:var(--text-primary);">—</strong>
+                    </p>
+
+                    <div class="form-group">
+                        <label class="form-label">Wybierz platformy</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+                            <label class="check-card">
+                                <input type="checkbox" value="facebook" name="platforms" checked>
+                                <i class="fab fa-facebook-f" style="color:#1877F2;"></i> Facebook
                             </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="twitter" name="platforms" id="platform-twitter">
-                            <label class="form-check-label" for="platform-twitter">
-                                <i class="fab fa-twitter text-info me-1"></i> Twitter
+                            <label class="check-card">
+                                <input type="checkbox" value="twitter" name="platforms" checked>
+                                <i class="fab fa-x-twitter" style="color:#0F1419;"></i> X (Twitter)
                             </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="linkedin" name="platforms" id="platform-linkedin">
-                            <label class="form-check-label" for="platform-linkedin">
-                                <i class="fab fa-linkedin-in text-success me-1"></i> LinkedIn
+                            <label class="check-card">
+                                <input type="checkbox" value="linkedin" name="platforms" checked>
+                                <i class="fab fa-linkedin-in" style="color:#0A66C2;"></i> LinkedIn
                             </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="instagram" name="platforms" id="platform-instagram">
-                            <label class="form-check-label" for="platform-instagram">
-                                <i class="fab fa-instagram text-danger me-1"></i> Instagram
+                            <label class="check-card">
+                                <input type="checkbox" value="instagram" name="platforms">
+                                <i class="fab fa-instagram" style="color:#E4405F;"></i> Instagram
                             </label>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="scheduleSwitch">
-                            <label class="form-check-label" for="scheduleSwitch">Schedule for later</label>
-                        </div>
+
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                            <input type="checkbox" id="scheduleSwitch">
+                            <span>Zaplanuj na później</span>
+                        </label>
                     </div>
-                    <div class="mb-3 d-none" id="scheduleTimeField">
-                        <label for="scheduled_time" class="form-label">Schedule Time</label>
+
+                    <div class="form-group" id="scheduleTimeField" style="display:none;">
+                        <label for="scheduled_time" class="form-label">Data i godzina publikacji</label>
                         <input type="datetime-local" class="form-control" id="scheduled_time" name="scheduled_time">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Publish</button>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Publikuj
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+.check-card {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.625rem .75rem;
+    border:1px solid var(--border-default);
+    border-radius:var(--radius-md);
+    cursor:pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    font-size:.875rem;
+}
+.check-card:hover { background: var(--surface-sunken); border-color: var(--color-indigo-300); }
+.check-card input { margin:0; }
+</style>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle publish modal
-        const publishModal = document.getElementById('publishModal');
-        if (publishModal) {
-            publishModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const contentId = button.getAttribute('data-content-id');
-                const form = document.getElementById('publishForm');
-                form.action = `/social/posts/${contentId}/publish`;
-            });
-        }
-        
-        // Handle schedule switch
-        const scheduleSwitch = document.getElementById('scheduleSwitch');
-        const scheduleTimeField = document.getElementById('scheduleTimeField');
-        
-        if (scheduleSwitch && scheduleTimeField) {
-            scheduleSwitch.addEventListener('change', function() {
-                if (this.checked) {
-                    scheduleTimeField.classList.remove('d-none');
-                } else {
-                    scheduleTimeField.classList.add('d-none');
-                }
-            });
-        }
-        
-        // Status polling for pending posts
-        function pollPostStatus() {
-            document.querySelectorAll('[id^="status-"]').forEach(function(element) {
-                const contentId = element.id.split('-')[1];
-                
-                fetch(`/api/social/posts/${contentId}/status`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Check if any posts are pending or error
-                        const hasError = Object.values(data).some(post => post.status === 'error');
-                        const hasPending = Object.values(data).some(post => post.status === 'pending');
-                        const allPublished = Object.values(data).every(post => post.status === 'published');
-                        
-                        let statusHtml = '';
-                        if (hasError) {
-                            statusHtml = '<span class="badge bg-danger">Error</span>';
-                        } else if (hasPending) {
-                            statusHtml = '<span class="badge bg-warning">Scheduled</span>';
-                        } else if (allPublished) {
-                            statusHtml = '<span class="badge bg-success">Published</span>';
-                        } else {
-                            statusHtml = '<span class="badge bg-secondary">Draft</span>';
-                        }
-                        
-                        element.innerHTML = statusHtml;
-                    });
-            });
-        }
-        
-        // Poll every 30 seconds
-        setInterval(pollPostStatus, 30000);
+document.addEventListener('DOMContentLoaded', function () {
+    // Otwarcie modala publikacji
+    document.querySelectorAll('.js-publish-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-content-id');
+            const title = btn.getAttribute('data-title');
+            document.getElementById('publishForm').action = `/social/posts/${id}/publish`;
+            document.getElementById('publishTitle').textContent = title;
+            Modal.open('publishModal');
+        });
     });
+
+    // Toggle harmonogram
+    const switchEl = document.getElementById('scheduleSwitch');
+    const field = document.getElementById('scheduleTimeField');
+    if (switchEl && field) {
+        switchEl.addEventListener('change', () => {
+            field.style.display = switchEl.checked ? '' : 'none';
+        });
+    }
+
+    // Polling statusu postów - co 30s
+    async function pollStatus() {
+        const elements = document.querySelectorAll('[id^="status-"]');
+        for (const el of elements) {
+            const id = el.id.split('-')[1];
+            try {
+                const data = await API.get(`/api/social/posts/${id}/status`);
+                const values = Object.values(data);
+                const hasError = values.some(p => p.status === 'error');
+                const hasPending = values.some(p => p.status === 'pending');
+                const allPublished = values.length && values.every(p => p.status === 'published');
+
+                let html;
+                if (allPublished) html = '<span class="badge badge-success">Opublikowany</span>';
+                else if (hasError) html = '<span class="badge badge-danger">Błąd</span>';
+                else if (hasPending) html = '<span class="badge badge-warning">Zaplanowany</span>';
+                else html = '<span class="badge badge-neutral">Wersja robocza</span>';
+                el.innerHTML = html;
+            } catch (_) { /* cicho - api.js wyświetli toast jeśli krytyczne */ }
+        }
+    }
+    setInterval(pollStatus, 30000);
+});
 </script>
 {% endblock %}

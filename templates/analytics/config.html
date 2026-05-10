@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Konfiguracja Analytics - BlogAutomationAgent{% endblock %}
+{% block title %}Konfiguracja Analytics — MasterContentAI{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -20,6 +20,7 @@
         </div>
         <div class="card-body">
             <form action="{{ url_for('save_global_analytics') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -91,6 +92,7 @@
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('save_blog_analytics', blog_id=blog.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="property_id_{{ blog.id }}" class="form-label">Property ID (GA4)</label>
                             <input type="text" class="form-control" id="property_id_{{ blog.id }}" 

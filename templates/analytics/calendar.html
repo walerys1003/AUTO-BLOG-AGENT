@@ -1,411 +1,463 @@
 {% extends 'base.html' %}
 
-{% block title %}Content Calendar - BLOG AUTOMATION MASTER{% endblock %}
-
-{% block styles %}
-<style>
-    .calendar-day {
-        min-height: 120px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-    }
-    
-    .calendar-day-header {
-        position: absolute;
-        top: 5px;
-        right: 8px;
-        font-size: 1.2rem;
-        opacity: 0.7;
-    }
-    
-    .calendar-day.inactive {
-        background-color: rgba(0, 0, 0, 0.1);
-    }
-    
-    .calendar-day.today {
-        border: 2px solid var(--bs-primary);
-    }
-    
-    .calendar-day.weekend {
-        background-color: rgba(0, 0, 0, 0.05);
-    }
-    
-    .calendar-item {
-        padding: 5px 8px;
-        margin: 5px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        cursor: pointer;
-    }
-    
-    .calendar-item.priority-1 {
-        background-color: rgba(var(--bs-secondary-rgb), 0.4);
-    }
-    
-    .calendar-item.priority-2 {
-        background-color: rgba(var(--bs-info-rgb), 0.4);
-    }
-    
-    .calendar-item.priority-3 {
-        background-color: rgba(var(--bs-success-rgb), 0.4);
-    }
-    
-    .calendar-item.priority-4 {
-        background-color: rgba(var(--bs-warning-rgb), 0.4);
-    }
-    
-    .calendar-item.priority-5 {
-        background-color: rgba(var(--bs-primary-rgb), 0.4);
-    }
-    
-    .calendar-item.status-published {
-        border-left: 3px solid var(--bs-success);
-    }
-    
-    .calendar-item.status-in_progress {
-        border-left: 3px solid var(--bs-warning);
-    }
-    
-    .calendar-item.status-planned {
-        border-left: 3px solid var(--bs-info);
-    }
-    
-    .calendar-item.status-cancelled {
-        border-left: 3px solid var(--bs-danger);
-        text-decoration: line-through;
-        opacity: 0.7;
-    }
-</style>
-{% endblock %}
+{% block title %}Kalendarz treści — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Kalendarz treści</h1>
+{# ============================================================
+   KALENDARZ TREŚCI
+   - Nawigacja miesięczna (prev/next)
+   - Filtry (blog, status)
+   - Siatka kalendarza 7-dniowa z polskimi nazwami dni
+   - Natywny modal szczegółów wpisu + potwierdzenie usunięcia
+   ============================================================ #}
+
+{# Słownik mapujący status na etykietę i kolor — DRY pattern #}
+{% set status_meta = {
+    'planned':     {'label': 'Zaplanowane',  'state': 'info'},
+    'in_progress': {'label': 'W trakcie',    'state': 'warning'},
+    'published':   {'label': 'Opublikowane', 'state': 'success'},
+    'cancelled':   {'label': 'Anulowane',    'state': 'danger'}
+} %}
+{% set priority_labels = {
+    1: 'Bardzo niski',
+    2: 'Niski',
+    3: 'Średni',
+    4: 'Wysoki',
+    5: 'Bardzo wysoki'
+} %}
+{% set month_names_pl = {
+    1: 'Styczeń',  2: 'Luty',     3: 'Marzec',   4: 'Kwiecień',
+    5: 'Maj',      6: 'Czerwiec', 7: 'Lipiec',   8: 'Sierpień',
+    9: 'Wrzesień', 10: 'Październik', 11: 'Listopad', 12: 'Grudzień'
+} %}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
         <div>
-            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">Kalendarz treści</h1>
+            <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">Planuj i zarządzaj publikacjami w czasie.</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left"></i> Powrót
             </a>
-            <a href="{{ url_for('generate_content_plan') }}" class="btn btn-primary ms-2">
-                <i class="fas fa-magic me-1"></i> Zaplanuj treści
+            <a href="{{ url_for('generate_content_plan') }}" class="btn btn-primary">
+                <i class="fas fa-magic"></i> Zaplanuj treści (AI)
             </a>
-            <a href="{{ url_for('add_calendar_entry') }}" class="btn btn-outline-primary ms-2">
-                <i class="fas fa-plus me-1"></i> Dodaj ręcznie
+            <a href="{{ url_for('add_calendar_entry') }}" class="btn btn-ghost">
+                <i class="fas fa-plus"></i> Dodaj ręcznie
             </a>
         </div>
     </div>
-    
-    <!-- Calendar Controls -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center">
-                        <a href="{{ url_for('content_calendar', year=prev_month.year, month=prev_month.month) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                        <h3 class="mb-0 mx-3">{{ current_date.strftime('%B %Y')|capitalize }}</h3>
-                        <a href="{{ url_for('content_calendar', year=next_month.year, month=next_month.month) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <form action="{{ url_for('content_calendar') }}" method="get" class="row g-3">
-                        <div class="col-md-4">
-                            <select class="form-select" id="blog_id" name="blog_id">
-                                <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}" {% if selected_blog_id|int == blog.id %}selected{% endif %}>{{ blog.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="form-select" id="status" name="status">
-                                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Wszystkie statusy</option>
-                                <option value="planned" {% if selected_status == 'planned' %}selected{% endif %}>Zaplanowane</option>
-                                <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>W trakcie</option>
-                                <option value="published" {% if selected_status == 'published' %}selected{% endif %}>Opublikowane</option>
-                                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Anulowane</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex">
-                                <button type="submit" class="btn btn-primary flex-grow-1">Filtruj</button>
-                                <a href="{{ url_for('content_calendar') }}" class="btn btn-outline-secondary ms-2">
-                                    <i class="fas fa-redo"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+</div>
+
+<!-- Nawigacja + Filtry -->
+<section class="card" style="margin-bottom:1.25rem;">
+    <div class="card-body">
+        <div class="cal-toolbar">
+            <!-- Nawigacja miesięczna -->
+            <div class="cal-nav">
+                <a href="{{ url_for('content_calendar', year=prev_month.year, month=prev_month.month) }}"
+                   class="btn btn-ghost btn-icon-only" title="Poprzedni miesiąc" aria-label="Poprzedni miesiąc">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <h2 class="cal-title">
+                    {{ month_names_pl.get(current_date.month, '') }} {{ current_date.year }}
+                </h2>
+                <a href="{{ url_for('content_calendar', year=next_month.year, month=next_month.month) }}"
+                   class="btn btn-ghost btn-icon-only" title="Następny miesiąc" aria-label="Następny miesiąc">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('content_calendar') }}" class="btn btn-ghost btn-sm" title="Dzisiaj">
+                    <i class="fas fa-calendar-day"></i> Dzisiaj
+                </a>
             </div>
+
+            <!-- Filtry -->
+            <form action="{{ url_for('content_calendar') }}" method="get" class="cal-filters" data-validate>
+                <div class="form-group">
+                    <select class="form-control" id="blog_id" name="blog_id" aria-label="Filtr — blog">
+                        <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}" {% if selected_blog_id != 'all' and selected_blog_id|string|int(0) == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select class="form-control" id="status" name="status" aria-label="Filtr — status">
+                        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Wszystkie statusy</option>
+                        {% for st_key, st_val in status_meta.items() %}
+                        <option value="{{ st_key }}" {% if selected_status == st_key %}selected{% endif %}>{{ st_val.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtruj
+                </button>
+                <a href="{{ url_for('content_calendar') }}" class="btn btn-ghost btn-icon-only" title="Wyczyść filtry" aria-label="Wyczyść filtry">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </form>
         </div>
     </div>
-    
-    <!-- Calendar Grid -->
-    <div class="card">
-        <div class="card-body">
-            <!-- Days of week header -->
-            <div class="row mb-2">
-                {% for day in ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'] %}
-                <div class="col text-center">
-                    <strong>{{ day }}</strong>
-                </div>
-                {% endfor %}
+</section>
+
+<!-- Siatka kalendarza -->
+<section class="card">
+    <div class="card-body" style="padding:.875rem;">
+        <!-- Nagłówki dni tygodnia -->
+        <div class="cal-grid cal-header-row">
+            {% for day in ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'] %}
+            <div class="cal-day-header">
+                <span class="cal-day-name-full">{{ day }}</span>
+                <span class="cal-day-name-short">{{ day[:3] }}</span>
             </div>
-            
-            <!-- Calendar grid -->
-            {% for week in calendar_weeks %}
-            <div class="row mb-2">
-                {% for day in week %}
-                {% if day.date %}
-                <div class="col calendar-day {% if day.current_month == false %}inactive{% endif %} {% if day.today %}today{% endif %} {% if day.weekday >= 5 %}weekend{% endif %}">
-                    <div class="calendar-day-header">{{ day.date.day }}</div>
-                    
+            {% endfor %}
+        </div>
+
+        <!-- Siatka dni -->
+        {% for week in calendar_weeks %}
+        <div class="cal-grid">
+            {% for day in week %}
+            {% if day.date %}
+            <div class="cal-day{% if day.current_month == false %} is-inactive{% endif %}{% if day.today %} is-today{% endif %}{% if day.weekday >= 5 %} is-weekend{% endif %}">
+                <div class="cal-day-number">{{ day.date.day }}</div>
+                <div class="cal-day-entries">
                     {% for entry in day.entries %}
-                    <div class="calendar-item priority-{{ entry.priority }} status-{{ entry.status }}" 
-                         data-bs-toggle="modal" data-bs-target="#entryDetailsModal" 
-                         data-entry-id="{{ entry.id }}" 
-                         data-entry-title="{{ entry.title }}" 
-                         data-entry-blog="{{ entry.blog_name }}" 
-                         data-entry-time="{{ entry.time }}" 
-                         data-entry-status="{{ entry.status }}" 
-                         data-entry-priority="{{ entry.priority }}" 
-                         data-entry-notes="{{ entry.notes|default('') }}">
-                        {% if entry.time %}{{ entry.time }} {% endif %}
-                        {{ entry.title }}
+                    {% set s_meta = status_meta.get(entry.status, {'label': entry.status, 'state': 'neutral'}) %}
+                    <button type="button"
+                            class="cal-entry cal-entry-state-{{ s_meta.state }} cal-entry-priority-{{ entry.priority }}"
+                            data-action="open-entry"
+                            data-entry-id="{{ entry.id }}"
+                            data-entry-title="{{ entry.title }}"
+                            data-entry-blog="{{ entry.blog_name }}"
+                            data-entry-time="{{ entry.time }}"
+                            data-entry-date="{{ day.date.strftime('%Y-%m-%d') }}"
+                            data-entry-status="{{ entry.status }}"
+                            data-entry-status-label="{{ s_meta.label }}"
+                            data-entry-priority="{{ entry.priority }}"
+                            data-entry-priority-label="{{ priority_labels.get(entry.priority, entry.priority) }}"
+                            data-entry-notes="{{ entry.notes|default('') }}"
+                            title="{{ entry.title }}">
+                        {% if entry.time %}<span class="cal-entry-time">{{ entry.time }}</span>{% endif %}
+                        <span class="cal-entry-title">{{ entry.title }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="cal-day is-empty"></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <!-- Legenda -->
+        <div class="cal-legend">
+            <div class="cal-legend-section">
+                <h3 class="cal-legend-title"><i class="fas fa-flag" style="color:var(--brand-600);"></i> Status</h3>
+                <div class="cal-legend-items">
+                    {% for st_key, st_val in status_meta.items() %}
+                    <div class="cal-legend-item">
+                        <span class="cal-entry cal-entry-state-{{ st_val.state }} cal-entry-legend">{{ st_val.label }}</span>
                     </div>
                     {% endfor %}
                 </div>
-                {% else %}
-                <div class="col"></div>
-                {% endif %}
-                {% endfor %}
             </div>
-            {% endfor %}
-            
-            <!-- Legend -->
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <h5>Status</h5>
-                    <div class="d-flex flex-wrap gap-3">
-                        <div>
-                            <span class="calendar-item status-planned">Przykład</span>
-                            <span class="ms-2">Zaplanowane</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item status-in_progress">Przykład</span>
-                            <span class="ms-2">W trakcie</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item status-published">Przykład</span>
-                            <span class="ms-2">Opublikowane</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item status-cancelled">Przykład</span>
-                            <span class="ms-2">Anulowane</span>
-                        </div>
+            <div class="cal-legend-section">
+                <h3 class="cal-legend-title"><i class="fas fa-bolt" style="color:var(--warning-700);"></i> Priorytet</h3>
+                <div class="cal-legend-items">
+                    {% for p_num, p_label in priority_labels.items() %}
+                    <div class="cal-legend-item">
+                        <span class="cal-entry cal-entry-priority-{{ p_num }} cal-entry-state-info cal-entry-legend">{{ p_label }}</span>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <h5>Priorytet</h5>
-                    <div class="d-flex flex-wrap gap-3">
-                        <div>
-                            <span class="calendar-item priority-1">Przykład</span>
-                            <span class="ms-2">Bardzo niski</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item priority-2">Przykład</span>
-                            <span class="ms-2">Niski</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item priority-3">Przykład</span>
-                            <span class="ms-2">Średni</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item priority-4">Przykład</span>
-                            <span class="ms-2">Wysoki</span>
-                        </div>
-                        <div>
-                            <span class="calendar-item priority-5">Przykład</span>
-                            <span class="ms-2">Bardzo wysoki</span>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- Natywny modal: szczegóły wpisu -->
+<div class="modal" id="entryDetailsModal" role="dialog" aria-modal="true" aria-labelledby="entryDetailsModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog" role="document">
+        <header class="modal-header">
+            <h3 class="modal-title" id="entryDetailsModalLabel">
+                <i class="fas fa-calendar-check" style="color:var(--brand-600);"></i> Szczegóły wpisu
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="modal-body">
+            <h4 id="entryTitle" style="margin:0 0 .25rem;font-size:1.0625rem;font-weight:600;color:var(--text-1);"></h4>
+            <p id="entryBlog" style="margin:0 0 1rem;color:var(--text-3);font-size:.8125rem;"></p>
+
+            <dl class="meta-list">
+                <dt>Data i czas</dt>
+                <dd id="entryDateTime"></dd>
+                <dt>Status</dt>
+                <dd><span id="entryStatusPill" class="pill"></span></dd>
+                <dt>Priorytet</dt>
+                <dd>
+                    <div style="display:flex;align-items:center;gap:.625rem;">
+                        <div class="progress" style="flex:1;">
+                            <div id="entryPriorityBar" class="progress-bar"></div>
+                        </div>
+                        <span id="entryPriorityLabel" style="font-size:.8125rem;color:var(--text-2);min-width:6.5rem;"></span>
+                    </div>
+                </dd>
+            </dl>
+
+            <div id="entryNotesContainer" style="margin-top:1rem;">
+                <strong style="display:block;margin-bottom:.375rem;font-size:.8125rem;color:var(--text-2);">
+                    <i class="fas fa-sticky-note" style="color:var(--info-700);"></i> Notatki
+                </strong>
+                <p id="entryNotes" style="margin:0;padding:.625rem .75rem;background:var(--surface-2);border:1px solid var(--border-1);border-radius:.5rem;font-size:.8125rem;line-height:1.5;color:var(--text-1);white-space:pre-wrap;"></p>
+            </div>
+
+            <input type="hidden" id="entryId">
+        </div>
+        <footer class="modal-footer" style="justify-content:space-between;">
+            <button type="button" class="btn btn-ghost btn-danger-ghost" data-action="confirm-delete">
+                <i class="fas fa-trash"></i> Usuń
+            </button>
+            <div style="display:flex;gap:.5rem;">
+                <button type="button" class="btn btn-ghost" data-close>Zamknij</button>
+                <a href="#" id="editEntryLink" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edytuj
+                </a>
+            </div>
+        </footer>
     </div>
 </div>
 
-<!-- Entry Details Modal -->
-<div class="modal fade" id="entryDetailsModal" tabindex="-1" aria-labelledby="entryDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="entryDetailsModalLabel">Szczegóły wpisu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <h4 id="entryTitle"></h4>
-                <p class="text-muted" id="entryBlog"></p>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Data i czas:</strong>
-                        <p id="entryDateTime"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Status:</strong>
-                        <p id="entryStatus"></p>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <strong>Priorytet:</strong>
-                    <div class="progress" style="height: 20px;">
-                        <div id="entryPriorityBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                </div>
-                
-                <div id="entryNotesContainer" class="mb-3">
-                    <strong>Notatki:</strong>
-                    <p id="entryNotes" class="border rounded p-2"></p>
-                </div>
-                
-                <input type="hidden" id="entryId">
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <div>
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEntryModal">
-                        Usuń
-                    </button>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                    <a href="#" id="editEntryLink" class="btn btn-primary">Edytuj</a>
-                </div>
-            </div>
+<!-- Natywny modal: potwierdzenie usunięcia -->
+<div class="modal" id="deleteEntryModal" role="dialog" aria-modal="true" aria-labelledby="deleteEntryModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog" role="document" style="max-width:440px;">
+        <header class="modal-header">
+            <h3 class="modal-title" id="deleteEntryModalLabel">
+                <i class="fas fa-exclamation-triangle" style="color:var(--danger-700);"></i> Potwierdzenie usunięcia
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="modal-body">
+            <p style="margin:0 0 .5rem;">Czy na pewno chcesz usunąć ten wpis z kalendarza treści?</p>
+            <p style="margin:0;color:var(--danger-700);font-size:.8125rem;"><i class="fas fa-info-circle"></i> Tej operacji nie można cofnąć.</p>
         </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>Anuluj</button>
+            <form action="{{ url_for('delete_calendar_entry') }}" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="entry_id" id="entryIdToDelete">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Usuń wpis
+                </button>
+            </form>
+        </footer>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteEntryModal" tabindex="-1" aria-labelledby="deleteEntryModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteEntryModalLabel">Potwierdzenie usunięcia</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Czy na pewno chcesz usunąć ten wpis z kalendarza treści?
-                <p class="text-danger mt-2">Tej operacji nie można cofnąć.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <form action="{{ url_for('delete_calendar_entry') }}" method="post">
-                    <input type="hidden" name="entry_id" id="entryIdToDelete">
-                    <button type="submit" class="btn btn-danger">Usuń</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+/* ----- Toolbar (nawigacja + filtry) ----- */
+.cal-toolbar{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:center;}
+@media (max-width:900px){.cal-toolbar{grid-template-columns:1fr;}}
+.cal-nav{display:flex;align-items:center;gap:.5rem;}
+.cal-title{margin:0;font-size:1.125rem;font-weight:600;color:var(--text-1);min-width:11rem;text-align:center;}
+.cal-filters{display:flex;align-items:center;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;}
+@media (max-width:900px){.cal-filters{justify-content:flex-start;}}
+.cal-filters .form-group{margin:0;min-width:9.5rem;}
+
+.btn-icon-only{width:2.25rem;height:2.25rem;padding:0;display:inline-flex;align-items:center;justify-content:center;}
+
+/* ----- Siatka kalendarza ----- */
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.25rem;margin-bottom:.25rem;}
+.cal-header-row{margin-bottom:.5rem;}
+.cal-day-header{padding:.5rem .375rem;background:var(--surface-2);border-radius:.375rem;text-align:center;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;}
+.cal-day-name-short{display:none;}
+@media (max-width:700px){.cal-day-name-full{display:none;}.cal-day-name-short{display:inline;}}
+
+.cal-day{min-height:7.5rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.5rem;padding:.375rem .375rem .5rem;position:relative;display:flex;flex-direction:column;}
+.cal-day.is-inactive{background:var(--surface-2);opacity:.55;}
+.cal-day.is-weekend{background:linear-gradient(180deg,var(--surface-1) 0%,var(--surface-2) 100%);}
+.cal-day.is-today{border:2px solid var(--brand-600);box-shadow:0 0 0 3px var(--brand-50);}
+.cal-day.is-empty{background:transparent;border:none;}
+.cal-day-number{position:absolute;top:.375rem;right:.5rem;font-size:.8125rem;font-weight:600;color:var(--text-3);font-variant-numeric:tabular-nums;}
+.cal-day.is-today .cal-day-number{color:var(--brand-700);}
+.cal-day-entries{display:flex;flex-direction:column;gap:.25rem;margin-top:1.5rem;}
+
+/* ----- Wpis w kalendarzu ----- */
+.cal-entry{display:flex;align-items:center;gap:.25rem;padding:.25rem .5rem;border-radius:.25rem;font-size:.75rem;line-height:1.3;text-align:left;cursor:pointer;border:1px solid transparent;border-left-width:3px;background:var(--surface-2);color:var(--text-1);overflow:hidden;width:100%;font-family:inherit;}
+.cal-entry:hover{filter:brightness(.97);box-shadow:0 1px 3px rgba(15,23,42,.08);}
+.cal-entry-time{font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.cal-entry-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+
+/* Stany statusowe (border-left + tło) */
+.cal-entry-state-info     {background:var(--info-50);    border-left-color:var(--info-700);    color:var(--info-700);}
+.cal-entry-state-warning  {background:var(--warning-50); border-left-color:var(--warning-700); color:var(--warning-700);}
+.cal-entry-state-success  {background:var(--success-50); border-left-color:var(--success-700); color:var(--success-700);}
+.cal-entry-state-danger   {background:var(--danger-50);  border-left-color:var(--danger-700);  color:var(--danger-700);text-decoration:line-through;opacity:.75;}
+.cal-entry-state-neutral  {background:var(--surface-2);  border-left-color:var(--text-3);      color:var(--text-2);}
+
+/* Priorytet — intensyfikacja tła */
+.cal-entry-priority-1{opacity:.65;}
+.cal-entry-priority-2{opacity:.8;}
+.cal-entry-priority-3{}
+.cal-entry-priority-4{font-weight:600;}
+.cal-entry-priority-5{font-weight:700;box-shadow:inset 0 0 0 1px currentColor;}
+
+.cal-entry-legend{display:inline-flex;cursor:default;width:auto;}
+
+/* ----- Legenda ----- */
+.cal-legend{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border-1);}
+@media (max-width:700px){.cal-legend{grid-template-columns:1fr;}}
+.cal-legend-title{margin:0 0 .625rem;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:.375rem;}
+.cal-legend-items{display:flex;flex-wrap:wrap;gap:.375rem;}
+
+/* ----- Pills ----- */
+.pill{display:inline-flex;align-items:center;padding:.25rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.4;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger {background:var(--danger-50); color:var(--danger-700);}
+.pill-warning{background:var(--warning-50);color:var(--warning-700);}
+.pill-info   {background:var(--info-50);   color:var(--info-700);}
+.pill-brand  {background:var(--brand-50);  color:var(--brand-700);}
+.pill-neutral{background:var(--surface-2); color:var(--text-2);}
+
+/* ----- Meta-list (definition list) ----- */
+.meta-list{display:grid;grid-template-columns:auto 1fr;gap:.5rem .875rem;margin:0;font-size:.875rem;}
+.meta-list dt{color:var(--text-3);font-weight:500;white-space:nowrap;}
+.meta-list dd{margin:0;color:var(--text-1);}
+
+/* ----- Progress ----- */
+.progress{height:.5rem;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+.progress-bar{height:100%;border-radius:999px;background:var(--brand-600);transition:width .25s ease;}
+.progress-bar.is-low     {background:var(--info-700);}
+.progress-bar.is-medium  {background:var(--success-700);}
+.progress-bar.is-high    {background:var(--warning-700);}
+.progress-bar.is-critical{background:var(--brand-700);}
+
+/* ----- Modal ----- */
+.modal{position:fixed;inset:0;z-index:1050;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal[hidden]{display:none;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);}
+.modal-dialog{position:relative;background:var(--surface-1);border-radius:.75rem;box-shadow:0 24px 48px rgba(15,23,42,.2);max-width:540px;width:100%;animation:modalIn .15s ease;max-height:90vh;display:flex;flex-direction:column;}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.modal-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.modal-body{padding:1.25rem;color:var(--text-1);overflow-y:auto;}
+.modal-footer{display:flex;justify-content:flex-end;gap:.5rem;padding:.875rem 1.25rem;border-top:1px solid var(--border-1);}
+.btn-icon{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:.375rem;color:var(--text-3);cursor:pointer;}
+.btn-icon:hover{background:var(--surface-2);color:var(--text-1);}
+
+.btn-danger-ghost:hover{background:var(--danger-50)!important;color:var(--danger-700)!important;}
+</style>
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle entry details modal
-    var entryDetailsModal = document.getElementById('entryDetailsModal');
-    if (entryDetailsModal) {
-        entryDetailsModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var entryId = button.getAttribute('data-entry-id');
-            var entryTitle = button.getAttribute('data-entry-title');
-            var entryBlog = button.getAttribute('data-entry-blog');
-            var entryTime = button.getAttribute('data-entry-time');
-            var entryStatus = button.getAttribute('data-entry-status');
-            var entryPriority = button.getAttribute('data-entry-priority');
-            var entryNotes = button.getAttribute('data-entry-notes');
-            
-            // Update modal content
-            document.getElementById('entryId').value = entryId;
-            document.getElementById('entryTitle').textContent = entryTitle;
-            document.getElementById('entryBlog').textContent = 'Blog: ' + entryBlog;
-            
-            // Format date and time
-            var dateTimeStr = button.closest('.calendar-day').querySelector('.calendar-day-header').textContent;
-            if (entryTime) {
-                dateTimeStr += ', ' + entryTime;
-            }
-            document.getElementById('entryDateTime').textContent = dateTimeStr;
-            
-            // Format status
-            var statusText = '';
-            var statusClass = '';
-            switch (entryStatus) {
-                case 'planned':
-                    statusText = 'Zaplanowane';
-                    statusClass = 'text-info';
-                    break;
-                case 'in_progress':
-                    statusText = 'W trakcie';
-                    statusClass = 'text-warning';
-                    break;
-                case 'published':
-                    statusText = 'Opublikowane';
-                    statusClass = 'text-success';
-                    break;
-                case 'cancelled':
-                    statusText = 'Anulowane';
-                    statusClass = 'text-danger';
-                    break;
-                default:
-                    statusText = entryStatus;
-            }
-            var statusElement = document.getElementById('entryStatus');
-            statusElement.textContent = statusText;
-            statusElement.className = statusClass;
-            
-            // Update priority bar
-            var priorityBar = document.getElementById('entryPriorityBar');
-            var priorityPercent = (entryPriority / 5) * 100;
-            priorityBar.style.width = priorityPercent + '%';
-            priorityBar.setAttribute('aria-valuenow', priorityPercent);
-            
-            // Set priority bar color
-            priorityBar.className = 'progress-bar';
-            if (entryPriority <= 2) {
-                priorityBar.classList.add('bg-info');
-            } else if (entryPriority == 3) {
-                priorityBar.classList.add('bg-success');
-            } else if (entryPriority == 4) {
-                priorityBar.classList.add('bg-warning');
-            } else {
-                priorityBar.classList.add('bg-primary');
-            }
-            
-            // Update notes or hide if none
+    // ----- DRY: helper modal open/close -----
+    function openModal(modal){
+        if (!modal) return;
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var firstFocusable = modal.querySelector('[data-close]:not(.modal-backdrop), button, a, input');
+        if (firstFocusable) firstFocusable.focus();
+    }
+    function closeModal(modal){
+        if (!modal) return;
+        modal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    // ----- Modal: szczegóły wpisu -----
+    var detailsModal = document.getElementById('entryDetailsModal');
+    var deleteModal  = document.getElementById('deleteEntryModal');
+
+    // Mapowanie status -> pill class (synced with Jinja status_meta)
+    var STATUS_PILL = {
+        planned:     'pill-info',
+        in_progress: 'pill-warning',
+        published:   'pill-success',
+        cancelled:   'pill-danger'
+    };
+    // Priority bar classes (1-5)
+    function priorityBarClass(p){
+        p = parseInt(p, 10) || 0;
+        if (p <= 2) return 'is-low';
+        if (p === 3) return 'is-medium';
+        if (p === 4) return 'is-high';
+        return 'is-critical';
+    }
+
+    // Otwarcie modala szczegółów (po kliknięciu wpisu)
+    document.querySelectorAll('[data-action="open-entry"]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var d = btn.dataset;
+            document.getElementById('entryId').value = d.entryId;
+            document.getElementById('entryTitle').textContent = d.entryTitle || '';
+            document.getElementById('entryBlog').textContent = d.entryBlog ? ('Blog: ' + d.entryBlog) : '';
+
+            // Data + czas
+            var dateText = d.entryDate || '';
+            if (d.entryTime) dateText += ' • ' + d.entryTime;
+            document.getElementById('entryDateTime').textContent = dateText;
+
+            // Status pill
+            var statusPill = document.getElementById('entryStatusPill');
+            statusPill.className = 'pill ' + (STATUS_PILL[d.entryStatus] || 'pill-neutral');
+            statusPill.textContent = d.entryStatusLabel || d.entryStatus || '';
+
+            // Priorytet
+            var p = parseInt(d.entryPriority, 10) || 0;
+            var bar = document.getElementById('entryPriorityBar');
+            bar.style.width = ((p / 5) * 100) + '%';
+            bar.className = 'progress-bar ' + priorityBarClass(p);
+            document.getElementById('entryPriorityLabel').textContent = (d.entryPriorityLabel || '') + ' (' + p + '/5)';
+
+            // Notatki
             var notesContainer = document.getElementById('entryNotesContainer');
-            var notesElement = document.getElementById('entryNotes');
-            if (entryNotes && entryNotes.trim() !== '') {
-                notesElement.textContent = entryNotes;
-                notesContainer.style.display = 'block';
+            var notesEl = document.getElementById('entryNotes');
+            if (d.entryNotes && d.entryNotes.trim() !== '') {
+                notesEl.textContent = d.entryNotes;
+                notesContainer.style.display = '';
             } else {
                 notesContainer.style.display = 'none';
             }
-            
-            // Update edit link
-            document.getElementById('editEntryLink').href = "{{ url_for('edit_calendar_entry', entry_id='') }}" + entryId;
-            
-            // Update delete form
-            document.getElementById('entryIdToDelete').value = entryId;
+
+            // Linki edycji + usunięcia
+            var editBase = "{{ url_for('edit_calendar_entry', entry_id=0) }}".replace(/\/0$/, '/');
+            document.getElementById('editEntryLink').href = editBase + d.entryId;
+            document.getElementById('entryIdToDelete').value = d.entryId;
+
+            openModal(detailsModal);
+        });
+    });
+
+    // Przycisk "Usuń" w modal szczegółów -> otwórz modal potwierdzenia
+    var confirmDeleteBtn = detailsModal.querySelector('[data-action="confirm-delete"]');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function(){
+            closeModal(detailsModal);
+            openModal(deleteModal);
         });
     }
+
+    // Zamykanie modali (backdrop, X, ESC, "Anuluj")
+    [detailsModal, deleteModal].forEach(function(modal){
+        modal.querySelectorAll('[data-close]').forEach(function(el){
+            el.addEventListener('click', function(){ closeModal(modal); });
+        });
+    });
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+            if (!deleteModal.hidden)  closeModal(deleteModal);
+            else if (!detailsModal.hidden) closeModal(detailsModal);
+        }
+    });
 });
 </script>
 {% endblock %}

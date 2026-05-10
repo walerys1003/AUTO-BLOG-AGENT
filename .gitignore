@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Environment variables - NEVER COMMIT
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Flask
+*.pyc
+flask_session/
+
+# Logs
+*.log
+logs/
+generation_log.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.egg
+
+# Node (if any frontend tooling added later)
+node_modules/
+package-lock.json
+
+# OS
+Thumbs.db
+
+# Project-specific
+attached_assets/
+generated-icon.png
+landing_full.png
+test_plan_*.json
+*.tar.gz

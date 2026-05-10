@@ -1,540 +1,319 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MASTER AGENT AI - AI-powered content generation and management for WordPress blogs">
-    <title>{% block title %}MASTER AGENT AI{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts - Nowoczesna czcionka -->
+    <meta name="description" content="MasterContentAI — AI Content Workflow Platform">
+    <title>{% block title %}MasterContentAI{% endblock %}</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <meta name="theme-color" content="#0a1428">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <style>
-        /* Zmienne kolorów Consist UI */
-        :root {
-            --primary-color: #287F71;       /* Zielony - kolor główny */
-            --secondary-color: #EB862A;     /* Pomarańczowy - akcent */
-            --accent-color: #ABBDD3;        /* Jasny niebieski - akcent dodatkowy */
-            --neutral-color: #97A3B6;       /* Szaro-niebieski */
-            --dark-color: #0a0f1c;          /* Bardzo ciemny granatowy - tekst */
-            --bg-color: #f8f9fa;            /* Tło strony */
-            --card-bg: #FFFFFF;             /* Tło kart */
-            --text-color: #0a0f1c;          /* Bardzo ciemny kolor tekstu */
-            --icon-color: #1a2332;          /* Ciemny kolor ikon */
-        }
-        
-        /* Globalne style dla wszystkich funkcji agenta */
-        body {
-            background-color: var(--bg-color) !important;
-            color: var(--text-color) !important;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
-        }
-        
-        /* Wszystkie nagłówki w aplikacji */
-        h1, h2, h3, h4, h5, h6, 
-        .h1, .h2, .h3, .h4, .h5, .h6 {
-            color: var(--dark-color) !important;
-            font-weight: bold !important;
-        }
-        
-        /* Wszystkie karty i panele w aplikacji */
-        .card {
-            background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
-            border: none !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            border-radius: 8px !important;
-        }
-        
-        .card-header {
-            background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
-            border-bottom: 1px solid rgba(151, 163, 182, 0.2) !important;
-        }
-        
-        .card-body, .card-footer {
-            background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
-        }
-        
-        /* Tytuły kart */
-        .card-header h1, .card-header h2, .card-header h3, 
-        .card-header h4, .card-header h5, .card-header h6,
-        .card-header .h1, .card-header .h2, .card-header .h3, 
-        .card-header .h4, .card-header .h5, .card-header .h6 {
-            color: var(--dark-color) !important;
-            font-weight: bold !important;
-            margin-bottom: 0 !important;
-        }
-        
-        /* Elementy tekstowe w kartach */
-        .card p, .card li, .card div, .card span {
-            color: var(--text-color) !important;
-        }
-        
-        .card a:not(.btn) {
-            color: var(--primary-color) !important;
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-        /* Ikony - ciemniejszy kolor dla lepszej czytelności */
-        .fa, .fas, .far, .fab, .fal, .fad, .fat, .fass,
-        i[class*="fa-"], .icon {
-            color: var(--icon-color) !important;
-        }
+    <!-- Icons (lightweight, kept for FA classes still in legacy templates) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* Ikony w przyciskach zachowują kolor przycisku */
-        .btn .fa, .btn .fas, .btn .far, .btn .fab, 
-        .btn .fal, .btn .fad, .btn .fat, .btn .fass,
-        .btn i[class*="fa-"] {
-            color: inherit !important;
-        }
+    <!-- Design system -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 
-        /* Dodatkowe wzmocnienie kontrastu tekstu */
-        body, p, div, span, li, td, th, label {
-            color: var(--text-color) !important;
-            font-weight: 500 !important;
-        }
+    {# CSRF meta dla api.js - opt-in jeśli aplikacja włączy CSRF #}
+    {% if csrf_token is defined %}<meta name="csrf-token" content="{{ csrf_token() }}">{% endif %}
 
-        /* Bardzo ciemny tekst w nawigacji */
-        .navbar-brand, .nav-link {
-            color: var(--dark-color) !important;
-            font-weight: 600 !important;
-        }
-        
-        /* Formularze */
-        .form-label, .form-check-label {
-            color: var(--text-color) !important;
-            font-weight: 500 !important;
-        }
-        
-        /* Style przycisków */
-        .btn-primary {
-            background-color: var(--primary-color) !important;
-            border-color: var(--primary-color) !important;
-            color: #fff !important;
-        }
-        
-        .btn-secondary {
-            background-color: var(--neutral-color) !important;
-            border-color: var(--neutral-color) !important;
-            color: #fff !important;
-        }
-        
-        .btn-success {
-            background-color: var(--primary-color) !important;
-            border-color: var(--primary-color) !important;
-            color: #fff !important;
-        }
-        
-        .btn-danger {
-            background-color: var(--secondary-color) !important;
-            border-color: var(--secondary-color) !important;
-            color: #fff !important;
-        }
-        
-        .btn-info {
-            background-color: var(--accent-color) !important;
-            border-color: var(--accent-color) !important;
-            color: var(--dark-color) !important;
-        }
-        
-        .btn-outline-primary {
-            color: var(--primary-color) !important;
-            border-color: var(--primary-color) !important;
-        }
-        
-        .btn-outline-primary:hover {
-            background-color: var(--primary-color) !important;
-            color: #fff !important;
-        }
-        
-        /* Kontrolki i pola formularzy */
-        input, select, textarea {
-            background-color: #fff !important;
-            color: var(--dark-color) !important;
-            border: 1px solid var(--neutral-color) !important;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 0 0 0.25rem rgba(40, 127, 113, 0.25) !important;
-        }
-        
-        /* Tabele */
-        .table {
-            color: var(--dark-color) !important;
-        }
-        
-        .table th {
-            color: var(--dark-color) !important;
-            font-weight: bold !important;
-            border-bottom-color: var(--primary-color) !important;
-        }
-        
-        .table td {
-            color: var(--dark-color) !important;
-            border-color: rgba(151, 163, 182, 0.2) !important;
-        }
-        
-        /* Dodatkowe style dla tabel */
-        .table-hover tbody tr:hover {
-            background-color: rgba(40, 127, 113, 0.05) !important;
-        }
-        
-        /* Szczególne style dla funkcji podglądu artykułów */
-        .preview-title, 
-        .preview-content,
-        .preview-article h1, 
-        .preview-article h2, 
-        .preview-article h3,
-        .preview-article h4, 
-        .preview-article h5, 
-        .preview-article h6,
-        .preview-article p, 
-        .preview-article ul, 
-        .preview-article ol,
-        .preview-article li, 
-        .preview-article span, 
-        .preview-article div,
-        .preview-article a, 
-        .preview-article blockquote,
-        .preview-article strong,
-        .preview-article em,
-        .preview-article td,
-        .preview-article th,
-        .preview-article small,
-        .preview-article code,
-        .preview-article pre,
-        .lead {
-            color: #000000 !important;
-        }
-        
-        .preview-article {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-            padding: 2rem !important;
-            border-radius: 5px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-        }
-        
-        /* Globalne style dla funkcji podglądu w panelu edycji */
-        .preview-panel * {
-            color: #000000 !important;
-        }
-        
-        /* Style dla funkcji edycji artykułów */
-        .edit-form label {
-            color: #000000 !important;
-            font-weight: 500 !important;
-        }
-        
-        /* Stylizacja elementów select/option */
-        select option {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        
-        /* Klasa dla wymuszenia białego pola z czarnym nagłówkiem */
-        .function-box {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E0E0E0 !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            border-radius: 8px !important;
-        }
-
-        .function-title {
-            color: #000000 !important;
-            font-weight: bold !important;
-            font-size: 20px !important;
-            margin-bottom: 15px !important;
-        }
-        
-        /* NAPRAWA: Tooltips (dymki) - białe tło, czarny tekst */
-        .tooltip-inner {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-            border: 1px solid #dee2e6 !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-            font-weight: 500 !important;
-            padding: 8px 12px !important;
-        }
-        
-        .tooltip.bs-tooltip-top .tooltip-arrow::before,
-        .tooltip.bs-tooltip-auto[data-popper-placement^="top"] .tooltip-arrow::before {
-            border-top-color: #FFFFFF !important;
-        }
-        
-        .tooltip.bs-tooltip-end .tooltip-arrow::before,
-        .tooltip.bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
-            border-right-color: #FFFFFF !important;
-        }
-        
-        .tooltip.bs-tooltip-bottom .tooltip-arrow::before,
-        .tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
-            border-bottom-color: #FFFFFF !important;
-        }
-        
-        .tooltip.bs-tooltip-start .tooltip-arrow::before,
-        .tooltip.bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
-            border-left-color: #FFFFFF !important;
-        }
-        
-        /* Logo - nowoczesna czcionka Montserrat */
-        .logo-text {
-            font-family: 'Montserrat', sans-serif !important;
-            font-weight: 900 !important;
-            letter-spacing: 0.5px !important;
-        }
-    </style>
     {% block styles %}{% endblock %}
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#212529">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body class="d-flex flex-column min-vh-100">
-    <!-- Navigation -->
-    <header>
-        <!-- Główne menu nawigacyjne -->
-        <nav class="navbar navbar-expand-lg navbar-light border-bottom shadow-sm" style="background-color: var(--card-bg) !important;">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
-                    <div class="logo-icon me-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                        <span style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">🦁</span>
-                    </div>
-                    <span class="logo-text" style="color: var(--dark-color) !important; font-size: 1.15rem;">MASTER AGENT AI</span>
+<body>
+
+{# ------------------------------------------------------------------
+   SIDEBAR (left) — 5 logical sections
+   WORKSPACE / CONTENT / DISTRIBUTION / INTELLIGENCE / SETTINGS
+   ------------------------------------------------------------------ #}
+{% set ep = request.endpoint or '' %}
+{% macro nav_link(endpoint, label, icon, match=none, badge=none) -%}
+    {%- set active = (ep == endpoint) or (match and ep.startswith(match)) -%}
+    <a href="{{ url_for(endpoint) }}"
+       class="sidebar-link {% if active %}is-active{% endif %}"
+       {% if active %}aria-current="page"{% endif %}>
+        <span class="sidebar-link-icon"><i class="{{ icon }}"></i></span>
+        <span class="sidebar-link-label">{{ label }}</span>
+        {% if badge %}<span class="sidebar-link-badge">{{ badge }}</span>{% endif %}
+    </a>
+{%- endmacro %}
+
+<aside class="app-sidebar" id="appSidebar" aria-label="Główna nawigacja">
+    <a href="{{ url_for('dashboard') if is_authenticated else url_for('public_landing') }}" class="sidebar-brand">
+        <span class="sidebar-brand-logo">
+            <img src="{{ url_for('static', filename='img/logo-mark.svg') }}" alt="" width="32" height="32">
+        </span>
+        <span class="sidebar-brand-text">
+            <span class="sidebar-brand-name">MasterContent<span style="color:var(--color-cyan-300);">AI</span></span>
+            <span class="sidebar-brand-tag">Content Workflow</span>
+        </span>
+    </a>
+
+    <nav class="sidebar-section" aria-label="Obszar roboczy">
+        <div class="sidebar-section-title">Obszar roboczy</div>
+        {{ nav_link('dashboard',  'Pulpit', 'fas fa-chart-line') }}
+        {{ nav_link('blogs_list', 'Blogi',  'fas fa-globe') }}
+    </nav>
+
+    <nav class="sidebar-section" aria-label="Treści">
+        <div class="sidebar-section-title">Treści</div>
+        {{ nav_link('content_creator.content_dashboard', 'Edytor artykułów',   'fas fa-pen-nib',     match='content_creator.') }}
+        {{ nav_link('topics',                            'Tematy',             'fas fa-lightbulb') }}
+        {{ nav_link('images.image_library',              'Biblioteka obrazów', 'fas fa-images',      match='images.') }}
+    </nav>
+
+    <nav class="sidebar-section" aria-label="Dystrybucja">
+        <div class="sidebar-section-title">Dystrybucja</div>
+        {{ nav_link('publishing.publishing_dashboard', 'Publikacje',    'fas fa-paper-plane', match='publishing.') }}
+        {{ nav_link('social.social_dashboard',         'Social media',  'fas fa-share-nodes', match='social.') }}
+        {{ nav_link('newsletter.dashboard',            'Newsletter',    'fas fa-envelope',    match='newsletter.') }}
+    </nav>
+
+    <nav class="sidebar-section" aria-label="Analityka">
+        <div class="sidebar-section-title">Analityka</div>
+        {{ nav_link('seo.index',              'SEO',         'fas fa-magnifying-glass-chart', match='seo') }}
+        {{ nav_link('analytics_dashboard',    'Statystyki',  'fas fa-chart-pie') }}
+        {{ nav_link('logs',                   'Dziennik',    'fas fa-clipboard-list') }}
+    </nav>
+
+    {% if is_authenticated and current_user and current_user.is_admin %}
+    <nav class="sidebar-section" aria-label="Ustawienia">
+        <div class="sidebar-section-title">Ustawienia</div>
+        {{ nav_link('openrouter_config', 'Modele AI',    'fas fa-microchip') }}
+        {{ nav_link('auth.list_users',   'Użytkownicy',  'fas fa-users-gear') }}
+    </nav>
+    {% endif %}
+
+    <div class="sidebar-footer">
+        {% if is_authenticated and current_user %}
+            {%- set role_pl_sb = {'admin':'Administrator', 'editor':'Redaktor', 'viewer':'Czytelnik'}.get(current_user.role, current_user.role) -%}
+            <a href="{{ url_for('auth.profile') }}" class="sidebar-link" style="padding:.5rem;" aria-label="Mój profil">
+                <span class="user-chip-avatar" style="width:32px;height:32px;font-size:.75rem;">{{ current_user.initials }}</span>
+                <span class="sidebar-link-label">
+                    <span style="display:block;font-weight:600;color:#fff;font-size:.875rem;line-height:1.2;">{{ current_user.full_name or current_user.username }}</span>
+                    <span style="display:block;font-size:.6875rem;color:rgba(255,255,255,0.5);">{{ role_pl_sb }}</span>
+                </span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-accent btn-sm btn-block">Zaloguj się</a>
+        {% endif %}
+    </div>
+</aside>
+
+{# ------------------------------------------------------------------
+   MAIN: topbar + content
+   ------------------------------------------------------------------ #}
+<main class="app-main">
+
+    <header class="app-topbar" role="banner">
+        <button class="topbar-icon-btn" id="sidebarToggle" type="button" aria-label="Przełącz menu" title="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="topbar-search" role="search">
+            <span class="topbar-search-icon"><i class="fas fa-magnifying-glass"></i></span>
+            <input type="search"
+                   class="form-control"
+                   placeholder="{% block search_placeholder %}Szukaj artykułów, blogów, tematów…{% endblock %}"
+                   aria-label="Szukaj"
+                   {% block search_attrs %}{% endblock %}>
+        </div>
+
+        <div class="topbar-actions">
+            {% block topbar_actions %}{% endblock %}
+
+            {% if is_authenticated and current_user %}
+                <a href="{{ url_for('logs') }}" class="topbar-icon-btn" title="Powiadomienia / logi" aria-label="Powiadomienia">
+                    <i class="fas fa-bell"></i>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <div class="ms-auto">
-                        <!-- Pierwszy rząd -->
-                        <ul class="navbar-nav d-flex flex-wrap justify-content-end" style="max-width: 100%;">
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.path == url_for('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/blogs' in request.path %}active{% endif %}" href="{{ url_for('blogs_list') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-blog me-1"></i> Blogs
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/topics' in request.path %}active{% endif %}" href="{{ url_for('topics') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-lightbulb me-1"></i> Topics
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {% if '/social' in request.path %}active{% endif %}" href="#" id="socialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-share-alt me-1"></i> Social Media
-                                </a>
-                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="socialDropdown">
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('social.social_dashboard') %}active{% endif %}" href="{{ url_for('social.social_dashboard') }}" style="color: black !important;">
-                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('social.social_accounts') %}active{% endif %}" href="{{ url_for('social.social_accounts') }}" style="color: black !important;">
-                                            <i class="fas fa-users-cog me-1"></i> Manage Accounts
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/logs' in request.path %}active{% endif %}" href="{{ url_for('logs') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-clipboard-list me-1"></i> Logs
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {% if '/seo' in request.path %}active{% endif %}" href="#" id="seoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-search me-1"></i> SEO Tools
-                                </a>
-                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="seoDropdown">
-                                    <li>
-                                        <a class="dropdown-item {% if '/seo-tools' in request.path %}active{% endif %}" href="{{ url_for('seo_tools') }}" style="color: black !important;">
-                                            <i class="fas fa-chart-line me-1"></i> SEO Analytics
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if '/seo-inspirations' in request.path %}active{% endif %}" href="{{ url_for('seo_inspiration.seo_inspirations') }}" style="color: black !important;">
-                                            <i class="fas fa-magic me-1"></i> SEO Inspirations
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if '/seo/' in request.path %}active{% endif %}" href="{{ url_for('seo.index') }}" style="color: black !important;">
-                                            <i class="fas fa-robot me-1"></i> <strong>Topic Generator</strong>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {% if '/content-creator' in request.path or '/content-generator' in request.path %}active{% endif %}" href="#" id="contentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-pen-fancy me-1"></i> Content Creator
-                                </a>
-                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="contentDropdown">
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('content_creator.content_dashboard') %}active{% endif %}" href="{{ url_for('content_creator.content_dashboard') }}" style="color: black !important;">
-                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if '/simplified_content' in request.path %}active{% endif %}" href="{{ url_for('simplified_content.simplified_content_page') }}" style="color: black !important;">
-                                            <i class="fas fa-feather-alt me-1"></i> <strong>Generator Długich Treści</strong>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if '/automation' in request.path %}active{% endif %}" href="{{ url_for('content_creator.automation_dashboard') }}" style="color: black !important;">
-                                            <i class="fas fa-robot me-1"></i> Automation
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <!-- Drugi rząd -->
-                        <ul class="navbar-nav d-flex flex-wrap justify-content-end mt-1" style="max-width: 100%;">
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/images' in request.path %}active{% endif %}" href="{{ url_for('images.image_library') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-images me-1"></i> Images
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {% if '/publishing' in request.path %}active{% endif %}" href="#" id="publishingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-newspaper me-1"></i> Publishing
-                                </a>
-                                <ul class="dropdown-menu" style="background-color: white !important; border-color: var(--primary-color) !important;" aria-labelledby="publishingDropdown">
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_dashboard') %}active{% endif %}" href="{{ url_for('publishing.publishing_dashboard') }}" style="color: black !important;">
-                                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_schedule') %}active{% endif %}" href="{{ url_for('publishing.publishing_schedule') }}" style="color: black !important;">
-                                            <i class="fas fa-calendar-alt me-1"></i> Schedule
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.workload_visualization') %}active{% endif %}" href="{{ url_for('publishing.workload_visualization') }}" style="color: black !important;">
-                                            <i class="fas fa-chart-bar me-1"></i> <strong>Workload Visualization</strong>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.pending_articles') %}active{% endif %}" href="{{ url_for('publishing.pending_articles') }}" style="color: black !important;">
-                                            <i class="fas fa-list-ul me-1"></i> Pending Articles
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.publication_history') %}active{% endif %}" href="{{ url_for('publishing.publication_history') }}" style="color: black !important;">
-                                            <i class="fas fa-history me-1"></i> Publication History
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item {% if request.path == url_for('publishing.publishing_settings') %}active{% endif %}" href="{{ url_for('publishing.publishing_settings') }}" style="color: black !important;">
-                                            <i class="fas fa-cog me-1"></i> Settings
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/analytics' in request.path %}active{% endif %}" href="{{ url_for('analytics_dashboard') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-chart-line me-1"></i> Analytics
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if '/openrouter' in request.path %}active{% endif %}" href="{{ url_for('openrouter_config') }}" style="color: var(--dark-color) !important; font-size: 0.9rem;">
-                                    <i class="fas fa-brain me-1"></i> AI Models
-                                </a>
-                            </li>
-                            {% if admin_logged_in %}
-                            <li class="nav-item ms-2">
-                                <span class="nav-link text-muted" style="font-size: 0.8rem;">
-                                    <i class="fas fa-user me-1"></i> {{ admin_username }}
-                                </span>
-                            </li>
-                            <li class="nav-item ms-2">
-                                <a class="nav-link text-danger" href="{{ url_for('admin_logout') }}" style="font-size: 0.9rem; font-weight: 600;" data-bs-toggle="tooltip" title="Bezpieczne wylogowanie z Blog Automation Agent">
-                                    <i class="fas fa-sign-out-alt me-1"></i> Wyloguj
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
+
+                <div class="divider-vertical" style="height:24px;"></div>
+
+                {%- set role_pl = {'admin':'Administrator', 'editor':'Redaktor', 'viewer':'Czytelnik'}.get(current_user.role, current_user.role) -%}
+                <details class="user-menu" style="position:relative;">
+                    <summary class="user-chip" style="list-style:none;cursor:pointer;" aria-label="Menu użytkownika">
+                        <span class="user-chip-avatar">{{ current_user.initials }}</span>
+                        <span class="user-chip-meta d-none d-md-flex">
+                            <span class="user-chip-name">{{ current_user.full_name or current_user.username }}</span>
+                            <span class="user-chip-role">{{ role_pl }}</span>
+                        </span>
+                        <i class="fas fa-chevron-down" style="font-size:.6875rem;color:var(--text-tertiary);margin-right:.25rem;"></i>
+                    </summary>
+                    <div class="user-menu-popover">
+                        <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user"></i> Mój profil</a>
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('auth.list_users') }}"><i class="fas fa-users-gear"></i> Użytkownicy</a>
+                            <a href="{{ url_for('openrouter_config') }}"><i class="fas fa-microchip"></i> Modele AI</a>
+                        {% endif %}
+                        <div class="divider" style="margin:.25rem 0;"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="user-menu-danger"><i class="fas fa-arrow-right-from-bracket"></i> Wyloguj się</a>
                     </div>
-                </div>
-            </div>
-        </nav>
+                </details>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-accent btn-sm">Zaloguj się</a>
+            {% endif %}
+        </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow-1 py-4">
-        <div class="container">
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages mb-4">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {% if category == 'success' %}
-                                    <i class="fas fa-check-circle me-2"></i>
-                                {% elif category == 'danger' %}
-                                    <i class="fas fa-exclamation-circle me-2"></i>
-                                {% elif category == 'warning' %}
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                {% elif category == 'info' %}
-                                    <i class="fas fa-info-circle me-2"></i>
-                                {% endif %}
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
+    <div class="app-content fade-in">
+        {# Page header (optional, controlled by child template) #}
+        {% block page_header %}
+            {% if self.page_title()|trim %}
+                <header class="page-header">
+                    <div>
+                        {% block breadcrumb %}{% endblock %}
+                        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                        {% block page_subtitle %}{% endblock %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    <div class="page-actions">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </header>
+            {% endif %}
+        {% endblock %}
 
-            <!-- Page Content -->
-            {% block content %}{% endblock %}
-        </div>
-    </main>
+        {# Flash messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-stack" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem;">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category in ['success','warning','danger','info'] else 'info' }}">
+                            <span class="alert-icon">
+                                {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                                {% elif category == 'warning' %}<i class="fas fa-triangle-exclamation"></i>
+                                {% elif category == 'danger' %}<i class="fas fa-circle-exclamation"></i>
+                                {% else %}<i class="fas fa-circle-info"></i>{% endif %}
+                            </span>
+                            <div class="alert-body">{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-    <!-- Footer -->
-    <footer class="footer py-3 mt-auto" style="background-color: var(--dark-color) !important;">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <span style="color: var(--accent-color) !important;">MASTER AGENT AI &copy; {{ now.year }}</span>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <span style="color: var(--accent-color) !important;">Powered by <span style="color: var(--secondary-color) !important;">OpenRouter AI</span></span>
-                </div>
-            </div>
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="app-footer" style="padding:1.5rem 2rem;color:var(--text-tertiary);font-size:.75rem;border-top:1px solid var(--border-subtle);background:var(--surface-base);">
+        <div style="max-width:var(--size-content-max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
+            <span>© {{ now.year if now else 2026 }} MasterContentAI · Content Workflow Platform</span>
+            <span>{{ ep or '—' }}</span>
         </div>
     </footer>
+</main>
 
-    <!-- Tooltips Initialization -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize all tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
+{# Mobile sidebar backdrop #}
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+{# ------------------------------------------------------------------
+   Local component styles (user-menu, sidebar mobile, etc.)
+   ------------------------------------------------------------------ #}
+<style>
+    /* User menu popover (uses native <details>) */
+    .user-menu summary::-webkit-details-marker { display: none; }
+    .user-menu[open] .user-chip { background-color: var(--surface-sunken); border-color: var(--border-subtle); }
+    .user-menu-popover {
+        position: absolute;
+        top: calc(100% + .5rem);
+        right: 0;
+        min-width: 220px;
+        background: var(--surface-base);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        padding: .375rem;
+        z-index: var(--z-popover);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .user-menu-popover a {
+        display: flex;
+        align-items: center;
+        gap: .625rem;
+        padding: .5rem .75rem;
+        font-size: .875rem;
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+    }
+    .user-menu-popover a:hover { background: var(--surface-sunken); text-decoration: none; }
+    .user-menu-popover a i { width: 16px; color: var(--text-tertiary); }
+    .user-menu-popover a.user-menu-danger { color: var(--status-danger-fg); }
+    .user-menu-popover a.user-menu-danger:hover { background: var(--status-danger-bg); }
+    .user-menu-popover a.user-menu-danger i { color: var(--status-danger-fg); }
+    .divider { height:1px; background:var(--border-subtle); border:0; }
+
+    /* Sidebar backdrop on mobile */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 20, 40, 0.45);
+        backdrop-filter: blur(2px);
+        z-index: calc(var(--z-sidebar) - 1);
+        opacity: 0;
+        transition: opacity var(--duration-normal) var(--ease-out);
+    }
+    .sidebar-backdrop.is-visible { display: block; opacity: 1; }
+    @media (max-width: 1024px) {
+        .app-content { padding: var(--space-6); }
+    }
+
+    /* Make page-header optional rendering work */
+    .page-header:empty { display: none; }
+
+    /* Helpers reused across pages, kept thin */
+    .stack { display: flex; flex-direction: column; }
+    .stack-2 > * + * { margin-top: var(--space-2); }
+    .stack-3 > * + * { margin-top: var(--space-3); }
+    .stack-4 > * + * { margin-top: var(--space-4); }
+    .stack-6 > * + * { margin-top: var(--space-6); }
+</style>
+
+{# ------------------------------------------------------------------
+   Core scripts (kolejność: api -> ui -> forms; charts ładowane on-demand)
+   ------------------------------------------------------------------ #}
+<script src="{{ url_for('static', filename='js/api.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/forms.js') }}" defer></script>
+
+{# Opt-in: Chart.js + charts.js. Strony wymagające wykresów ładują przez:
+   {% block vendor_scripts %}{{ super() }}{% endblock %} po dodaniu {% set need_charts = true %} #}
+{% block vendor_scripts %}
+    {% if need_charts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+        <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+    {% endif %}
+{% endblock %}
+
+<script>
+    /* Topbar: zamknięcie user-menu po kliknięciu poza */
+    document.addEventListener('click', (e) => {
+        document.querySelectorAll('details.user-menu[open]').forEach((d) => {
+            if (!d.contains(e.target)) d.removeAttribute('open');
         });
-    </script>
+    });
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-    {% block scripts %}{% endblock %}
+    /* Sidebar: alias starych ID na nowe data-attrs używane przez ui.js */
+    (function () {
+        const btn = document.getElementById('sidebarToggle');
+        if (btn && !btn.hasAttribute('data-sidebar-toggle')) {
+            btn.setAttribute('data-sidebar-toggle', '');
+        }
+        const sb = document.getElementById('appSidebar');
+        if (sb) sb.classList.add('sidebar');
+        const bd = document.getElementById('sidebarBackdrop');
+        if (bd) bd.classList.add('sidebar-backdrop');
+    })();
+</script>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

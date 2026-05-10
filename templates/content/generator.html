@@ -1,745 +1,603 @@
 {% extends 'base.html' %}
 
-{% block title %}New Content Generator{% endblock %}
+{% block title %}Generator treści — MasterContentAI{% endblock %}
 
 {% block styles %}
 <style>
-    .topic-card {
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-left: 3px solid transparent;
-    }
-    
-    .topic-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        border-left-color: var(--primary-color);
-    }
-    
-    .topic-card.selected {
-        border-left-color: var(--primary-color);
-        background-color: rgba(40, 127, 113, 0.05);
-    }
-    
-    .topic-score {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
-    
-    .topic-meta {
-        font-size: 0.85rem;
-    }
-    
-    .loader-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 200px;
-    }
-    
-    .generation-progress {
-        margin-bottom: 20px;
-    }
-    
-    #editor-container {
-        display: none;
-    }
-    
-    .preview-content {
-        min-height: 300px;
-        color: #212529 !important;
-    }
-    
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-    }
-    
-    .filter-section {
-        background-color: rgba(40, 127, 113, 0.05);
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .generation-settings {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .paragraph-placeholder {
-        background-color: #f8f9fa;
-        border: 1px dashed #dee2e6;
-        border-radius: 5px;
-        padding: 20px;
-        margin-bottom: 15px;
-        min-height: 100px;
-    }
-    
-    .paragraph-heading {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: var(--primary-color);
-    }
+  .gen-wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .gen-breadcrumb { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: var(--text-3); }
+  .gen-breadcrumb a { color: var(--brand-600); text-decoration: none; }
+  .gen-breadcrumb a:hover { text-decoration: underline; }
+  .gen-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .gen-title { margin: .25rem 0 .25rem; font-size: 1.6rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: .65rem; }
+  .gen-title-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .gen-sub { margin: 0; color: var(--text-3); font-size: .95rem; }
+
+  .gen-stepper { display: flex; gap: .5rem; margin: 0 0 .5rem; flex-wrap: wrap; }
+  .gen-step { display: inline-flex; align-items: center; gap: .5rem; padding: .35rem .8rem; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border-1); }
+  .gen-step.is-active { background: var(--brand-50); color: var(--brand-700); border-color: var(--brand-600); }
+  .gen-step.is-done { background: var(--success-50); color: var(--success-700); border-color: var(--success-700); }
+  .gen-step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-1); display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; }
+
+  .gen-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); overflow: hidden; }
+  .gen-card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); background: var(--surface-2); flex-wrap: wrap; }
+  .gen-card-head h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-1); }
+  .gen-card-body { padding: 1.25rem; }
+
+  .gen-toolbar { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .gen-search { display: flex; align-items: center; gap: .35rem; background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: 0 .65rem; }
+  .gen-search input { border: none; background: transparent; padding: .5rem .25rem; outline: none; min-width: 180px; font-size: .9rem; color: var(--text-1); }
+  .gen-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .85rem; border-radius: 8px; font-weight: 600; font-size: .85rem; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s ease; }
+  .gen-btn--primary { background: var(--brand-600); color: white; }
+  .gen-btn--primary:hover { background: var(--brand-700); }
+  .gen-btn--success { background: var(--success-700); color: white; }
+  .gen-btn--success:hover { filter: brightness(1.08); }
+  .gen-btn--ghost { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+  .gen-btn--ghost:hover { background: var(--surface-3); }
+  .gen-btn--lg { padding: .75rem 1.5rem; font-size: 1rem; }
+
+  .gen-filter { background: var(--brand-50); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; display: grid; gap: .75rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px) { .gen-filter { grid-template-columns: 1fr; } }
+
+  .gen-field { display: flex; flex-direction: column; gap: .35rem; }
+  .gen-field label { font-size: .8rem; font-weight: 600; color: var(--text-2); }
+  .gen-field .form-control, .gen-field .form-select { background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: .55rem .7rem; font-size: .9rem; color: var(--text-1); }
+  .gen-field .form-control:focus, .gen-field .form-select:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+
+  .gen-topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .gen-topic-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 12px; padding: 1rem; cursor: pointer; transition: all .15s ease; display: flex; flex-direction: column; gap: .65rem; }
+  .gen-topic-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(15,23,42,.08); border-color: var(--brand-600); }
+  .gen-topic-card:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+  .gen-topic-card.is-selected { border-color: var(--brand-600); background: var(--brand-50); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+  .gen-topic-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; }
+  .gen-topic-title { font-size: .95rem; font-weight: 600; margin: 0; color: var(--text-1); line-height: 1.35; }
+  .gen-topic-blog { font-size: .75rem; color: var(--text-3); margin-top: .15rem; }
+  .gen-topic-score { text-align: center; flex-shrink: 0; }
+  .gen-topic-score-val { font-size: 1.3rem; font-weight: 700; color: var(--brand-700); line-height: 1; }
+  .gen-topic-score-lbl { display: block; font-size: .65rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .03em; margin-top: .15rem; }
+  .gen-topic-keywords { display: flex; flex-wrap: wrap; gap: .25rem; }
+  .gen-topic-kw { font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border-1); }
+  .gen-topic-meta { font-size: .75rem; color: var(--text-3); margin-top: auto; }
+
+  .gen-empty { text-align: center; padding: 3rem 1rem; color: var(--text-3); }
+  .gen-empty i { font-size: 2.5rem; color: var(--text-3); margin-bottom: .75rem; opacity: .6; }
+  .gen-empty h3 { margin: 0 0 .35rem; color: var(--text-2); font-size: 1.1rem; }
+  .gen-empty p { margin: 0 0 1rem; font-size: .9rem; }
+
+  .gen-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; gap: 1rem; color: var(--text-3); }
+  .gen-spinner { width: 42px; height: 42px; border: 3px solid var(--border-2); border-top-color: var(--brand-600); border-radius: 50%; animation: gen-spin 1s linear infinite; }
+  .gen-spinner--sm { width: 18px; height: 18px; border-width: 2px; }
+  @keyframes gen-spin { to { transform: rotate(360deg); } }
+
+  .gen-progress { background: var(--surface-2); border-radius: 999px; height: 8px; overflow: hidden; }
+  .gen-progress-bar { background: linear-gradient(90deg, var(--brand-600), var(--info-700, #0891b2)); height: 100%; transition: width .4s ease; border-radius: 999px; }
+  .gen-progress-status { text-align: center; font-size: .85rem; color: var(--text-2); margin-top: .5rem; }
+  .gen-progress-status.is-error { color: var(--danger-700); }
+  .gen-progress-status.is-success { color: var(--success-700); }
+
+  .gen-article { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 10px; padding: 1.5rem; line-height: 1.75; color: var(--text-1); }
+  .gen-paragraph-ph { background: var(--surface-2); border: 1px dashed var(--border-2); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; min-height: 100px; transition: all .25s ease; }
+  .gen-paragraph-ph.is-done { background: var(--surface-1); border-style: solid; border-color: var(--success-700); }
+  .gen-paragraph-heading { font-size: 1.05rem; font-weight: 700; margin-bottom: .65rem; color: var(--brand-700); display: flex; align-items: center; gap: .5rem; }
+  .gen-paragraph-heading-num { width: 24px; height: 24px; border-radius: 6px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; }
+  .gen-paragraph-loading { display: flex; align-items: center; gap: .75rem; color: var(--text-3); font-size: .9rem; padding: 1rem 0; }
+  .gen-paragraph-content { color: var(--text-2); }
+  .gen-paragraph-content p { margin: 0 0 .65rem; }
+  .gen-paragraph-content p:last-child { margin-bottom: 0; }
+
+  .gen-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('content_creator.content_dashboard') }}">Content Creator</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">New Generator</li>
-                </ol>
-            </nav>
-            <h1 class="h2 mb-3">Dynamic Content Generator</h1>
-            <p class="text-muted">Select a topic and watch as your article is generated in real-time, paragraph by paragraph.</p>
-        </div>
+<div class="gen-wrap">
+  <div>
+    <nav class="gen-breadcrumb" aria-label="Ścieżka">
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <span aria-hidden="true">›</span>
+      <a href="{{ url_for('content_creator.content_dashboard') }}">Kreator treści</a>
+      <span aria-hidden="true">›</span>
+      <span>Nowy generator</span>
+    </nav>
+    <div class="gen-header">
+      <div>
+        <h1 class="gen-title">
+          <span class="gen-title-icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+          Dynamiczny generator treści
+        </h1>
+        <p class="gen-sub">Wybierz temat i obserwuj, jak Twój artykuł powstaje w czasie rzeczywistym — akapit po akapicie.</p>
+      </div>
     </div>
-    
-    <!-- Topic Selection Section -->
-    <div id="topic-selection-container" class="mb-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Select a Topic</h5>
-                    <div>
-                        <div class="input-group">
-                            <input type="text" id="topic-search" class="form-control" placeholder="Search topics...">
-                            <button class="btn btn-outline-secondary" type="button" id="topic-filter-btn">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Filter Section (Initially Hidden) -->
-                <div class="filter-section mb-3" id="filter-section" style="display: none;">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="blog-filter" class="form-label">Filter by Blog</label>
-                            <select class="form-select" id="blog-filter">
-                                <option value="">All Blogs</option>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}">{{ blog.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="sort-option" class="form-label">Sort by</label>
-                            <select class="form-select" id="sort-option">
-                                <option value="score">Score (Highest First)</option>
-                                <option value="date_asc">Date (Oldest First)</option>
-                                <option value="date_desc">Date (Newest First)</option>
-                                <option value="title">Title (A-Z)</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-primary" id="apply-filters">Apply Filters</button>
-                            <button class="btn btn-outline-secondary" id="reset-filters">Reset</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Loader for Topics -->
-                <div id="topics-loader" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading topics...</span>
-                    </div>
-                    <p class="mt-3">Loading available topics...</p>
-                </div>
-                
-                <!-- Topics Grid -->
-                <div class="row g-3" id="topics-grid" style="display: none;">
-                    <!-- Topics will be populated here dynamically -->
-                </div>
-                
-                <!-- No Topics Message -->
-                <div id="no-topics-message" class="text-center py-5" style="display: none;">
-                    <div class="mb-3">
-                        <i class="fas fa-search fa-3x text-muted"></i>
-                    </div>
-                    <h4>No Topics Found</h4>
-                    <p class="text-muted">
-                        Try adjusting your search criteria or generate new topics.
-                    </p>
-                    <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-primary mt-3">
-                        <i class="fas fa-lightbulb me-2"></i> Discover New Topics
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div class="gen-stepper" id="gen-stepper" aria-label="Postęp generowania">
+      <span class="gen-step is-active" data-step="1"><span class="gen-step-num">1</span> Temat</span>
+      <span class="gen-step" data-step="2"><span class="gen-step-num">2</span> Ustawienia</span>
+      <span class="gen-step" data-step="3"><span class="gen-step-num">3</span> Generowanie</span>
     </div>
-    
-    <!-- Generation Settings Section -->
-    <div id="generation-settings" class="mb-4" style="display: none;">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">Generation Settings</h5>
-            </div>
-            <div class="card-body">
-                <form id="generation-form">
-                    <input type="hidden" id="selected-topic-id" name="topic_id">
-                    <input type="hidden" id="selected-topic-title" name="topic_title">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="writing-style" class="form-label">Writing Style</label>
-                            <select class="form-select" id="writing-style" name="style">
-                                <option value="informative">Informative & Educational</option>
-                                <option value="conversational">Conversational & Friendly</option>
-                                <option value="professional">Professional & Technical</option>
-                                <option value="storytelling">Storytelling & Narrative</option>
-                                <option value="persuasive">Persuasive & Compelling</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="paragraph-count" class="form-label">Number of Paragraphs</label>
-                            <select class="form-select" id="paragraph-count" name="paragraph_count">
-                                <option value="3">3 paragraphs</option>
-                                <option value="4" selected>4 paragraphs</option>
-                                <option value="5">5 paragraphs</option>
-                                <option value="6">6 paragraphs</option>
-                                <option value="7">7 paragraphs</option>
-                                <option value="8">8 paragraphs</option>
-                            </select>
-                            <small class="form-text text-muted">Each paragraph covers a distinct aspect of the topic</small>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button type="button" id="generate-button" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-magic me-2"></i> Generate Article
-                        </button>
-                    </div>
-                </form>
-            </div>
+  </div>
+
+  <!-- Krok 1: Wybór tematu -->
+  <section id="topic-selection-container" class="gen-card">
+    <div class="gen-card-head">
+      <h2>Wybierz temat</h2>
+      <div class="gen-toolbar">
+        <div class="gen-search">
+          <i class="fas fa-magnifying-glass" style="color: var(--text-3); font-size: .85rem;"></i>
+          <input type="search" id="topic-search" placeholder="Szukaj tematów…" aria-label="Wyszukaj tematy">
         </div>
+        <button type="button" class="gen-btn gen-btn--ghost" id="topic-filter-btn" aria-expanded="false" aria-controls="filter-section">
+          <i class="fas fa-filter"></i> Filtry
+        </button>
+      </div>
     </div>
-    
-    <!-- Editor Container (Initially Hidden) -->
-    <div id="editor-container" class="mb-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0" id="article-title">Article Title</h5>
-                    <div class="btn-group">
-                        <button type="button" id="save-draft-button" class="btn btn-outline-primary">
-                            <i class="fas fa-save me-1"></i> Save Draft
-                        </button>
-                        <button type="button" id="edit-metadata-button" class="btn btn-outline-secondary">
-                            <i class="fas fa-cog me-1"></i> Metadata
-                        </button>
-                        <button type="button" id="publish-button" class="btn btn-success">
-                            <i class="fas fa-paper-plane me-1"></i> Publish
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Generation Progress -->
-                <div class="generation-progress">
-                    <div class="progress" style="height: 10px;">
-                        <div id="generation-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                    </div>
-                    <p class="text-center mt-2 mb-4" id="generation-status">Preparing to generate content...</p>
-                </div>
-                
-                <!-- Article Content Preview -->
-                <div class="preview-content p-4" id="article-content">
-                    <!-- Dynamic content will be inserted here -->
-                </div>
-            </div>
+    <div class="gen-card-body">
+      <div class="gen-filter" id="filter-section" hidden>
+        <div class="gen-field">
+          <label for="blog-filter">Filtruj po blogu</label>
+          <select class="form-select" id="blog-filter">
+            <option value="">Wszystkie blogi</option>
+            {% for blog in blogs %}
+            <option value="{{ blog.id }}">{{ blog.name }}</option>
+            {% endfor %}
+          </select>
         </div>
+        <div class="gen-field">
+          <label for="sort-option">Sortuj wg</label>
+          <select class="form-select" id="sort-option">
+            <option value="score">Wynik (od najwyższego)</option>
+            <option value="date_asc">Data (od najstarszej)</option>
+            <option value="date_desc">Data (od najnowszej)</option>
+            <option value="title">Tytuł (A–Z)</option>
+          </select>
+        </div>
+        <div style="grid-column: 1 / -1; display: flex; gap: .5rem;">
+          <button type="button" class="gen-btn gen-btn--primary" id="apply-filters">Zastosuj filtry</button>
+          <button type="button" class="gen-btn gen-btn--ghost" id="reset-filters">Resetuj</button>
+        </div>
+      </div>
+
+      <div id="topics-loader" class="gen-loader">
+        <div class="gen-spinner" aria-hidden="true"></div>
+        <p style="margin:0">Ładowanie dostępnych tematów…</p>
+      </div>
+
+      <div class="gen-topics-grid" id="topics-grid" hidden></div>
+
+      <div id="no-topics-message" class="gen-empty" hidden>
+        <i class="fas fa-magnifying-glass"></i>
+        <h3>Brak tematów</h3>
+        <p>Spróbuj zmienić kryteria wyszukiwania lub wygeneruj nowe tematy.</p>
+        <a href="{{ url_for('content_creator.content_dashboard') }}" class="gen-btn gen-btn--primary">
+          <i class="fas fa-lightbulb"></i> Odkryj nowe tematy
+        </a>
+      </div>
     </div>
+  </section>
+
+  <!-- Krok 2: Ustawienia -->
+  <section id="generation-settings" class="gen-card" hidden>
+    <div class="gen-card-head"><h2>Ustawienia generowania</h2></div>
+    <div class="gen-card-body">
+      <form id="generation-form" data-validate>
+        <input type="hidden" id="selected-topic-id" name="topic_id">
+        <input type="hidden" id="selected-topic-title" name="topic_title">
+        <div class="gen-filter" style="background: var(--surface-2); margin-bottom: 1.25rem;">
+          <div class="gen-field">
+            <label for="writing-style">Styl pisania</label>
+            <select class="form-select" id="writing-style" name="style">
+              <option value="informative">Informacyjny i edukacyjny</option>
+              <option value="conversational">Konwersacyjny i przyjazny</option>
+              <option value="professional">Profesjonalny i techniczny</option>
+              <option value="storytelling">Storytelling i narracyjny</option>
+              <option value="persuasive">Perswazyjny i przekonujący</option>
+            </select>
+          </div>
+          <div class="gen-field">
+            <label for="paragraph-count">Liczba akapitów</label>
+            <select class="form-select" id="paragraph-count" name="paragraph_count">
+              <option value="3">3 akapity</option>
+              <option value="4" selected>4 akapity (zalecane)</option>
+              <option value="5">5 akapitów</option>
+              <option value="6">6 akapitów</option>
+              <option value="7">7 akapitów</option>
+              <option value="8">8 akapitów</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" id="generate-button" class="gen-btn gen-btn--success gen-btn--lg" style="width:100%">
+          <i class="fas fa-wand-magic-sparkles"></i> Generuj artykuł
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Krok 3: Edytor / podgląd -->
+  <section id="editor-container" class="gen-card" hidden>
+    <div class="gen-card-head">
+      <h2 id="article-title">Tytuł artykułu</h2>
+      <div class="gen-actions">
+        <button type="button" id="save-draft-button" class="gen-btn gen-btn--ghost" disabled>
+          <i class="fas fa-save"></i> Zapisz szkic
+        </button>
+        <button type="button" id="edit-metadata-button" class="gen-btn gen-btn--ghost" disabled>
+          <i class="fas fa-cog"></i> Metadane
+        </button>
+        <button type="button" id="publish-button" class="gen-btn gen-btn--success" disabled>
+          <i class="fas fa-paper-plane"></i> Publikuj
+        </button>
+      </div>
+    </div>
+    <div class="gen-card-body">
+      <div style="margin-bottom: 1.25rem;">
+        <div class="gen-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="generation-progress-bar" class="gen-progress-bar" style="width: 0%"></div>
+        </div>
+        <p class="gen-progress-status" id="generation-status">Przygotowywanie do generowania treści…</p>
+      </div>
+      <div class="gen-article" id="article-content"></div>
+    </div>
+  </section>
 </div>
 
-<!-- Article Plan Template (Hidden) -->
-<div id="article-plan-template" style="display: none;">
-    <div class="paragraph-placeholder" data-index="{{index}}">
-        <div class="paragraph-heading">{{title}}</div>
-        <div class="placeholder-content">
-            <div class="d-flex justify-content-center align-items-center" style="height: 60px;">
-                <div class="spinner-border text-primary spinner-border-sm me-2" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <span>Generating content...</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Topic Card Template (Hidden) -->
-<div id="topic-card-template" style="display: none;">
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100 topic-card border-0 shadow-sm" data-topic-id="{{id}}" data-topic-title="{{title}}">
-            <div class="card-body">
-                <div class="d-flex mb-3">
-                    <div class="flex-grow-1">
-                        <h5 class="card-title mb-1 text-truncate">{{title}}</h5>
-                        <div class="topic-meta text-muted">
-                            <small>Blog: {{blog_name}}</small>
-                        </div>
-                    </div>
-                    <div class="ms-3 text-center">
-                        <div class="topic-score">{{score}}</div>
-                        <small class="d-block text-muted">Score</small>
-                    </div>
-                </div>
-                <div class="topic-keywords mb-2">
-                    {{keywords}}
-                </div>
-                <div class="text-end mt-auto">
-                    <small class="text-muted">{{created_at}}</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{# Szablony JSON na bok #}
+<script id="paragraph-template" type="application/json">
+{"index": "{{index}}", "title": "{{title}}"}
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // DOM Elements
-        const topicSelectionContainer = document.getElementById('topic-selection-container');
-        const generationSettings = document.getElementById('generation-settings');
-        const editorContainer = document.getElementById('editor-container');
-        const topicsGrid = document.getElementById('topics-grid');
-        const topicsLoader = document.getElementById('topics-loader');
-        const noTopicsMessage = document.getElementById('no-topics-message');
-        const topicCardTemplate = document.getElementById('topic-card-template').innerHTML;
-        const articlePlanTemplate = document.getElementById('article-plan-template').innerHTML;
-        const topicFilterBtn = document.getElementById('topic-filter-btn');
-        const filterSection = document.getElementById('filter-section');
-        const topicSearch = document.getElementById('topic-search');
-        const blogFilter = document.getElementById('blog-filter');
-        const sortOption = document.getElementById('sort-option');
-        const applyFiltersBtn = document.getElementById('apply-filters');
-        const resetFiltersBtn = document.getElementById('reset-filters');
-        const generateButton = document.getElementById('generate-button');
-        const articleTitle = document.getElementById('article-title');
-        const articleContent = document.getElementById('article-content');
-        const generationProgressBar = document.getElementById('generation-progress-bar');
-        const generationStatus = document.getElementById('generation-status');
-        const selectedTopicId = document.getElementById('selected-topic-id');
-        const selectedTopicTitle = document.getElementById('selected-topic-title');
-        const writingStyle = document.getElementById('writing-style');
-        const paragraphCount = document.getElementById('paragraph-count');
-        const saveDraftButton = document.getElementById('save-draft-button');
-        const editMetadataButton = document.getElementById('edit-metadata-button');
-        const publishButton = document.getElementById('publish-button');
-        
-        // State Variables
-        let topics = [];
-        let filteredTopics = [];
-        let selectedTopic = null;
-        let articlePlan = null;
-        let currentParagraphIndex = 0;
-        let totalParagraphs = 0;
-        let contentDraftId = null;
-        
-        // Toggle Filter Section
-        topicFilterBtn.addEventListener('click', function() {
-            filterSection.style.display = filterSection.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        // Fetch All Topics
-        function fetchTopics(blogId = null) {
-            topicsLoader.style.display = 'block';
-            topicsGrid.style.display = 'none';
-            noTopicsMessage.style.display = 'none';
-            
-            let url = '{{ url_for("content_creator.get_all_topics") }}';
-            if (blogId) {
-                url += `?blog_id=${blogId}`;
-            }
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        topics = data.topics;
-                        filteredTopics = [...topics];
-                        renderTopics(filteredTopics);
-                    } else {
-                        console.error('Error fetching topics:', data.message);
-                        showNoTopicsMessage();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching topics:', error);
-                    showNoTopicsMessage();
-                })
-                .finally(() => {
-                    topicsLoader.style.display = 'none';
-                });
-        }
-        
-        // Render Topics to Grid
-        function renderTopics(topicsToRender) {
-            topicsGrid.innerHTML = '';
-            
-            if (topicsToRender.length === 0) {
-                showNoTopicsMessage();
-                return;
-            }
-            
-            topicsToRender.forEach(topic => {
-                // Sprawdź, czy topic.keywords istnieje, jeśli nie, użyj pustego stringu
-                const keywords = topic.keywords || '';
-                const keywordsHtml = keywords ? 
-                    keywords.split(',').map(k => `<span class="badge bg-light text-dark me-1">${k.trim()}</span>`).join('') : '';
-                
-                let html = topicCardTemplate
-                    .replace(/{{id}}/g, topic.id)
-                    .replace(/{{title}}/g, topic.title)
-                    .replace(/{{blog_name}}/g, topic.blog_name || 'Unknown Blog')
-                    .replace(/{{score}}/g, (topic.score ? topic.score.toFixed(1) : '0.0'))
-                    .replace(/{{keywords}}/g, keywordsHtml)
-                    .replace(/{{created_at}}/g, topic.created_at || 'Unknown Date');
-                
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                topicsGrid.appendChild(tempDiv.firstElementChild);
-            });
-            
-            // Add event listener to topic cards
-            document.querySelectorAll('.topic-card').forEach(card => {
-                card.addEventListener('click', handleTopicSelection);
-            });
-            
-            topicsGrid.style.display = 'flex';
-        }
-        
-        // Show No Topics Message
-        function showNoTopicsMessage() {
-            topicsGrid.style.display = 'none';
-            noTopicsMessage.style.display = 'block';
-        }
-        
-        // Handle Topic Selection
-        function handleTopicSelection(event) {
-            const card = event.currentTarget;
-            
-            // Remove selection from all cards
-            document.querySelectorAll('.topic-card').forEach(c => {
-                c.classList.remove('selected');
-            });
-            
-            // Add selection to clicked card
-            card.classList.add('selected');
-            
-            // Update selected topic
-            selectedTopic = {
-                id: card.dataset.topicId,
-                title: card.dataset.topicTitle
-            };
-            
-            // Show generation settings
-            selectedTopicId.value = selectedTopic.id;
-            selectedTopicTitle.value = selectedTopic.title;
-            generationSettings.style.display = 'block';
-            
-            // Scroll to generation settings
-            generationSettings.scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        // Filter Topics
-        function filterTopics() {
-            const searchTerm = topicSearch.value.toLowerCase();
-            const blogId = blogFilter.value;
-            const sortBy = sortOption.value;
-            
-            let filtered = [...topics];
-            
-            // Apply search filter
-            if (searchTerm) {
-                filtered = filtered.filter(topic => 
-                    topic.title.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // Apply blog filter
-            if (blogId) {
-                filtered = filtered.filter(topic => topic.blog_id.toString() === blogId);
-            }
-            
-            // Apply sorting
-            switch(sortBy) {
-                case 'score':
-                    filtered.sort((a, b) => b.score - a.score);
-                    break;
-                case 'date_asc':
-                    filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                    break;
-                case 'date_desc':
-                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
-                case 'title':
-                    filtered.sort((a, b) => a.title.localeCompare(b.title));
-                    break;
-            }
-            
-            filteredTopics = filtered;
-            renderTopics(filteredTopics);
-        }
-        
-        // Handle Generate Button Click
-        generateButton.addEventListener('click', function() {
-            if (!selectedTopic) {
-                alert('Please select a topic first.');
-                return;
-            }
-            
-            // Show editor container and hide other sections
-            topicSelectionContainer.style.display = 'none';
-            generationSettings.style.display = 'none';
-            editorContainer.style.display = 'block';
-            
-            // Set article title
-            articleTitle.textContent = selectedTopic.title;
-            
-            // Clear previous content
-            articleContent.innerHTML = '';
-            
-            // Reset progress
-            generationProgressBar.style.width = '0%';
-            generationStatus.textContent = 'Generating article plan...';
-            
-            // Get the selected options
-            const style = writingStyle.value;
-            const paragraphCountValue = parseInt(paragraphCount.value);
-            
-            // Create draft content entry
-            createDraftContent(selectedTopic.title, selectedTopic.id)
-                .then(draftId => {
-                    contentDraftId = draftId;
-                    // Generate article plan
-                    return generateArticlePlan(selectedTopic.title, paragraphCountValue, style);
-                })
-                .then(plan => {
-                    articlePlan = plan;
-                    totalParagraphs = plan.length;
-                    currentParagraphIndex = 0;
-                    
-                    // Create placeholders for each paragraph
-                    articleContent.innerHTML = '';
-                    plan.forEach((paragraph, index) => {
-                        const placeholderHtml = articlePlanTemplate
-                            .replace(/{{index}}/g, index)
-                            .replace(/{{title}}/g, paragraph.title);
-                        
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = placeholderHtml;
-                        articleContent.appendChild(tempDiv.firstElementChild);
-                    });
-                    
-                    // Update progress
-                    updateGenerationProgress(0, totalParagraphs);
-                    
-                    // Start generating paragraphs
-                    return generateNextParagraph();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    generationStatus.textContent = 'Error generating content. Please try again.';
-                    generationStatus.classList.add('text-danger');
-                });
-        });
-        
-        // Create Draft Content Entry
-        function createDraftContent(title, topicId) {
-            return fetch('{{ url_for("content_creator.api_create_draft_content_v2") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'title': title,
-                    'topic_id': topicId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    return data.content_id;
-                } else {
-                    throw new Error(data.message || 'Failed to create draft content');
-                }
-            });
-        }
-        
-        // Generate Article Plan
-        function generateArticlePlan(topic, paragraphCount, style) {
-            const url = '{{ url_for("content_creator.generate_article_plan_api") }}';
-            console.log("Calling API at URL:", url);
-            
-            return fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'topic': topic,
-                    'paragraph_count': paragraphCount,
-                    'style': style
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    return data.plan;
-                } else {
-                    throw new Error(data.message || 'Failed to generate article plan');
-                }
-            });
-        }
-        
-        // Generate Next Paragraph
-        function generateNextParagraph() {
-            if (currentParagraphIndex >= totalParagraphs) {
-                // All paragraphs generated
-                generationStatus.textContent = 'Article generation complete!';
-                generationProgressBar.style.width = '100%';
-                saveDraftButton.disabled = false;
-                editMetadataButton.disabled = false;
-                publishButton.disabled = false;
-                return Promise.resolve();
-            }
-            
-            const paragraphData = articlePlan[currentParagraphIndex];
-            const isIntroduction = currentParagraphIndex === 0;
-            const isConclusion = currentParagraphIndex === totalParagraphs - 1;
-            
-            updateGenerationProgress(currentParagraphIndex, totalParagraphs);
-            
-            const paragraphUrl = '{{ url_for("content_creator.generate_dynamic_paragraph_v2") }}';
-            const paragraphParams = {
-                'topic': selectedTopic.title,
-                'paragraph_topic': paragraphData.title,
-                'style': writingStyle.value,
-                'paragraph_index': currentParagraphIndex,
-                'total_paragraphs': totalParagraphs,
-                'content_id': contentDraftId
-            };
-            
-            console.log("Generating paragraph:", currentParagraphIndex + 1, "of", totalParagraphs);
-            console.log("API URL:", paragraphUrl);
-            console.log("Params:", paragraphParams);
-            
-            return fetch(paragraphUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(paragraphParams)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the placeholder with the generated content
-                    const placeholder = document.querySelector(`.paragraph-placeholder[data-index="${currentParagraphIndex}"]`);
-                    if (placeholder) {
-                        placeholder.querySelector('.placeholder-content').innerHTML = `<div class="paragraph-content">${data.content}</div>`;
-                    }
-                    
-                    // Move to next paragraph
-                    currentParagraphIndex++;
-                    updateGenerationProgress(currentParagraphIndex, totalParagraphs);
-                    
-                    // Generate next paragraph
-                    return generateNextParagraph();
-                } else {
-                    throw new Error(data.message || 'Failed to generate paragraph');
-                }
-            });
-        }
-        
-        // Update Generation Progress
-        function updateGenerationProgress(current, total) {
-            const progress = (current / total) * 100;
-            generationProgressBar.style.width = `${progress}%`;
-            
-            if (current < total) {
-                generationStatus.textContent = `Generating paragraph ${current + 1} of ${total}...`;
-            } else {
-                generationStatus.textContent = 'Article generation complete!';
-            }
-        }
-        
-        // Save Draft Button
-        saveDraftButton.addEventListener('click', function() {
-            if (!contentDraftId) return;
-            
-            // Redirect to edit page
-            window.location.href = '{{ url_for("content_creator.edit_content", content_id=0) }}'.replace('/edit/0/', '/edit/' + contentDraftId + '/');
-        });
-        
-        // Edit Metadata Button
-        editMetadataButton.addEventListener('click', function() {
-            if (!contentDraftId) return;
-            
-            // Show metadata modal (to be implemented)
-            alert('Metadata editing will be implemented soon.');
-        });
-        
-        // Publish Button
-        publishButton.addEventListener('click', function() {
-            if (!contentDraftId) return;
-            
-            // Redirect to publish page
-            window.location.href = '{{ url_for("content_creator.publish_content", content_id=0) }}'.replace('/publish/0/', '/publish/' + contentDraftId + '/');
-        });
-        
-        // Search Input Event
-        topicSearch.addEventListener('input', debounce(function() {
-            filterTopics();
-        }, 300));
-        
-        // Apply Filters
-        applyFiltersBtn.addEventListener('click', function() {
-            filterTopics();
-            filterSection.style.display = 'none';
-        });
-        
-        // Reset Filters
-        resetFiltersBtn.addEventListener('click', function() {
-            topicSearch.value = '';
-            blogFilter.value = '';
-            sortOption.value = 'score';
-            filteredTopics = [...topics];
-            renderTopics(filteredTopics);
-        });
-        
-        // Debounce Function
-        function debounce(func, wait) {
-            let timeout;
-            return function() {
-                const context = this;
-                const args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    func.apply(context, args);
-                }, wait);
-            };
-        }
-        
-        // Initialize
-        fetchTopics();
-        
-        // Disable buttons until article is generated
-        saveDraftButton.disabled = true;
-        editMetadataButton.disabled = true;
-        publishButton.disabled = true;
+(function() {
+  'use strict';
+
+  // ---------- Stałe ----------
+  const URLS = {
+    fetchTopics: '{{ url_for("content_creator.get_all_topics") }}',
+    createDraft: '{{ url_for("content_creator.api_create_draft_content_v2") }}',
+    planArticle: '{{ url_for("content_creator.generate_article_plan_api") }}',
+    generateParagraph: '{{ url_for("content_creator.generate_dynamic_paragraph_v2") }}',
+    editContentTpl: '{{ url_for("content_creator.edit_content", content_id=0) }}',
+    publishContentTpl: '{{ url_for("content_creator.publish_content", content_id=0) }}'
+  };
+
+  // ---------- Stan ----------
+  const state = {
+    topics: [],
+    filteredTopics: [],
+    selectedTopic: null,
+    articlePlan: null,
+    currentIndex: 0,
+    totalParagraphs: 0,
+    contentDraftId: null
+  };
+
+  // ---------- DOM ----------
+  const dom = {
+    topicSelection: document.getElementById('topic-selection-container'),
+    generationSettings: document.getElementById('generation-settings'),
+    editorContainer: document.getElementById('editor-container'),
+    topicsGrid: document.getElementById('topics-grid'),
+    topicsLoader: document.getElementById('topics-loader'),
+    noTopicsMessage: document.getElementById('no-topics-message'),
+    filterBtn: document.getElementById('topic-filter-btn'),
+    filterSection: document.getElementById('filter-section'),
+    topicSearch: document.getElementById('topic-search'),
+    blogFilter: document.getElementById('blog-filter'),
+    sortOption: document.getElementById('sort-option'),
+    applyFilters: document.getElementById('apply-filters'),
+    resetFilters: document.getElementById('reset-filters'),
+    generateBtn: document.getElementById('generate-button'),
+    articleTitle: document.getElementById('article-title'),
+    articleContent: document.getElementById('article-content'),
+    progressBar: document.getElementById('generation-progress-bar'),
+    status: document.getElementById('generation-status'),
+    selectedTopicId: document.getElementById('selected-topic-id'),
+    selectedTopicTitle: document.getElementById('selected-topic-title'),
+    writingStyle: document.getElementById('writing-style'),
+    paragraphCount: document.getElementById('paragraph-count'),
+    saveDraftBtn: document.getElementById('save-draft-button'),
+    editMetaBtn: document.getElementById('edit-metadata-button'),
+    publishBtn: document.getElementById('publish-button'),
+    stepper: document.getElementById('gen-stepper')
+  };
+
+  // ---------- Helpers ----------
+  function escHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+  }
+  function toast(type, msg) {
+    if (window.Toast && Toast[type]) Toast[type](msg);
+  }
+  function setStep(step) {
+    dom.stepper.querySelectorAll('.gen-step').forEach(el => {
+      const s = parseInt(el.dataset.step, 10);
+      el.classList.remove('is-active', 'is-done');
+      if (s < step) el.classList.add('is-done');
+      else if (s === step) el.classList.add('is-active');
     });
+  }
+
+  // ---------- Topic filter toggle ----------
+  dom.filterBtn.addEventListener('click', () => {
+    const isHidden = dom.filterSection.hasAttribute('hidden');
+    if (isHidden) {
+      dom.filterSection.removeAttribute('hidden');
+      dom.filterBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      dom.filterSection.setAttribute('hidden', '');
+      dom.filterBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // ---------- Fetch topics ----------
+  function fetchTopics(blogId) {
+    dom.topicsLoader.removeAttribute('hidden');
+    dom.topicsGrid.setAttribute('hidden', '');
+    dom.noTopicsMessage.setAttribute('hidden', '');
+    let url = URLS.fetchTopics;
+    if (blogId) url += `?blog_id=${encodeURIComponent(blogId)}`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          state.topics = data.topics || [];
+          state.filteredTopics = [...state.topics];
+          renderTopics(state.filteredTopics);
+        } else {
+          toast('error', data.message || 'Nie udało się pobrać tematów');
+          showEmpty();
+        }
+      })
+      .catch(err => {
+        console.error('Topics error:', err);
+        toast('error', 'Błąd pobierania tematów');
+        showEmpty();
+      })
+      .finally(() => dom.topicsLoader.setAttribute('hidden', ''));
+  }
+
+  function showEmpty() {
+    dom.topicsGrid.setAttribute('hidden', '');
+    dom.noTopicsMessage.removeAttribute('hidden');
+  }
+
+  function renderTopics(topics) {
+    dom.topicsGrid.innerHTML = '';
+    if (!topics.length) { showEmpty(); return; }
+    dom.noTopicsMessage.setAttribute('hidden', '');
+    topics.forEach(t => {
+      const card = document.createElement('article');
+      card.className = 'gen-topic-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Wybierz temat: ${t.title || 'bez tytułu'}`);
+      card.dataset.topicId = t.id;
+      card.dataset.topicTitle = t.title || '';
+
+      const kws = t.keywords ? String(t.keywords).split(',').map(k => k.trim()).filter(Boolean).slice(0, 5) : [];
+      const kwsHtml = kws.map(k => `<span class="gen-topic-kw">${escHtml(k)}</span>`).join('');
+
+      card.innerHTML = `
+        <div class="gen-topic-head">
+          <div style="flex: 1; min-width: 0;">
+            <h3 class="gen-topic-title">${escHtml(t.title || 'Bez tytułu')}</h3>
+            <div class="gen-topic-blog">${escHtml(t.blog_name || 'Nieznany blog')}</div>
+          </div>
+          <div class="gen-topic-score">
+            <span class="gen-topic-score-val">${t.score ? Number(t.score).toFixed(1) : '0.0'}</span>
+            <span class="gen-topic-score-lbl">Wynik</span>
+          </div>
+        </div>
+        ${kwsHtml ? `<div class="gen-topic-keywords">${kwsHtml}</div>` : ''}
+        <div class="gen-topic-meta">${escHtml(t.created_at || '')}</div>
+      `;
+      card.addEventListener('click', () => selectTopic(card, t));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTopic(card, t); }
+      });
+      dom.topicsGrid.appendChild(card);
+    });
+    dom.topicsGrid.removeAttribute('hidden');
+  }
+
+  function selectTopic(card, topic) {
+    document.querySelectorAll('.gen-topic-card').forEach(c => {
+      c.classList.remove('is-selected');
+      c.setAttribute('aria-pressed', 'false');
+    });
+    card.classList.add('is-selected');
+    card.setAttribute('aria-pressed', 'true');
+    state.selectedTopic = { id: topic.id, title: topic.title };
+    dom.selectedTopicId.value = topic.id;
+    dom.selectedTopicTitle.value = topic.title || '';
+    dom.generationSettings.removeAttribute('hidden');
+    setStep(2);
+    dom.generationSettings.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------- Filtering / sorting ----------
+  function filterAndSort() {
+    const term = (dom.topicSearch.value || '').toLowerCase().trim();
+    const blogId = dom.blogFilter.value;
+    const sortBy = dom.sortOption.value;
+    let result = [...state.topics];
+    if (term) result = result.filter(t => (t.title || '').toLowerCase().includes(term));
+    if (blogId) result = result.filter(t => String(t.blog_id) === blogId);
+    switch (sortBy) {
+      case 'score': result.sort((a, b) => (b.score || 0) - (a.score || 0)); break;
+      case 'date_asc': result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); break;
+      case 'date_desc': result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+      case 'title': result.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'pl')); break;
+    }
+    state.filteredTopics = result;
+    renderTopics(result);
+  }
+
+  function debounce(fn, ms) {
+    let t;
+    return function() {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, arguments), ms);
+    };
+  }
+  dom.topicSearch.addEventListener('input', debounce(filterAndSort, 250));
+  dom.applyFilters.addEventListener('click', () => {
+    filterAndSort();
+    dom.filterSection.setAttribute('hidden', '');
+    dom.filterBtn.setAttribute('aria-expanded', 'false');
+  });
+  dom.resetFilters.addEventListener('click', () => {
+    dom.topicSearch.value = '';
+    dom.blogFilter.value = '';
+    dom.sortOption.value = 'score';
+    state.filteredTopics = [...state.topics];
+    renderTopics(state.filteredTopics);
+  });
+
+  // ---------- Generate ----------
+  dom.generateBtn.addEventListener('click', () => {
+    if (!state.selectedTopic) {
+      toast('warning', 'Najpierw wybierz temat');
+      return;
+    }
+    dom.topicSelection.setAttribute('hidden', '');
+    dom.generationSettings.setAttribute('hidden', '');
+    dom.editorContainer.removeAttribute('hidden');
+    setStep(3);
+    dom.articleTitle.textContent = state.selectedTopic.title;
+    dom.articleContent.innerHTML = '';
+    dom.progressBar.style.width = '0%';
+    dom.status.className = 'gen-progress-status';
+    dom.status.textContent = 'Generowanie planu artykułu…';
+
+    const style = dom.writingStyle.value;
+    const paragraphCount = parseInt(dom.paragraphCount.value, 10);
+
+    createDraft(state.selectedTopic.title, state.selectedTopic.id)
+      .then(id => { state.contentDraftId = id; return planArticle(state.selectedTopic.title, paragraphCount, style); })
+      .then(plan => {
+        state.articlePlan = plan;
+        state.totalParagraphs = plan.length;
+        state.currentIndex = 0;
+        dom.articleContent.innerHTML = '';
+        plan.forEach((p, idx) => {
+          const ph = document.createElement('div');
+          ph.className = 'gen-paragraph-ph';
+          ph.dataset.index = idx;
+          ph.innerHTML = `
+            <div class="gen-paragraph-heading">
+              <span class="gen-paragraph-heading-num">${idx + 1}</span>
+              ${escHtml(p.title || '')}
+            </div>
+            <div class="gen-paragraph-loading">
+              <div class="gen-spinner gen-spinner--sm" aria-hidden="true"></div>
+              <span>Generowanie treści…</span>
+            </div>`;
+          dom.articleContent.appendChild(ph);
+        });
+        updateProgress(0, state.totalParagraphs);
+        return generateNext();
+      })
+      .catch(err => {
+        console.error('Generation error:', err);
+        dom.status.className = 'gen-progress-status is-error';
+        dom.status.textContent = 'Błąd generowania treści. Spróbuj ponownie.';
+        toast('error', err.message || 'Błąd generowania');
+      });
+  });
+
+  function createDraft(title, topicId) {
+    return fetch(URLS.createDraft, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ title, topic_id: topicId })
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) return d.content_id; throw new Error(d.message || 'Nie udało się utworzyć szkicu'); });
+  }
+
+  function planArticle(topic, paragraphCount, style) {
+    return fetch(URLS.planArticle, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ topic, paragraph_count: paragraphCount, style })
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) return d.plan; throw new Error(d.message || 'Nie udało się stworzyć planu'); });
+  }
+
+  function generateNext() {
+    if (state.currentIndex >= state.totalParagraphs) {
+      dom.status.className = 'gen-progress-status is-success';
+      dom.status.textContent = 'Generowanie artykułu zakończone!';
+      dom.progressBar.style.width = '100%';
+      dom.saveDraftBtn.disabled = false;
+      dom.editMetaBtn.disabled = false;
+      dom.publishBtn.disabled = false;
+      toast('success', 'Artykuł wygenerowany');
+      return Promise.resolve();
+    }
+
+    const p = state.articlePlan[state.currentIndex];
+    updateProgress(state.currentIndex, state.totalParagraphs);
+
+    return fetch(URLS.generateParagraph, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        topic: state.selectedTopic.title,
+        paragraph_topic: p.title,
+        style: dom.writingStyle.value,
+        paragraph_index: state.currentIndex,
+        total_paragraphs: state.totalParagraphs,
+        content_id: state.contentDraftId
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) throw new Error(data.message || 'Nie udało się wygenerować akapitu');
+      const ph = dom.articleContent.querySelector(`.gen-paragraph-ph[data-index="${state.currentIndex}"]`);
+      if (ph) {
+        ph.classList.add('is-done');
+        const loading = ph.querySelector('.gen-paragraph-loading');
+        if (loading) loading.remove();
+        const content = document.createElement('div');
+        content.className = 'gen-paragraph-content';
+        content.innerHTML = data.content; // backend już zwraca HTML
+        ph.appendChild(content);
+      }
+      state.currentIndex++;
+      updateProgress(state.currentIndex, state.totalParagraphs);
+      return generateNext();
+    });
+  }
+
+  function updateProgress(current, total) {
+    const pct = total > 0 ? (current / total) * 100 : 0;
+    dom.progressBar.style.width = `${pct}%`;
+    const bar = dom.progressBar.parentElement;
+    if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+    if (current < total) dom.status.textContent = `Generowanie akapitu ${current + 1} z ${total}…`;
+    else dom.status.textContent = 'Generowanie artykułu zakończone!';
+  }
+
+  // ---------- Save/Edit/Publish ----------
+  dom.saveDraftBtn.addEventListener('click', () => {
+    if (!state.contentDraftId) return;
+    window.location.href = URLS.editContentTpl.replace(/\/0(\/|$)/, '/' + state.contentDraftId + '$1');
+  });
+  dom.editMetaBtn.addEventListener('click', () => {
+    if (!state.contentDraftId) return;
+    window.location.href = URLS.editContentTpl.replace(/\/0(\/|$)/, '/' + state.contentDraftId + '$1');
+  });
+  dom.publishBtn.addEventListener('click', () => {
+    if (!state.contentDraftId) return;
+    if (!confirm('Czy na pewno chcesz opublikować ten artykuł?')) return;
+    window.location.href = URLS.publishContentTpl.replace(/\/0(\/|$)/, '/' + state.contentDraftId + '$1');
+  });
+
+  // ---------- Init ----------
+  fetchTopics();
+})();
 </script>
 {% endblock %}

@@ -367,7 +367,8 @@
                         });
                         
                         // Show a success message with image info
-                        alert(`Artykuł został zapisany jako szkic. Znaleziono ${data.images.length} pasujących obrazów.`);
+                        var msg = `Artykuł został zapisany jako szkic. Znaleziono ${data.images.length} pasujących obrazów.`;
+                        if (window.Toast && Toast.success) Toast.success(msg); else alert(msg);
                     } else if (autoFindImages) {
                         // If autofind was enabled but no images found
                         featuredImageStatus.innerHTML = `
@@ -377,10 +378,12 @@
                             </div>
                         `;
                         
-                        alert('Artykuł został zapisany jako szkic, ale nie znaleziono pasujących obrazów.');
+                        var msg = 'Artykuł został zapisany jako szkic, ale nie znaleziono pasujących obrazów.';
+                        if (window.Toast && Toast.warning) Toast.warning(msg); else alert(msg);
                     } else {
                         // Normal success without image search
-                        alert('Artykuł został zapisany jako szkic.');
+                        var msg = 'Artykuł został zapisany jako szkic.';
+                        if (window.Toast && Toast.success) Toast.success(msg); else alert(msg);
                     }
                     
                     // Clear the form after a short delay to let user see the images

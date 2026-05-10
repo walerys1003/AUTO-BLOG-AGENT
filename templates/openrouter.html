@@ -1,277 +1,403 @@
 {% extends 'base.html' %}
 
-{% block title %}OpenRouter Models - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}Modele OpenRouter — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="mb-4">OpenRouter Integration</h1>
-        <p class="lead">
-            Configure AI models for content generation via OpenRouter.
-        </p>
-    </div>
-</div>
+<style>
+  .or-page { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .or-breadcrumb { font-size: .85rem; color: var(--text-3); margin-bottom: .75rem; }
+  .or-breadcrumb a { color: var(--text-2); text-decoration: none; }
+  .or-breadcrumb a:hover { color: var(--brand-700); }
+  .or-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .or-header h1 { font-size: 1.65rem; font-weight: 700; margin: 0 0 .35rem; color: var(--text-1); }
+  .or-header p { margin: 0; color: var(--text-2); font-size: .95rem; max-width: 720px; }
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">OpenRouter Status</h5>
-                <button class="btn btn-sm btn-outline-primary" id="refreshModels">
-                    <i class="fas fa-sync-alt"></i> Refresh Models
-                </button>
-            </div>
-            <div class="card-body">
-                {% if openrouter_api_key %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> OpenRouter integration is active and properly configured.
-                </div>
-                {% else %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> OpenRouter API key is missing. Please configure it in your environment variables.
-                </div>
-                {% endif %}
-                
-                <h6 class="mt-3">Current Model Configurations</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Purpose</th>
-                                <th>Model</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Topic Generation</td>
-                                <td>{{ default_topic_model }}</td>
-                            </tr>
-                            <tr>
-                                <td>Content Creation</td>
-                                <td>{{ default_content_model }}</td>
-                            </tr>
-                            <tr>
-                                <td>Social Media Content</td>
-                                <td>{{ default_social_model }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+  .or-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 12px; margin-bottom: 1.25rem; overflow: hidden; }
+  .or-card__head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .or-card__head h2 { font-size: 1.05rem; font-weight: 600; margin: 0; color: var(--text-1); }
+  .or-card__body { padding: 1.25rem; }
+  .or-card__body--flush { padding: 0; }
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Available Models</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="modelsTable">
-                        <thead>
-                            <tr>
-                                <th>Model</th>
-                                <th>Provider</th>
-                                <th>Context Size</th>
-                                <th>Features</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if models %}
-                                {% for model in models %}
-                                <tr>
-                                    <td>{{ model.name }}</td>
-                                    <td>{{ model.provider }}</td>
-                                    <td>{{ model.context_length }}</td>
-                                    <td>
-                                        {% if model.vision %}
-                                        <span class="badge bg-primary me-1" data-bs-toggle="tooltip" title="Vision capabilities">
-                                            <i class="fas fa-eye"></i> Vision
-                                        </span>
-                                        {% endif %}
-                                        {% if model.json_output %}
-                                        <span class="badge bg-success me-1" data-bs-toggle="tooltip" title="Structured JSON output">
-                                            <i class="fas fa-code"></i> JSON
-                                        </span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                <i class="fas fa-cog"></i> Set As
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ url_for('set_model', purpose='topic', model_id=model.id) }}">
-                                                        Topic Generation Model
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ url_for('set_model', purpose='content', model_id=model.id) }}">
-                                                        Content Creation Model
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ url_for('set_model', purpose='social', model_id=model.id) }}">
-                                                        Social Media Model
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        {% if openrouter_api_key %}
-                                        <p>No models available or error fetching models. Please try refreshing.</p>
-                                        {% else %}
-                                        <p>OpenRouter API key is not configured. Please set it up to view available models.</p>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+  .or-alert { padding: .85rem 1rem; border-radius: 8px; border: 1px solid; margin-bottom: 1rem; font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
+  .or-alert--success { background: var(--success-50); color: var(--success-700); border-color: var(--success-700); }
+  .or-alert--warning { background: var(--warning-50); color: #92400e; border-color: #d97706; }
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Test OpenRouter</h5>
-            </div>
-            <div class="card-body">
-                <form id="testForm">
-                    <div class="mb-3">
-                        <label for="testModel" class="form-label">Model</label>
-                        <select class="form-select" id="testModel" required>
-                            {% if models %}
-                                {% for model in models %}
-                                <option value="{{ model.id }}">{{ model.name }} ({{ model.provider }})</option>
-                                {% endfor %}
-                            {% else %}
-                                <option value="" disabled>No models available</option>
-                            {% endif %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="testPrompt" class="form-label">Prompt</label>
-                        <textarea class="form-control" id="testPrompt" rows="3" required>Generate a short blog introduction about AI technology.</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="testTemperature" class="form-label">Temperature: <span id="tempValue">0.7</span></label>
-                        <input type="range" class="form-range" id="testTemperature" min="0" max="1" step="0.1" value="0.7">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" id="testButton">
-                        <i class="fas fa-flask"></i> Run Test
+  .or-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .or-table th { text-align: left; padding: .65rem .85rem; background: var(--surface-2); border-bottom: 1px solid var(--border-1); color: var(--text-2); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; }
+  .or-table td { padding: .65rem .85rem; border-bottom: 1px solid var(--border-1); color: var(--text-1); vertical-align: middle; }
+  .or-table tr:last-child td { border-bottom: 0; }
+  .or-table--hover tbody tr:hover { background: var(--surface-2); }
+
+  .or-tags { display: inline-flex; flex-wrap: wrap; gap: .35rem; }
+  .or-tag {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 500;
+    position: relative; cursor: help;
+  }
+  .or-tag--vision { background: var(--brand-50); color: var(--brand-700); }
+  .or-tag--json { background: var(--success-50); color: var(--success-700); }
+  .or-tag[data-tooltip]:hover::after {
+    content: attr(data-tooltip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: var(--text-1); color: #fff; padding: .3rem .55rem; border-radius: 4px;
+    font-size: .72rem; white-space: nowrap; pointer-events: none; z-index: 10;
+  }
+  .or-tag[data-tooltip]:hover::before {
+    content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    border: 4px solid transparent; border-top-color: var(--text-1); pointer-events: none; z-index: 10;
+  }
+
+  .or-btn {
+    border: 0; border-radius: 8px; padding: .5rem .9rem; cursor: pointer;
+    font-size: .85rem; font-weight: 500; font-family: inherit;
+    transition: background .15s, transform .05s;
+    display: inline-flex; align-items: center; gap: .35rem;
+  }
+  .or-btn:active { transform: translateY(1px); }
+  .or-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .or-btn--primary { background: var(--brand-600); color: #fff; }
+  .or-btn--primary:hover:not(:disabled) { background: var(--brand-700); }
+  .or-btn--ghost { background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-2); }
+  .or-btn--ghost:hover:not(:disabled) { background: var(--surface-3); }
+  .or-btn--sm { padding: .35rem .65rem; font-size: .8rem; }
+
+  .or-dropdown { position: relative; display: inline-block; }
+  .or-dropdown__menu {
+    position: absolute; right: 0; top: calc(100% + 4px); z-index: 20;
+    background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(15,23,42,.12); min-width: 240px; padding: .35rem;
+    display: none;
+  }
+  .or-dropdown.is-open .or-dropdown__menu { display: block; }
+  .or-dropdown__item {
+    display: block; width: 100%; text-align: left; padding: .45rem .7rem;
+    background: transparent; border: 0; color: var(--text-1); font-size: .85rem;
+    border-radius: 6px; cursor: pointer; text-decoration: none; font-family: inherit;
+  }
+  .or-dropdown__item:hover { background: var(--surface-2); color: var(--brand-700); }
+
+  .or-empty { text-align: center; padding: 2rem 1rem; color: var(--text-3); font-size: .9rem; }
+
+  .or-grid { display: grid; gap: 1rem; }
+  .or-grid--2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 720px) { .or-grid--2 { grid-template-columns: 1fr; } }
+
+  .or-field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+  .or-field label { font-size: .88rem; font-weight: 500; color: var(--text-2); }
+  .or-field input, .or-field textarea, .or-field select {
+    width: 100%; padding: .55rem .75rem; border: 1px solid var(--border-2); border-radius: 8px;
+    background: var(--surface-1); color: var(--text-1); font-size: .92rem; font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .or-field input[type=range] { padding: 0; border: 0; background: transparent; }
+  .or-field input:focus, .or-field textarea:focus, .or-field select:focus {
+    outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+  }
+  .or-field textarea { resize: vertical; min-height: 80px; font-family: 'JetBrains Mono', monospace; font-size: .85rem; }
+
+  .or-result { background: var(--surface-2); border: 1px solid var(--border-1); border-radius: 8px; }
+  .or-result__head { padding: .65rem .85rem; border-bottom: 1px solid var(--border-1); display: flex; gap: .5rem; flex-wrap: wrap; font-size: .82rem; color: var(--text-2); }
+  .or-result__badge { display: inline-flex; align-items: center; gap: .3rem; background: var(--surface-1); border: 1px solid var(--border-2); padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; }
+  .or-result__body { padding: 1rem; }
+  .or-result__body pre { margin: 0; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: .85rem; color: var(--text-1); }
+
+  .or-config-meta { font-size: .82rem; color: var(--text-3); }
+</style>
+
+<div class="or-page">
+  <div class="or-breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Pulpit</a> &rsaquo; <span>Modele OpenRouter</span>
+  </div>
+
+  <div class="or-header">
+    <div>
+      <h1>Integracja OpenRouter</h1>
+      <p>Konfiguracja modeli AI używanych do generowania tematów, tworzenia treści oraz postów społecznościowych.</p>
+    </div>
+  </div>
+
+  <!-- Status + bieżąca konfiguracja -->
+  <div class="or-card">
+    <div class="or-card__head">
+      <h2>Status OpenRouter</h2>
+      <button class="or-btn or-btn--ghost or-btn--sm" id="refreshModels" type="button" aria-label="Odśwież listę modeli">
+        <i class="fas fa-sync-alt" aria-hidden="true"></i> Odśwież modele
+      </button>
+    </div>
+    <div class="or-card__body">
+      {% if openrouter_api_key %}
+      <div class="or-alert or-alert--success">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span>Integracja OpenRouter jest aktywna i poprawnie skonfigurowana.</span>
+      </div>
+      {% else %}
+      <div class="or-alert or-alert--warning">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+        <span>Brak klucza API OpenRouter. Skonfiguruj go w zmiennych środowiskowych (<code>OPENROUTER_API_KEY</code>).</span>
+      </div>
+      {% endif %}
+
+      <h3 style="font-size:.95rem;margin:.75rem 0 .5rem;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.03em;">Aktualna konfiguracja modeli</h3>
+      <div style="overflow-x:auto;">
+        <table class="or-table">
+          <thead>
+            <tr>
+              <th>Zastosowanie</th>
+              <th>Model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Generowanie tematów</td>
+              <td><code>{{ default_topic_model }}</code></td>
+            </tr>
+            <tr>
+              <td>Tworzenie treści</td>
+              <td><code>{{ default_content_model }}</code></td>
+            </tr>
+            <tr>
+              <td>Posty społecznościowe</td>
+              <td><code>{{ default_social_model }}</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista modeli -->
+  <div class="or-card">
+    <div class="or-card__head">
+      <h2>Dostępne modele</h2>
+      <span class="or-config-meta">
+        {% if models %}{{ models|length }} model{% if models|length != 1 %}i{% endif %}{% endif %}
+      </span>
+    </div>
+    <div class="or-card__body or-card__body--flush">
+      <div style="overflow-x:auto;">
+        <table class="or-table or-table--hover" id="modelsTable">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Dostawca</th>
+              <th>Wielkość kontekstu</th>
+              <th>Funkcje</th>
+              <th style="text-align:right;">Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if models %}
+              {% for model in models %}
+              <tr>
+                <td><strong>{{ model.name }}</strong><br><span class="or-config-meta">{{ model.id }}</span></td>
+                <td>{{ model.provider }}</td>
+                <td>{{ model.context_length }}</td>
+                <td>
+                  <span class="or-tags">
+                    {% if model.vision %}
+                    <span class="or-tag or-tag--vision" data-tooltip="Obsługa analizy obrazów">
+                      <i class="fas fa-eye" aria-hidden="true"></i> Vision
+                    </span>
+                    {% endif %}
+                    {% if model.json_output %}
+                    <span class="or-tag or-tag--json" data-tooltip="Strukturalne wyjście JSON">
+                      <i class="fas fa-code" aria-hidden="true"></i> JSON
+                    </span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="text-align:right;">
+                  <div class="or-dropdown" data-dropdown>
+                    <button class="or-btn or-btn--ghost or-btn--sm" type="button" data-dropdown-toggle aria-haspopup="menu" aria-expanded="false">
+                      <i class="fas fa-cog" aria-hidden="true"></i> Ustaw jako… <i class="fas fa-chevron-down" aria-hidden="true" style="font-size:.7rem;"></i>
                     </button>
-                </form>
-                
-                <div class="mt-4" id="testResults" style="display: none;">
-                    <h6>Test Results</h6>
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <span class="badge bg-secondary me-2">Model: <span id="resultModel"></span></span>
-                            <span class="badge bg-secondary">Time: <span id="resultTime"></span></span>
-                        </div>
-                        <div class="card-body">
-                            <pre id="resultContent" class="mb-0" style="white-space: pre-wrap;"></pre>
-                        </div>
+                    <div class="or-dropdown__menu" role="menu">
+                      <a class="or-dropdown__item" role="menuitem" href="{{ url_for('set_model', purpose='topic', model_id=model.id) }}">Model do generowania tematów</a>
+                      <a class="or-dropdown__item" role="menuitem" href="{{ url_for('set_model', purpose='content', model_id=model.id) }}">Model do tworzenia treści</a>
+                      <a class="or-dropdown__item" role="menuitem" href="{{ url_for('set_model', purpose='social', model_id=model.id) }}">Model do social media</a>
                     </div>
-                </div>
-            </div>
-        </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5">
+                  <div class="or-empty">
+                    {% if openrouter_api_key %}
+                      Brak dostępnych modeli lub błąd pobierania. Spróbuj kliknąć „Odśwież modele”.
+                    {% else %}
+                      Klucz API OpenRouter nie jest skonfigurowany — uzupełnij go, aby zobaczyć modele.
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
-</div>
-{% endblock %}
+  </div>
 
-{% block scripts %}
+  <!-- Test OpenRouter -->
+  <div class="or-card">
+    <div class="or-card__head">
+      <h2>Test OpenRouter</h2>
+    </div>
+    <div class="or-card__body">
+      <form id="testForm">
+        <div class="or-grid or-grid--2">
+          <div class="or-field">
+            <label for="testModel">Model</label>
+            <select id="testModel" required>
+              {% if models %}
+                {% for model in models %}
+                <option value="{{ model.id }}">{{ model.name }} ({{ model.provider }})</option>
+                {% endfor %}
+              {% else %}
+                <option value="" disabled>Brak dostępnych modeli</option>
+              {% endif %}
+            </select>
+          </div>
+          <div class="or-field">
+            <label for="testTemperature">Temperatura: <strong id="tempValue">0,7</strong></label>
+            <input type="range" id="testTemperature" min="0" max="1" step="0.1" value="0.7">
+          </div>
+        </div>
+        <div class="or-field">
+          <label for="testPrompt">Prompt</label>
+          <textarea id="testPrompt" rows="3" required>Wygeneruj krótkie wprowadzenie do artykułu o technologii AI.</textarea>
+        </div>
+        <button type="submit" class="or-btn or-btn--primary" id="testButton">
+          <i class="fas fa-flask" aria-hidden="true"></i> Uruchom test
+        </button>
+      </form>
+
+      <div id="testResults" hidden style="margin-top:1.25rem;">
+        <h3 style="font-size:.95rem;margin:0 0 .5rem;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.03em;">Wynik testu</h3>
+        <div class="or-result">
+          <div class="or-result__head">
+            <span class="or-result__badge">Model: <strong id="resultModel">—</strong></span>
+            <span class="or-result__badge">Czas: <strong id="resultTime">—</strong></span>
+          </div>
+          <div class="or-result__body">
+            <pre id="resultContent"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-    
-    // Temperature slider
-    document.getElementById('testTemperature').addEventListener('input', function() {
-        document.getElementById('tempValue').textContent = this.value;
-    });
-    
-    // Refresh models button
-    document.getElementById('refreshModels').addEventListener('click', function() {
-        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-        this.disabled = true;
-        
-        window.location.reload();
-    });
-    
-    // Test form submission
-    document.getElementById('testForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const testButton = document.getElementById('testButton');
-        const model = document.getElementById('testModel').value;
-        const prompt = document.getElementById('testPrompt').value;
-        const temperature = document.getElementById('testTemperature').value;
-        
-        if (!model || !prompt) {
-            alert('Please select a model and enter a prompt.');
-            return;
+(function () {
+  'use strict';
+
+  function notifyError(msg) {
+    if (window.Toast && Toast.error) Toast.error(msg);
+    else alert(msg);
+  }
+  function notifySuccess(msg) {
+    if (window.Toast && Toast.success) Toast.success(msg);
+  }
+  function setLoading(btn, loading, loadingLabel) {
+    if (!btn) return;
+    if (loading) {
+      btn.dataset._origLabel = btn.innerHTML;
+      btn.innerHTML = loadingLabel || 'Przetwarzanie…';
+      btn.disabled = true;
+    } else {
+      if (btn.dataset._origLabel) btn.innerHTML = btn.dataset._origLabel;
+      btn.disabled = false;
+      delete btn.dataset._origLabel;
+    }
+  }
+
+  // ---------- Native dropdowns ----------
+  document.querySelectorAll('[data-dropdown]').forEach(dd => {
+    const btn = dd.querySelector('[data-dropdown-toggle]');
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dd.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      // close others
+      document.querySelectorAll('[data-dropdown].is-open').forEach(other => {
+        if (other !== dd) {
+          other.classList.remove('is-open');
+          const ob = other.querySelector('[data-dropdown-toggle]');
+          if (ob) ob.setAttribute('aria-expanded', 'false');
         }
-        
-        // Update button state
-        testButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        testButton.disabled = true;
-        
-        // Show results section
-        document.getElementById('testResults').style.display = 'none';
-        
-        // Make API request
-        fetch('/api/test_openrouter', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                prompt: prompt,
-                temperature: parseFloat(temperature)
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update results
-            document.getElementById('resultModel').textContent = data.model || 'Unknown';
-            document.getElementById('resultTime').textContent = data.time_taken ? (data.time_taken.toFixed(2) + 's') : 'Unknown';
-            document.getElementById('resultContent').textContent = data.content || 'No response received';
-            
-            // Show results
-            document.getElementById('testResults').style.display = 'block';
-            
-            // Reset button
-            testButton.innerHTML = '<i class="fas fa-flask"></i> Run Test';
-            testButton.disabled = false;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while testing. Please try again.');
-            
-            // Reset button
-            testButton.innerHTML = '<i class="fas fa-flask"></i> Run Test';
-            testButton.disabled = false;
-        });
+      });
     });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('[data-dropdown].is-open').forEach(dd => {
+      dd.classList.remove('is-open');
+      const ob = dd.querySelector('[data-dropdown-toggle]');
+      if (ob) ob.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('[data-dropdown].is-open').forEach(dd => {
+        dd.classList.remove('is-open');
+        const ob = dd.querySelector('[data-dropdown-toggle]');
+        if (ob) { ob.setAttribute('aria-expanded', 'false'); ob.focus(); }
+      });
+    }
+  });
+
+  // ---------- Temperature slider ----------
+  const tempInput = document.getElementById('testTemperature');
+  const tempLabel = document.getElementById('tempValue');
+  if (tempInput && tempLabel) {
+    const upd = () => { tempLabel.textContent = String(tempInput.value).replace('.', ','); };
+    tempInput.addEventListener('input', upd);
+    upd();
+  }
+
+  // ---------- Refresh models ----------
+  const refreshBtn = document.getElementById('refreshModels');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function () {
+      setLoading(refreshBtn, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Odświeżanie…');
+      window.location.reload();
+    });
+  }
+
+  // ---------- Test form ----------
+  const form = document.getElementById('testForm');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const testButton = document.getElementById('testButton');
+      const model = document.getElementById('testModel').value;
+      const prompt = document.getElementById('testPrompt').value;
+      const temperature = parseFloat(document.getElementById('testTemperature').value);
+
+      if (!model) { notifyError('Wybierz model.'); return; }
+      if (!prompt.trim()) { notifyError('Wpisz prompt.'); return; }
+
+      document.getElementById('testResults').hidden = true;
+      setLoading(testButton, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Przetwarzanie…');
+
+      fetch('/api/test_openrouter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt, temperature })
+      })
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(data => {
+          document.getElementById('resultModel').textContent = data.model || 'Nieznany';
+          document.getElementById('resultTime').textContent = data.time_taken != null ? (Number(data.time_taken).toFixed(2) + ' s') : '—';
+          document.getElementById('resultContent').textContent = data.content || 'Brak odpowiedzi.';
+          document.getElementById('testResults').hidden = false;
+          notifySuccess('Test zakończony pomyślnie');
+        })
+        .catch(err => notifyError('Błąd testu: ' + err.message))
+        .finally(() => setLoading(testButton, false));
+    });
+  }
+})();
 </script>
 {% endblock %}

@@ -1,144 +1,151 @@
 {% extends 'base.html' %}
 
-{% block title %}Custom Report Generation - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}Raport niestandardowy — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Generowanie niestandardowego raportu</h1>
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
         <div>
-            <a href="{{ url_for('analytics_reports') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Powrót do raportów
-            </a>
+            <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">Raport niestandardowy</h1>
+            <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">Wygeneruj raport wydajności dla dowolnego zakresu dat.</p>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-7 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Parametry raportu</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ url_for('custom_report') }}" method="post">
-                        <div class="mb-3">
-                            <label for="blog_id" class="form-label">Blog</label>
-                            <select class="form-select" id="blog_id" name="blog_id" required>
-                                <option value="">Wybierz blog</option>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}">{{ blog.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="start_date" class="form-label">Data początkowa</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="end_date" class="form-label">Data końcowa</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" required>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="include_insights" name="include_insights" checked>
-                            <label class="form-check-label" for="include_insights">Generuj wnioski i rekomendacje AI</label>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Niestandardowy raport pozwala na analizę danych z wybranego przez Ciebie okresu. Raport będzie zawierał wszystkie metryki dla treści opublikowanych na blogu w tym czasie.
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Generuj raport</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-5">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">Wskazówki dotyczące raportów</h5>
-                </div>
-                <div class="card-body">
-                    <h5>Jak korzystać z raportów?</h5>
-                    <p>Raporty wydajności treści dostarczają kluczowych informacji na temat skuteczności Twojej strategii content marketingowej. Wykorzystaj te dane, aby:</p>
-                    
-                    <ul class="list-group mb-4">
-                        <li class="list-group-item">
-                            <i class="fas fa-check text-success me-2"></i> Identyfikować najlepiej działające tematy i formaty
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-check text-success me-2"></i> Odkrywać wzorce zaangażowania czytelników
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-check text-success me-2"></i> Podejmować decyzje dotyczące przyszłych treści
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-check text-success me-2"></i> Optymalizować istniejące artykuły
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-check text-success me-2"></i> Mierzyć wpływ swoich działań w czasie
-                        </li>
-                    </ul>
-                    
-                    <h5>Wybór zakresu dat</h5>
-                    <p>Przy wyborze zakresu dat dla raportu niestandardowego warto pamiętać:</p>
-                    
-                    <ul>
-                        <li><strong>Krótkie okresy (7-14 dni)</strong> - dobre do analizy konkretnych kampanii lub nowości</li>
-                        <li><strong>Średnie okresy (30-60 dni)</strong> - idealne do analizy trendów sezonowych</li>
-                        <li><strong>Długie okresy (90+ dni)</strong> - świetne do wykrywania długoterminowych trendów</li>
-                    </ul>
-                    
-                    <div class="alert alert-warning mt-3">
-                        <i class="fas fa-exclamation-triangle me-2"></i> Wybierz daty, dla których masz zebrane dane analityczne. Jeśli Google Analytics zostało skonfigurowane niedawno, starsze dane mogą być niedostępne.
-                    </div>
-                </div>
-            </div>
-        </div>
+        <a href="{{ url_for('analytics_reports') }}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Powrót do raportów
+        </a>
     </div>
 </div>
+
+<div class="grid-2col" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.25rem;">
+    <!-- Formularz parametrów -->
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-sliders-h" style="color:var(--brand-600);margin-right:.5rem;"></i>
+                Parametry raportu
+            </h2>
+        </header>
+        <div class="card-body">
+            <form action="{{ url_for('custom_report') }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="blog_id" class="form-label">Blog <span style="color:var(--danger-700);">*</span></label>
+                    <select class="form-control" id="blog_id" name="blog_id" required>
+                        <option value="">— Wybierz blog —</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}">{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group">
+                        <label for="start_date" class="form-label">Data początkowa <span style="color:var(--danger-700);">*</span></label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date" class="form-label">Data końcowa <span style="color:var(--danger-700);">*</span></label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:.5rem;">
+                    <label class="switch-row" style="display:flex;align-items:center;gap:.625rem;cursor:pointer;">
+                        <input type="checkbox" id="include_insights" name="include_insights" checked style="width:1.1rem;height:1.1rem;accent-color:var(--brand-600);">
+                        <span style="color:var(--text-1);font-weight:500;">Generuj wnioski i rekomendacje AI</span>
+                    </label>
+                    <p style="margin:.25rem 0 0 1.75rem;color:var(--text-3);font-size:.8125rem;">
+                        Claude Haiku przeanalizuje dane i przygotuje praktyczne wskazówki.
+                    </p>
+                </div>
+
+                <div class="alert alert-info" style="margin-top:1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Raport niestandardowy pozwala na analizę danych z wybranego przez Ciebie okresu — będzie zawierał wszystkie metryki dla treści opublikowanych w tym czasie.
+                </div>
+
+                <div style="display:flex;gap:.5rem;margin-top:1rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i> Generuj raport
+                    </button>
+                    <a href="{{ url_for('analytics_reports') }}" class="btn btn-ghost">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Wskazówki -->
+    <aside class="card" style="background:linear-gradient(180deg,var(--brand-50) 0%,var(--surface-1) 60%);border:1px solid var(--border-2);">
+        <header class="card-header" style="background:transparent;border-bottom:1px solid var(--border-2);">
+            <h2 class="card-title">
+                <i class="fas fa-lightbulb" style="color:var(--warning-700);margin-right:.5rem;"></i>
+                Wskazówki dotyczące raportów
+            </h2>
+        </header>
+        <div class="card-body">
+            <h3 style="font-size:.9375rem;font-weight:600;color:var(--text-1);margin:0 0 .5rem;">Jak korzystać z raportów?</h3>
+            <p style="color:var(--text-2);font-size:.875rem;margin:0 0 .75rem;">
+                Wykorzystuj raporty do podejmowania decyzji opartych na danych:
+            </p>
+            <ul class="check-list">
+                <li><i class="fas fa-check" style="color:var(--success-700);"></i> Identyfikuj najlepiej działające tematy i formaty</li>
+                <li><i class="fas fa-check" style="color:var(--success-700);"></i> Odkrywaj wzorce zaangażowania czytelników</li>
+                <li><i class="fas fa-check" style="color:var(--success-700);"></i> Podejmuj decyzje dotyczące przyszłych treści</li>
+                <li><i class="fas fa-check" style="color:var(--success-700);"></i> Optymalizuj istniejące artykuły</li>
+                <li><i class="fas fa-check" style="color:var(--success-700);"></i> Mierz wpływ działań w czasie</li>
+            </ul>
+
+            <h3 style="font-size:.9375rem;font-weight:600;color:var(--text-1);margin:1rem 0 .5rem;">Wybór zakresu dat</h3>
+            <ul style="margin:0;padding-left:1.1rem;color:var(--text-2);font-size:.875rem;line-height:1.6;">
+                <li><strong style="color:var(--text-1);">Krótkie okresy (7–14 dni)</strong> — analiza kampanii lub nowości</li>
+                <li><strong style="color:var(--text-1);">Średnie okresy (30–60 dni)</strong> — trendy sezonowe</li>
+                <li><strong style="color:var(--text-1);">Długie okresy (90+ dni)</strong> — trendy długoterminowe</li>
+            </ul>
+
+            <div class="alert alert-warning" style="margin-top:1rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Wybierz daty, dla których masz zebrane dane analityczne. Starsze dane mogą być niedostępne, jeśli Google Analytics zostało skonfigurowane niedawno.
+            </div>
+        </div>
+    </aside>
+</div>
+
+<style>
+.check-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.375rem;}
+.check-list li{padding:.375rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.5rem;color:var(--text-1);font-size:.8125rem;display:flex;align-items:center;gap:.5rem;}
+.alert{padding:.625rem .75rem;border-radius:.5rem;font-size:.8125rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.5;}
+.alert i{flex-shrink:0;margin-top:.125rem;}
+.alert-info{background:var(--info-50);color:var(--info-700);border:1px solid var(--info-50);}
+.alert-warning{background:var(--warning-50);color:var(--warning-700);border:1px solid var(--warning-50);}
+@media (max-width:900px){.grid-2col{grid-template-columns:1fr !important;}}
+</style>
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default dates
-    const today = new Date();
-    const lastMonth = new Date();
+    var today = new Date();
+    var lastMonth = new Date();
     lastMonth.setMonth(today.getMonth() - 1);
-    
-    // Format dates as YYYY-MM-DD
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+
+    var fmt = function(d){
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0');
     };
-    
-    // Set default values
-    document.getElementById('end_date').value = formatDate(today);
-    document.getElementById('start_date').value = formatDate(lastMonth);
-    
-    // Validate date range
-    const startDateInput = document.getElementById('start_date');
-    const endDateInput = document.getElementById('end_date');
-    
-    function validateDates() {
-        const startDate = new Date(startDateInput.value);
-        const endDate = new Date(endDateInput.value);
-        
-        if (startDate > endDate) {
-            endDateInput.setCustomValidity('Data końcowa musi być późniejsza niż data początkowa');
+
+    var startEl = document.getElementById('start_date');
+    var endEl   = document.getElementById('end_date');
+    endEl.value   = fmt(today);
+    startEl.value = fmt(lastMonth);
+
+    function validate(){
+        if (new Date(startEl.value) > new Date(endEl.value)) {
+            endEl.setCustomValidity('Data końcowa musi być późniejsza niż data początkowa.');
         } else {
-            endDateInput.setCustomValidity('');
+            endEl.setCustomValidity('');
         }
     }
-    
-    startDateInput.addEventListener('change', validateDates);
-    endDateInput.addEventListener('change', validateDates);
+    startEl.addEventListener('change', validate);
+    endEl.addEventListener('change', validate);
 });
 </script>
 {% endblock %}

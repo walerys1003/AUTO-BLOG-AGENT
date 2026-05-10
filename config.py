@@ -1,45 +1,79 @@
+"""
+MasterContentAI - Centralised configuration.
+
+All secrets MUST be supplied via environment variables (see .env.example).
+Never hardcode credentials in this file.
+"""
+
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from .env if present
 load_dotenv()
 
-# API Keys and Configuration
+
+def _env(name: str, default=None, *, required: bool = False, cast=str):
+    """Read an env variable with optional cast and required flag."""
+    value = os.environ.get(name, default)
+    if required and value in (None, ""):
+        raise RuntimeError(
+            f"Missing required environment variable: {name}. "
+            f"See .env.example for the list of expected variables."
+        )
+    if value is None or value == "":
+        return default
+    try:
+        return cast(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _csv(name: str, default: str):
+    return [x.strip() for x in os.environ.get(name, default).split(",") if x.strip()]
+
+
 class Config:
-    # OpenRouter API Configuration
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")  # Direct Anthropic API fallback
-    
-    # Image API Configuration
-    UNSPLASH_API_KEY = os.environ.get("UNSPLASH_API_KEY")
-    BING_SEARCH_API_KEY = os.environ.get("BING_SEARCH_API_KEY")  # Azure Cognitive Services
-    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAqIRfjsdiZrmDqap0Je8-YZPISawTsQSY")
-    GOOGLE_CSE_ID = os.environ.get("GOOGLE_CSE_ID", "10400bb2536244d91")
-    
-    # SEO API Configuration
-    SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "57d393880136bab7d3159bf1d56d251fa3945bf56e6d1fa3448199e7c10e069c")
-    
-    # Social Media API Configuration
-    FACEBOOK_APP_ID = os.environ.get("FACEBOOK_APP_ID")
-    FACEBOOK_APP_SECRET = os.environ.get("FACEBOOK_APP_SECRET")
-    TWITTER_API_KEY = os.environ.get("TWITTER_API_KEY")
-    TWITTER_API_SECRET = os.environ.get("TWITTER_API_SECRET")
-    LINKEDIN_CLIENT_ID = os.environ.get("LINKEDIN_CLIENT_ID")
-    LINKEDIN_CLIENT_SECRET = os.environ.get("LINKEDIN_CLIENT_SECRET")
-    
-    # Application Configuration
-    ARTICLES_PER_DAY_PER_BLOG = int(os.environ.get("ARTICLES_PER_DAY_PER_BLOG", 4))
-    ARTICLE_MIN_LENGTH = int(os.environ.get("ARTICLE_MIN_LENGTH", 1200))
-    ARTICLE_MAX_LENGTH = int(os.environ.get("ARTICLE_MAX_LENGTH", 1600))
-    PUBLISHING_TIMES = os.environ.get("PUBLISHING_TIMES", "08:00,12:00,16:00,20:00").split(",")
-    
-    # Default models - Using Claude Haiku 4.5 (excellent quality: ~$10-30/month for 270 articles)
-    DEFAULT_TOPIC_MODEL = os.environ.get("DEFAULT_TOPIC_MODEL", "anthropic/claude-haiku-4.5")
-    DEFAULT_CONTENT_MODEL = os.environ.get("DEFAULT_CONTENT_MODEL", "anthropic/claude-haiku-4.5")
-    DEFAULT_SOCIAL_MODEL = os.environ.get("DEFAULT_SOCIAL_MODEL", "anthropic/claude-haiku-4.5")
-    
-    # Database Retention (days)
-    LOG_RETENTION_DAYS = int(os.environ.get("LOG_RETENTION_DAYS", 30))
-    
-    # Scheduler Configuration
+    """Application configuration sourced exclusively from env."""
+
+    # ---- Flask ----
+    SESSION_SECRET = _env("SESSION_SECRET", "mastercontentai-change-me")
+    DATABASE_URL = _env("DATABASE_URL", "sqlite:///zyga.db")
+
+    # ---- AI / OpenRouter ----
+    OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
+    ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
+    OPENAI_API_KEY = _env("OPENAI_API_KEY")
+
+    DEFAULT_TOPIC_MODEL = _env("DEFAULT_TOPIC_MODEL", "anthropic/claude-haiku-4.5")
+    DEFAULT_CONTENT_MODEL = _env("DEFAULT_CONTENT_MODEL", "anthropic/claude-haiku-4.5")
+    DEFAULT_SOCIAL_MODEL = _env("DEFAULT_SOCIAL_MODEL", "anthropic/claude-haiku-4.5")
+
+    # ---- Images ----
+    UNSPLASH_API_KEY = _env("UNSPLASH_API_KEY")
+    BING_SEARCH_API_KEY = _env("BING_SEARCH_API_KEY")
+    GOOGLE_API_KEY = _env("GOOGLE_API_KEY")
+    GOOGLE_CSE_ID = _env("GOOGLE_CSE_ID")
+
+    # ---- SEO ----
+    SERPAPI_KEY = _env("SERPAPI_KEY")
+
+    # ---- Social Media ----
+    FACEBOOK_APP_ID = _env("FACEBOOK_APP_ID")
+    FACEBOOK_APP_SECRET = _env("FACEBOOK_APP_SECRET")
+    TWITTER_API_KEY = _env("TWITTER_API_KEY")
+    TWITTER_API_SECRET = _env("TWITTER_API_SECRET")
+    LINKEDIN_CLIENT_ID = _env("LINKEDIN_CLIENT_ID")
+    LINKEDIN_CLIENT_SECRET = _env("LINKEDIN_CLIENT_SECRET")
+
+    # ---- Application limits ----
+    ARTICLES_PER_DAY_PER_BLOG = _env("ARTICLES_PER_DAY_PER_BLOG", 3, cast=int)
+    ARTICLE_MIN_LENGTH = _env("ARTICLE_MIN_LENGTH", 1200, cast=int)
+    ARTICLE_MAX_LENGTH = _env("ARTICLE_MAX_LENGTH", 1600, cast=int)
+    PUBLISHING_TIMES = _csv("PUBLISHING_TIMES", "08:00,12:00,16:00,20:00")
+    LOG_RETENTION_DAYS = _env("LOG_RETENTION_DAYS", 30, cast=int)
+
+    # ---- Production safety ----
+    USE_MOCK_ADAPTER = _env("USE_MOCK_ADAPTER", "false").lower() == "true"
+
+    # ---- Scheduler ----
     SCHEDULER_API_ENABLED = True

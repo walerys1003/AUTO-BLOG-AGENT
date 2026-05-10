@@ -1,221 +1,329 @@
 {% extends 'base.html' %}
 
-{% block title %}Content Logs - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}Dzienniki treści — MasterContentAI{% endblock %}
+
+{% block styles %}
+<style>
+  .logs-wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .logs-header h1 { margin: 0 0 .25rem; font-size: 1.6rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: .65rem; }
+  .logs-header-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .logs-header p { margin: 0; color: var(--text-3); font-size: .95rem; }
+
+  .logs-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); overflow: hidden; }
+  .logs-card-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+  .logs-card-head h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-1); }
+  .logs-card-body { padding: 1.25rem; }
+  .logs-card-body--flush { padding: 0; }
+
+  .logs-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; align-items: end; }
+  @media (max-width: 900px) { .logs-filter-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .logs-filter-grid { grid-template-columns: 1fr; } }
+
+  .logs-field { display: flex; flex-direction: column; gap: .35rem; }
+  .logs-field label { font-size: .8rem; font-weight: 600; color: var(--text-2); }
+  .logs-field select { background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: .55rem .7rem; font-size: .9rem; color: var(--text-1); }
+  .logs-field select:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+
+  .logs-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border-radius: 8px; font-weight: 600; font-size: .9rem; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s ease; }
+  .logs-btn--primary { background: var(--brand-600); color: white; }
+  .logs-btn--primary:hover { background: var(--brand-700); }
+  .logs-btn--ghost { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+  .logs-btn--ghost:hover { background: var(--surface-3); }
+  .logs-btn--sm { padding: .35rem .65rem; font-size: .8rem; }
+
+  .logs-table-wrap { overflow-x: auto; }
+  .logs-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .logs-table th { background: var(--surface-2); color: var(--text-2); font-weight: 600; text-align: left; padding: .65rem .85rem; border-bottom: 1px solid var(--border-1); font-size: .8rem; text-transform: uppercase; letter-spacing: .02em; }
+  .logs-table td { padding: .75rem .85rem; border-bottom: 1px solid var(--border-1); color: var(--text-1); vertical-align: middle; }
+  .logs-table tr:last-child td { border-bottom: 0; }
+  .logs-table tr:hover td { background: var(--surface-2); }
+  .logs-title-link { color: var(--brand-700); text-decoration: none; font-weight: 500; }
+  .logs-title-link:hover { text-decoration: underline; }
+
+  .logs-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .15rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+  .logs-badge.is-success { background: var(--success-50); color: var(--success-700); }
+  .logs-badge.is-danger { background: var(--danger-50); color: var(--danger-700); cursor: help; }
+  .logs-badge.is-warning { background: var(--warning-50, #fef3c7); color: var(--warning-700, #92400e); }
+  .logs-badge.is-info { background: var(--info-50, #cffafe); color: var(--info-700, #0e7490); }
+
+  .logs-empty { text-align: center; padding: 3rem 1rem; color: var(--text-3); }
+  .logs-empty i { font-size: 2.5rem; margin-bottom: .75rem; opacity: .5; }
+  .logs-empty p { margin: 0; }
+
+  .logs-pagination { display: flex; gap: .25rem; justify-content: center; flex-wrap: wrap; padding: 1rem; border-top: 1px solid var(--border-1); }
+  .logs-pagination a, .logs-pagination span { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 .65rem; border-radius: 8px; font-size: .85rem; font-weight: 500; color: var(--text-2); text-decoration: none; border: 1px solid var(--border-2); background: var(--surface-1); }
+  .logs-pagination a:hover { background: var(--surface-2); color: var(--text-1); }
+  .logs-pagination .is-active { background: var(--brand-600); color: white; border-color: var(--brand-600); }
+  .logs-pagination .is-disabled { color: var(--text-3); opacity: .5; pointer-events: none; }
+
+  .logs-platform-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+  .logs-platform-item { display: flex; align-items: center; justify-content: space-between; padding: .65rem .85rem; border: 1px solid var(--border-1); border-radius: 8px; background: var(--surface-2); }
+  .logs-platform-left { display: flex; align-items: center; gap: .5rem; }
+  .logs-platform-left i { font-size: 1.1rem; }
+  .logs-platform-right { display: flex; align-items: center; gap: .5rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="mb-4">Content Logs</h1>
-    </div>
-</div>
+<div class="logs-wrap">
+  <div class="logs-header">
+    <h1>
+      <span class="logs-header-icon"><i class="fas fa-clipboard-list"></i></span>
+      Dzienniki treści
+    </h1>
+    <p>Pełna historia aktywności publikacji i operacji w systemie.</p>
+  </div>
 
-<!-- Filter Form -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0">Filter Logs</h5>
-    </div>
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-3">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
-                    <option value="publishing" {% if current_status == 'publishing' %}selected{% endif %}>Publishing</option>
-                    <option value="published" {% if current_status == 'published' %}selected{% endif %}>Published</option>
-                    <option value="error" {% if current_status == 'error' %}selected{% endif %}>Error</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="blog_id" class="form-label">Blog</label>
-                <select class="form-select" id="blog_id" name="blog_id">
-                    <option value="all" {% if current_blog == 'all' %}selected{% endif %}>All</option>
-                    {% for blog in blogs %}
-                    <option value="{{ blog.id }}" {% if current_blog|string == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="days" class="form-label">Time Range</label>
-                <select class="form-select" id="days" name="days">
-                    <option value="1" {% if days == 1 %}selected{% endif %}>Last 24 hours</option>
-                    <option value="7" {% if days == 7 %}selected{% endif %}>Last week</option>
-                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
-                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Logs Table -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">Content Activity Logs</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Blog</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Published</th>
-                        <th>Social Media</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs.items %}
-                    <tr>
-                        <td>
-                            {% if log.post_id %}
-                            <a href="{{ log.blog.url }}/?p={{ log.post_id }}" target="_blank">{{ log.title }}</a>
-                            {% else %}
-                            {{ log.title }}
-                            {% endif %}
-                        </td>
-                        <td>{{ log.blog.name }}</td>
-                        <td>
-                            {% if log.status == 'published' %}
-                            <span class="badge bg-success">Published</span>
-                            {% elif log.status == 'error' %}
-                            <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ log.error_message }}">Error</span>
-                            {% else %}
-                            <span class="badge bg-warning">{{ log.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ log.published_at.strftime('%Y-%m-%d %H:%M') if log.published_at else 'N/A' }}</td>
-                        <td>
-                            {% if log.social_media_posts %}
-                            {% set social_posts = log.get_social_posts() %}
-                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#socialModal{{ log.id }}">
-                                <i class="fas fa-share-alt"></i> {{ social_posts|length }} platforms
-                            </button>
-                            
-                            <!-- Social Media Modal -->
-                            <div class="modal fade" id="socialModal{{ log.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Social Media Posts</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <h6>Article: {{ log.title }}</h6>
-                                            <ul class="list-group mt-3">
-                                                {% for platform, details in social_posts.items() %}
-                                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        {% if platform == 'facebook' %}
-                                                        <i class="fab fa-facebook text-primary me-2"></i>
-                                                        {% elif platform == 'twitter' %}
-                                                        <i class="fab fa-twitter text-info me-2"></i>
-                                                        {% elif platform == 'linkedin' %}
-                                                        <i class="fab fa-linkedin text-primary me-2"></i>
-                                                        {% elif platform == 'instagram' %}
-                                                        <i class="fab fa-instagram text-danger me-2"></i>
-                                                        {% else %}
-                                                        <i class="fas fa-share-alt me-2"></i>
-                                                        {% endif %}
-                                                        {{ platform|capitalize }}
-                                                    </div>
-                                                    <div>
-                                                        {% if details.success %}
-                                                        <span class="badge bg-success">Posted</span>
-                                                        {% if details.post_url %}
-                                                        <a href="{{ details.post_url }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">
-                                                            <i class="fas fa-external-link-alt"></i>
-                                                        </a>
-                                                        {% endif %}
-                                                        {% else %}
-                                                        <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ details.error }}">Failed</span>
-                                                        {% endif %}
-                                                    </div>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% else %}
-                            <span class="text-muted">None</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <p class="mb-0">No logs found for the selected filters.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+  <section class="logs-card">
+    <div class="logs-card-head"><h2><i class="fas fa-filter"></i> Filtry</h2></div>
+    <div class="logs-card-body">
+      <form method="get" class="logs-filter-grid">
+        <div class="logs-field">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="all" {% if current_status == 'all' %}selected{% endif %}>Wszystkie</option>
+            <option value="publishing" {% if current_status == 'publishing' %}selected{% endif %}>Publikowanie</option>
+            <option value="published" {% if current_status == 'published' %}selected{% endif %}>Opublikowane</option>
+            <option value="error" {% if current_status == 'error' %}selected{% endif %}>Błąd</option>
+          </select>
         </div>
+        <div class="logs-field">
+          <label for="blog_id">Blog</label>
+          <select id="blog_id" name="blog_id">
+            <option value="all" {% if current_blog == 'all' %}selected{% endif %}>Wszystkie</option>
+            {% for blog in blogs %}
+            <option value="{{ blog.id }}" {% if current_blog|string == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="logs-field">
+          <label for="days">Zakres czasu</label>
+          <select id="days" name="days">
+            <option value="1" {% if days == 1 %}selected{% endif %}>Ostatnie 24 godziny</option>
+            <option value="7" {% if days == 7 %}selected{% endif %}>Ostatni tydzień</option>
+            <option value="30" {% if days == 30 %}selected{% endif %}>Ostatnie 30 dni</option>
+            <option value="90" {% if days == 90 %}selected{% endif %}>Ostatnie 90 dni</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="logs-btn logs-btn--primary" style="width:100%">
+            <i class="fas fa-magnifying-glass"></i> Zastosuj filtry
+          </button>
+        </div>
+      </form>
     </div>
-    
-    <!-- Pagination -->
-    <div class="card-footer">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mb-0">
-                {% if logs.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('logs', page=logs.prev_num, status=current_status, blog_id=current_blog, days=days) }}">Previous</a>
-                </li>
+  </section>
+
+  {# Status meta dict - DRY #}
+  {% set status_meta = {
+    'published': {'cls': 'is-success', 'label': 'Opublikowane'},
+    'publishing': {'cls': 'is-info', 'label': 'Publikowanie'},
+    'error': {'cls': 'is-danger', 'label': 'Błąd'},
+    'draft': {'cls': 'is-warning', 'label': 'Szkic'}
+  } %}
+
+  <section class="logs-card">
+    <div class="logs-card-head"><h2><i class="fas fa-list"></i> Historia aktywności</h2></div>
+    <div class="logs-card-body logs-card-body--flush">
+      <div class="logs-table-wrap">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Tytuł</th>
+              <th>Blog</th>
+              <th>Status</th>
+              <th>Utworzono</th>
+              <th>Opublikowano</th>
+              <th>Social Media</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs.items %}
+            {% set sm = status_meta.get(log.status, {'cls': 'is-warning', 'label': log.status}) %}
+            <tr>
+              <td>
+                {% if log.post_id %}
+                  <a href="{{ log.blog.url }}/?p={{ log.post_id }}" target="_blank" rel="noopener" class="logs-title-link">{{ log.title }}</a>
                 {% else %}
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
+                  {{ log.title }}
                 {% endif %}
-                
-                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                    {% if page_num %}
-                        {% if logs.page == page_num %}
-                        <li class="page-item active">
-                            <a class="page-link" href="{{ url_for('logs', page=page_num, status=current_status, blog_id=current_blog, days=days) }}">{{ page_num }}</a>
-                        </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('logs', page=page_num, status=current_status, blog_id=current_blog, days=days) }}">{{ page_num }}</a>
-                        </li>
-                        {% endif %}
-                    {% else %}
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#">...</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if logs.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('logs', page=logs.next_num, status=current_status, blog_id=current_blog, days=days) }}">Next</a>
-                </li>
+              </td>
+              <td>{{ log.blog.name }}</td>
+              <td>
+                {% if log.status == 'error' %}
+                  <span class="logs-badge {{ sm.cls }}" title="{{ log.error_message }}">{{ sm.label }}</span>
                 {% else %}
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a>
-                </li>
+                  <span class="logs-badge {{ sm.cls }}">{{ sm.label }}</span>
                 {% endif %}
-            </ul>
-        </nav>
+              </td>
+              <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ log.published_at.strftime('%Y-%m-%d %H:%M') if log.published_at else '—' }}</td>
+              <td>
+                {% if log.social_media_posts %}
+                  {% set social_posts = log.get_social_posts() %}
+                  <button type="button" class="logs-btn logs-btn--ghost logs-btn--sm"
+                          data-open-modal="socialModal"
+                          data-title="{{ log.title|e }}"
+                          data-posts='{{ social_posts|tojson|forceescape }}'>
+                    <i class="fas fa-share-alt"></i> {{ social_posts|length }}
+                  </button>
+                {% else %}
+                  <span style="color: var(--text-3); font-size: .85rem;">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6">
+                <div class="logs-empty">
+                  <i class="fas fa-folder-open"></i>
+                  <p>Brak dzienników dla wybranych filtrów.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if logs.pages > 1 %}
+      <nav class="logs-pagination" aria-label="Paginacja">
+        {% if logs.has_prev %}
+          <a href="{{ url_for('logs', page=logs.prev_num, status=current_status, blog_id=current_blog, days=days) }}" aria-label="Poprzednia strona">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        {% else %}
+          <span class="is-disabled"><i class="fas fa-chevron-left"></i></span>
+        {% endif %}
+
+        {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            {% if logs.page == page_num %}
+              <span class="is-active">{{ page_num }}</span>
+            {% else %}
+              <a href="{{ url_for('logs', page=page_num, status=current_status, blog_id=current_blog, days=days) }}">{{ page_num }}</a>
+            {% endif %}
+          {% else %}
+            <span class="is-disabled">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if logs.has_next %}
+          <a href="{{ url_for('logs', page=logs.next_num, status=current_status, blog_id=current_blog, days=days) }}" aria-label="Następna strona">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        {% else %}
+          <span class="is-disabled"><i class="fas fa-chevron-right"></i></span>
+        {% endif %}
+      </nav>
+      {% endif %}
     </div>
+  </section>
+</div>
+
+{# Native modal - SINGLE shared modal filled via data-* (DRY zamiast N modali per wiersz) #}
+<div class="modal-backdrop" id="socialModal" hidden role="dialog" aria-modal="true" aria-labelledby="socialModalTitle">
+  <div class="modal-dialog">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="socialModalTitle" class="modal-title">Posty w social media</h3>
+        <button type="button" class="modal-close" data-close="socialModal" aria-label="Zamknij">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin: 0 0 .85rem; color: var(--text-2); font-size: .9rem;">
+          <strong>Artykuł:</strong> <span id="socialModalArticle"></span>
+        </p>
+        <ul class="logs-platform-list" id="socialModalList"></ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="logs-btn logs-btn--ghost" data-close="socialModal">Zamknij</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
+(function() {
+  'use strict';
+
+  const PLATFORM_META = {
+    facebook:  { icon: 'fab fa-facebook',  color: '#1877F2', label: 'Facebook' },
+    twitter:   { icon: 'fab fa-twitter',   color: '#1DA1F2', label: 'Twitter' },
+    linkedin:  { icon: 'fab fa-linkedin',  color: '#0A66C2', label: 'LinkedIn' },
+    instagram: { icon: 'fab fa-instagram', color: '#E4405F', label: 'Instagram' }
+  };
+
+  function escHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+  }
+
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  // Open social modal from any row button
+  document.querySelectorAll('[data-open-modal="socialModal"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const title = btn.dataset.title || '';
+      let posts = {};
+      try { posts = JSON.parse(btn.dataset.posts || '{}'); } catch (e) { posts = {}; }
+
+      document.getElementById('socialModalArticle').textContent = title;
+      const list = document.getElementById('socialModalList');
+      list.innerHTML = '';
+
+      Object.entries(posts).forEach(([platform, details]) => {
+        const meta = PLATFORM_META[platform] || { icon: 'fas fa-share-alt', color: 'var(--text-2)', label: platform };
+        const li = document.createElement('li');
+        li.className = 'logs-platform-item';
+        const success = details && details.success;
+        const errorMsg = (details && details.error) ? escHtml(details.error) : '';
+        li.innerHTML = `
+          <div class="logs-platform-left">
+            <i class="${meta.icon}" style="color: ${meta.color};" aria-hidden="true"></i>
+            <span>${escHtml(meta.label)}</span>
+          </div>
+          <div class="logs-platform-right">
+            ${success
+              ? `<span class="logs-badge is-success">Opublikowano</span>` +
+                (details.post_url ? ` <a href="${escHtml(details.post_url)}" target="_blank" rel="noopener" class="logs-btn logs-btn--ghost logs-btn--sm"><i class="fas fa-external-link-alt"></i></a>` : '')
+              : `<span class="logs-badge is-danger" title="${errorMsg}">Błąd</span>`
+            }
+          </div>`;
+        list.appendChild(li);
+      });
+
+      openModal('socialModal');
     });
+  });
+
+  // Close handlers (button + backdrop + ESC)
+  document.querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', () => closeModal(b.dataset.close));
+  });
+  document.getElementById('socialModal').addEventListener('click', (e) => {
+    if (e.target.id === 'socialModal') closeModal('socialModal');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal('socialModal');
+  });
+
+  // Auto-submit form on select change (UX boost — natychmiastowa filtracja)
+  document.querySelectorAll('.logs-filter-grid select').forEach(sel => {
+    sel.addEventListener('change', () => sel.form.submit());
+  });
+})();
 </script>
 {% endblock %}

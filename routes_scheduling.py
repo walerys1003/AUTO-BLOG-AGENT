@@ -9,6 +9,7 @@ from typing import Dict, List, Any
 from app import db
 from models import Blog, ScheduledPublication
 from utils.scheduling.publication_scheduler import create_30_day_schedule
+from auth import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 scheduling_bp = Blueprint('scheduling', __name__, url_prefix='/scheduling')
 
 @scheduling_bp.route('/dashboard')
+@login_required
 def scheduling_dashboard():
     """Dashboard for publication scheduling management"""
     try:
@@ -60,6 +62,7 @@ def scheduling_dashboard():
                              error_message="Błąd podczas ładowania dashboardu harmonogramu")
 
 @scheduling_bp.route('/api/create-schedule', methods=['POST'])
+@login_required
 def create_schedule_api():
     """API endpoint to create 30-day publication schedule"""
     try:
@@ -114,6 +117,7 @@ def create_schedule_api():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/api/schedule/<int:blog_id>')
+@login_required
 def get_schedule_api(blog_id: int):
     """Get current schedule for a blog"""
     try:
@@ -140,6 +144,7 @@ def get_schedule_api(blog_id: int):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/api/schedule/<int:schedule_id>', methods=['PUT'])
+@login_required
 def update_scheduled_publication(schedule_id: int):
     """Update a scheduled publication"""
     try:
@@ -171,6 +176,7 @@ def update_scheduled_publication(schedule_id: int):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/api/schedule/<int:schedule_id>', methods=['DELETE'])
+@login_required
 def delete_scheduled_publication(schedule_id: int):
     """Delete a scheduled publication"""
     try:
@@ -196,6 +202,7 @@ def delete_scheduled_publication(schedule_id: int):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/api/analytics/<int:blog_id>')
+@login_required
 def get_scheduling_analytics(blog_id: int):
     """Get detailed analytics for publication scheduling"""
     try:
@@ -245,6 +252,7 @@ def get_scheduling_analytics(blog_id: int):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @scheduling_bp.route('/calendar/<int:blog_id>')
+@login_required
 def calendar_view(blog_id: int):
     """Calendar view of scheduled publications"""
     try:

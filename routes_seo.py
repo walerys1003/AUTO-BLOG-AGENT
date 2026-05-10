@@ -14,6 +14,7 @@ from utils.seo.serp import get_serp_data, get_keyword_competition, analyze_serp_
 from utils.seo.analyzer import analyze_content, get_keyword_suggestions
 from utils.seo.optimizer import seo_optimizer, generate_title_variations
 from utils.seo.topic_generator import generate_topics_from_trends
+from auth import login_required
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 seo_bp = Blueprint('seo', __name__, url_prefix='/seo')
 
 @seo_bp.route('/')
+@login_required
 def index():
     """SEO dashboard page"""
     # Get stats for topics
@@ -82,6 +84,7 @@ def index():
         return render_template('seo/dashboard.html')
 
 @seo_bp.route('/trends')
+@login_required
 def trends():
     """View current trends"""
     try:
@@ -93,11 +96,13 @@ def trends():
         return render_template('seo/trends.html', trends=[])
 
 @seo_bp.route('/keywords')
+@login_required
 def keywords():
     """Keyword research and analysis"""
     return render_template('seo/keywords.html')
 
 @seo_bp.route('/topics')
+@login_required
 def topics():
     """View and manage article topics"""
     # Get topics with join to Blog
@@ -110,12 +115,30 @@ def topics():
         'rejected': []
     }
     
+    def _safe_keywords(raw):
+        """Bezpieczne parsowanie keywords: JSON list lub fallback CSV/plain."""
+        if not raw:
+            return []
+        if isinstance(raw, list):
+            return raw
+        if isinstance(raw, str):
+            s = raw.strip()
+            if not s:
+                return []
+            try:
+                parsed = json.loads(s)
+                return parsed if isinstance(parsed, list) else [str(parsed)]
+            except (ValueError, TypeError):
+                # Fallback: CSV/plain string -> rozdzielenie przecinkami
+                return [kw.strip() for kw in s.split(',') if kw.strip()]
+        return []
+
     for topic, blog in topics:
         topic_data = {
             'id': topic.id,
             'title': topic.title,
             'description': topic.description,
-            'keywords': json.loads(topic.keywords) if topic.keywords else [],
+            'keywords': _safe_keywords(topic.keywords),
             'category': topic.category,
             'blog': blog.name,
             'blog_id': blog.id,
@@ -135,6 +158,7 @@ def topics():
     )
 
 @seo_bp.route('/generate-topics', methods=['POST'])
+@login_required
 def generate_topics():
     """Generate new topics from trends and keywords"""
     try:
@@ -179,6 +203,7 @@ def generate_topics():
         return redirect(url_for('seo.topics'))
 
 @seo_bp.route('/approve-topic/<int:topic_id>', methods=['POST'])
+@login_required
 def approve_topic(topic_id):
     """Approve a pending topic"""
     try:
@@ -200,6 +225,7 @@ def approve_topic(topic_id):
         return redirect(url_for('seo.topics'))
 
 @seo_bp.route('/approve-all-topics', methods=['POST'])
+@login_required
 def approve_all_topics():
     """Approve all pending topics for a specific blog"""
     try:
@@ -234,6 +260,7 @@ def approve_all_topics():
         return redirect(url_for('seo.topics'))
 
 @seo_bp.route('/reject-topic/<int:topic_id>', methods=['POST'])
+@login_required
 def reject_topic(topic_id):
     """Reject a pending topic"""
     try:
@@ -255,6 +282,7 @@ def reject_topic(topic_id):
         return redirect(url_for('seo.topics'))
 
 @seo_bp.route('/delete-topic/<int:topic_id>', methods=['POST'])
+@login_required
 def delete_topic(topic_id):
     """Delete a topic"""
     try:
@@ -273,6 +301,7 @@ def delete_topic(topic_id):
         return redirect(url_for('seo.topics'))
 
 @seo_bp.route('/analyze-content', methods=['GET', 'POST'])
+@login_required
 def analyze_content_page():
     """Analyze content for SEO optimization"""
     if request.method == 'POST':
@@ -309,6 +338,7 @@ def analyze_content_page():
     return render_template('seo/analyze_content.html')
 
 @seo_bp.route('/api/trends')
+@login_required
 def api_trends():
     """API endpoint to get current trends"""
     try:
@@ -330,6 +360,7 @@ def api_trends():
         }), 500
 
 @seo_bp.route('/api/keyword-competition', methods=['POST'])
+@login_required
 def api_keyword_competition():
     """API endpoint to analyze keyword competition"""
     try:
@@ -362,6 +393,7 @@ def api_keyword_competition():
         }), 500
 
 @seo_bp.route('/api/keyword-suggestions', methods=['GET'])
+@login_required
 def api_keyword_suggestions():
     """API endpoint to get keyword suggestions"""
     try:
@@ -392,6 +424,7 @@ def api_keyword_suggestions():
         }), 500
 
 @seo_bp.route('/api/title-variations', methods=['POST'])
+@login_required
 def api_title_variations():
     """API endpoint to generate title variations"""
     try:

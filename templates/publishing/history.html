@@ -1,312 +1,313 @@
 {% extends 'base.html' %}
 
-{% block title %}Historia Publikacji{% endblock %}
+{% block title %}Historia publikacji — MasterContentAI{% endblock %}
+
+{# Wlaczamy Chart.js + wrapper charts.js przez opt-in block z base.html #}
+{% set need_charts = true %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Historia Publikacji</h1>
-        <div>
-            <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Dashboard
-            </a>
-        </div>
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Publikacje</p>
+      <h1 class="page-title">Historia publikacji</h1>
+      <p class="page-subtitle">Przegląd wszystkich publikacji, statusów i błędów z możliwością filtrowania.</p>
     </div>
-    
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Statystyki publikacji</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 250px;">
-                        <canvas id="successRateChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Filtry</h5>
-                </div>
-                <div class="card-body">
-                    <form method="GET" id="filter-form">
-                        <div class="mb-3">
-                            <label for="blog_id" class="form-label">Blog</label>
-                            <select class="form-select" id="blog_id" name="blog_id">
-                                <option value="">Wszystkie blogi</option>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Wszystkie statusy</option>
-                                <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Opublikowane</option>
-                                <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Zaplanowane</option>
-                                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Błędy</option>
-                                <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Szkice</option>
-                                <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Do zatwierdzenia</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="from_date" class="form-label">Od daty</label>
-                            <input type="date" class="form-control" id="from_date" name="from_date" value="{{ from_date }}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="to_date" class="form-label">Do daty</label>
-                            <input type="date" class="form-control" id="to_date" name="to_date" value="{{ to_date }}">
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Filtruj</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div class="page-actions">
+      <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-ghost">
+        <span class="icon" aria-hidden="true">←</span>
+        <span>Wróć do pulpitu publikacji</span>
+      </a>
     </div>
-    
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Historia artykułów</h5>
-                <span class="text-muted">Wyniki: {{ pagination.total }}</span>
-            </div>
-        </div>
+  </header>
+
+  <div class="grid grid-2-1 gap-6">
+    {# === LEWA: wykres + tabela === #}
+    <div class="stack gap-6">
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2 class="card-title">Statystyki publikacji</h2>
+            <p class="card-subtitle">Opublikowane vs. nieudane w podziale na blogi.</p>
+          </div>
+        </header>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Tytuł</th>
-                            <th>Blog</th>
-                            <th>Status</th>
-                            <th>Data publikacji</th>
-                            <th>Akcje</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in pagination.items %}
-                        <tr>
-                            <td>{{ item.title }}</td>
-                            <td>{{ item.blog.name }}</td>
-                            <td>
-                                {% if item.status == 'published' %}
-                                <span class="badge bg-success">Opublikowany</span>
-                                {% elif item.status == 'scheduled' %}
-                                <span class="badge bg-info">Zaplanowany</span>
-                                {% elif item.status == 'draft' %}
-                                <span class="badge bg-secondary">Szkic</span>
-                                {% elif item.status == 'failed' %}
-                                <span class="badge bg-danger">Błąd</span>
-                                {% elif item.status == 'pending_review' %}
-                                <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
-                                {% else %}
-                                <span class="badge bg-dark">{{ item.status }}</span>
-                                {% endif %}
-                                
-                                {% if item.error_message %}
-                                <i class="bi bi-exclamation-circle text-danger" 
-                                   data-bs-toggle="tooltip" 
-                                   title="{{ item.error_message }}"></i>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.published_at %}
-                                {{ item.published_at.strftime('%Y-%m-%d %H:%M') }}
-                                {% elif item.publish_date %}
-                                {{ item.publish_date.strftime('%Y-%m-%d %H:%M') }}
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    {% if item.status == 'published' and item.post_id %}
-                                    <a href="{{ item.blog.url }}/p/{{ item.post_id }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i> Zobacz
-                                    </a>
-                                    {% endif %}
-                                    
-                                    {% if item.status == 'scheduled' or item.status == 'draft' or item.status == 'pending_review' %}
-                                    <a href="{{ url_for('publishing.edit_article', content_id=item.id) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i> Edytuj
-                                    </a>
-                                    {% endif %}
-                                    
-                                    {% if item.status == 'failed' %}
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-secondary"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#errorModal"
-                                            data-error="{{ item.error_message }}">
-                                        <i class="bi bi-info-circle"></i> Szczegóły błędu
-                                    </button>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center">Brak wyników</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            {% if pagination.pages > 1 %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if pagination.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('publishing.publication_history', page=pagination.prev_num, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">Poprzednia</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Poprzednia</a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for page in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
-                        {% if page %}
-                            {% if page == pagination.page %}
-                            <li class="page-item active" aria-current="page">
-                                <a class="page-link" href="#">{{ page }}</a>
-                            </li>
-                            {% else %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('publishing.publication_history', page=page, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">{{ page }}</a>
-                            </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#">…</a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if pagination.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('publishing.publication_history', page=pagination.next_num, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">Następna</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Następna</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+          <div class="chart-wrap" style="height: 260px;">
+            <canvas id="successRateChart" aria-label="Wykres statystyk publikacji"></canvas>
+          </div>
         </div>
+      </section>
+
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2 class="card-title">Lista artykułów</h2>
+            <p class="card-subtitle">
+              Wyniki: <strong>{{ pagination.total }}</strong>
+            </p>
+          </div>
+        </header>
+        <div class="table-wrap">
+          <table class="table table-clean">
+            <thead>
+              <tr>
+                <th scope="col">Tytuł</th>
+                <th scope="col">Blog</th>
+                <th scope="col">Status</th>
+                <th scope="col">Data publikacji</th>
+                <th scope="col" class="text-end">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in pagination.items %}
+              <tr>
+                <td>
+                  <div class="cell-title">{{ item.title or 'Bez tytułu' }}</div>
+                  {% if item.excerpt %}<div class="cell-meta">{{ item.excerpt[:80] }}{% if item.excerpt|length > 80 %}…{% endif %}</div>{% endif %}
+                </td>
+                <td>
+                  <div class="cell-primary">
+                    <span class="avatar avatar-xs" aria-hidden="true">{{ item.blog.name[:1]|upper }}</span>
+                    <span class="cell-meta">{{ item.blog.name }}</span>
+                  </div>
+                </td>
+                <td>
+                  {% if item.status == 'published' %}
+                    <span class="badge badge-success">Opublikowany</span>
+                  {% elif item.status == 'scheduled' %}
+                    <span class="badge badge-info">Zaplanowany</span>
+                  {% elif item.status == 'draft' %}
+                    <span class="badge badge-muted">Szkic</span>
+                  {% elif item.status == 'failed' %}
+                    <span class="badge badge-danger">Błąd</span>
+                  {% elif item.status == 'pending_review' %}
+                    <span class="badge badge-warning">Do zatwierdzenia</span>
+                  {% else %}
+                    <span class="badge">{{ item.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.published_at %}
+                    <span class="mono">{{ item.published_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                  {% elif item.publish_date %}
+                    <span class="mono">{{ item.publish_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                  {% else %}
+                    <span class="cell-meta">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="row-actions">
+                    {% if item.status == 'published' and item.post_id %}
+                    <a href="{{ item.blog.url }}/p/{{ item.post_id }}" target="_blank" rel="noopener"
+                       class="btn btn-ghost btn-sm" title="Otwórz artykuł w nowej karcie">
+                      <span class="icon" aria-hidden="true">↗</span>
+                      <span>Zobacz</span>
+                    </a>
+                    {% endif %}
+                    {% if item.status in ['scheduled', 'draft', 'pending_review'] %}
+                    <a href="{{ url_for('publishing.edit_article', content_id=item.id) }}"
+                       class="btn btn-ghost btn-sm">
+                      <span class="icon" aria-hidden="true">✎</span>
+                      <span>Edytuj</span>
+                    </a>
+                    {% endif %}
+                    {% if item.status == 'failed' and item.error_message %}
+                    <button type="button" class="btn btn-ghost btn-sm js-show-error"
+                            data-error="{{ item.error_message }}">
+                      <span class="icon" aria-hidden="true">⚠</span>
+                      <span>Błąd</span>
+                    </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="empty">
+                  <div class="empty-state">
+                    <div class="empty-state-title">Brak wyników</div>
+                    <p class="empty-state-text">Spróbuj rozszerzyć zakres dat lub usunąć filtry.</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <footer class="card-footer">
+          <nav class="pagination" aria-label="Stronicowanie historii publikacji">
+            {% if pagination.has_prev %}
+            <a class="pagination-link"
+               href="{{ url_for('publishing.publication_history', page=pagination.prev_num, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">
+              ← Poprzednia
+            </a>
+            {% else %}
+            <span class="pagination-link is-disabled">← Poprzednia</span>
+            {% endif %}
+
+            {% for page in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+              {% if page %}
+                {% if page == pagination.page %}
+                  <span class="pagination-link is-current" aria-current="page">{{ page }}</span>
+                {% else %}
+                  <a class="pagination-link"
+                     href="{{ url_for('publishing.publication_history', page=page, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">{{ page }}</a>
+                {% endif %}
+              {% else %}
+                <span class="pagination-link is-disabled">…</span>
+              {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a class="pagination-link"
+               href="{{ url_for('publishing.publication_history', page=pagination.next_num, blog_id=selected_blog_id, status=status_filter, from_date=from_date, to_date=to_date) }}">
+              Następna →
+            </a>
+            {% else %}
+            <span class="pagination-link is-disabled">Następna →</span>
+            {% endif %}
+          </nav>
+        </footer>
+        {% endif %}
+      </section>
     </div>
+
+    {# === PRAWA: filtry === #}
+    <aside class="stack gap-6">
+      <section class="card card-sticky">
+        <header class="card-header">
+          <h2 class="card-title">Filtry</h2>
+          <p class="card-subtitle">Zawęź wyniki do interesującego okresu i statusu.</p>
+        </header>
+        <form method="GET" class="card-body stack gap-4" id="filter-form">
+          <div class="field">
+            <label class="field-label" for="blog_id">Blog</label>
+            <select class="select" id="blog_id" name="blog_id">
+              <option value="">Wszystkie blogi</option>
+              {% for blog in blogs %}
+              <option value="{{ blog.id }}" {% if selected_blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="status">Status</label>
+            <select class="select" id="status" name="status">
+              <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Wszystkie statusy</option>
+              <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Opublikowane</option>
+              <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Zaplanowane</option>
+              <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Błędy</option>
+              <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Szkice</option>
+              <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Do zatwierdzenia</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="from_date">Od daty</label>
+            <input type="date" class="input" id="from_date" name="from_date" value="{{ from_date or '' }}">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="to_date">Do daty</label>
+            <input type="date" class="input" id="to_date" name="to_date" value="{{ to_date or '' }}">
+          </div>
+
+          <div class="stack gap-2">
+            <button type="submit" class="btn btn-primary btn-block">
+              <span class="icon" aria-hidden="true">⌕</span>
+              <span>Zastosuj filtry</span>
+            </button>
+            <a href="{{ url_for('publishing.publication_history') }}" class="btn btn-ghost btn-block">
+              Wyczyść filtry
+            </a>
+          </div>
+        </form>
+      </section>
+    </aside>
+  </div>
 </div>
 
-<!-- Error Details Modal -->
-<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="errorModalLabel">Szczegóły błędu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <pre id="error-details" class="bg-light p-3" style="max-height: 300px; overflow: auto;"></pre>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-            </div>
-        </div>
+{# === Modal: szczegoly bledu === #}
+<div class="modal" id="errorModal" aria-hidden="true" role="dialog" aria-labelledby="errorModalTitle">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog" role="document">
+    <header class="modal-header">
+      <h3 class="modal-title" id="errorModalTitle">Szczegóły błędu</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">×</button>
+    </header>
+    <div class="modal-body">
+      <pre id="error-details" class="mono code-block">Brak szczegółów błędu</pre>
     </div>
+    <footer class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-modal-close>Zamknij</button>
+    </footer>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
-        
-        // Error modal handling
-        const errorModal = document.getElementById('errorModal');
-        errorModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const errorMessage = button.getAttribute('data-error');
-            document.getElementById('error-details').textContent = errorMessage || 'Brak szczegółów błędu';
-        });
-        
-        // Success rate chart
-        const ctx = document.getElementById('successRateChart').getContext('2d');
-        const successRateChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for blog_name, data in success_data.items() %}
-                    "{{ blog_name }}",
-                    {% endfor %}
-                ],
-                datasets: [
-                    {
-                        label: 'Opublikowane',
-                        data: [
-                            {% for blog_name, data in success_data.items() %}
-                            {{ data.published }},
-                            {% endfor %}
-                        ],
-                        backgroundColor: '#28a745',
-                    },
-                    {
-                        label: 'Błędy',
-                        data: [
-                            {% for blog_name, data in success_data.items() %}
-                            {{ data.failed }},
-                            {% endfor %}
-                        ],
-                        backgroundColor: '#dc3545',
-                    }
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: true
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            afterTitle: function(context) {
-                                const index = context[0].dataIndex;
-                                const blogName = context[0].chart.data.labels[index];
-                                const data = {
-                                    {% for blog_name, data in success_data.items() %}
-                                    "{{ blog_name }}": {{ data.success_rate }},
-                                    {% endfor %}
-                                };
-                                return `Wskaźnik sukcesu: ${data[blogName]}%`;
-                            }
-                        }
-                    }
-                }
+(function () {
+  'use strict';
+  if (!window.Chart) return;
+
+  // === Wykres slupkowy: opublikowane vs bledy ===
+  var labels  = [{% for blog_name, data in success_data.items() %}{{ blog_name|tojson }}{% if not loop.last %},{% endif %}{% endfor %}];
+  var published = [{% for blog_name, data in success_data.items() %}{{ data.published }}{% if not loop.last %},{% endif %}{% endfor %}];
+  var failed   = [{% for blog_name, data in success_data.items() %}{{ data.failed }}{% if not loop.last %},{% endif %}{% endfor %}];
+  var rates    = { {% for blog_name, data in success_data.items() %}{{ blog_name|tojson }}: {{ data.success_rate }}{% if not loop.last %},{% endif %}{% endfor %} };
+
+  if (labels.length === 0) return;
+
+  var canvas = document.getElementById('successRateChart');
+  if (!canvas) return;
+
+  new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Opublikowane', data: published, backgroundColor: '#10b981', borderRadius: 6, barThickness: 'flex', maxBarThickness: 32 },
+        { label: 'Błędy',        data: failed,    backgroundColor: '#ef4444', borderRadius: 6, barThickness: 'flex', maxBarThickness: 32 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+        tooltip: {
+          callbacks: {
+            afterTitle: function (ctx) {
+              var name = ctx[0].chart.data.labels[ctx[0].dataIndex];
+              return 'Wskaźnik sukcesu: ' + (rates[name] || 0) + '%';
             }
-        });
+          }
+        }
+      }
+    }
+  });
+
+  // === Modal bledow ===
+  document.querySelectorAll('.js-show-error').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var msg = btn.getAttribute('data-error') || 'Brak szczegółów błędu';
+      var pre = document.getElementById('error-details');
+      if (pre) pre.textContent = msg;
+      if (window.Modal && typeof Modal.open === 'function') {
+        Modal.open('errorModal');
+      } else {
+        var m = document.getElementById('errorModal');
+        if (m) m.classList.add('is-open');
+      }
     });
+  });
+})();
 </script>
 {% endblock %}

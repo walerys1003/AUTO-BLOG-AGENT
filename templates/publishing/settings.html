@@ -1,194 +1,266 @@
 {% extends 'base.html' %}
 
-{% block title %}Ustawienia publikacji{% endblock %}
+{% block title %}Ustawienia publikacji — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Ustawienia publikacji</h1>
-        <div>
-            <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Dashboard
-            </a>
-        </div>
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Publikacje</p>
+      <h1 class="page-title">Ustawienia publikacji</h1>
+      <p class="page-subtitle">Konfiguruj reguły automatycznej publikacji i akceptacji artykułów dla każdego bloga.</p>
     </div>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Konfiguracja publikacji</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('publishing.update_settings') }}">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Poniższe ustawienia określają, czy artykuły będą publikowane automatycznie, czy będą wymagać ręcznego zatwierdzenia.
-                        </div>
-                        
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Blog</th>
-                                    <th>Wymagana akceptacja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for blog in blogs %}
-                                <tr>
-                                    <td>{{ blog.name }}</td>
-                                    <td>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" 
-                                                   id="approval_required_{{ blog.id }}" 
-                                                   name="approval_required_{{ blog.id }}"
-                                                   {% if blog.approval_required %}checked{% endif %}>
-                                            <label class="form-check-label" for="approval_required_{{ blog.id }}">
-                                                {% if blog.approval_required %}
-                                                Wymagana akceptacja
-                                                {% else %}
-                                                Automatyczna publikacja
-                                                {% endif %}
-                                            </label>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        
-                        <button type="submit" class="btn btn-primary">Zapisz ustawienia</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Reguły automatyzacji</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Reguły automatyzacji określają, kiedy i jak artykuły są automatycznie generowane i publikowane.
-                    </div>
-                    
-                    {% for blog in blogs %}
-                    <div class="mb-4">
-                        <h5>{{ blog.name }}</h5>
-                        
-                        {% if automation_rules[blog.id] %}
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Nazwa reguły</th>
-                                    <th>Status</th>
-                                    <th>Dni publikacji</th>
-                                    <th>Godzina</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for rule in automation_rules[blog.id] %}
-                                <tr>
-                                    <td>{{ rule.name }}</td>
-                                    <td>
-                                        {% if rule.is_active %}
-                                        <span class="badge bg-success">Aktywna</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">Nieaktywna</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% set days = rule.get_publishing_days() %}
-                                        {% if days|length == 7 %}
-                                        Codziennie
-                                        {% else %}
-                                        {% set day_names = {0: 'Pon', 1: 'Wt', 2: 'Śr', 3: 'Czw', 4: 'Pt', 5: 'Sob', 6: 'Nd'} %}
-                                        {% for day in days %}
-                                        {{ day_names[day] }}{% if not loop.last %}, {% endif %}
-                                        {% endfor %}
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ rule.publishing_time }}</td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-outline-primary">Edytuj</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% else %}
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i> Brak reguł automatyzacji dla tego bloga.
-                        </div>
-                        {% endif %}
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="#" class="btn btn-primary">
-                                <i class="bi bi-plus"></i> Dodaj regułę
-                            </a>
-                        </div>
-                    </div>
-                    
-                    {% if not loop.last %}<hr>{% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Wskazówki</h5>
-                </div>
-                <div class="card-body">
-                    <h6 class="fw-bold">Wymagana akceptacja</h6>
-                    <p>Gdy ta opcja jest włączona, artykuły wygenerowane przez system nie będą publikowane automatycznie, ale będą czekać na twoją akceptację.</p>
-                    
-                    <h6 class="fw-bold">Automatyczna publikacja</h6>
-                    <p>Gdy ta opcja jest wyłączona, artykuły będą publikowane automatycznie zgodnie z ustawionymi regułami.</p>
-                    
-                    <h6 class="fw-bold">Reguły automatyzacji</h6>
-                    <p>Reguły automatyzacji pozwalają zdefiniować kiedy i jak często publikowane są artykuły, a także określić ich styl, długość i źródła tematów.</p>
-                    
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> Pamiętaj, że nawet przy włączonej automatycznej publikacji, możesz zawsze ręcznie edytować i publikować artykuły.
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Ustawienia publikacji</h5>
-                </div>
-                <div class="card-body">
-                    <p>Domyślne ustawienia publikacji dotyczą wszystkich artykułów generowanych przez system.</p>
-                    
-                    <form method="POST" action="{{ url_for('publishing.update_settings') }}">
-                        <input type="hidden" name="form_type" value="global_settings">
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Domyślny status publikacji</label>
-                            <select class="form-select" name="default_status">
-                                <option value="draft" {% if global_settings.default_status == 'draft' %}selected{% endif %}>Szkic</option>
-                                <option value="scheduled" {% if global_settings.default_status == 'scheduled' %}selected{% endif %}>Zaplanowany</option>
-                                <option value="published" {% if global_settings.default_status == 'published' %}selected{% endif %}>Opublikowany</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Domyślny czas publikacji</label>
-                            <input type="time" class="form-control" name="default_time" value="{{ global_settings.default_time|default('10:00') }}">
-                        </div>
-                        
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" role="switch" id="auto_promote" name="auto_promote" {% if global_settings.auto_promote %}checked{% endif %}>
-                            <label class="form-check-label" for="auto_promote">Automatycznie promuj w mediach społecznościowych</label>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Zapisz ustawienia globalne</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div class="page-actions">
+      <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-ghost">
+        <span class="icon" aria-hidden="true">←</span>
+        <span>Wróć do pulpitu publikacji</span>
+      </a>
     </div>
+  </header>
+
+  <div class="grid grid-2-1 gap-6">
+    {# === LEWA KOLUMNA — formularze blogow + reguly === #}
+    <div class="stack gap-6">
+
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2 class="card-title">Tryb publikacji blogów</h2>
+            <p class="card-subtitle">Wybierz, czy artykuły wymagają akceptacji, czy publikują się automatycznie.</p>
+          </div>
+        </header>
+        <form method="POST" action="{{ url_for('publishing.update_settings') }}" data-validate>
+          {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <div class="card-body">
+            <div class="alert alert-info">
+              <span class="alert-icon" aria-hidden="true">ℹ</span>
+              <div>
+                Powyższe ustawienia decydują, czy artykuły wygenerowane przez AI trafią od razu do publikacji,
+                czy będą oczekiwać na akceptację redaktora.
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table table-clean">
+                <thead>
+                  <tr>
+                    <th scope="col">Blog</th>
+                    <th scope="col">Status bloga</th>
+                    <th scope="col" class="text-end">Wymagana akceptacja</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for blog in blogs %}
+                  <tr>
+                    <td>
+                      <div class="cell-primary">
+                        <span class="avatar avatar-sm" aria-hidden="true">{{ blog.name[:1]|upper }}</span>
+                        <div>
+                          <div class="cell-title">{{ blog.name }}</div>
+                          <div class="cell-meta">{{ blog.url }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {% if blog.active %}
+                        <span class="badge badge-success">Aktywny</span>
+                      {% else %}
+                        <span class="badge badge-muted">Wstrzymany</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <label class="switch">
+                        <input type="checkbox" name="approval_required_{{ blog.id }}" {% if blog.approval_required %}checked{% endif %}>
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">
+                          {% if blog.approval_required %}Akceptacja wymagana{% else %}Publikacja automatyczna{% endif %}
+                        </span>
+                      </label>
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="3" class="empty">
+                      <div class="empty-state">
+                        <div class="empty-state-title">Brak skonfigurowanych blogów</div>
+                        <p class="empty-state-text">Najpierw dodaj blog, aby móc skonfigurować tryb publikacji.</p>
+                        <a href="{{ url_for('add_blog') }}" class="btn btn-primary">Dodaj blog</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% if blogs %}
+          <footer class="card-footer">
+            <button type="submit" class="btn btn-primary">
+              <span class="icon" aria-hidden="true">✓</span>
+              <span>Zapisz tryb publikacji</span>
+            </button>
+          </footer>
+          {% endif %}
+        </form>
+      </section>
+
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2 class="card-title">Reguły automatyzacji</h2>
+            <p class="card-subtitle">Harmonogram automatycznego generowania i publikacji treści dla każdego bloga.</p>
+          </div>
+        </header>
+        <div class="card-body">
+          {% for blog in blogs %}
+          <div class="rule-group {% if not loop.first %}rule-group-divider{% endif %}">
+            <div class="rule-group-header">
+              <div class="cell-primary">
+                <span class="avatar avatar-sm" aria-hidden="true">{{ blog.name[:1]|upper }}</span>
+                <div>
+                  <div class="cell-title">{{ blog.name }}</div>
+                  <div class="cell-meta">
+                    {% set rules_count = automation_rules[blog.id]|length %}
+                    {{ rules_count }} {% if rules_count == 1 %}reguła{% elif 2 <= rules_count <= 4 %}reguły{% else %}reguł{% endif %}
+                  </div>
+                </div>
+              </div>
+              <a href="#" class="btn btn-ghost btn-sm">
+                <span class="icon" aria-hidden="true">+</span>
+                <span>Dodaj regułę</span>
+              </a>
+            </div>
+
+            {% if automation_rules[blog.id] %}
+            <div class="table-wrap">
+              <table class="table table-clean table-compact">
+                <thead>
+                  <tr>
+                    <th scope="col">Nazwa reguły</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Dni publikacji</th>
+                    <th scope="col">Godzina</th>
+                    <th scope="col" class="text-end">Akcje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for rule in automation_rules[blog.id] %}
+                  <tr>
+                    <td><span class="cell-title">{{ rule.name }}</span></td>
+                    <td>
+                      {% if rule.is_active %}
+                        <span class="badge badge-success">Aktywna</span>
+                      {% else %}
+                        <span class="badge badge-muted">Wyłączona</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% set days = rule.get_publishing_days() %}
+                      {% if days|length == 7 %}
+                        <span class="cell-meta">Codziennie</span>
+                      {% else %}
+                        {% set day_names = {0: 'Pn', 1: 'Wt', 2: 'Śr', 3: 'Czw', 4: 'Pt', 5: 'Sob', 6: 'Nd'} %}
+                        <span class="cell-meta">
+                          {% for day in days %}{{ day_names[day] }}{% if not loop.last %}, {% endif %}{% endfor %}
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td><span class="mono">{{ rule.publishing_time }}</span></td>
+                    <td class="text-end">
+                      <a href="#" class="btn btn-ghost btn-sm">Edytuj</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="empty-state empty-state-compact">
+              <p class="empty-state-text">Brak reguł automatyzacji dla tego bloga.</p>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <div class="empty-state-title">Brak blogów</div>
+            <p class="empty-state-text">Dodaj blog, aby zdefiniować reguły automatyzacji.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    {# === PRAWA KOLUMNA — wskazowki + globalne === #}
+    <aside class="stack gap-6">
+
+      <section class="card">
+        <header class="card-header">
+          <h2 class="card-title">Ustawienia globalne</h2>
+          <p class="card-subtitle">Domyślne wartości dla wszystkich nowych artykułów.</p>
+        </header>
+        <form method="POST" action="{{ url_for('publishing.update_settings') }}" data-validate>
+          {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <input type="hidden" name="form_type" value="global_settings">
+          <div class="card-body stack gap-4">
+            <div class="field">
+              <label class="field-label" for="default_status">Domyślny status publikacji</label>
+              <select class="select" id="default_status" name="default_status">
+                <option value="draft" {% if global_settings.default_status == 'draft' %}selected{% endif %}>Szkic</option>
+                <option value="scheduled" {% if global_settings.default_status == 'scheduled' %}selected{% endif %}>Zaplanowany</option>
+                <option value="published" {% if global_settings.default_status == 'published' %}selected{% endif %}>Opublikowany</option>
+              </select>
+              <p class="field-hint">Status nadawany nowo wygenerowanym artykułom.</p>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="default_time">Domyślna godzina publikacji</label>
+              <input type="time" class="input" id="default_time" name="default_time"
+                     value="{{ global_settings.default_time|default('10:00') }}">
+              <p class="field-hint">Używana, gdy reguła nie określa własnej godziny.</p>
+            </div>
+
+            <label class="switch switch-block">
+              <input type="checkbox" id="auto_promote" name="auto_promote" {% if global_settings.auto_promote %}checked{% endif %}>
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-label">
+                <strong>Automatyczna promocja</strong>
+                <span class="cell-meta">Po publikacji wysyłaj posty na social media.</span>
+              </span>
+            </label>
+          </div>
+          <footer class="card-footer">
+            <button type="submit" class="btn btn-primary btn-block">
+              <span class="icon" aria-hidden="true">✓</span>
+              <span>Zapisz ustawienia globalne</span>
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      <section class="card card-soft">
+        <header class="card-header">
+          <h2 class="card-title">Wskazówki</h2>
+        </header>
+        <div class="card-body stack gap-4">
+          <div>
+            <h3 class="tip-title">Akceptacja wymagana</h3>
+            <p class="tip-text">Artykuły generowane przez AI nie są od razu publikowane — czekają na zatwierdzenie redaktora.</p>
+          </div>
+          <div>
+            <h3 class="tip-title">Publikacja automatyczna</h3>
+            <p class="tip-text">Artykuły publikują się od razu po wygenerowaniu, zgodnie z regułami automatyzacji.</p>
+          </div>
+          <div>
+            <h3 class="tip-title">Reguły automatyzacji</h3>
+            <p class="tip-text">Pozwalają zdefiniować, kiedy i jak często powstają nowe artykuły oraz ich styl i długość.</p>
+          </div>
+          <div class="alert alert-warning">
+            <span class="alert-icon" aria-hidden="true">!</span>
+            <div>Nawet przy publikacji automatycznej możesz w każdej chwili ręcznie edytować lub anulować artykuł.</div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
 </div>
 {% endblock %}

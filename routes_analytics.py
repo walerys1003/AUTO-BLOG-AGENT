@@ -496,10 +496,21 @@ def register_analytics_routes(app):
         selected_blog_id = request.args.get('blog_id', 'all')
         selected_status = request.args.get('status', 'all')
         
-        # Get year and month
+        # Get year and month (z bezpieczną konwersją, fallback do bieżącego)
         today = datetime.utcnow()
-        year = int(request.args.get('year', today.year))
-        month = int(request.args.get('month', today.month))
+        def _safe_int(value, default):
+            try:
+                v = int(value) if value not in (None, '', 'null') else default
+                return v
+            except (TypeError, ValueError):
+                return default
+        year = _safe_int(request.args.get('year'), today.year)
+        month = _safe_int(request.args.get('month'), today.month)
+        # Walidacja zakresu
+        if not (1 <= month <= 12):
+            month = today.month
+        if not (1900 <= year <= 2100):
+            year = today.year
         
         # Create calendar date
         current_date = date(year, month, 1)

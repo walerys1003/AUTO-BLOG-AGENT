@@ -1,21 +1,27 @@
+import logging
 from flask import request, jsonify, render_template, Blueprint
-from app import app, db
+from app import db
 from models import Blog, Category, AutomationRule, ContentLog
 from datetime import datetime
 import json
 import requests
 from requests.auth import HTTPBasicAuth
+from auth import login_required
+
+logger = logging.getLogger(__name__)
 
 # Create blueprint for multi-blog management
 multi_blog_bp = Blueprint('multi_blog', __name__)
 
 @multi_blog_bp.route('/multi-blog')
+@login_required
 def multi_blog_management():
     """Multi-blog management interface"""
     return render_template('multi_blog_management.html')
 
 
 @multi_blog_bp.route('/api/blogs', methods=['GET'])
+@login_required
 def get_blogs():
     """Get all blogs with stats"""
     try:
@@ -73,6 +79,7 @@ def get_blogs():
 
 
 @multi_blog_bp.route('/api/blogs', methods=['POST'])
+@login_required
 def add_blog():
     """Add new blog"""
     try:
@@ -144,6 +151,7 @@ def add_blog():
 
 
 @multi_blog_bp.route('/api/blogs/<int:blog_id>', methods=['GET'])
+@login_required
 def get_blog(blog_id):
     """Get specific blog details"""
     try:
@@ -173,6 +181,7 @@ def get_blog(blog_id):
 
 
 @multi_blog_bp.route('/api/blogs/<int:blog_id>', methods=['PUT'])
+@login_required
 def update_blog(blog_id):
     """Update blog details"""
     try:
@@ -230,6 +239,7 @@ def update_blog(blog_id):
 
 
 @multi_blog_bp.route('/api/blogs/<int:blog_id>/toggle', methods=['POST'])
+@login_required
 def toggle_blog_status(blog_id):
     """Toggle blog active status"""
     try:
@@ -270,6 +280,7 @@ def toggle_blog_status(blog_id):
 
 
 @multi_blog_bp.route('/api/blogs/<int:blog_id>/sync-categories', methods=['POST'])
+@login_required
 def sync_categories_endpoint(blog_id):
     """Sync blog categories with WordPress"""
     try:
@@ -415,9 +426,8 @@ def create_default_automation_rule(blog_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating default automation rule: {e}")
+        logger.error("Error creating default automation rule: %s", e)
         return False
 
 
-# Register the blueprint with the app
-app.register_blueprint(multi_blog_bp)
+# NOTE: Blueprint is registered centrally in routes.register_routes()

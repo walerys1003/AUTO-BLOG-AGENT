@@ -11,6 +11,7 @@ from app import db
 from models import Blog, ContentLog, Category, Tag, PublishingSchedule, AutomationRule, SystemSettings, Notification
 from utils.wordpress.client import get_wordpress_post, update_wordpress_post
 from utils.notifications import send_notification
+from auth import login_required
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 publishing_bp = Blueprint('publishing', __name__, url_prefix='/publishing')
 
 @publishing_bp.route('/')
+@login_required
 def publishing_dashboard():
     """Publishing dashboard - overview of publication status"""
     # Get blogs for filter
@@ -75,6 +77,7 @@ def publishing_dashboard():
     )
 
 @publishing_bp.route('/schedule')
+@login_required
 def publishing_schedule():
     """View and manage publishing schedule"""
     # Get blogs for filter
@@ -167,6 +170,7 @@ def publishing_schedule():
     )
 
 @publishing_bp.route('/schedule/update', methods=['POST'])
+@login_required
 def update_schedule():
     """Update publishing schedule item"""
     try:
@@ -213,6 +217,7 @@ def update_schedule():
         }), 500
 
 @publishing_bp.route('/schedule/toggle-automation', methods=['POST'])
+@login_required
 def toggle_automation():
     """Toggle automation for a blog"""
     try:
@@ -244,6 +249,7 @@ def toggle_automation():
         }), 500
 
 @publishing_bp.route('/pending')
+@login_required
 def pending_articles():
     """View and manage pending articles"""
     # Get blogs for filter
@@ -280,6 +286,7 @@ def pending_articles():
     )
 
 @publishing_bp.route('/edit/<int:content_id>', methods=['GET', 'POST'])
+@login_required
 def edit_article(content_id):
     """Edit article before publication"""
     # Get content
@@ -478,6 +485,7 @@ def edit_article(content_id):
     )
 
 @publishing_bp.route('/publish-now/<int:content_id>', methods=['POST'])
+@login_required
 def publish_now(content_id):
     """Publish article immediately"""
     from utils.wordpress.client import publish_wordpress_post
@@ -537,6 +545,7 @@ def publish_now(content_id):
         return redirect(url_for('publishing.pending_articles'))
 
 @publishing_bp.route('/cancel/<int:content_id>', methods=['POST'])
+@login_required
 def cancel_publication(content_id):
     """Cancel scheduled publication"""
     # Get content
@@ -564,6 +573,7 @@ def cancel_publication(content_id):
         return redirect(url_for('publishing.pending_articles'))
 
 @publishing_bp.route('/history')
+@login_required
 def publication_history():
     """View publication history and logs"""
     # Get blogs for filter
@@ -647,6 +657,7 @@ def publication_history():
     )
 
 @publishing_bp.route('/preview/<int:content_id>')
+@login_required
 def preview_article(content_id):
     """Preview article before publication"""
     # Get content
@@ -703,6 +714,7 @@ def preview_article(content_id):
     )
 
 @publishing_bp.route('/workload')
+@login_required
 def workload_visualization():
     """Workload visualization for scheduled content"""
     # Get query parameters
@@ -893,6 +905,7 @@ def workload_visualization():
     )
 
 @publishing_bp.route('/settings')
+@login_required
 def publishing_settings():
     """Publication settings"""
     # Get blogs
@@ -919,6 +932,7 @@ def publishing_settings():
     )
 
 @publishing_bp.route('/settings/update', methods=['POST'])
+@login_required
 def update_settings():
     """Update publication settings"""
     try:

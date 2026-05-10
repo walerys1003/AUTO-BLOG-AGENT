@@ -1,185 +1,278 @@
 {% extends 'base.html' %}
 
-{% block title %}Content Preview - BLOG AUTOMATION MASTER{% endblock %}
+{# Podgląd treści — MasterContentAI #}
+
+{% block title %}Podgląd treści — MasterContentAI{% endblock %}
+
+{# DRY: ocena długości artykułu #}
+{% set word_count = content_html|striptags|replace('&nbsp;', ' ')|replace('\n', ' ')|replace('\t', ' ')|replace('  ', ' ')|split(' ')|length %}
+{% if word_count < 800 %}
+    {% set wc_label = 'Za krótki (< 800 słów)' %}{% set wc_class = 'is-danger' %}
+{% elif word_count < 1200 %}
+    {% set wc_label = 'Krótki (800–1200 słów)' %}{% set wc_class = 'is-warning' %}
+{% elif word_count <= 1600 %}
+    {% set wc_label = 'Optymalny (1200–1600 słów)' %}{% set wc_class = 'is-success' %}
+{% else %}
+    {% set wc_label = 'Długi (> 1600 słów)' %}{% set wc_class = 'is-info' %}
+{% endif %}
+{% set wc_pct = (word_count / 1600 * 100) if word_count <= 1600 else 100 %}
+{% set md_len = meta_description|length %}
+{% set md_class = 'is-success' if md_len <= 160 else 'is-danger' %}
+{% set md_pct = (md_len / 160 * 100) if md_len <= 160 else 100 %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-lg-8">
-        <h1 class="h2 mb-0">
-            <i class="fas fa-eye text-primary me-2"></i> Content Preview
-        </h1>
-        <p class="text-muted mt-2">
-            Preview how your article will look when published.
-        </p>
-    </div>
-    <div class="col-lg-4 text-end">
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('content_creator.edit_content', content_id=content_log.id) }}" class="btn btn-outline-primary">
-                <i class="fas fa-edit me-2"></i> Edit
+<div class="page-shell">
+
+    {# ---------- Header ---------- #}
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-eye" aria-hidden="true" style="color:var(--brand-700);"></i>
+                Podgląd treści
+            </h1>
+            <p class="page-subtitle">
+                Sprawdź, jak Twój artykuł będzie wyglądał po publikacji.
+            </p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ url_for('content_creator.edit_content', content_id=content_log.id) }}" class="btn btn-outline">
+                <i class="fas fa-edit" aria-hidden="true"></i> Edytuj
             </a>
-            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back
+            <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Powrót
             </a>
         </div>
-    </div>
-</div>
+    </header>
 
-<div class="row">
-    <div class="col-lg-8">
-        <!-- Article Content Preview -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h1 class="h3 mb-0">{{ content_log.title }}</h1>
-                <p class="text-muted mb-0">
-                    <small>
-                        <i class="fas fa-globe me-1"></i> {{ blog.name }} | 
-                        <i class="fas fa-calendar me-1"></i> {{ content_log.created_at.strftime('%B %d, %Y') }}
-                    </small>
-                </p>
-            </div>
+    <div class="preview-layout">
+
+        {# ---------- Lewa kolumna: Artykuł ---------- #}
+        <section class="card">
+            <header class="card-header">
+                <div>
+                    <h2 class="article-title">{{ content_log.title }}</h2>
+                    <div class="article-meta">
+                        <span><i class="fas fa-globe" aria-hidden="true"></i> {{ blog.name }}</span>
+                        <span><i class="fas fa-calendar" aria-hidden="true"></i> {{ content_log.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+            </header>
             <div class="card-body">
-                <!-- Featured Image (if provided) -->
                 {% if featured_image_url %}
-                <div class="text-center mb-4">
-                    <img src="{{ featured_image_url }}" alt="{{ content_log.title }}" class="img-fluid rounded">
-                </div>
+                <figure class="featured-image">
+                    <img src="{{ featured_image_url }}" alt="{{ content_log.title }}" loading="lazy">
+                </figure>
                 {% endif %}
-                
-                <!-- Article Excerpt -->
-                <div class="mb-4">
-                    <p class="lead">
-                        {{ excerpt }}
-                    </p>
-                    <hr>
-                </div>
-                
-                <!-- Article Content -->
+
+                {% if excerpt %}
+                <p class="article-lead">{{ excerpt }}</p>
+                <hr class="divider">
+                {% endif %}
+
                 <div class="article-content">
                     {{ content_html|safe }}
                 </div>
-                
-                <!-- Tags -->
+
                 {% if tags %}
-                <div class="mt-4">
-                    <h5>Tags:</h5>
-                    <div>
+                <div class="article-tags">
+                    <h3 class="article-tags__label">Tagi:</h3>
+                    <div class="tag-list">
                         {% for tag in tags %}
-                        <span class="badge bg-light text-dark me-2 mb-2">{{ tag }}</span>
+                        <span class="tag-item">{{ tag }}</span>
                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <!-- Metadata Preview -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">SEO Metadata</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <h6>Google Search Preview:</h6>
-                    <div class="border rounded p-3 bg-light">
-                        <div style="color: #1a0dab; font-size: 18px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ content_log.title }}</div>
-                        <div style="color: #006621; font-size: 14px; margin-bottom: 5px;">{{ blog.url }}</div>
-                        <div style="color: #545454; font-size: 14px; line-height: 1.4;">{{ meta_description }}</div>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <h6>Meta Description:</h6>
-                    <p class="mb-2">{{ meta_description }}</p>
-                    <div class="progress" style="height: 5px;">
-                        <div class="progress-bar {{ 'bg-success' if meta_description|length <= 160 else 'bg-danger' }}" 
-                             role="progressbar" 
-                             style="width: {% if (meta_description|length / 160 * 100) > 100 %}100{% else %}{{ meta_description|length / 160 * 100 }}{% endif %}%">
+        </section>
+
+        {# ---------- Prawa kolumna: SEO + Mobile ---------- #}
+        <aside class="preview-sidebar">
+
+            {# SEO Metadata #}
+            <section class="card">
+                <header class="card-header">
+                    <h3 class="card-title">Metadane SEO</h3>
+                </header>
+                <div class="card-body">
+
+                    <div class="meta-block">
+                        <h4 class="meta-block__title">Podgląd Google:</h4>
+                        <div class="serp-preview">
+                            <div class="serp-title">{{ content_log.title }}</div>
+                            <div class="serp-url">{{ blog.url }}</div>
+                            <div class="serp-desc">{{ meta_description }}</div>
                         </div>
                     </div>
-                    <small class="text-{{ 'success' if meta_description|length <= 160 else 'danger' }}">
-                        {{ meta_description|length }} / 160 characters
-                    </small>
-                </div>
-                
-                <div class="mb-4">
-                    <h6>Excerpt:</h6>
-                    <p>{{ excerpt }}</p>
-                </div>
-                
-                <div class="mb-4">
-                    <h6>Word Count:</h6>
-                    {% set word_count = content_html|striptags|replace('&nbsp;', ' ')|replace('\n', ' ')|replace('\t', ' ')|replace('  ', ' ')|split(' ')|length %}
-                    <p>{{ word_count }} words</p>
-                    <div class="progress" style="height: 5px;">
-                        <div class="progress-bar {{ 'bg-danger' if word_count < 800 else 'bg-warning' if word_count < 1200 else 'bg-success' if word_count <= 1600 else 'bg-info' }}" 
-                             role="progressbar" 
-                             style="width: {% if (word_count / 1600 * 100) > 100 %}100{% else %}{{ word_count / 1600 * 100 }}{% endif %}%">
+
+                    <div class="meta-block">
+                        <h4 class="meta-block__title">Meta opis:</h4>
+                        <p class="meta-block__text">{{ meta_description }}</p>
+                        <div class="progress">
+                            <div class="progress-bar {{ md_class }}" style="width:{{ md_pct }}%;"></div>
                         </div>
+                        <small class="meta-block__hint {{ md_class }}">{{ md_len }} / 160 znaków</small>
                     </div>
-                    <small>
-                        {% if word_count < 800 %}
-                        Too short (< 800 words)
-                        {% elif word_count < 1200 %}
-                        Short (800-1200 words)
-                        {% elif word_count <= 1600 %}
-                        Optimal (1200-1600 words)
-                        {% else %}
-                        Long (> 1600 words)
-                        {% endif %}
-                    </small>
-                </div>
-                
-                <!-- Publish Action -->
-                {% if content_log.status == 'ready_to_publish' %}
-                <div class="d-grid mt-4">
-                    <form action="{{ url_for('content_creator.publish_content', content_id=content_log.id) }}" method="post">
+
+                    {% if excerpt %}
+                    <div class="meta-block">
+                        <h4 class="meta-block__title">Zajawka:</h4>
+                        <p class="meta-block__text">{{ excerpt }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="meta-block">
+                        <h4 class="meta-block__title">Liczba słów:</h4>
+                        <p class="meta-block__text"><strong>{{ word_count }}</strong> słów</p>
+                        <div class="progress">
+                            <div class="progress-bar {{ wc_class }}" style="width:{{ wc_pct }}%;"></div>
+                        </div>
+                        <small class="meta-block__hint {{ wc_class }}">{{ wc_label }}</small>
+                    </div>
+
+                    {% if content_log.status == 'ready_to_publish' %}
+                    <form action="{{ url_for('content_creator.publish_content', content_id=content_log.id) }}"
+                          method="post" data-confirm="Na pewno opublikować ten artykuł?" style="margin-top:1rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="topic_id" value="{{ topic.id if topic else '' }}">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-paper-plane me-2"></i> Publish Now
+                        <button type="submit" class="btn btn-success btn--block">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i> Opublikuj teraz
                         </button>
                     </form>
+                    {% endif %}
                 </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Mobile Preview (mock) -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">Mobile Preview</h5>
-            </div>
-            <div class="card-body text-center">
-                <div class="mock-mobile-device mx-auto border rounded" style="max-width: 300px; height: 500px; overflow: hidden;">
-                    <div class="mock-mobile-header bg-dark text-white p-2">
-                        <small>
-                            <i class="fas fa-globe"></i> {{ blog.name }}
-                        </small>
-                    </div>
-                    <div class="mock-mobile-content p-3" style="height: 440px; overflow-y: auto;">
-                        <h3 style="font-size: 1.2rem;">{{ content_log.title }}</h3>
-                        <p><small>{{ content_log.created_at.strftime('%B %d, %Y') }}</small></p>
-                        
-                        {% if featured_image_url %}
-                        <img src="{{ featured_image_url }}" alt="{{ content_log.title }}" class="img-fluid rounded mb-3">
-                        {% endif %}
-                        
-                        <p style="font-size: 0.9rem;">{{ excerpt }}</p>
-                        <hr>
-                        
-                        <div style="font-size: 0.8rem;">
-                            {{ content_html|safe|truncate(2000) }}
-                            {% if content_html|length > 2000 %}
-                            <p class="text-center text-muted">
-                                <small>(Content truncated for preview)</small>
-                            </p>
+            </section>
+
+            {# Mobile Preview #}
+            <section class="card">
+                <header class="card-header">
+                    <h3 class="card-title">Podgląd na telefonie</h3>
+                </header>
+                <div class="card-body" style="display:flex;justify-content:center;">
+                    <div class="mobile-mock">
+                        <div class="mobile-mock__header">
+                            <i class="fas fa-globe" aria-hidden="true"></i> {{ blog.name }}
+                        </div>
+                        <div class="mobile-mock__content">
+                            <h4 class="mobile-mock__title">{{ content_log.title }}</h4>
+                            <p class="mobile-mock__date">{{ content_log.created_at.strftime('%d.%m.%Y') }}</p>
+                            {% if featured_image_url %}
+                            <img src="{{ featured_image_url }}" alt="" class="mobile-mock__img" loading="lazy">
                             {% endif %}
+                            {% if excerpt %}
+                            <p class="mobile-mock__excerpt">{{ excerpt }}</p>
+                            <hr>
+                            {% endif %}
+                            <div class="mobile-mock__body">
+                                {{ content_html|safe|truncate(2000) }}
+                                {% if content_html|length > 2000 %}
+                                <p class="mobile-mock__truncated">(treść skrócona w podglądzie)</p>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+        </aside>
+
     </div>
+
 </div>
+
+<style>
+.page-shell{display:flex;flex-direction:column;gap:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+.page-title{margin:0;font-size:1.625rem;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.page-subtitle{margin:.375rem 0 0;color:var(--text-3);font-size:.9375rem;max-width:60ch;}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+.preview-layout{display:grid;grid-template-columns:minmax(0, 2fr) minmax(0, 1fr);gap:1.5rem;align-items:start;}
+@media (max-width: 1024px){.preview-layout{grid-template-columns:1fr;}}
+.preview-sidebar{display:flex;flex-direction:column;gap:1.5rem;}
+
+.card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;overflow:hidden;}
+.card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.card-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);}
+.card-body{padding:1.5rem;}
+
+/* Article */
+.article-title{margin:0 0 .375rem;font-size:1.5rem;font-weight:700;color:var(--text-1);line-height:1.3;}
+.article-meta{display:flex;gap:1rem;flex-wrap:wrap;font-size:.8125rem;color:var(--text-3);}
+.featured-image{margin:0 0 1.25rem;border-radius:.5rem;overflow:hidden;background:var(--surface-2);}
+.featured-image img{width:100%;height:auto;display:block;}
+.article-lead{font-size:1.125rem;color:var(--text-2);font-weight:500;line-height:1.6;margin:0 0 1rem;}
+.divider{border:none;border-top:1px solid var(--border-1);margin:1rem 0 1.5rem;}
+.article-content{color:var(--text-1);line-height:1.7;font-size:1rem;}
+.article-content h1,.article-content h2,.article-content h3,.article-content h4{color:var(--text-1);margin:1.5rem 0 .75rem;font-weight:600;}
+.article-content h2{font-size:1.375rem;}
+.article-content h3{font-size:1.125rem;}
+.article-content p{margin:0 0 1rem;}
+.article-content ul,.article-content ol{margin:0 0 1rem 1.5rem;}
+.article-content a{color:var(--brand-700);text-decoration:underline;}
+.article-content img{max-width:100%;height:auto;border-radius:.5rem;}
+.article-content blockquote{margin:1rem 0;padding:.75rem 1rem;background:var(--surface-2);border-left:3px solid var(--brand-600);border-radius:.25rem;color:var(--text-2);}
+
+.article-tags{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border-1);}
+.article-tags__label{margin:0 0 .5rem;font-size:.875rem;font-weight:600;color:var(--text-2);}
+.tag-list{display:flex;gap:.375rem;flex-wrap:wrap;}
+.tag-item{display:inline-block;padding:.1875rem .625rem;font-size:.75rem;font-weight:500;border-radius:.25rem;background:var(--brand-50);color:var(--brand-700);}
+
+/* SEO meta */
+.meta-block{margin-bottom:1.25rem;}
+.meta-block:last-child{margin-bottom:0;}
+.meta-block__title{margin:0 0 .375rem;font-size:.8125rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);}
+.meta-block__text{margin:0 0 .375rem;font-size:.875rem;color:var(--text-2);}
+.meta-block__hint{display:block;margin-top:.25rem;font-size:.75rem;}
+.meta-block__hint.is-success{color:var(--success-700);}
+.meta-block__hint.is-warning{color:var(--warning-700);}
+.meta-block__hint.is-danger{color:var(--danger-700);}
+.meta-block__hint.is-info{color:var(--info-700);}
+
+.serp-preview{padding:.75rem;border:1px solid var(--border-1);border-radius:.5rem;background:var(--surface-2);}
+.serp-title{color:#1a0dab;font-size:1rem;margin-bottom:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.serp-url{color:#006621;font-size:.8125rem;margin-bottom:.25rem;}
+.serp-desc{color:#545454;font-size:.8125rem;line-height:1.4;}
+
+.progress{height:.375rem;background:var(--surface-3);border-radius:999px;overflow:hidden;margin:.25rem 0;}
+.progress-bar{height:100%;transition:width .3s ease;background:var(--brand-600);}
+.progress-bar.is-success{background:var(--success-700);}
+.progress-bar.is-warning{background:var(--warning-700);}
+.progress-bar.is-danger{background:var(--danger-700);}
+.progress-bar.is-info{background:var(--info-700);}
+
+/* Mobile mock */
+.mobile-mock{width:100%;max-width:300px;height:500px;border:1px solid var(--border-1);border-radius:1rem;overflow:hidden;background:var(--surface-1);box-shadow:0 8px 24px rgba(15,23,42,.08);}
+.mobile-mock__header{padding:.5rem .75rem;background:var(--text-1);color:#fff;font-size:.75rem;}
+.mobile-mock__content{height:calc(100% - 32px);overflow-y:auto;padding:.875rem;}
+.mobile-mock__title{margin:0 0 .25rem;font-size:1rem;color:var(--text-1);}
+.mobile-mock__date{margin:0 0 .5rem;font-size:.6875rem;color:var(--text-3);}
+.mobile-mock__img{width:100%;border-radius:.375rem;margin-bottom:.5rem;}
+.mobile-mock__excerpt{font-size:.8125rem;color:var(--text-2);}
+.mobile-mock__body{font-size:.75rem;color:var(--text-2);line-height:1.5;}
+.mobile-mock__body img{max-width:100%;}
+.mobile-mock__truncated{text-align:center;color:var(--text-3);font-size:.6875rem;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;font-size:.875rem;font-weight:500;border-radius:.5rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s ease;}
+.btn--block{display:flex;width:100%;justify-content:center;}
+.btn-primary{background:var(--brand-600);color:#fff;border-color:var(--brand-600);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700);}
+.btn-success{background:var(--success-700);color:#fff;border-color:var(--success-700);}
+.btn-success:hover{filter:brightness(.92);}
+.btn-outline{background:var(--surface-1);color:var(--brand-700);border-color:var(--brand-600);}
+.btn-outline:hover{background:var(--brand-50);}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text-1);}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('form[data-confirm]').forEach(function(form){
+    form.addEventListener('submit', function(e){
+        if (!window.confirm(form.dataset.confirm)) e.preventDefault();
+    });
+});
+</script>
 {% endblock %}

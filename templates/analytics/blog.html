@@ -1,297 +1,352 @@
 {% extends 'base.html' %}
 
-{% block title %}Blog Analytics: {{ blog.name }} - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}Analityka: {{ blog.name }} — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Analityka bloga: {{ blog.name }}</h1>
+{# ============================================================
+   ANALITYKA BLOGA
+   - Statystyki w grid 4-kolumnowym
+   - Pokrycie analityką + meta bloga
+   - Tabela top postów
+   - Najnowsze raporty + szybkie akcje
+   ============================================================ #}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
         <div>
-            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">
+                Analityka: <span style="color:var(--brand-700);">{{ blog.name }}</span>
+            </h1>
+            <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">
+                Szczegółowe metryki, top treści i ostatnie raporty.
+            </p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left"></i> Powrót
             </a>
-            <a href="{{ url_for('sync_analytics', blog_id=blog.id) }}" class="btn btn-primary ms-2">
-                <i class="fas fa-sync me-1"></i> Synchronizuj dane
+            <a href="{{ url_for('sync_analytics', blog_id=blog.id) }}" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Synchronizuj dane
             </a>
         </div>
     </div>
-    
-    <!-- Overview Stats -->
-    <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card h-100 bg-light">
-                <div class="card-body text-center p-4">
-                    <div class="display-4 mb-2">{{ total_views }}</div>
-                    <h5 class="card-title text-primary">Wyświetlenia</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card h-100 bg-light">
-                <div class="card-body text-center p-4">
-                    <div class="display-4 mb-2">{{ total_visitors }}</div>
-                    <h5 class="card-title text-success">Unikalni użytkownicy</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card h-100 bg-light">
-                <div class="card-body text-center p-4">
-                    <div class="display-4 mb-2">{{ '%0.1f'|format(avg_bounce_rate|float) }}%</div>
-                    <h5 class="card-title text-warning">Współczynnik odrzuceń</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card h-100 bg-light">
-                <div class="card-body text-center p-4">
-                    <div class="display-4 mb-2">{{ '%0.1f'|format(engagement_rate|float) }}%</div>
-                    <h5 class="card-title text-info">Zaangażowanie</h5>
-                </div>
-            </div>
+</div>
+
+<!-- KPI 4 kolumny -->
+<section class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:var(--brand-50);color:var(--brand-600);"><i class="fas fa-eye"></i></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Wyświetlenia</div>
+            <div class="kpi-value">{{ '{:,}'.format(total_views|int).replace(',', ' ') }}</div>
         </div>
     </div>
-    
-    <!-- Content Coverage -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-3">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Pokrycie treści analityką</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h6 class="mb-0">Posty z metrykami: {{ posts_with_metrics }}/{{ total_posts }}</h6>
-                            <div class="text-muted small">
-                                {% if posts_with_metrics == 0 %}
-                                    Brak danych analitycznych
-                                {% elif posts_with_metrics < total_posts %}
-                                    Częściowe pokrycie treści
-                                {% else %}
-                                    Pełne pokrycie treści
-                                {% endif %}
-                            </div>
-                        </div>
-                        <span class="badge {% if posts_with_metrics == 0 %}bg-danger{% elif posts_with_metrics < total_posts %}bg-warning{% else %}bg-success{% endif %} fs-6">
-                            {{ '%0.1f'|format((posts_with_metrics / total_posts * 100) if total_posts > 0 else 0) }}%
-                        </span>
-                    </div>
-                    
-                    <div class="progress mb-3" style="height: 20px;">
-                        <div class="progress-bar {% if posts_with_metrics == 0 %}bg-danger{% elif posts_with_metrics < total_posts %}bg-warning{% else %}bg-success{% endif %}" 
-                             role="progressbar" 
-                             style="width: {{ (posts_with_metrics / total_posts * 100) if total_posts > 0 else 0 }}%;" 
-                             aria-valuenow="{{ (posts_with_metrics / total_posts * 100) if total_posts > 0 else 0 }}" 
-                             aria-valuemin="0" 
-                             aria-valuemax="100">
-                        </div>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        {% if config and config.active %}
-                            <p class="mb-1">
-                                <strong>Ostatnia synchronizacja:</strong> 
-                                {% if config.last_sync %}
-                                    {{ config.last_sync.strftime('%Y-%m-%d %H:%M') }}
-                                {% else %}
-                                    Nigdy
-                                {% endif %}
-                            </p>
-                            <p class="mb-0">
-                                <strong>Measurement ID:</strong> {{ config.measurement_id or 'Nie ustawiono' }}
-                            </p>
-                        {% else %}
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i> Google Analytics nie jest skonfigurowane dla tego bloga
-                                <div class="mt-2">
-                                    <a href="{{ url_for('analytics_config') }}" class="btn btn-sm btn-outline-primary">
-                                        Skonfiguruj Google Analytics
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Podstawowe informacje o blogu</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-hover mb-0">
-                        <tbody>
-                            <tr>
-                                <th style="width: 30%">Nazwa bloga:</th>
-                                <td>{{ blog.name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Adres URL:</th>
-                                <td><a href="{{ blog.url }}" target="_blank">{{ blog.url }}</a></td>
-                            </tr>
-                            <tr>
-                                <th>API URL:</th>
-                                <td>{{ blog.api_url }}</td>
-                            </tr>
-                            <tr>
-                                <th>Status:</th>
-                                <td>
-                                    {% if blog.active %}
-                                    <span class="badge bg-success">Aktywny</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Nieaktywny</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Kategorie:</th>
-                                <td>
-                                    {% for category in blog.get_categories() %}
-                                    <span class="badge bg-secondary me-1">{{ category }}</span>
-                                    {% else %}
-                                    <em>Brak kategorii</em>
-                                    {% endfor %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Data utworzenia:</th>
-                                <td>{{ blog.created_at.strftime('%Y-%m-%d') }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:var(--success-50);color:var(--success-700);"><i class="fas fa-users"></i></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Unikalni użytkownicy</div>
+            <div class="kpi-value">{{ '{:,}'.format(total_visitors|int).replace(',', ' ') }}</div>
         </div>
     </div>
-    
-    <!-- Top Posts -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Najlepsze treści</h5>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:var(--warning-50);color:var(--warning-700);"><i class="fas fa-percentage"></i></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Współczynnik odrzuceń</div>
+            <div class="kpi-value">{{ '%0.1f'|format(avg_bounce_rate|float) }}%</div>
         </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:var(--info-50);color:var(--info-700);"><i class="fas fa-heart"></i></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Zaangażowanie</div>
+            <div class="kpi-value">{{ '%0.1f'|format(engagement_rate|float) }}%</div>
+        </div>
+    </div>
+</section>
+
+<!-- Coverage + Meta -->
+<section class="grid-2col" style="margin-top:1.25rem;">
+    <!-- Pokrycie analityką -->
+    <div class="card">
+        <header class="card-header">
+            <h2 class="card-title"><i class="fas fa-chart-pie" style="color:var(--brand-600);"></i> Pokrycie treści analityką</h2>
+        </header>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
+            {% set coverage_pct = ((posts_with_metrics / total_posts * 100) if total_posts > 0 else 0) %}
+            {% if posts_with_metrics == 0 %}
+                {% set coverage_state = 'danger' %}
+                {% set coverage_label = 'Brak danych analitycznych' %}
+            {% elif posts_with_metrics < total_posts %}
+                {% set coverage_state = 'warning' %}
+                {% set coverage_label = 'Częściowe pokrycie treści' %}
+            {% else %}
+                {% set coverage_state = 'success' %}
+                {% set coverage_label = 'Pełne pokrycie treści' %}
+            {% endif %}
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;gap:.75rem;">
+                <div>
+                    <div style="font-weight:600;color:var(--text-1);">Posty z metrykami: {{ posts_with_metrics }} / {{ total_posts }}</div>
+                    <div style="font-size:.8125rem;color:var(--text-3);">{{ coverage_label }}</div>
+                </div>
+                <span class="pill pill-{{ coverage_state }}">{{ '%0.1f'|format(coverage_pct) }}%</span>
+            </div>
+
+            <div class="progress" aria-label="Pokrycie analityką" role="progressbar" aria-valuenow="{{ coverage_pct }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-{{ coverage_state }}" style="width: {{ coverage_pct }}%;"></div>
+            </div>
+
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-1);">
+                {% if config and config.active %}
+                    <dl class="meta-list">
+                        <dt>Ostatnia synchronizacja</dt>
+                        <dd>{% if config.last_sync %}{{ config.last_sync.strftime('%Y-%m-%d %H:%M') }}{% else %}<em style="color:var(--text-3);">Nigdy</em>{% endif %}</dd>
+                        <dt>Measurement ID</dt>
+                        <dd><code style="font-size:.8125rem;">{{ config.measurement_id or '—' }}</code></dd>
+                    </dl>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Google Analytics nie jest skonfigurowane</strong> dla tego bloga.
+                            <div style="margin-top:.375rem;">
+                                <a href="{{ url_for('analytics_config') }}" class="btn btn-sm btn-ghost">Skonfiguruj GA</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Meta bloga -->
+    <div class="card">
+        <header class="card-header">
+            <h2 class="card-title"><i class="fas fa-info-circle" style="color:var(--info-700);"></i> Informacje o blogu</h2>
+        </header>
+        <div class="card-body">
+            <dl class="meta-list">
+                <dt>Nazwa bloga</dt>
+                <dd>{{ blog.name }}</dd>
+                <dt>Adres URL</dt>
+                <dd><a href="{{ blog.url }}" target="_blank" rel="noopener" style="color:var(--brand-700);">{{ blog.url }}</a></dd>
+                <dt>API URL</dt>
+                <dd><code style="font-size:.8125rem;word-break:break-all;">{{ blog.api_url }}</code></dd>
+                <dt>Status</dt>
+                <dd>
+                    {% if blog.active %}
+                        <span class="pill pill-success">Aktywny</span>
+                    {% else %}
+                        <span class="pill pill-danger">Nieaktywny</span>
+                    {% endif %}
+                </dd>
+                <dt>Kategorie</dt>
+                <dd>
+                    {% for category in blog.get_categories() %}
+                        <span class="tag">{{ category }}</span>
+                    {% else %}
+                        <em style="color:var(--text-3);">Brak kategorii</em>
+                    {% endfor %}
+                </dd>
+                <dt>Data utworzenia</dt>
+                <dd>{{ blog.created_at.strftime('%Y-%m-%d') }}</dd>
+            </dl>
+        </div>
+    </div>
+</section>
+
+<!-- Top Posts -->
+<section class="card" style="margin-top:1.25rem;">
+    <header class="card-header">
+        <h2 class="card-title"><i class="fas fa-trophy" style="color:var(--warning-700);"></i> Najlepsze treści</h2>
+    </header>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Tytuł</th>
+                        <th style="text-align:right;">Wyświetlenia</th>
+                        <th style="text-align:right;">Użytkownicy</th>
+                        <th style="text-align:right;">Śr. czas (s)</th>
+                        <th style="text-align:right;">Wsp. odrzuceń</th>
+                        <th style="text-align:right;">Ostatnia aktualizacja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in top_posts %}
+                    <tr>
+                        <td>
+                            <a href="{{ post.url }}" target="_blank" rel="noopener" title="{{ post.title }}" style="color:var(--brand-700);">
+                                {{ post.title|truncate(60) }}
+                            </a>
+                        </td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ post.page_views }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ post.unique_visitors }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ '%0.1f'|format(post.avg_time_on_page|float) }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ '%0.1f'|format(post.bounce_rate|float) }}%</td>
+                        <td style="text-align:right;color:var(--text-3);">{{ post.updated_at.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-inbox" style="color:var(--text-3);font-size:1.5rem;margin-bottom:.5rem;display:block;"></i>
+                            Brak danych o postach
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Najnowsze raporty + Akcje -->
+<section class="grid-2col" style="margin-top:1.25rem;">
+    <div class="card">
+        <header class="card-header">
+            <h2 class="card-title"><i class="fas fa-file-alt" style="color:var(--info-700);"></i> Najnowsze raporty</h2>
+        </header>
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+                <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Tytuł</th>
-                            <th class="text-end">Wyświetlenia</th>
-                            <th class="text-end">Użytkownicy</th>
-                            <th class="text-end">Śr. czas (sek.)</th>
-                            <th class="text-end">Wsp. odrzuceń</th>
-                            <th class="text-end">Ostatnia aktualizacja</th>
+                            <th>Typ</th>
+                            <th>Okres</th>
+                            <th>Utworzono</th>
+                            <th style="text-align:right;">Akcje</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for post in top_posts %}
+                        {% set report_meta = {
+                            'daily':   {'label': 'Dzienny',   'state': 'info'},
+                            'weekly':  {'label': 'Tygodniowy','state': 'brand'},
+                            'monthly': {'label': 'Miesięczny','state': 'success'},
+                            'custom':  {'label': 'Niestandardowy','state': 'neutral'}
+                        } %}
+                        {% for report in reports %}
+                        {% set rmeta = report_meta.get(report.report_type, {'label': report.report_type|capitalize, 'state': 'neutral'}) %}
                         <tr>
-                            <td>
-                                <a href="{{ post.url }}" target="_blank" title="{{ post.title }}">
-                                    {{ post.title|truncate(60) }}
+                            <td><span class="pill pill-{{ rmeta.state }}">{{ rmeta.label }}</span></td>
+                            <td style="font-size:.8125rem;color:var(--text-2);">{{ report.start_date.strftime('%Y-%m-%d') }} – {{ report.end_date.strftime('%Y-%m-%d') }}</td>
+                            <td style="font-size:.8125rem;color:var(--text-3);">{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td style="text-align:right;">
+                                <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-ghost" title="Zobacz raport">
+                                    <i class="fas fa-eye"></i>
                                 </a>
                             </td>
-                            <td class="text-end">{{ post.page_views }}</td>
-                            <td class="text-end">{{ post.unique_visitors }}</td>
-                            <td class="text-end">{{ '%0.1f'|format(post.avg_time_on_page|float) }}</td>
-                            <td class="text-end">{{ '%0.1f'|format(post.bounce_rate|float) }}%</td>
-                            <td class="text-end">{{ post.updated_at.strftime('%Y-%m-%d') }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center">Brak danych o postach</td>
+                            <td colspan="4" class="empty-state">
+                                <i class="fas fa-folder-open" style="color:var(--text-3);font-size:1.5rem;margin-bottom:.5rem;display:block;"></i>
+                                Brak raportów
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-    
-    <!-- Reports and Actions -->
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Najnowsze raporty</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Typ</th>
-                                    <th>Okres</th>
-                                    <th>Data utworzenia</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for report in reports %}
-                                <tr>
-                                    <td>
-                                        {% if report.report_type == 'daily' %}
-                                            <span class="badge bg-info">Dzienny</span>
-                                        {% elif report.report_type == 'weekly' %}
-                                            <span class="badge bg-primary">Tygodniowy</span>
-                                        {% elif report.report_type == 'monthly' %}
-                                            <span class="badge bg-success">Miesięczny</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ report.report_type|capitalize }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ report.start_date.strftime('%Y-%m-%d') }} - {{ report.end_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center">Brak raportów</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <a href="{{ url_for('analytics_reports', blog_id=blog.id) }}" class="btn btn-outline-primary">
-                            Wszystkie raporty
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Akcje</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='daily') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-chart-line me-1"></i> Wygeneruj raport dzienny
-                        </a>
-                        <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='weekly') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-chart-bar me-1"></i> Wygeneruj raport tygodniowy
-                        </a>
-                        <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='monthly') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-chart-pie me-1"></i> Wygeneruj raport miesięczny
-                        </a>
-                        <a href="{{ url_for('content_calendar', blog_id=blog.id) }}" class="btn btn-outline-success">
-                            <i class="fas fa-calendar-alt me-1"></i> Przejdź do kalendarza treści
-                        </a>
-                        <a href="{{ url_for('generate_content_plan', blog_id=blog.id) }}" class="btn btn-success">
-                            <i class="fas fa-magic me-1"></i> Wygeneruj plan treści
-                        </a>
-                    </div>
-                </div>
+            <div style="padding:.75rem 1rem;border-top:1px solid var(--border-1);text-align:center;">
+                <a href="{{ url_for('analytics_reports', blog_id=blog.id) }}" class="btn btn-ghost btn-sm">
+                    Wszystkie raporty <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="card">
+        <header class="card-header">
+            <h2 class="card-title"><i class="fas fa-bolt" style="color:var(--brand-600);"></i> Szybkie akcje</h2>
+        </header>
+        <div class="card-body">
+            <div class="action-grid">
+                <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='daily') }}" class="action-tile">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Raport dzienny</span>
+                </a>
+                <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='weekly') }}" class="action-tile">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Raport tygodniowy</span>
+                </a>
+                <a href="{{ url_for('generate_report', blog_id=blog.id, report_type='monthly') }}" class="action-tile">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Raport miesięczny</span>
+                </a>
+                <a href="{{ url_for('content_calendar', blog_id=blog.id) }}" class="action-tile">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Kalendarz treści</span>
+                </a>
+                <a href="{{ url_for('generate_content_plan', blog_id=blog.id) }}" class="action-tile action-tile-accent">
+                    <i class="fas fa-magic"></i>
+                    <span>Wygeneruj plan treści</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media (max-width:900px){.grid-2col{grid-template-columns:1fr;}}
+
+/* KPI grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;}
+@media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:560px){.kpi-grid{grid-template-columns:1fr;}}
+.kpi-card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;padding:1rem;display:flex;align-items:center;gap:.875rem;transition:transform .15s ease,box-shadow .15s ease;}
+.kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,23,42,.06);}
+.kpi-icon{width:2.75rem;height:2.75rem;border-radius:.625rem;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0;}
+.kpi-content{min-width:0;}
+.kpi-label{font-size:.75rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.125rem;}
+.kpi-value{font-size:1.375rem;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.15;}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;padding:.25rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.4;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger {background:var(--danger-50); color:var(--danger-700);}
+.pill-warning{background:var(--warning-50);color:var(--warning-700);}
+.pill-info   {background:var(--info-50);   color:var(--info-700);}
+.pill-brand  {background:var(--brand-50);  color:var(--brand-700);}
+.pill-neutral{background:var(--surface-2); color:var(--text-2);}
+
+/* Progress */
+.progress{height:.5rem;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+.progress-bar{height:100%;border-radius:999px;transition:width .25s ease;}
+.progress-bar-success{background:var(--success-700);}
+.progress-bar-warning{background:var(--warning-700);}
+.progress-bar-danger {background:var(--danger-700);}
+
+/* Meta list */
+.meta-list{display:grid;grid-template-columns:auto 1fr;gap:.375rem .875rem;margin:0;font-size:.875rem;}
+.meta-list dt{color:var(--text-3);font-weight:500;white-space:nowrap;}
+.meta-list dd{margin:0;color:var(--text-1);word-break:break-word;}
+
+/* Tag */
+.tag{display:inline-block;padding:.125rem .5rem;background:var(--surface-2);color:var(--text-2);border-radius:.375rem;font-size:.75rem;margin:.125rem .25rem .125rem 0;}
+
+/* Alert */
+.alert{padding:.75rem;border-radius:.5rem;font-size:.8125rem;display:flex;align-items:flex-start;gap:.625rem;line-height:1.5;}
+.alert i{flex-shrink:0;margin-top:.125rem;}
+.alert-warning{background:var(--warning-50);color:var(--warning-700);border:1px solid var(--warning-50);}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:.875rem;}
+.data-table thead th{background:var(--surface-2);color:var(--text-2);font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;padding:.625rem .875rem;border-bottom:1px solid var(--border-1);text-align:left;}
+.data-table tbody td{padding:.75rem .875rem;border-bottom:1px solid var(--border-1);color:var(--text-1);}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.data-table tbody tr:hover{background:var(--surface-2);}
+.empty-state{text-align:center;padding:2rem 1rem;color:var(--text-3);font-size:.875rem;}
+
+/* Action grid */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;}
+.action-tile{display:flex;align-items:center;gap:.625rem;padding:.75rem .875rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.5rem;color:var(--text-1);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .15s ease;}
+.action-tile i{color:var(--brand-600);font-size:1rem;flex-shrink:0;}
+.action-tile:hover{background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-700);}
+.action-tile-accent{grid-column:1/-1;background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-700);justify-content:center;font-weight:600;}
+.action-tile-accent:hover{background:var(--brand-600);color:#fff;}
+.action-tile-accent:hover i{color:#fff;}
+</style>
 {% endblock %}

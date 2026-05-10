@@ -1,252 +1,262 @@
 {% extends 'base.html' %}
 
-{% block title %}Social Media Accounts{% endblock %}
+{% block title %}Konta social media — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page">
+  <header class="page-header">
     <div>
-        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-        </a>
+      <p class="eyebrow">Social media</p>
+      <h1 class="page-title">Konta social media</h1>
+      <p class="page-subtitle">Zarządzaj połączonymi kontami Facebook, Twitter/X, LinkedIn i Instagram.</p>
     </div>
-    <h1 class="h3 mb-0">Social Media Accounts</h1>
-    <div>
+    <div class="page-actions">
+      <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-ghost">
+        <span class="icon" aria-hidden="true">←</span>
+        <span>Pulpit social</span>
+      </a>
+      <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
+        <span class="icon" aria-hidden="true">+</span>
+        <span>Dodaj konto</span>
+      </a>
+    </div>
+  </header>
+
+  {# === Karty platform === #}
+  {% set fb_count = accounts|selectattr('platform', 'equalto', 'facebook')|list|length %}
+  {% set tw_count = accounts|selectattr('platform', 'equalto', 'twitter')|list|length %}
+  {% set li_count = accounts|selectattr('platform', 'equalto', 'linkedin')|list|length %}
+  {% set ig_count = accounts|selectattr('platform', 'equalto', 'instagram')|list|length %}
+  {% set total = accounts|length %}
+
+  <section class="grid grid-4 gap-4 mb-6">
+    <article class="platform-card" style="--platform-color: #1877f2;">
+      <div class="platform-card-head">
+        <span class="platform-icon" aria-hidden="true">f</span>
+        <div>
+          <h2 class="platform-title">Facebook</h2>
+          <p class="platform-meta">{{ fb_count }} {% if fb_count == 1 %}konto{% elif 2 <= fb_count <= 4 %}konta{% else %}kont{% endif %}</p>
+        </div>
+      </div>
+      <div class="platform-progress" aria-hidden="true">
+        <div class="platform-progress-bar" style="width: {{ (fb_count / total * 100) if total else 0 }}%;"></div>
+      </div>
+    </article>
+
+    <article class="platform-card" style="--platform-color: #1da1f2;">
+      <div class="platform-card-head">
+        <span class="platform-icon" aria-hidden="true">𝕏</span>
+        <div>
+          <h2 class="platform-title">Twitter / X</h2>
+          <p class="platform-meta">{{ tw_count }} {% if tw_count == 1 %}konto{% elif 2 <= tw_count <= 4 %}konta{% else %}kont{% endif %}</p>
+        </div>
+      </div>
+      <div class="platform-progress" aria-hidden="true">
+        <div class="platform-progress-bar" style="width: {{ (tw_count / total * 100) if total else 0 }}%;"></div>
+      </div>
+    </article>
+
+    <article class="platform-card" style="--platform-color: #0a66c2;">
+      <div class="platform-card-head">
+        <span class="platform-icon" aria-hidden="true">in</span>
+        <div>
+          <h2 class="platform-title">LinkedIn</h2>
+          <p class="platform-meta">{{ li_count }} {% if li_count == 1 %}konto{% elif 2 <= li_count <= 4 %}konta{% else %}kont{% endif %}</p>
+        </div>
+      </div>
+      <div class="platform-progress" aria-hidden="true">
+        <div class="platform-progress-bar" style="width: {{ (li_count / total * 100) if total else 0 }}%;"></div>
+      </div>
+    </article>
+
+    <article class="platform-card" style="--platform-color: #e1306c;">
+      <div class="platform-card-head">
+        <span class="platform-icon" aria-hidden="true">⌾</span>
+        <div>
+          <h2 class="platform-title">Instagram</h2>
+          <p class="platform-meta">{{ ig_count }} {% if ig_count == 1 %}konto{% elif 2 <= ig_count <= 4 %}konta{% else %}kont{% endif %}</p>
+        </div>
+      </div>
+      <div class="platform-progress" aria-hidden="true">
+        <div class="platform-progress-bar" style="width: {{ (ig_count / total * 100) if total else 0 }}%;"></div>
+      </div>
+    </article>
+  </section>
+
+  {# === Tabela kont === #}
+  <section class="card">
+    <header class="card-header flex-row items-center justify-between">
+      <div>
+        <h2 class="card-title">Zarządzaj kontami</h2>
+        <p class="card-subtitle">{{ total }} {% if total == 1 %}połączone konto{% elif 2 <= total <= 4 %}połączone konta{% else %}połączonych kont{% endif %}</p>
+      </div>
+    </header>
+
+    {% if accounts %}
+    <div class="table-wrap">
+      <table class="table table-clean">
+        <thead>
+          <tr>
+            <th scope="col">Platforma</th>
+            <th scope="col">Nazwa konta</th>
+            <th scope="col">Powiązany blog</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="text-end">Akcje</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for account in accounts %}
+          {% set p = account.platform %}
+          {% set p_meta = {
+            'facebook':  {'name': 'Facebook',    'color': '#1877f2', 'icon': 'f'},
+            'twitter':   {'name': 'Twitter / X', 'color': '#1da1f2', 'icon': '𝕏'},
+            'linkedin':  {'name': 'LinkedIn',    'color': '#0a66c2', 'icon': 'in'},
+            'instagram': {'name': 'Instagram',   'color': '#e1306c', 'icon': '⌾'}
+          } %}
+          {% set m = p_meta.get(p, {'name': p|title, 'color': '#64748b', 'icon': '○'}) %}
+          <tr>
+            <td>
+              <div class="cell-primary">
+                <span class="platform-badge" style="background: {{ m.color }};" aria-hidden="true">{{ m.icon }}</span>
+                <span class="cell-title">{{ m.name }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="cell-title">{{ account.name }}</span>
+            </td>
+            <td>
+              {% if account.blog %}
+                <span class="cell-meta">{{ account.blog.name }}</span>
+              {% else %}
+                <span class="cell-meta">— (globalne)</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if account.active %}
+                <span class="badge badge-success">Aktywne</span>
+              {% else %}
+                <span class="badge badge-muted">Nieaktywne</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="row-actions">
+                <a href="{{ url_for('social.edit_social_account', account_id=account.id) }}"
+                   class="btn btn-ghost btn-sm" title="Edytuj konto">
+                  <span class="icon" aria-hidden="true">✎</span>
+                  <span>Edytuj</span>
+                </a>
+                <button type="button" class="btn btn-ghost btn-sm js-delete-account"
+                        data-account-id="{{ account.id }}" data-account-name="{{ account.name }}">
+                  <span class="icon text-danger" aria-hidden="true">🗑</span>
+                  <span>Usuń</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-state-icon" aria-hidden="true">📱</div>
+        <div class="empty-state-title">Brak połączonych kont</div>
+        <p class="empty-state-text">Dodaj pierwsze konto social media, aby publikować posty automatycznie z poziomu MasterContentAI.</p>
         <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Add Account
+          <span class="icon" aria-hidden="true">+</span>
+          <span>Dodaj pierwsze konto</span>
         </a>
+      </div>
     </div>
+    {% endif %}
+  </section>
 </div>
 
-<!-- Platform cards -->
-<div class="row mb-4">
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-primary p-3 me-3">
-                        <i class="fab fa-facebook-f text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Facebook</h5>
-                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }} Accounts</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-primary" role="progressbar" 
-                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'facebook')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'facebook')|list|length > 0 else 0 }}%;" 
-                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'facebook')|list|length }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="10">
-                    </div>
-                </div>
-            </div>
-        </div>
+{# === Modal: usun konto === #}
+<div class="modal" id="deleteAccountModal" aria-hidden="true" role="dialog" aria-labelledby="deleteAccountTitle">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog" role="document">
+    <header class="modal-header">
+      <h3 class="modal-title" id="deleteAccountTitle">Usuń konto social media</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">×</button>
+    </header>
+    <div class="modal-body">
+      <p>Czy na pewno chcesz usunąć konto <strong id="deleteAccountName"></strong>?</p>
+      <p class="text-danger">Tej operacji nie można cofnąć — wszystkie powiązane zaplanowane posty również zostaną anulowane.</p>
     </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-info p-3 me-3">
-                        <i class="fab fa-twitter text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Twitter</h5>
-                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }} Accounts</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-info" role="progressbar" 
-                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'twitter')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'twitter')|list|length > 0 else 0 }}%;" 
-                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'twitter')|list|length }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="10">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-success p-3 me-3">
-                        <i class="fab fa-linkedin-in text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">LinkedIn</h5>
-                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }} Accounts</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'linkedin')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'linkedin')|list|length > 0 else 0 }}%;" 
-                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'linkedin')|list|length }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="10">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-danger p-3 me-3">
-                        <i class="fab fa-instagram text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="card-title text-black fw-bold">Instagram</h5>
-                        <h6 class="mb-0 text-black">{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }} Accounts</h6>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-danger" role="progressbar" 
-                        style="width: {{ (accounts|selectattr('platform', 'equalto', 'instagram')|list|length / 1 * 100) if accounts|selectattr('platform', 'equalto', 'instagram')|list|length > 0 else 0 }}%;" 
-                        aria-valuenow="{{ accounts|selectattr('platform', 'equalto', 'instagram')|list|length }}" 
-                        aria-valuemin="0" 
-                        aria-valuemax="10">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <footer class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+      <form id="deleteAccountForm" method="POST" action="" class="inline">
+        {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        <button type="submit" class="btn btn-danger">
+          <span class="icon" aria-hidden="true">🗑</span>
+          <span>Tak, usuń konto</span>
+        </button>
+      </form>
+    </footer>
+  </div>
 </div>
 
-<!-- Accounts table -->
-<div class="card">
-    <div class="card-header bg-white">
-        <h5 class="mb-0">Manage Social Media Accounts</h5>
-    </div>
-    <div class="card-body p-0">
-        {% if accounts %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Platform</th>
-                        <th>Account Name</th>
-                        <th>Blog</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for account in accounts %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                {% if account.platform == 'facebook' %}
-                                <div class="rounded-circle bg-primary p-2 me-2">
-                                    <i class="fab fa-facebook-f text-white"></i>
-                                </div>
-                                <span class="text-black fw-bold">Facebook</span>
-                                {% elif account.platform == 'twitter' %}
-                                <div class="rounded-circle bg-info p-2 me-2">
-                                    <i class="fab fa-twitter text-white"></i>
-                                </div>
-                                <span class="text-black fw-bold">Twitter</span>
-                                {% elif account.platform == 'linkedin' %}
-                                <div class="rounded-circle bg-success p-2 me-2">
-                                    <i class="fab fa-linkedin-in text-white"></i>
-                                </div>
-                                <span class="text-black fw-bold">LinkedIn</span>
-                                {% elif account.platform == 'instagram' %}
-                                <div class="rounded-circle bg-danger p-2 me-2">
-                                    <i class="fab fa-instagram text-white"></i>
-                                </div>
-                                <span class="text-black fw-bold">Instagram</span>
-                                {% else %}
-                                <div class="rounded-circle bg-secondary p-2 me-2">
-                                    <i class="fas fa-share-alt text-white"></i>
-                                </div>
-                                <span class="text-black fw-bold">{{ account.platform|title }}</span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>{{ account.name }}</td>
-                        <td>
-                            {% if account.blog %}
-                            {{ account.blog.name }}
-                            {% else %}
-                            <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if account.active %}
-                            <span class="badge bg-success">Active</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{{ url_for('social.edit_social_account', account_id=account.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-account-id="{{ account.id }}" data-account-name="{{ account.name }}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center p-5">
-            <div class="mb-3">
-                <i class="fas fa-share-alt fa-4x text-muted"></i>
-            </div>
-            <h5>No Social Media Accounts Found</h5>
-            <p class="text-muted">Get started by adding your first social media account.</p>
-            <a href="{{ url_for('social.add_social_account') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> Add Account
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete Social Media Account</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the account "<span id="accountName"></span>"?</p>
-                <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" action="" method="post">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+/* === Platform cards (zharmonizowane z dashboardem social) === */
+.platform-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.platform-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-1px); }
+.platform-card-head { display: flex; align-items: center; gap: 0.875rem; }
+.platform-icon {
+  width: 44px; height: 44px;
+  background: var(--platform-color);
+  color: #fff;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.125rem;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.platform-title { margin: 0; font-size: 0.9375rem; font-weight: 600; color: var(--color-text, #0f172a); }
+.platform-meta  { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-muted, #64748b); }
+.platform-progress {
+  height: 6px; background: var(--color-surface-2, #f1f5f9);
+  border-radius: 999px; overflow: hidden;
+}
+.platform-progress-bar {
+  height: 100%; background: var(--platform-color);
+  border-radius: 999px; transition: width 0.3s ease;
+}
+.platform-badge {
+  width: 32px; height: 32px;
+  color: #fff;
+  border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.875rem;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle delete modal
-        const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal) {
-            deleteModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const accountId = button.getAttribute('data-account-id');
-                const accountName = button.getAttribute('data-account-name');
-                
-                document.getElementById('accountName').textContent = accountName;
-                document.getElementById('deleteForm').action = `/social/accounts/${accountId}/delete`;
-            });
-        }
+(function () {
+  'use strict';
+  document.querySelectorAll('.js-delete-account').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id   = btn.getAttribute('data-account-id');
+      var name = btn.getAttribute('data-account-name');
+      var nameEl = document.getElementById('deleteAccountName');
+      var form   = document.getElementById('deleteAccountForm');
+      if (nameEl) nameEl.textContent = name || '';
+      if (form)   form.action = '/social/accounts/' + id + '/delete';
+      if (window.Modal && Modal.open) Modal.open('deleteAccountModal');
+      else document.getElementById('deleteAccountModal').classList.add('is-open');
     });
+  });
+})();
 </script>
 {% endblock %}

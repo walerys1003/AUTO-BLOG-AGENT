@@ -1,174 +1,225 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit {{ platform|capitalize }} Post{% endblock %}
+{% block title %}Edytuj post: {{ platform|capitalize }}{% endblock %}
+
+{% set platform_meta = {
+  'facebook':  {'label': 'Facebook',  'color': '#1877f2', 'icon': 'fab fa-facebook-f'},
+  'twitter':   {'label': 'X (Twitter)', 'color': '#1da1f2', 'icon': 'fab fa-x-twitter'},
+  'linkedin':  {'label': 'LinkedIn',  'color': '#0a66c2', 'icon': 'fab fa-linkedin-in'},
+  'instagram': {'label': 'Instagram', 'color': '#e1306c', 'icon': 'fab fa-instagram'}
+} %}
+{% set p_meta = platform_meta.get(platform|lower, {'label': platform|capitalize, 'color': '#64748b', 'icon': 'fas fa-hashtag'}) %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{{ url_for('social.preview_posts', content_id=content.id) }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Back to Preview
+<header class="page-header">
+  <div class="page-header__top">
+    <a href="{{ url_for('social.preview_posts', content_id=content.id) }}" class="btn btn-ghost">
+      <i class="fas fa-arrow-left"></i> Wróć do podglądu
+    </a>
+    <h1 class="page-title">
+      <span class="platform-badge" style="--platform-color: {{ p_meta.color }};">
+        <i class="{{ p_meta.icon }}"></i>
+      </span>
+      Edycja postu — {{ p_meta.label }}
+    </h1>
+    <form action="{{ url_for('social.regenerate_post', content_id=content.id, platform=platform) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-secondary">
+        <i class="fas fa-sync-alt"></i> Wygeneruj ponownie
+      </button>
+    </form>
+  </div>
+  <p class="page-subtitle">Edytuj treść i hashtagi posta. Podgląd po prawej aktualizuje się na żywo.</p>
+</header>
+
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+  <section class="card md:col-span-7">
+    <header class="card-header">
+      <h2 class="card-title"><i class="fas fa-pen"></i> Treść postu</h2>
+    </header>
+    <form action="{{ url_for('social.edit_post', content_id=content.id, platform=platform) }}" method="post" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card-body stack-md">
+        <div class="field">
+          <label class="field-label" for="content">Treść <span class="text-danger">*</span></label>
+          <textarea class="input" id="content" name="content" rows="8" required>{{ post_data.content }}</textarea>
+          {% if platform == 'twitter' %}
+          <p class="field-hint">
+            <span id="char-count">{{ post_data.content|length }}</span>/280 znaków
+          </p>
+          {% else %}
+          <p class="field-hint">Krótka, angażująca treść działa najlepiej w mediach społecznościowych.</p>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="hashtags">Hashtagi</label>
+          <input type="text" class="input" id="hashtags" name="hashtags"
+                 value="{{ post_data.hashtags|join(', ') }}"
+                 placeholder="np. marketing, social, ai">
+          <p class="field-hint">Oddziel hashtagi przecinkami — symbol # zostanie dodany automatycznie.</p>
+        </div>
+      </div>
+      <footer class="card-footer card-footer--actions">
+        <a href="{{ url_for('social.preview_posts', content_id=content.id) }}" class="btn btn-ghost">Anuluj</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Zapisz zmiany
+        </button>
+      </footer>
+    </form>
+  </section>
+
+  <aside class="card md:col-span-5">
+    <header class="card-header">
+      <h2 class="card-title">
+        <span class="platform-badge platform-badge--sm" style="--platform-color: {{ p_meta.color }};">
+          <i class="{{ p_meta.icon }}"></i>
+        </span>
+        Podgląd — {{ p_meta.label }}
+      </h2>
+    </header>
+    <div class="card-body">
+      <article class="social-preview" style="--platform-color: {{ p_meta.color }};">
+        <div class="social-preview__header">
+          <div class="social-preview__avatar">
+            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Avatar" onerror="this.style.display='none'">
+            <span class="social-preview__avatar-fallback">{{ (content.blog.name if content.blog else 'B')[0]|upper }}</span>
+          </div>
+          <div>
+            <div class="social-preview__author">{{ content.blog.name if content.blog else 'Nazwa bloga' }}</div>
+            {% if platform == 'twitter' %}
+              <div class="social-preview__meta">@{{ content.blog.name|lower|replace(' ', '') if content.blog else 'blogname' }}</div>
+            {% else %}
+              <div class="social-preview__meta">Przed chwilą</div>
+            {% endif %}
+          </div>
+        </div>
+        <p class="social-preview__content" id="preview-content">{{ post_data.content }}</p>
+        <p class="social-preview__hashtags" id="preview-hashtags">
+          {% for tag in post_data.hashtags %}<span>#{{ tag }}</span> {% endfor %}
+        </p>
+        {% if content.featured_image_data %}
+        <div class="social-preview__image">
+          <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}">
+          {% if platform == 'linkedin' %}
+          <div class="social-preview__link-card">
+            <div class="social-preview__link-title">{{ content.title }}</div>
+            <div class="social-preview__link-excerpt">{{ content.excerpt | truncate(100) }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if platform == 'facebook' %}
+        <a class="social-preview__link-card" href="{{ content.url or '#' }}" target="_blank" rel="noopener">
+          <div class="social-preview__link-url">{{ content.url or 'https://blog.example.com' }}</div>
+          <div class="social-preview__link-title">{{ content.title }}</div>
         </a>
+        {% endif %}
+      </article>
     </div>
-    <h1 class="h3 mb-0">Edit {{ platform|capitalize }} Post</h1>
-    <div>
-        <form action="{{ url_for('social.regenerate_post', content_id=content.id, platform=platform) }}" method="post">
-            <button type="submit" class="btn btn-outline-primary">
-                <i class="fas fa-sync-alt me-1"></i> Regenerate
-            </button>
-        </form>
-    </div>
+    <footer class="card-footer">
+      <div class="field-hint">
+        <strong>Artykuł:</strong>
+        <a href="{{ content.url }}" target="_blank" rel="noopener">{{ content.title }}</a>
+      </div>
+      {% if post_data.status == 'published' %}
+      <div class="mt-2 flex items-center gap-2">
+        <span class="badge badge-success">Opublikowano</span>
+        {% if post_data.post_url %}
+        <a href="{{ post_data.post_url }}" target="_blank" rel="noopener" class="text-link">
+          <i class="fas fa-external-link-alt"></i> Zobacz post
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </footer>
+  </aside>
 </div>
 
-<div class="row">
-    <div class="col-md-7">
-        <div class="card mb-4">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Edit Post Content</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('social.edit_post', content_id=content.id, platform=platform) }}" method="post">
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Content</label>
-                        <textarea class="form-control" id="content" name="content" rows="6" required>{{ post_data.content }}</textarea>
-                        {% if platform == 'twitter' %}
-                        <div class="form-text">
-                            <span id="char-count">0</span>/280 characters
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="hashtags" class="form-label">Hashtags</label>
-                        <input type="text" class="form-control" id="hashtags" name="hashtags" value="{{ post_data.hashtags|join(', ') }}">
-                        <div class="form-text">Separate hashtags with commas</div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="fab fa-{{ platform.lower() }} me-2 text-{{ platform_color }}"></i>
-                    {{ platform|capitalize }} Preview
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="social-preview {{ platform.lower() }}-preview">
-                    <div class="social-header d-flex align-items-center mb-2">
-                        <div class="profile-img me-2">
-                            <img src="{{ url_for('static', filename='img/default-profile.png') }}" alt="Profile" class="rounded-circle" width="40" height="40">
-                        </div>
-                        <div>
-                            <div class="fw-bold">{{ content.blog.name if content.blog else 'Blog Name' }}</div>
-                            {% if platform == 'twitter' %}
-                            <div class="text-muted small">@{{ content.blog.name|lower|replace(' ', '') if content.blog else 'blogname' }}</div>
-                            {% else %}
-                            <div class="text-muted small">Just now</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="social-content mb-2">
-                        <span id="preview-content">{{ post_data.content }}</span>
-                    </div>
-                    <div class="social-hashtags mb-2">
-                        <span id="preview-hashtags">
-                            {% for tag in post_data.hashtags %}
-                            <span class="text-{{ platform_color }}">#{{ tag }}</span>
-                            {% endfor %}
-                        </span>
-                    </div>
-                    {% if content.featured_image_data %}
-                    <div class="social-image mb-2">
-                        <img src="{{ content.get_featured_image().url }}" alt="{{ content.title }}" class="img-fluid rounded">
-                        {% if platform == 'linkedin' %}
-                        <div class="card mt-1">
-                            <div class="card-body p-2">
-                                <div class="small fw-bold">{{ content.title }}</div>
-                                <div class="small text-muted">{{ content.excerpt | truncate(100) }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% if platform == 'facebook' %}
-                    <div class="social-url bg-light p-2 rounded mt-2">
-                        <a href="{{ content.url or '#' }}" class="text-decoration-none" target="_blank">
-                            <div class="small text-truncate">{{ content.url or 'https://blog.example.com' }}</div>
-                            <div class="fw-bold">{{ content.title }}</div>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card-footer bg-white">
-                <div class="text-muted small">
-                    <strong>Article:</strong> <a href="{{ content.url }}" target="_blank" class="text-primary">{{ content.title }}</a>
-                </div>
-                {% if post_data.status == 'published' %}
-                <div class="mt-2">
-                    <span class="badge bg-success">Published</span>
-                    {% if post_data.post_url %}
-                    <a href="{{ post_data.post_url }}" target="_blank" class="text-{{ platform_color }} ms-2">
-                        <i class="fas fa-external-link-alt me-1"></i>View Post
-                    </a>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--platform-color, var(--color-primary-600));
+  color: #fff;
+  font-size: 1rem;
+  margin-right: .5rem;
+}
+.platform-badge--sm { width: 1.75rem; height: 1.75rem; font-size: .85rem; }
+
+.social-preview {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  background: var(--color-surface);
+}
+.social-preview__header { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
+.social-preview__avatar {
+  position: relative;
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 50%;
+  background: var(--platform-color, var(--color-primary-600));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.social-preview__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.social-preview__avatar-fallback {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; z-index: 0;
+}
+.social-preview__avatar img { position: relative; z-index: 1; }
+.social-preview__author { font-weight: 600; color: var(--color-text); }
+.social-preview__meta { font-size: .8125rem; color: var(--color-text-muted); }
+.social-preview__content { white-space: pre-wrap; color: var(--color-text); margin: .5rem 0; }
+.social-preview__hashtags span { color: var(--platform-color); margin-right: .25rem; font-weight: 500; }
+.social-preview__image img { width: 100%; border-radius: var(--radius-md); margin-top: .5rem; }
+.social-preview__link-card {
+  display: block;
+  margin-top: .75rem;
+  padding: .75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  text-decoration: none;
+}
+.social-preview__link-url { font-size: .75rem; color: var(--color-text-muted); text-transform: lowercase; }
+.social-preview__link-title { font-weight: 600; color: var(--color-text); }
+.social-preview__link-excerpt { font-size: .8125rem; color: var(--color-text-muted); margin-top: .25rem; }
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const contentTextarea = document.getElementById('content');
-        const previewContent = document.getElementById('preview-content');
-        const hashtagsInput = document.getElementById('hashtags');
-        const previewHashtags = document.getElementById('preview-hashtags');
-        const charCount = document.getElementById('char-count');
-        
-        // Platform-specific colors
-        const platformColor = '{{ platform_color }}';
-        
-        // Update preview on content change
-        if (contentTextarea && previewContent) {
-            contentTextarea.addEventListener('input', function() {
-                previewContent.textContent = this.value;
-                
-                // Update character count for Twitter
-                if (charCount) {
-                    charCount.textContent = this.value.length;
-                    
-                    if (this.value.length > 280) {
-                        charCount.classList.add('text-danger');
-                    } else {
-                        charCount.classList.remove('text-danger');
-                    }
-                }
-            });
-        }
-        
-        // Update hashtags preview on change
-        if (hashtagsInput && previewHashtags) {
-            hashtagsInput.addEventListener('input', function() {
-                const hashtags = this.value.split(',').map(tag => tag.trim()).filter(tag => tag);
-                
-                let hashtagsHtml = '';
-                hashtags.forEach(tag => {
-                    hashtagsHtml += `<span class="text-${platformColor}">#${tag}</span> `;
-                });
-                
-                previewHashtags.innerHTML = hashtagsHtml;
-            });
-        }
+document.addEventListener('DOMContentLoaded', function() {
+  const contentTextarea = document.getElementById('content');
+  const previewContent = document.getElementById('preview-content');
+  const hashtagsInput = document.getElementById('hashtags');
+  const previewHashtags = document.getElementById('preview-hashtags');
+  const charCount = document.getElementById('char-count');
+
+  function renderHashtags(value) {
+    if (!previewHashtags) return;
+    const tags = value.split(',').map(t => t.trim()).filter(Boolean);
+    previewHashtags.innerHTML = tags.map(t => `<span>#${t}</span>`).join(' ');
+  }
+
+  if (contentTextarea && previewContent) {
+    contentTextarea.addEventListener('input', function() {
+      previewContent.textContent = this.value;
+      if (charCount) {
+        charCount.textContent = this.value.length;
+        charCount.classList.toggle('text-danger', this.value.length > 280);
+      }
     });
+  }
+
+  if (hashtagsInput) {
+    hashtagsInput.addEventListener('input', function() { renderHashtags(this.value); });
+  }
+});
 </script>
 {% endblock %}

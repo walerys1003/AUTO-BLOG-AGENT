@@ -4,15 +4,18 @@ Trasy dla monitorowania metrycznych aspektów działania systemu.
 
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
 from utils.monitoring.content_metrics import ContentMetricsTracker
+from auth import login_required
 
 monitoring_bp = Blueprint('monitoring', __name__)
 
 @monitoring_bp.route('/', methods=['GET'])
+@login_required
 def metrics_dashboard():
     """Główny panel monitorowania"""
     return redirect(url_for('monitoring.show_metrics'))
 
 @monitoring_bp.route('/metrics', methods=['GET'])
+@login_required
 def show_metrics():
     """Wyświetla panel monitorowania z metrykami generowania treści"""
     days = request.args.get('days', 7, type=int)
@@ -33,6 +36,7 @@ def show_metrics():
     )
 
 @monitoring_bp.route('/api/metrics', methods=['GET'])
+@login_required
 def api_metrics():
     """API do pobierania metryk generowania treści w formacie JSON"""
     days = request.args.get('days', 7, type=int)
@@ -45,6 +49,7 @@ def api_metrics():
     })
 
 @monitoring_bp.route('/api/metrics/dashboard', methods=['GET'])
+@login_required
 def api_metrics_dashboard():
     """API do pobierania danych metryk do dashboardu"""
     days = request.args.get('days', 30, type=int)

@@ -14,12 +14,14 @@ from app import db
 from models import Blog, Newsletter, Subscriber, NewsletterConfig
 from utils.newsletter.generator import NewsletterGenerator
 from utils.newsletter.distributor import NewsletterDistributor, create_weekly_newsletter_for_blog
+from auth import login_required
 
 # Create blueprint
 newsletter_bp = Blueprint('newsletter', __name__, url_prefix='/newsletter')
 
 # Newsletter Dashboard
 @newsletter_bp.route('/')
+@login_required
 def dashboard():
     """Newsletter dashboard view"""
     # Get all blogs with newsletter config
@@ -66,6 +68,7 @@ def dashboard():
 
 # Subscribers Management
 @newsletter_bp.route('/subscribers')
+@login_required
 def subscribers():
     """View and manage subscribers"""
     subscribers = Subscriber.query.order_by(Subscriber.created_at.desc()).all()
@@ -86,6 +89,7 @@ def subscribers():
     )
 
 @newsletter_bp.route('/subscribers/add', methods=['POST'])
+@login_required
 def add_subscriber():
     """Add a new subscriber"""
     try:
@@ -140,6 +144,7 @@ def add_subscriber():
         return redirect(url_for('newsletter.subscribers'))
 
 @newsletter_bp.route('/subscribers/<int:subscriber_id>/edit', methods=['POST'])
+@login_required
 def edit_subscriber(subscriber_id):
     """Edit a subscriber"""
     try:
@@ -166,6 +171,7 @@ def edit_subscriber(subscriber_id):
         return redirect(url_for('newsletter.subscribers'))
 
 @newsletter_bp.route('/subscribers/<int:subscriber_id>/delete', methods=['POST'])
+@login_required
 def delete_subscriber(subscriber_id):
     """Delete a subscriber"""
     try:
@@ -186,6 +192,7 @@ def delete_subscriber(subscriber_id):
 
 # Newsletter Configuration
 @newsletter_bp.route('/config/<int:blog_id>', methods=['GET', 'POST'])
+@login_required
 def newsletter_config(blog_id):
     """Configure newsletter settings for a blog"""
     blog = Blog.query.get(blog_id)
@@ -239,6 +246,7 @@ def newsletter_config(blog_id):
 
 # Newsletter Management
 @newsletter_bp.route('/newsletters')
+@login_required
 def newsletters():
     """View and manage newsletters"""
     newsletters = Newsletter.query.order_by(desc(Newsletter.created_at)).all()
@@ -251,6 +259,7 @@ def newsletters():
     )
 
 @newsletter_bp.route('/create/<int:blog_id>', methods=['GET', 'POST'])
+@login_required
 def create_newsletter(blog_id):
     """Create a new newsletter"""
     blog = Blog.query.get(blog_id)
@@ -328,6 +337,7 @@ def create_newsletter(blog_id):
     )
 
 @newsletter_bp.route('/preview/<int:newsletter_id>')
+@login_required
 def preview_newsletter(newsletter_id):
     """Preview a newsletter"""
     newsletter = Newsletter.query.get(newsletter_id)
@@ -342,6 +352,7 @@ def preview_newsletter(newsletter_id):
     )
 
 @newsletter_bp.route('/send/<int:newsletter_id>', methods=['POST'])
+@login_required
 def send_newsletter(newsletter_id):
     """Send a newsletter immediately"""
     newsletter = Newsletter.query.get(newsletter_id)
@@ -367,6 +378,7 @@ def send_newsletter(newsletter_id):
         return redirect(url_for('newsletter.newsletters'))
 
 @newsletter_bp.route('/delete/<int:newsletter_id>', methods=['POST'])
+@login_required
 def delete_newsletter(newsletter_id):
     """Delete a newsletter"""
     newsletter = Newsletter.query.get(newsletter_id)
@@ -387,6 +399,7 @@ def delete_newsletter(newsletter_id):
 
 # API Endpoints
 @newsletter_bp.route('/api/process-pending', methods=['POST'])
+@login_required
 def api_process_pending():
     """API endpoint to process pending newsletters"""
     try:
@@ -400,6 +413,7 @@ def api_process_pending():
         return jsonify({'error': str(e)})
 
 @newsletter_bp.route('/api/create-weekly/<int:blog_id>', methods=['POST'])
+@login_required
 def api_create_weekly(blog_id):
     """API endpoint to create a weekly newsletter for a blog"""
     try:
@@ -411,6 +425,7 @@ def api_create_weekly(blog_id):
         return jsonify({'error': str(e)})
 
 @newsletter_bp.route('/api/upload-subscribers/<int:blog_id>', methods=['POST'])
+@login_required
 def api_upload_subscribers(blog_id):
     """API endpoint to upload subscribers to EmailOctopus"""
     try:

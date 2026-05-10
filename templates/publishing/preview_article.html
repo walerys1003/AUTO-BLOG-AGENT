@@ -1,414 +1,647 @@
 {% extends 'base.html' %}
 
-{% block title %}Podgląd artykułu{% endblock %}
+{% block title %}Podgląd artykułu — MasterContentAI{% endblock %}
 
-{% block styles %}
+{% block extra_css %}
 <style>
-    .preview-container {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    
-    .preview-article {
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        padding: 2rem;
-        color: #000000 !important;
-    }
-    
-    .preview-article img {
-        max-width: 100%;
-        height: auto;
-    }
-    
-    .preview-meta {
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .preview-title {
-        margin-bottom: 1rem;
-    }
-    
-    .preview-featured-image {
-        margin-bottom: 1.5rem;
-    }
-    
-    .preview-tools {
-        position: sticky;
-        top: 1rem;
-        z-index: 100;
-    }
-    
-    .preview-content {
-        color: #000000 !important;
-    }
-    
-    .preview-content * {
-        color: #000000 !important;
-    }
-    
-    .preview-content h1, .preview-content h2, .preview-content h3,
-    .preview-content h4, .preview-content h5, .preview-content h6,
-    .preview-content p, .preview-content li, .preview-content ul,
-    .preview-content ol, .preview-content blockquote, .preview-content span,
-    .preview-content div, .preview-content a, .preview-content td,
-    .preview-content th, .preview-content strong, .preview-content em,
-    .preview-content small, .preview-content code, .preview-content pre {
-        color: #000000 !important;
-    }
+  /* ===== Layout ===== */
+  .preview-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-5);
+    align-items: start;
+  }
+  @media (max-width: 1024px) {
+    .preview-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Pasek narzędzi podglądu ===== */
+  .preview-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+  }
+  .preview-toolbar__info h2 {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-1);
+  }
+  .preview-toolbar__info p {
+    margin: 0;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+  .preview-toolbar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  /* ===== Segmented control: tryb podglądu ===== */
+  .device-toggle {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-md);
+    padding: 3px;
+  }
+  .device-toggle__btn {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .device-toggle__btn:hover { color: var(--text-1); }
+  .device-toggle__btn.is-active {
+    background: var(--surface-1);
+    color: var(--brand-700);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ===== Kontener podglądu artykułu ===== */
+  .preview-container {
+    margin: 0 auto;
+    transition: max-width var(--transition-base);
+  }
+  .preview-container[data-device="desktop"] { max-width: 800px; }
+  .preview-container[data-device="tablet"]  { max-width: 600px; }
+  .preview-container[data-device="mobile"]  { max-width: 380px; }
+  .preview-container[data-device="facebook"],
+  .preview-container[data-device="twitter"] { max-width: 500px; }
+
+  .preview-article {
+    background: white;
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-7);
+    box-shadow: var(--shadow-sm);
+    color: #1a1a1a;
+  }
+  .preview-article img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+  }
+  .preview-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3);
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+  .preview-category {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--brand-50);
+    color: var(--brand-700);
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .preview-title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1a1a1a;
+    margin: 0 0 var(--space-3);
+  }
+  .preview-excerpt {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #4a4a4a;
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid #eee;
+  }
+  .preview-featured-image {
+    margin-bottom: var(--space-5);
+    text-align: center;
+  }
+  .preview-featured-image small {
+    display: block;
+    color: var(--text-3);
+    font-size: 0.75rem;
+    margin-top: 6px;
+  }
+  .preview-content { color: #1a1a1a; line-height: 1.7; }
+  .preview-content h1,
+  .preview-content h2,
+  .preview-content h3,
+  .preview-content h4,
+  .preview-content h5,
+  .preview-content h6 { color: #1a1a1a; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .preview-content p,
+  .preview-content li { color: #1a1a1a; }
+  .preview-content blockquote {
+    border-left: 4px solid var(--brand-400);
+    padding: var(--space-2) var(--space-4);
+    margin: var(--space-4) 0;
+    color: #4a4a4a;
+    background: var(--surface-2);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+  .preview-tags {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .preview-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  /* ===== Sidebar ===== */
+  .side-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+  }
+  .side-card__head {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-1);
+    background: var(--surface-2);
+  }
+  .side-card__title {
+    margin: 0;
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--text-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .side-card__body { padding: var(--space-4); }
+
+  .info-list { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-3); margin: 0; }
+  .info-list dt {
+    font-size: var(--fs-xs);
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .info-list dd { margin: 0; font-size: var(--fs-sm); color: var(--text-1); }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .status-badge--published { background: var(--success-50); color: var(--success-700); }
+  .status-badge--scheduled { background: var(--info-50); color: var(--info-700); }
+  .status-badge--draft     { background: var(--surface-3); color: var(--text-2); }
+  .status-badge--failed    { background: var(--danger-50); color: var(--danger-700); }
+  .status-badge--pending   { background: var(--warning-50); color: var(--warning-700); }
+
+  /* ===== SEO preview (Google SERP) ===== */
+  .serp-preview {
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    background: white;
+  }
+  .serp-preview__url {
+    color: #006621;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+    word-break: break-all;
+  }
+  .serp-preview__title {
+    color: #1a0dab;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .serp-preview__description {
+    color: #4d5156;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Preview Toolbar -->
-<div class="bg-light py-3 mb-4 shadow-sm">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-0">Podgląd artykułu</h5>
-                <p class="text-muted mb-0 small">Tak będzie wyglądał opublikowany artykuł</p>
-            </div>
-            <div class="btn-group">
-                <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-outline-primary">
-                    <i class="fas fa-pencil-alt me-1"></i> Edytuj
-                </a>
-                <div class="btn-group" role="group">
-                    <button id="previewOptionsDropdown" type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-desktop me-1"></i> Widok
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="previewOptionsDropdown">
-                        <li><button class="dropdown-item active" id="desktop-view">Komputer</button></li>
-                        <li><button class="dropdown-item" id="tablet-view">Tablet</button></li>
-                        <li><button class="dropdown-item" id="mobile-view">Telefon</button></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item" id="facebook-view">Facebook</button></li>
-                        <li><button class="dropdown-item" id="twitter-view">Twitter</button></li>
-                    </ul>
-                </div>
-                <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i> Powrót
-                </a>
-            </div>
-        </div>
-    </div>
+{# DRY: status map #}
+{% set status_map = {
+  'published':       {'label': 'Opublikowany',           'class': 'status-badge--published'},
+  'scheduled':       {'label': 'Zaplanowany',            'class': 'status-badge--scheduled'},
+  'draft':           {'label': 'Szkic',                  'class': 'status-badge--draft'},
+  'failed':          {'label': 'Błąd',                   'class': 'status-badge--failed'},
+  'pending_review':  {'label': 'Oczekuje na zatwierdzenie', 'class': 'status-badge--pending'}
+} %}
+{% set s = status_map.get(content.status, {'label': content.status, 'class': 'status-badge--draft'}) %}
+
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-ghost btn-sm">
+      <i class="fas fa-arrow-left"></i> Powrót do listy
+    </a>
+    <h1 class="page-title">Podgląd artykułu</h1>
+    <p class="page-subtitle">Tak będzie wyglądał opublikowany artykuł.</p>
+  </div>
+  <div class="page-header__actions">
+    <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-secondary">
+      <i class="fas fa-pencil-alt"></i> Edytuj artykuł
+    </a>
+  </div>
 </div>
 
-<div class="container mb-5">
-    <div class="row">
-        <div class="col-md-9">
-            <!-- Preview Container -->
-            <div class="preview-container" id="preview-container">
-                <div class="preview-article">
-                    <div class="preview-meta">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-muted mb-1">
-                                    {% if content.category %}
-                                    <span class="badge bg-primary">{{ content.category.name }}</span>
-                                    {% endif %}
-                                    
-                                    {% if content.created_at %}
-                                    <span class="ms-2">{{ content.created_at.strftime('%d.%m.%Y') }}</span>
-                                    {% endif %}
-                                </div>
-                                
-                                <h1 class="preview-title" style="color: #000000 !important;">{{ content.title }}</h1>
-                                
-                                {% if content.excerpt %}
-                                <div class="lead mb-0" style="color: #000000 !important;">{{ content.excerpt }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {% if content.featured_image_data %}
-                    <div class="preview-featured-image">
-                        <img src="{{ content.featured_image_data }}" alt="{{ content.title }}" class="img-fluid rounded">
-                        <div class="text-muted small mt-1">Obraz wyróżniający</div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="preview-content">
-                        {{ content.content|safe }}
-                    </div>
-                    
-                    {% if content.tags %}
-                    <div class="mt-4 pt-3 border-top">
-                        {% for tag in content.tags %}
-                        <span class="badge bg-light text-dark me-1">{{ tag.name }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <!-- Preview Tools -->
-            <div class="card shadow-sm mb-4 preview-tools">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Informacje</h5>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-6">Status:</dt>
-                        <dd class="col-6">
-                            {% if content.status == 'published' %}
-                            <span class="badge bg-success">Opublikowany</span>
-                            {% elif content.status == 'scheduled' %}
-                            <span class="badge bg-info">Zaplanowany</span>
-                            {% elif content.status == 'draft' %}
-                            <span class="badge bg-secondary">Szkic</span>
-                            {% elif content.status == 'failed' %}
-                            <span class="badge bg-danger">Błąd</span>
-                            {% elif content.status == 'pending_review' %}
-                            <span class="badge bg-warning">Oczekuje na zatwierdzenie</span>
-                            {% else %}
-                            <span class="badge bg-dark">{{ content.status }}</span>
-                            {% endif %}
-                        </dd>
-                        
-                        <dt class="col-6">Blog:</dt>
-                        <dd class="col-6">{{ blog.name }}</dd>
-                        
-                        {% if content.publish_date %}
-                        <dt class="col-6">Data publikacji:</dt>
-                        <dd class="col-6">{{ content.publish_date.strftime('%Y-%m-%d %H:%M') }}</dd>
-                        {% elif content.status == 'scheduled' %}
-                        <dt class="col-6">Zaplanowana data:</dt>
-                        <dd class="col-6">
-                            {% if schedule %}
-                            {{ schedule.publish_date.strftime('%Y-%m-%d') }} {{ schedule.publish_time }}
-                            {% else %}
-                            Nieznana
-                            {% endif %}
-                        </dd>
-                        {% endif %}
-                    </dl>
-                </div>
-                <div class="card-footer bg-white">
-                    <div class="d-grid gap-2">
-                        {% if content.status == 'pending_review' %}
-                        <a href="{{ url_for('publishing.publish_now', content_id=content.id) }}" class="btn btn-success">
-                            <i class="fas fa-check-circle me-1"></i> Zatwierdź publikację
-                        </a>
-                        {% endif %}
-                        
-                        {% if content.status == 'scheduled' %}
-                        <button type="button" class="btn btn-danger" onclick="confirmCancel({{ content.id }})">
-                            <i class="fas fa-times-circle me-1"></i> Anuluj publikację
-                        </button>
-                        {% endif %}
-                        
-                        <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-primary">
-                            <i class="fas fa-pencil-alt me-1"></i> Edytuj artykuł
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEO Preview Card -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Podgląd SEO</h5>
-                </div>
-                <div class="card-body">
-                    <div class="seo-preview border rounded p-3 mb-3">
-                        <div class="text-primary mb-1 text-truncate" style="font-size: 0.9rem;">
-                            {{ blog.site_url }}/{{ content.slug if content.slug else 'artykul' }}
-                        </div>
-                        <div style="font-size: 1.1rem; color: #1a0dab; font-weight: 500;" class="mb-1">
-                            {{ meta_title or content.title }}
-                        </div>
-                        <div style="font-size: 0.85rem; color: #4d5156;">
-                            {{ meta_description or content.excerpt or (content.content|striptags|truncate(160)) }}
-                        </div>
-                    </div>
-                    <p class="text-muted small mb-0">Tak Twój artykuł może wyglądać w wynikach wyszukiwania Google.</p>
-                </div>
-            </div>
-            
-            <!-- Social Preview Card -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Udostępnianie w mediach społecznościowych</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('social.create_posts', content_id=content.id) }}" class="btn btn-primary mb-2">
-                            <i class="fas fa-share-alt me-1"></i> Zarządzaj promocją
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Pasek narzędzi: przełącznik widoku urządzenia -->
+<div class="preview-toolbar">
+  <div class="preview-toolbar__info">
+    <h2><i class="fas fa-eye"></i> Tryb podglądu</h2>
+    <p>Wybierz urządzenie lub platformę społecznościową, aby zobaczyć alternatywny wygląd artykułu.</p>
+  </div>
+  <div class="preview-toolbar__actions">
+    <div class="device-toggle" role="group" aria-label="Wybór urządzenia podglądu">
+      <button type="button" class="device-toggle__btn is-active" data-device-view="desktop" title="Komputer">
+        <i class="fas fa-desktop"></i> Komputer
+      </button>
+      <button type="button" class="device-toggle__btn" data-device-view="tablet" title="Tablet">
+        <i class="fas fa-tablet-alt"></i> Tablet
+      </button>
+      <button type="button" class="device-toggle__btn" data-device-view="mobile" title="Telefon">
+        <i class="fas fa-mobile-alt"></i> Telefon
+      </button>
     </div>
+    <div class="device-toggle" role="group" aria-label="Podgląd społecznościowy">
+      <button type="button" class="device-toggle__btn" data-device-view="facebook" title="Facebook">
+        <i class="fab fa-facebook-f" style="color: #1877f2;"></i> Facebook
+      </button>
+      <button type="button" class="device-toggle__btn" data-device-view="twitter" title="Twitter">
+        <i class="fab fa-twitter" style="color: #1da1f2;"></i> Twitter
+      </button>
+    </div>
+  </div>
 </div>
 
-<!-- Cancel Publication Modal -->
-<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cancelModalLabel">Anuluj publikację</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
-                <p class="text-muted">Artykuł zostanie przeniesiony do szkiców.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
-                <form id="cancel-form" method="POST" action="">
-                    <button type="submit" class="btn btn-danger">Tak, anuluj</button>
-                </form>
-            </div>
+<div class="preview-layout">
+  <!-- LEWA KOLUMNA: artykuł -->
+  <div>
+    <div class="preview-container" id="preview-container" data-device="desktop">
+      <article class="preview-article" id="preview-article-content">
+        <div class="preview-meta">
+          {% if content.category %}
+            <span class="preview-category">{{ content.category.name }}</span>
+          {% endif %}
+          {% if content.created_at %}
+            <span><i class="far fa-calendar"></i> {{ content.created_at.strftime('%d.%m.%Y') }}</span>
+          {% endif %}
+          {% if blog %}
+            <span><i class="fas fa-globe"></i> {{ blog.name }}</span>
+          {% endif %}
         </div>
+
+        <h1 class="preview-title">{{ content.title }}</h1>
+
+        {% if content.excerpt %}
+          <p class="preview-excerpt">{{ content.excerpt }}</p>
+        {% endif %}
+
+        {% if content.featured_image_data %}
+          <div class="preview-featured-image">
+            <img src="{{ content.featured_image_data }}" alt="{{ content.title }}">
+            <small>Obraz wyróżniający</small>
+          </div>
+        {% endif %}
+
+        <div class="preview-content">
+          {{ content.content|safe }}
+        </div>
+
+        {% if content.tags %}
+          <div class="preview-tags">
+            {% for tag in content.tags %}
+              <span class="preview-tag">#{{ tag.name }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </article>
     </div>
+  </div>
+
+  <!-- PRAWA KOLUMNA: sidebar -->
+  <aside>
+    <!-- Informacje -->
+    <div class="side-card" style="position: sticky; top: var(--space-4);">
+      <div class="side-card__head">
+        <h2 class="side-card__title"><i class="fas fa-info-circle"></i> Informacje</h2>
+      </div>
+      <div class="side-card__body">
+        <dl class="info-list">
+          <dt>Status</dt>
+          <dd><span class="status-badge {{ s.class }}">{{ s.label }}</span></dd>
+
+          <dt>Blog</dt>
+          <dd>{{ blog.name }}</dd>
+
+          {% if content.publish_date %}
+            <dt>Opublikowano</dt>
+            <dd>{{ content.publish_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+          {% elif content.status == 'scheduled' %}
+            <dt>Planowana</dt>
+            <dd>
+              {% if schedule %}
+                {{ schedule.publish_date.strftime('%Y-%m-%d') }} {{ schedule.publish_time }}
+              {% else %}
+                Nieznana
+              {% endif %}
+            </dd>
+          {% endif %}
+        </dl>
+
+        <div style="margin-top: var(--space-4); display: grid; gap: var(--space-2);">
+          {% if content.status == 'pending_review' %}
+            <a href="{{ url_for('publishing.publish_now', content_id=content.id) }}" class="btn btn-success btn-block">
+              <i class="fas fa-check-circle"></i> Zatwierdź publikację
+            </a>
+          {% endif %}
+          {% if content.status == 'scheduled' %}
+            <button type="button" class="btn btn-danger btn-block" data-action="cancel-publication" data-content-id="{{ content.id }}">
+              <i class="fas fa-times-circle"></i> Anuluj publikację
+            </button>
+          {% endif %}
+          <a href="{{ url_for('publishing.edit_article', content_id=content.id) }}" class="btn btn-primary btn-block">
+            <i class="fas fa-pencil-alt"></i> Edytuj artykuł
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Podgląd SEO (Google SERP) -->
+    <div class="side-card">
+      <div class="side-card__head">
+        <h2 class="side-card__title"><i class="fas fa-search"></i> Podgląd SEO (Google)</h2>
+      </div>
+      <div class="side-card__body">
+        <div class="serp-preview">
+          <div class="serp-preview__url">
+            {{ blog.site_url if blog.site_url else (blog.url if blog.url else 'https://example.com') }}/{{ content.slug if content.slug else 'artykul' }}
+          </div>
+          <div class="serp-preview__title">{{ meta_title or content.title }}</div>
+          <div class="serp-preview__description">
+            {{ meta_description or content.excerpt or (content.content|striptags|truncate(160)) }}
+          </div>
+        </div>
+        <p class="form-help" style="margin-top: var(--space-3);">
+          <i class="fas fa-info-circle"></i>
+          Tak Twój artykuł może wyglądać w wynikach wyszukiwania Google.
+        </p>
+      </div>
+    </div>
+
+    <!-- Promocja społecznościowa -->
+    <div class="side-card">
+      <div class="side-card__head">
+        <h2 class="side-card__title"><i class="fas fa-share-alt"></i> Promocja społecznościowa</h2>
+      </div>
+      <div class="side-card__body">
+        <a href="{{ url_for('social.create_posts', content_id=content.id) }}" class="btn btn-primary btn-block">
+          <i class="fas fa-share-alt"></i> Zarządzaj promocją
+        </a>
+        <p class="form-help" style="margin: var(--space-3) 0 0;">
+          Zaplanuj posty na Facebooku, Twitterze, LinkedIn i Instagramie.
+        </p>
+      </div>
+    </div>
+  </aside>
 </div>
+
+<!-- Modal: Anuluj publikację -->
+<div class="modal" id="cancelModal" data-modal aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 class="modal-title" id="cancelTitle">
+          <i class="fas fa-exclamation-triangle text-danger"></i> Anuluj publikację
+        </h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+      <form id="cancel-form" method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p style="margin: 0 0 var(--space-3);">Czy na pewno chcesz anulować zaplanowaną publikację tego artykułu?</p>
+          <div class="alert alert-warning" style="margin: 0;">
+            <i class="fas fa-info-circle"></i>
+            Artykuł zostanie przeniesiony do szkiców i nie zostanie automatycznie opublikowany.
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-modal-close>Nie, zostaw</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-times-circle"></i> Tak, anuluj publikację
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Dane dla podglądu społecznościowego (data island) -->
+<script id="previewArticleData" type="application/json">{
+  "title":   {{ content.title|tojson }},
+  "excerpt": {{ (content.excerpt or '')|tojson }},
+  "imageUrl":{{ (content.featured_image_data or '')|tojson }},
+  "blogName":{{ blog.name|tojson }}
+}</script>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Device preview switcher
-        const previewContainer = document.getElementById('preview-container');
-        const desktopViewBtn = document.getElementById('desktop-view');
-        const tabletViewBtn = document.getElementById('tablet-view');
-        const mobileViewBtn = document.getElementById('mobile-view');
-        const facebookViewBtn = document.getElementById('facebook-view');
-        const twitterViewBtn = document.getElementById('twitter-view');
-        
-        // Set default view
-        previewContainer.style.maxWidth = '800px';
-        
-        // Handle view changes
-        desktopViewBtn.addEventListener('click', function() {
-            updateActiveViewButton(this);
-            previewContainer.style.maxWidth = '800px';
-        });
-        
-        tabletViewBtn.addEventListener('click', function() {
-            updateActiveViewButton(this);
-            previewContainer.style.maxWidth = '600px';
-        });
-        
-        mobileViewBtn.addEventListener('click', function() {
-            updateActiveViewButton(this);
-            previewContainer.style.maxWidth = '380px';
-        });
-        
-        facebookViewBtn.addEventListener('click', function() {
-            updateActiveViewButton(this);
-            showSocialPreview('facebook');
-        });
-        
-        twitterViewBtn.addEventListener('click', function() {
-            updateActiveViewButton(this);
-            showSocialPreview('twitter');
-        });
-        
-        function updateActiveViewButton(button) {
-            // Remove active class from all buttons
-            document.querySelectorAll('[id$="-view"]').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
-            button.classList.add('active');
-        }
-        
-        function showSocialPreview(platform) {
-            const title = "{{ content.title }}";
-            const excerpt = "{{ content.excerpt or '' }}";
-            const imageUrl = "{{ content.featured_image_data or '' }}";
-            const blogName = "{{ blog.name }}";
-            
-            let previewHtml = '';
-            
-            if (platform === 'facebook') {
-                previewContainer.style.maxWidth = '500px';
-                previewHtml = `
-                    <div class="social-preview facebook-preview border rounded overflow-hidden mb-3">
-                        <div class="border-bottom p-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="bg-light rounded-circle me-2" style="width: 40px; height: 40px;"></div>
-                                <div>
-                                    <div class="fw-bold">${blogName}</div>
-                                    <div class="text-muted small">Teraz · <i class="fas fa-globe-americas"></i></div>
-                                </div>
-                            </div>
-                            <p class="mb-0">Nowy artykuł na naszym blogu!</p>
-                        </div>
-                        ${imageUrl ? `<img src="${imageUrl}" class="img-fluid w-100" alt="${title}">` : ''}
-                        <div class="bg-light p-3">
-                            <div class="text-muted small text-uppercase">blog.${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com</div>
-                            <div class="fw-bold mb-1">${title}</div>
-                            <div class="small mb-0 text-muted">${excerpt}</div>
-                        </div>
-                        <div class="border-top p-2 d-flex justify-content-around">
-                            <button class="btn btn-light btn-sm"><i class="far fa-thumbs-up me-1"></i> Lubię to</button>
-                            <button class="btn btn-light btn-sm"><i class="far fa-comment me-1"></i> Komentarz</button>
-                            <button class="btn btn-light btn-sm"><i class="fas fa-share me-1"></i> Udostępnij</button>
-                        </div>
-                    </div>
-                    <p class="text-muted small">Przykładowy podgląd wpisu na Facebooku</p>
-                `;
-            } else if (platform === 'twitter') {
-                previewContainer.style.maxWidth = '500px';
-                previewHtml = `
-                    <div class="social-preview twitter-preview border rounded overflow-hidden mb-3">
-                        <div class="p-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="bg-light rounded-circle me-2" style="width: 48px; height: 48px;"></div>
-                                <div>
-                                    <div class="fw-bold">${blogName} <span class="text-primary">✓</span></div>
-                                    <div class="text-muted small">@${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}</div>
-                                </div>
-                            </div>
-                            <p class="mb-2">Nowy artykuł na naszym blogu: ${title}</p>
-                            <p class="mb-2">${excerpt}</p>
-                            <p class="mb-3 text-primary">#blog #content #article</p>
-                            ${imageUrl ? `
-                            <div class="border rounded overflow-hidden mb-2">
-                                <img src="${imageUrl}" class="img-fluid w-100" alt="${title}">
-                                <div class="bg-light p-2">
-                                    <div class="text-muted small">blog.${blogName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com</div>
-                                    <div class="fw-bold small">${title}</div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            <div class="d-flex justify-content-between text-muted mt-2">
-                                <span>11:23 AM · Apr 24, 2025</span>
-                                <span><i class="fas fa-external-link-alt"></i></span>
-                            </div>
-                        </div>
-                        <div class="border-top p-2 d-flex justify-content-around">
-                            <button class="btn btn-light btn-sm"><i class="far fa-comment me-1"></i> 8</button>
-                            <button class="btn btn-light btn-sm"><i class="fas fa-retweet me-1"></i> 15</button>
-                            <button class="btn btn-light btn-sm"><i class="far fa-heart me-1"></i> 32</button>
-                            <button class="btn btn-light btn-sm"><i class="fas fa-share-alt me-1"></i></button>
-                        </div>
-                    </div>
-                    <p class="text-muted small">Przykładowy podgląd wpisu na Twitterze</p>
-                `;
-            }
-            
-            // Update preview
-            document.querySelector('.preview-container').innerHTML = previewHtml;
-        }
-        
-        // Confirm cancel function
-        window.confirmCancel = function(contentId) {
-            const form = document.getElementById('cancel-form');
-            form.action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('0', contentId);
-            
-            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
-            modal.show();
-        };
-    });
+(function() {
+  'use strict';
+
+  const container = document.getElementById('preview-container');
+  const articleEl = document.getElementById('preview-article-content');
+  let originalArticleHTML = articleEl ? articleEl.outerHTML : '';
+
+  let articleData = { title: '', excerpt: '', imageUrl: '', blogName: '' };
+  try {
+    articleData = JSON.parse(document.getElementById('previewArticleData').textContent || '{}');
+  } catch (e) {
+    console.error('Nie udało się sparsować danych artykułu:', e);
+  }
+
+  function escHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function setActiveButton(btn) {
+    document.querySelectorAll('[data-device-view]').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+  }
+
+  function renderOriginal() {
+    if (originalArticleHTML) {
+      container.innerHTML = originalArticleHTML;
+    }
+  }
+
+  function renderFacebookPreview() {
+    const { title, excerpt, imageUrl, blogName } = articleData;
+    const slug = (blogName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    container.innerHTML = `
+      <div class="preview-article" style="padding: 0; overflow: hidden;">
+        <div style="padding: var(--space-4); border-bottom: 1px solid #eee;">
+          <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #1877f2; color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">${escHtml((blogName || 'B').charAt(0).toUpperCase())}</div>
+            <div>
+              <div style="font-weight: 600; color: #1a1a1a;">${escHtml(blogName)}</div>
+              <div style="color: #65676b; font-size: 0.8rem;">Teraz · <i class="fas fa-globe-americas"></i></div>
+            </div>
+          </div>
+          <p style="margin: 0; color: #1a1a1a;">Nowy artykuł na naszym blogu!</p>
+        </div>
+        ${imageUrl ? `<img src="${escHtml(imageUrl)}" alt="${escHtml(title)}" style="width: 100%; display: block;">` : ''}
+        <div style="padding: var(--space-3); background: #f0f2f5;">
+          <div style="text-transform: uppercase; color: #65676b; font-size: 0.72rem;">blog.${escHtml(slug)}.com</div>
+          <div style="font-weight: 600; color: #1a1a1a; margin-top: 4px;">${escHtml(title)}</div>
+          <div style="color: #65676b; font-size: 0.85rem; margin-top: 4px;">${escHtml(excerpt)}</div>
+        </div>
+        <div style="display: flex; justify-content: space-around; padding: var(--space-2); border-top: 1px solid #eee;">
+          <button class="btn btn-ghost btn-sm"><i class="far fa-thumbs-up"></i> Lubię to</button>
+          <button class="btn btn-ghost btn-sm"><i class="far fa-comment"></i> Komentarz</button>
+          <button class="btn btn-ghost btn-sm"><i class="fas fa-share"></i> Udostępnij</button>
+        </div>
+      </div>
+      <p style="text-align: center; color: var(--text-3); font-size: 0.8rem; margin-top: var(--space-3);">
+        Przykładowy podgląd wpisu na Facebooku
+      </p>
+    `;
+  }
+
+  function renderTwitterPreview() {
+    const { title, excerpt, imageUrl, blogName } = articleData;
+    const handle = (blogName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    container.innerHTML = `
+      <div class="preview-article" style="padding: 0; overflow: hidden;">
+        <div style="padding: var(--space-4);">
+          <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #1da1f2; color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">${escHtml((blogName || 'B').charAt(0).toUpperCase())}</div>
+            <div>
+              <div style="font-weight: 700; color: #1a1a1a;">${escHtml(blogName)} <span style="color: #1da1f2;">✓</span></div>
+              <div style="color: #536471; font-size: 0.85rem;">@${escHtml(handle)}</div>
+            </div>
+          </div>
+          <p style="margin: 0 0 var(--space-2); color: #1a1a1a;">Nowy artykuł na naszym blogu: ${escHtml(title)}</p>
+          <p style="margin: 0 0 var(--space-2); color: #1a1a1a;">${escHtml(excerpt)}</p>
+          <p style="margin: 0 0 var(--space-3); color: #1da1f2;">#blog #content #marketing</p>
+          ${imageUrl ? `
+            <div style="border: 1px solid #cfd9de; border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-2);">
+              <img src="${escHtml(imageUrl)}" alt="${escHtml(title)}" style="width: 100%; display: block;">
+              <div style="padding: var(--space-2); background: #f7f9fa;">
+                <div style="color: #536471; font-size: 0.8rem;">blog.${escHtml(handle)}.com</div>
+                <div style="font-weight: 600; font-size: 0.9rem; color: #1a1a1a;">${escHtml(title)}</div>
+              </div>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; color: #536471; font-size: 0.85rem; margin-top: var(--space-2);">
+            <span>11:23 · ${new Date().toLocaleDateString('pl-PL')}</span>
+            <span><i class="fas fa-external-link-alt"></i></span>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-around; padding: var(--space-2); border-top: 1px solid #eee;">
+          <button class="btn btn-ghost btn-sm"><i class="far fa-comment"></i> 8</button>
+          <button class="btn btn-ghost btn-sm"><i class="fas fa-retweet"></i> 15</button>
+          <button class="btn btn-ghost btn-sm"><i class="far fa-heart"></i> 32</button>
+          <button class="btn btn-ghost btn-sm"><i class="fas fa-share-alt"></i></button>
+        </div>
+      </div>
+      <p style="text-align: center; color: var(--text-3); font-size: 0.8rem; margin-top: var(--space-3);">
+        Przykładowy podgląd wpisu na Twitterze
+      </p>
+    `;
+  }
+
+  // ===== Obsługa przełącznika urządzeń =====
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-device-view]');
+    if (!btn) return;
+    setActiveButton(btn);
+    const view = btn.dataset.deviceView;
+    container.dataset.device = view;
+
+    if (view === 'facebook') {
+      renderFacebookPreview();
+    } else if (view === 'twitter') {
+      renderTwitterPreview();
+    } else {
+      renderOriginal();
+    }
+  });
+
+  // ===== Modale =====
+  function openModal(id) {
+    if (window.Modal && window.Modal.open) return window.Modal.open(id);
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.classList.add('is-open');
+    m.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(modal) {
+    if (window.Modal && window.Modal.close) return window.Modal.close(modal && modal.id);
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', (e) => {
+    const closer = e.target.closest('[data-modal-close]');
+    if (closer) closeModal(closer.closest('[data-modal]'));
+
+    const cancelBtn = e.target.closest('[data-action="cancel-publication"]');
+    if (cancelBtn) {
+      const id = cancelBtn.dataset.contentId;
+      const form = document.getElementById('cancel-form');
+      form.action = "{{ url_for('publishing.cancel_publication', content_id=0) }}".replace('/0', `/${id}`);
+      openModal('cancelModal');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('[data-modal].is-open').forEach(m => closeModal(m));
+    }
+  });
+})();
 </script>
 {% endblock %}

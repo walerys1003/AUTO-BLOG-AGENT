@@ -1,204 +1,210 @@
 {% extends 'base.html' %}
 
-{% block title %}Analyze Content for SEO{% endblock %}
+{% block title %}Analiza SEO treści — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body">
-                    <h1 class="card-title mb-4 d-flex align-items-center">
-                        <i class="fas fa-search text-primary me-3"></i> Content SEO Analysis
-                    </h1>
-                    <p class="lead">
-                        Analyze your content for SEO optimization and get recommendations to improve its search ranking.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
+{# ============================================================
+   ANALIZA SEO TREŚCI
+   - Formularz: słowo kluczowe + treść do analizy
+   - Wyniki: liczba słów, gęstość, czytelność, struktura H1-H4
+   - Rekomendacje AI
+   ============================================================ #}
 
-    <div class="row">
-        <div class="col-md-7 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-file-alt text-info me-2"></i> Content to Analyze
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ url_for('seo.analyze_content_page') }}" method="POST">
-                        <div class="mb-3">
-                            <label for="primary_keyword" class="form-label">Primary Keyword <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="primary_keyword" name="primary_keyword" placeholder="Enter your main target keyword" value="{{ primary_keyword|default('') }}" required>
-                            <div class="form-text">The main keyword you want to rank for.</div>
-                        </div>
+{% set kw_checks = [
+    {'key': 'in_title',           'label': 'W tytule (H1)'},
+    {'key': 'in_first_paragraph', 'label': 'W pierwszym akapicie'},
+    {'key': 'in_headings',        'label': 'W nagłówkach'},
+    {'key': 'in_last_paragraph',  'label': 'W ostatnim akapicie'}
+] %}
 
-                        <div class="mb-3">
-                            <label for="secondary_keywords" class="form-label">Secondary Keywords (comma-separated)</label>
-                            <input type="text" class="form-control" id="secondary_keywords" name="secondary_keywords" placeholder="keyword1, keyword2, keyword3" value="{{ secondary_keywords|default('') }}">
-                            <div class="form-text">Additional keywords you want to target (optional).</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="content" name="content" rows="15" placeholder="Paste your content here" required>{{ content|default('') }}</textarea>
-                            <div class="form-text">Content can include HTML tags for headings (h1, h2, etc.)</div>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-analyze me-2"></i> Analyze Content
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-5 mb-4">
-            {% if analysis %}
-            <div class="card shadow border-0 rounded-3 mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar text-success me-2"></i> Analysis Results
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="border rounded p-3 text-center">
-                                <h3 class="mb-0">{{ analysis.word_count }}</h3>
-                                <small class="text-muted">Word Count</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="border rounded p-3 text-center">
-                                <h3 class="mb-0">{{ (analysis.primary_keyword.density * 100)|round(1) }}%</h3>
-                                <small class="text-muted">Keyword Density</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="border rounded p-3 text-center">
-                                <h3 class="mb-0">{{ analysis.readability.score|round(1) }}</h3>
-                                <small class="text-muted">Readability Score</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="border rounded p-3 text-center">
-                                <h3 class="mb-0">{{ analysis.readability.level }}</h3>
-                                <small class="text-muted">Reading Level</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Primary Keyword Analysis -->
-                    <div class="mt-4">
-                        <h6 class="fw-bold">Primary Keyword Analysis</h6>
-                        <ul class="list-group mb-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                In Title (H1)
-                                {% if analysis.primary_keyword.in_title %}
-                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
-                                {% else %}
-                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
-                                {% endif %}
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                In First Paragraph
-                                {% if analysis.primary_keyword.in_first_paragraph %}
-                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
-                                {% else %}
-                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
-                                {% endif %}
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                In Headings
-                                {% if analysis.primary_keyword.in_headings %}
-                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
-                                {% else %}
-                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
-                                {% endif %}
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                In Last Paragraph
-                                {% if analysis.primary_keyword.in_last_paragraph %}
-                                <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
-                                {% else %}
-                                <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
-                                {% endif %}
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Heading Structure -->
-                    <div class="mt-4">
-                        <h6 class="fw-bold">Heading Structure</h6>
-                        <ul class="list-group mb-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                H1 Tags
-                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h1_count }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                H2 Tags
-                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h2_count }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                H3 Tags
-                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h3_count }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                H4+ Tags
-                                <span class="badge bg-primary rounded-pill">{{ analysis.headings.h4_plus_count }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recommendations -->
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb text-warning me-2"></i> Recommendations
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for recommendation in analysis.recommendations %}
-                        <li class="list-group-item">
-                            <i class="fas fa-check-circle text-success me-2"></i> {{ recommendation }}
-                        </li>
-                        {% else %}
-                        <li class="list-group-item">
-                            <i class="fas fa-check-circle text-success me-2"></i> Your content is well optimized!
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            {% else %}
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body text-center p-5">
-                    <div class="display-6 text-muted mb-4">
-                        <i class="fas fa-search fa-2x"></i>
-                    </div>
-                    <h3>Ready to Analyze</h3>
-                    <p class="text-muted mb-4">Enter your content and keywords to get a detailed SEO analysis.</p>
-                    <div class="text-start">
-                        <h6 class="fw-bold">What We Analyze:</h6>
-                        <ul class="list-unstyled ms-4">
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Keyword usage and density</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Content structure and readability</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Heading structure and organization</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> SEO best practices</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">
+        <i class="fas fa-search" style="color:var(--brand-600);margin-right:.5rem;"></i>
+        Analiza SEO treści
+    </h1>
+    <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">
+        Sprawdź optymalizację treści pod kątem SEO i otrzymaj rekomendacje poprawy.
+    </p>
 </div>
+
+<div class="grid-2col">
+    <!-- Formularz -->
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-file-alt" style="color:var(--info-700);"></i>
+                Treść do analizy
+            </h2>
+        </header>
+        <div class="card-body">
+            <form action="{{ url_for('seo.analyze_content_page') }}" method="POST" data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="primary_keyword" class="form-label">
+                        Główne słowo kluczowe <span style="color:var(--danger-700);">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="primary_keyword" name="primary_keyword"
+                           placeholder="np. content marketing AI"
+                           value="{{ primary_keyword|default('') }}" required>
+                    <small class="form-hint">Główna fraza, dla której chcesz się pozycjonować.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="secondary_keywords" class="form-label">
+                        Dodatkowe słowa kluczowe <span style="color:var(--text-3);">(rozdzielone przecinkami)</span>
+                    </label>
+                    <input type="text" class="form-control" id="secondary_keywords" name="secondary_keywords"
+                           placeholder="słowo1, słowo2, słowo3"
+                           value="{{ secondary_keywords|default('') }}">
+                    <small class="form-hint">Pomocnicze frazy do targetowania (opcjonalne).</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="content" class="form-label">
+                        Treść <span style="color:var(--danger-700);">*</span>
+                    </label>
+                    <textarea class="form-control" id="content" name="content" rows="15"
+                              placeholder="Wklej tutaj treść artykułu…" required>{{ content|default('') }}</textarea>
+                    <small class="form-hint">Treść może zawierać tagi HTML (h1, h2, p, ...).</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;">
+                    <i class="fas fa-chart-bar"></i> Analizuj treść
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Wyniki / Placeholder -->
+    <aside class="sidebar-stack">
+        {% if analysis %}
+        <!-- KPI -->
+        <div class="card">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-bar" style="color:var(--success-700);"></i>
+                    Wyniki analizy
+                </h2>
+            </header>
+            <div class="card-body">
+                <div class="kpi-mini-grid">
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value">{{ analysis.word_count }}</div>
+                        <div class="kpi-mini-label">Liczba słów</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value">{{ (analysis.primary_keyword.density * 100)|round(1) }}%</div>
+                        <div class="kpi-mini-label">Gęstość słowa</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value">{{ analysis.readability.score|round(1) }}</div>
+                        <div class="kpi-mini-label">Czytelność</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value" style="font-size:1rem;">{{ analysis.readability.level }}</div>
+                        <div class="kpi-mini-label">Poziom czytania</div>
+                    </div>
+                </div>
+
+                <!-- Lista checków słowa kluczowego -->
+                <h3 class="section-title"><i class="fas fa-key" style="color:var(--brand-600);"></i> Słowo kluczowe</h3>
+                <ul class="check-status-list">
+                    {% for check in kw_checks %}
+                    <li>
+                        <span>{{ check.label }}</span>
+                        {% if analysis.primary_keyword[check.key] %}
+                            <span class="pill pill-success"><i class="fas fa-check"></i> Tak</span>
+                        {% else %}
+                            <span class="pill pill-danger"><i class="fas fa-times"></i> Nie</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Struktura nagłówków -->
+                <h3 class="section-title"><i class="fas fa-heading" style="color:var(--info-700);"></i> Struktura nagłówków</h3>
+                <ul class="check-status-list">
+                    <li><span>Nagłówki H1</span><span class="pill pill-brand">{{ analysis.headings.h1_count }}</span></li>
+                    <li><span>Nagłówki H2</span><span class="pill pill-brand">{{ analysis.headings.h2_count }}</span></li>
+                    <li><span>Nagłówki H3</span><span class="pill pill-brand">{{ analysis.headings.h3_count }}</span></li>
+                    <li><span>Nagłówki H4+</span><span class="pill pill-brand">{{ analysis.headings.h4_plus_count }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Rekomendacje -->
+        <div class="card" style="background:linear-gradient(180deg,var(--warning-50) 0%,var(--surface-1) 60%);border:1px solid var(--border-2);">
+            <header class="card-header" style="background:transparent;">
+                <h2 class="card-title">
+                    <i class="fas fa-lightbulb" style="color:var(--warning-700);"></i>
+                    Rekomendacje
+                </h2>
+            </header>
+            <div class="card-body">
+                <ul class="check-list">
+                    {% for recommendation in analysis.recommendations %}
+                    <li><i class="fas fa-arrow-right" style="color:var(--warning-700);"></i> {{ recommendation }}</li>
+                    {% else %}
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Twoja treść jest dobrze zoptymalizowana!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Placeholder gdy brak wyników -->
+        <div class="card" style="background:linear-gradient(180deg,var(--brand-50) 0%,var(--surface-1) 60%);border:1px solid var(--border-2);">
+            <div class="card-body" style="text-align:center;padding:2rem 1.5rem;">
+                <i class="fas fa-search" style="font-size:2.5rem;color:var(--brand-600);margin-bottom:1rem;display:block;"></i>
+                <h3 style="margin:0 0 .375rem;font-size:1.0625rem;font-weight:600;color:var(--text-1);">Gotowe do analizy</h3>
+                <p style="margin:0 0 1.25rem;color:var(--text-2);font-size:.875rem;">
+                    Wprowadź treść i słowa kluczowe po lewej, aby otrzymać szczegółową analizę SEO.
+                </p>
+
+                <h4 style="text-align:left;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin:0 0 .5rem;">
+                    Co analizujemy:
+                </h4>
+                <ul class="check-list" style="text-align:left;">
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Użycie słów kluczowych i ich gęstość</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Strukturę treści i czytelność</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Hierarchię nagłówków (H1-H6)</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Najlepsze praktyki SEO</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+</div>
+
+<style>
+.grid-2col{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1.25rem;align-items:start;}
+@media (max-width:900px){.grid-2col{grid-template-columns:1fr;}}
+.sidebar-stack{display:flex;flex-direction:column;gap:1.25rem;}
+
+.form-hint{display:block;margin-top:.25rem;font-size:.75rem;color:var(--text-3);}
+
+/* KPI mini grid */
+.kpi-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:1rem;}
+.kpi-mini{padding:.875rem;background:var(--surface-2);border:1px solid var(--border-1);border-radius:.5rem;text-align:center;}
+.kpi-mini-value{font-size:1.375rem;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.2;}
+.kpi-mini-label{font-size:.6875rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:.25rem;}
+
+/* Section title */
+.section-title{margin:1rem 0 .5rem;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:.375rem;}
+
+/* Check status list */
+.check-status-list{list-style:none;padding:0;margin:0 0 .25rem;display:flex;flex-direction:column;gap:.25rem;}
+.check-status-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.375rem;font-size:.8125rem;color:var(--text-1);}
+
+/* Check list */
+.check-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.375rem;}
+.check-list li{padding:.5rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.375rem;color:var(--text-1);font-size:.8125rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.45;}
+.check-list li i{flex-shrink:0;margin-top:.125rem;}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .5rem;border-radius:999px;font-size:.6875rem;font-weight:600;line-height:1.4;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger {background:var(--danger-50); color:var(--danger-700);}
+.pill-brand  {background:var(--brand-50);  color:var(--brand-700);min-width:1.75rem;justify-content:center;font-variant-numeric:tabular-nums;}
+</style>
 {% endblock %}

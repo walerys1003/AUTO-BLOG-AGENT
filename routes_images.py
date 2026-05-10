@@ -21,13 +21,16 @@ images_bp = Blueprint('images', __name__, url_prefix='/images')
 # Import utility functions
 from utils.images.unsplash import search_unsplash_images
 from utils.images.finder import search_images as find_images, get_image_details
+from auth import login_required
 
 @images_bp.route('/')
+@login_required
 def index():
     """Images dashboard"""
     return redirect(url_for('images.image_library'))
 
 @images_bp.route('/search')
+@login_required
 def search_images():
     """Search for images from various sources"""
     query = request.args.get('query', '')
@@ -60,6 +63,7 @@ def search_images():
     )
 
 @images_bp.route('/library')
+@login_required
 def image_library():
     """View image library"""
     selected_blog_id = request.args.get('blog_id', '')
@@ -85,6 +89,7 @@ def image_library():
     )
 
 @images_bp.route('/library/add', methods=['GET', 'POST'])
+@login_required
 def add_to_library():
     """Add image to library"""
     if request.method == 'POST':
@@ -205,6 +210,7 @@ def add_to_library():
     return render_template('images/add_to_library.html', blogs=blogs)
 
 @images_bp.route('/library/delete/<int:image_id>', methods=['POST'])
+@login_required
 def delete_from_library(image_id):
     """Delete image from library"""
     image = ImageLibrary.query.get_or_404(image_id)
@@ -223,6 +229,7 @@ def delete_from_library(image_id):
         return redirect(url_for('images.image_library'))
 
 @images_bp.route('/article/<int:content_id>')
+@login_required
 def preview_article_image(content_id):
     """Preview article image"""
     content = ContentLog.query.get_or_404(content_id)
@@ -238,6 +245,7 @@ def preview_article_image(content_id):
     return render_template('images/preview.html', content=content, image=image)
 
 @images_bp.route('/article/<int:content_id>/change', methods=['GET', 'POST'])
+@login_required
 def change_article_image(content_id):
     """Change article image"""
     content = ContentLog.query.get_or_404(content_id)

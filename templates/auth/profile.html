@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Mój profil — MasterContentAI{% endblock %}
+
+{% block page_title %}Mój profil{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj swoimi danymi i hasłem dostępu.</p>{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns: 320px 1fr; gap: var(--space-6);">
+
+    {# Lewa kolumna: profile card #}
+    <div class="card">
+        <div class="card-body" style="text-align:center;">
+            <div class="avatar avatar-xl" style="margin: 0 auto var(--space-4);">{{ user.initials }}</div>
+            <h3 class="h-3" style="margin:0;">{{ user.full_name or user.username }}</h3>
+            <div class="text-muted text-sm mt-1">{{ user.email }}</div>
+            <div class="mt-3">
+                <span class="badge badge-pill badge-soft" style="text-transform:capitalize;">{{ user.role }}</span>
+                {% if user.is_active %}
+                    <span class="badge badge-pill badge-success">Aktywny</span>
+                {% else %}
+                    <span class="badge badge-pill badge-danger">Nieaktywny</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-footer" style="flex-direction:column;align-items:flex-start;gap:.75rem;">
+            <div style="display:flex;justify-content:space-between;width:100%;font-size:.75rem;color:var(--text-tertiary);">
+                <span>Nazwa użytkownika</span><strong style="color:var(--text-primary);">{{ user.username }}</strong>
+            </div>
+            {% if user.last_login_at %}
+            <div style="display:flex;justify-content:space-between;width:100%;font-size:.75rem;color:var(--text-tertiary);">
+                <span>Ostatnie logowanie</span><strong style="color:var(--text-primary);">{{ user.last_login_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            </div>
+            {% endif %}
+            <div style="display:flex;justify-content:space-between;width:100%;font-size:.75rem;color:var(--text-tertiary);">
+                <span>Konto utworzone</span><strong style="color:var(--text-primary);">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '—' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    {# Prawa kolumna: forms #}
+    <div class="stack stack-6">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Dane osobowe</h3>
+                    <div class="card-subtitle">Imię, nazwisko, email pokazywany w nawigacji.</div>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('auth.update_profile') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="card-body">
+                    <div class="grid grid-cols-2" style="gap: var(--space-4);">
+                        <div class="form-group" style="margin:0;">
+                            <label class="form-label" for="full_name">Imię i nazwisko</label>
+                            <input id="full_name" name="full_name" type="text" class="form-control"
+                                   value="{{ user.full_name or '' }}" placeholder="np. Anna Kowalska">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label class="form-label" for="email">Email <span class="required">*</span></label>
+                            <input id="email" name="email" type="email" class="form-control"
+                                   value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Hasło</h3>
+                    <div class="card-subtitle">Minimum 8 znaków. Pozostaw puste, by nie zmieniać.</div>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('auth.update_profile') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label" for="current_password">Aktualne hasło</label>
+                        <input id="current_password" name="current_password" type="password"
+                               class="form-control" autocomplete="current-password">
+                        <div class="form-hint">Wymagane tylko przy zmianie hasła.</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="new_password">Nowe hasło</label>
+                        <input id="new_password" name="new_password" type="password"
+                               class="form-control" autocomplete="new-password" minlength="8"
+                               placeholder="Min. 8 znaków">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-accent">Zmień hasło</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 1024px) {
+        .grid[style*="320px"] { grid-template-columns: 1fr !important; }
+    }
+</style>
+{% endblock %}
