@@ -1,163 +1,252 @@
 {% extends 'base.html' %}
+{% block title %}Blogi — MasterContentAI{% endblock %}
 
-{% block title %}Manage Blogs - BlogAutomationAgent{% endblock %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('dashboard') }}">Pulpit</a></li>
+    <li class="breadcrumb-separator"></li>
+    <li>Blogi</li>
+</ol>
+{% endblock %}
+
+{% block page_title %}Blogi{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj podłączonymi blogami WordPress dla automatycznego generowania treści.</p>{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Dodaj blog
+    </a>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="mb-0">Manage Blogs</h1>
-            <p class="text-muted">Configure your WordPress blogs for automated content generation</p>
+
+{# ─────────────────── STATS PASEK ─────────────────── #}
+{% set active_count = blogs|selectattr('active')|list|length %}
+{% set paused_count = blogs|rejectattr('active')|list|length %}
+<div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--color-indigo-50);color:var(--color-indigo-600);">
+            <i class="fas fa-globe"></i>
         </div>
+        <div>
+            <div class="stat-card-value">{{ blogs|length }}</div>
+            <div class="stat-card-label">Wszystkie blogi</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--status-success-bg);color:var(--status-success-fg);">
+            <i class="fas fa-circle-check"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ active_count }}</div>
+            <div class="stat-card-label">Aktywne</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--status-warning-bg);color:var(--status-warning-fg);">
+            <i class="fas fa-pause"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ paused_count }}</div>
+            <div class="stat-card-label">Wstrzymane</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--color-cyan-50);color:var(--color-cyan-600);">
+            <i class="fas fa-newspaper"></i>
+        </div>
+        <div>
+            {% set total_posts = 0 %}
+            {% for b in blogs %}{% set total_posts = total_posts + (b.content_logs|length) %}{% endfor %}
+            <div class="stat-card-value">{{ total_posts }}</div>
+            <div class="stat-card-label">Artykuły razem</div>
+        </div>
+    </div>
+</div>
+
+{# ─────────────────── TABELA BLOGÓW ─────────────────── #}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Skonfigurowane blogi</h3>
+        <span class="badge badge-neutral">{{ blogs|length }}</span>
+    </div>
+
+    {% if blogs %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Nazwa</th>
+                    <th style="width: 24%;">Adres WWW</th>
+                    <th style="width: 22%;">Kategorie</th>
+                    <th style="width: 8%;">Status</th>
+                    <th style="width: 8%;">Treści</th>
+                    <th style="width: 10%;" class="text-right">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for blog in blogs %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <span class="avatar avatar-md" style="background:linear-gradient(135deg,var(--color-indigo-500),var(--color-cyan-500));color:#fff;">
+                                {{ (blog.name[:1] or 'B')|upper }}
+                            </span>
+                            <div>
+                                <div style="font-weight:600;color:var(--text-primary);">{{ blog.name }}</div>
+                                <div style="font-size:.75rem;color:var(--text-tertiary);">
+                                    {% if blog.created_at %}Utworzono {{ blog.created_at.strftime('%Y-%m-%d') }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ blog.url }}" target="_blank" rel="noopener"
+                           style="color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:.375rem;">
+                            <span style="display:inline-block;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ blog.url }}</span>
+                            <i class="fas fa-arrow-up-right-from-square" style="font-size:.625rem;color:var(--text-tertiary);"></i>
+                        </a>
+                    </td>
+                    <td>
+                        {% set categories = blog.get_categories() %}
+                        {% if categories %}
+                            <div style="display:flex;flex-wrap:wrap;gap:.25rem;">
+                                {% for category in categories[:4] %}
+                                    <span class="badge badge-info">{{ category.name }}</span>
+                                {% endfor %}
+                                {% if categories|length > 4 %}
+                                    <span class="badge badge-neutral" title="{{ categories[4:]|map(attribute='name')|join(', ') }}">+{{ categories|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--status-warning-fg);font-size:.8125rem;">
+                                <i class="fas fa-triangle-exclamation"></i> Brak kategorii
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if blog.active %}
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Aktywny</span>
+                        {% else %}
+                            <span class="badge badge-warning"><i class="fas fa-pause"></i> Wstrzymany</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set content_count = blog.content_logs|length %}
+                        <div style="display:flex;align-items:center;gap:.5rem;">
+                            <span style="font-weight:600;color:var(--text-primary);min-width:24px;">{{ content_count }}</span>
+                            <div class="progress" style="flex:1;max-width:80px;">
+                                <div class="progress-bar" style="width:{{ 100 if content_count > 50 else (content_count * 2) }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <div style="display:inline-flex;gap:.25rem;">
+                            <a href="{{ url_for('edit_blog', blog_id=blog.id) }}"
+                               class="btn btn-ghost btn-icon btn-sm" title="Edytuj blog" aria-label="Edytuj">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm js-generate-btn"
+                                    data-blog-id="{{ blog.id }}" data-blog-name="{{ blog.name }}"
+                                    title="Generuj treści" aria-label="Generuj treści">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm js-delete-btn"
+                                    data-blog-id="{{ blog.id }}" data-blog-name="{{ blog.name }}"
+                                    title="Usuń blog" aria-label="Usuń"
+                                    style="color:var(--status-danger-fg);">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="fas fa-globe"></i></div>
+        <h4 class="empty-state-title">Nie masz jeszcze podłączonych blogów</h4>
+        <p class="empty-state-description">Dodaj swojego pierwszego bloga WordPress, aby uruchomić automatyzację treści.</p>
         <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Blog
+            <i class="fas fa-plus"></i> Dodaj pierwszy blog
         </a>
     </div>
+    {% endif %}
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert alert-info d-flex align-items-center" role="alert">
-            <i class="fas fa-info-circle fa-lg me-3"></i>
-            <div>
-                <strong>Quick Tip:</strong> For best results, connect blogs with well-defined categories and existing content that the AI can learn from.
+{# ─────────────────── PORADNIK KONFIGURACJI ─────────────────── #}
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title">Jak podłączyć blog WordPress</h3>
+    </div>
+    <div class="card-body">
+        <p style="color:var(--text-secondary);margin-bottom:1rem;">
+            Aby połączyć swojego bloga WordPress z MasterContentAI, potrzebujesz trzech rzeczy:
+        </p>
+        <ol style="color:var(--text-secondary);line-height:1.7;padding-left:1.25rem;">
+            <li class="mb-2">
+                <strong style="color:var(--text-primary);">Włączone REST API:</strong>
+                Twoja instalacja WordPress musi mieć aktywne REST API (jest domyślnie włączone od wersji 4.7).
+            </li>
+            <li class="mb-2">
+                <strong style="color:var(--text-primary);">Hasło aplikacji:</strong>
+                wygeneruj je w WordPress:
+                <ul style="margin-top:.25rem;">
+                    <li>panel administratora → <em>Użytkownicy → Twój profil</em>,</li>
+                    <li>sekcja <em>Hasła aplikacji</em>,</li>
+                    <li>wpisz nazwę (np. <code>MasterContentAI</code>) i kliknij <em>Dodaj nowe hasło aplikacji</em>,</li>
+                    <li>skopiuj wygenerowane hasło — wpiszesz je przy dodawaniu bloga.</li>
+                </ul>
+            </li>
+            <li>
+                <strong style="color:var(--text-primary);">Kategorie:</strong>
+                przygotuj listę identyfikatorów kategorii, do których chcesz publikować
+                (znajdziesz je w <em>Wpisy → Kategorie</em>).
+            </li>
+        </ol>
+
+        <div class="alert alert-info mt-4">
+            <span class="alert-icon"><i class="fas fa-shield-halved"></i></span>
+            <div class="alert-body">
+                Dla bezpieczeństwa zalecamy używanie HTTPS oraz utworzenie dedykowanego użytkownika
+                z uprawnieniami <em>Redaktora</em> wyłącznie do dostępu przez API.
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Configured Blogs</h5>
-        <span class="badge bg-primary">{{ blogs|length }} blogs</span>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width: 20%">Name</th>
-                        <th style="width: 20%">URL</th>
-                        <th style="width: 25%">Categories</th>
-                        <th style="width: 10%">Status</th>
-                        <th style="width: 10%">Content</th>
-                        <th style="width: 15%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for blog in blogs %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="blog-icon rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" style="width: 38px; height: 38px;">
-                                    <i class="fas fa-blog text-white"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold">{{ blog.name }}</div>
-                                    <small class="text-muted">Created {{ blog.created_at.strftime('%Y-%m-%d') }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <a href="{{ blog.url }}" target="_blank" class="d-flex align-items-center text-decoration-none">
-                                <span class="text-truncate d-inline-block" style="max-width: 200px;">{{ blog.url }}</span>
-                                <i class="fas fa-external-link-alt ms-2 text-secondary"></i>
-                            </a>
-                        </td>
-                        <td>
-                            {% set categories = blog.get_categories() %}
-                            {% if categories %}
-                                <div class="d-flex flex-wrap">
-                                    {% for category in categories[:5] %}
-                                    <span class="badge bg-info me-1 mb-1">{{ category.name }}</span>
-                                    {% endfor %}
-                                    
-                                    {% if categories|length > 5 %}
-                                    <span class="badge bg-secondary mb-1" data-bs-toggle="tooltip" title="{{ categories[5:]|map(attribute='name')|join(', ') }}">+{{ categories|length - 5 }} more</span>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i> No categories</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if blog.active %}
-                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Active</span>
-                            {% else %}
-                            <span class="badge bg-danger"><i class="fas fa-pause me-1"></i> Paused</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set content_count = blog.content_logs|selectattr('post_id', 'defined')|list|length %}
-                            <div class="d-flex align-items-center">
-                                <div class="me-2">{{ content_count }}</div>
-                                <div class="progress flex-grow-1" style="height: 8px;">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ 100 if content_count > 100 else content_count }}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="{{ url_for('edit_blog', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit Blog">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-success generate-content-btn" data-blog-id="{{ blog.id }}" data-bs-toggle="tooltip" title="Generate Content">
-                                    <i class="fas fa-robot"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger delete-blog-btn" data-blog-id="{{ blog.id }}" data-blog-name="{{ blog.name }}" title="Delete Blog">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div class="empty-state">
-                                <div class="mb-3">
-                                    <i class="fas fa-blog fa-4x text-muted"></i>
-                                </div>
-                                <h4>No blogs configured yet</h4>
-                                <p class="text-muted mb-3">Add your WordPress blog to start automating content generation</p>
-                                <a href="{{ url_for('add_blog') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus me-1"></i> Add Your First Blog
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Blog Modal - Separate from table -->
-<div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+{# ─────────────────── MODAL: USUWANIE ─────────────────── #}
+<div class="modal" id="deleteBlogModal" aria-hidden="true">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Delete Blog</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h3 class="modal-title">Usuwanie bloga</h3>
+                <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="d-flex flex-column align-items-center justify-content-center mb-4">
-                    <div class="text-danger mb-3" style="font-size: 3rem;">
-                        <i class="fas fa-exclamation-triangle"></i>
+                <div style="text-align:center;margin-bottom:1rem;">
+                    <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:var(--status-danger-bg);color:var(--status-danger-fg);font-size:1.75rem;margin-bottom:.75rem;">
+                        <i class="fas fa-triangle-exclamation"></i>
                     </div>
-                    <h4>Are you sure?</h4>
-                    <p class="text-center">You are about to delete <strong id="deleteBlogName">blog</strong></p>
+                    <h4 style="margin:0 0 .25rem 0;">Czy na pewno chcesz usunąć ten blog?</h4>
+                    <p style="color:var(--text-secondary);margin:0;">Usuwasz: <strong id="deleteBlogName">—</strong></p>
                 </div>
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>Warning:</strong> This action cannot be undone. All associated content logs and topics will also be deleted.
+                    <span class="alert-icon"><i class="fas fa-circle-exclamation"></i></span>
+                    <div class="alert-body">
+                        <strong>Uwaga:</strong> tej operacji nie można cofnąć.
+                        Wszystkie powiązane artykuły, tematy i logi również zostaną usunięte.
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteBlogForm" action="{{ url_for('delete_blog', blog_id=0) }}" method="post">
+                <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+                <form id="deleteBlogForm" action="{{ url_for('delete_blog', blog_id=0) }}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i> Delete Blog
+                        <i class="fas fa-trash"></i> Usuń blog
                     </button>
                 </form>
             </div>
@@ -165,178 +254,41 @@
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">WordPress Configuration Guide</h5>
-            </div>
-            <div class="card-body">
-                <p>To connect your WordPress blog to BlogAutomationAgent, you'll need the following:</p>
-                
-                <ol>
-                    <li class="mb-2">
-                        <strong>WordPress REST API Access:</strong> Ensure your WordPress installation has the REST API enabled (it's enabled by default in WordPress 4.7+).
-                    </li>
-                    <li class="mb-2">
-                        <strong>Application Password:</strong> Generate an application password in WordPress:
-                        <ul>
-                            <li>Go to your WordPress admin panel → Users → Your Profile</li>
-                            <li>Scroll down to "Application Passwords" section</li>
-                            <li>Enter a name for the application (e.g., "BlogAutomationAgent")</li>
-                            <li>Click "Add New Application Password"</li>
-                            <li>Copy the generated password (you'll need it when adding the blog)</li>
-                        </ul>
-                    </li>
-                    <li class="mb-2">
-                        <strong>Categories:</strong> Prepare a list of category IDs you want to publish to. You can find these in your WordPress admin panel under Posts → Categories.
-                    </li>
-                </ol>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    For enhanced security, we recommend using HTTPS for your WordPress site and creating a dedicated user with Editor permissions for API access.
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Delete blog button click handlers
-    const deleteButtons = document.querySelectorAll('.delete-blog-btn');
-    const deleteBlogModal = document.getElementById('deleteBlogModal');
-    const deleteBlogForm = document.getElementById('deleteBlogForm');
-    const deleteBlogName = document.getElementById('deleteBlogName');
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.getAttribute('data-blog-id');
-            const blogName = this.getAttribute('data-blog-name');
-            
-            // Update form action with the correct blog ID
-            deleteBlogForm.action = deleteBlogForm.action.replace(/\/blogs\/delete\/\d+/, '/blogs/delete/' + blogId);
-            
-            // Update blog name in the modal
-            deleteBlogName.textContent = blogName;
-            
-            // Show the modal
-            const modal = new bootstrap.Modal(deleteBlogModal);
-            modal.show();
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ────────── Usuwanie bloga (modal) ──────────
+    const modal = document.getElementById('deleteBlogModal');
+    const form  = document.getElementById('deleteBlogForm');
+    const nameEl = document.getElementById('deleteBlogName');
+
+    document.querySelectorAll('.js-delete-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-blog-id');
+            const name = btn.getAttribute('data-blog-name');
+            form.action = form.action.replace(/\/blogs\/delete\/\d+/, '/blogs/delete/' + id);
+            nameEl.textContent = name;
+            Modal.open(modal);
         });
     });
 
-    // Generate content button click handlers
-    const generateButtons = document.querySelectorAll('.generate-content-btn');
-    generateButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.getAttribute('data-blog-id');
-            const originalContent = this.innerHTML;
-            
-            // Show loading state
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            this.disabled = true;
-            
-            fetch(`/api/process_blog/${blogId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.innerHTML = '<i class="fas fa-check"></i>';
-                    this.classList.remove('btn-outline-success');
-                    this.classList.add('btn-success');
-                    
-                    // Show success toast/alert
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                    alertDiv.innerHTML = `
-                        <i class="fas fa-check-circle me-2"></i>${data.message || 'Content generation started successfully!'}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    document.body.appendChild(alertDiv);
-                    
-                    // Auto-hide after 5 seconds
-                    setTimeout(() => {
-                        if (alertDiv.parentNode) {
-                            alertDiv.remove();
-                        }
-                    }, 5000);
-                    
-                    // Reset button after 3 seconds
-                    setTimeout(() => {
-                        this.innerHTML = originalContent;
-                        this.classList.remove('btn-success');
-                        this.classList.add('btn-outline-success');
-                        this.disabled = false;
-                    }, 3000);
-                } else {
-                    this.innerHTML = '<i class="fas fa-times"></i>';
-                    this.classList.remove('btn-outline-success');
-                    this.classList.add('btn-danger');
-                    
-                    // Show error toast
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                    alertDiv.innerHTML = `
-                        <i class="fas fa-exclamation-circle me-2"></i>${data.message || 'Content generation failed'}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    document.body.appendChild(alertDiv);
-                    
-                    setTimeout(() => {
-                        if (alertDiv.parentNode) {
-                            alertDiv.remove();
-                        }
-                    }, 8000);
-                    
-                    // Reset button after 3 seconds
-                    setTimeout(() => {
-                        this.innerHTML = originalContent;
-                        this.classList.remove('btn-danger');
-                        this.classList.add('btn-outline-success');
-                        this.disabled = false;
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                this.innerHTML = '<i class="fas fa-times"></i>';
-                this.classList.remove('btn-outline-success');
-                this.classList.add('btn-danger');
-                
-                // Show network error toast
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                alertDiv.innerHTML = `
-                    <i class="fas fa-exclamation-triangle me-2"></i>Network error - please try again
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                document.body.appendChild(alertDiv);
-                
-                setTimeout(() => {
-                    if (alertDiv.parentNode) {
-                        alertDiv.remove();
-                    }
-                }, 8000);
-                
-                // Reset button after 3 seconds
-                setTimeout(() => {
-                    this.innerHTML = originalContent;
-                    this.classList.remove('btn-danger');
-                    this.classList.add('btn-outline-success');
-                    this.disabled = false;
-                }, 3000);
-            });
+    // ────────── Generuj treści (POST /api/process_blog/<id>) ──────────
+    document.querySelectorAll('.js-generate-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-blog-id');
+            const name = btn.getAttribute('data-blog-name');
+            Forms.setLoading(btn, true);
+            try {
+                const data = await API.post(`/api/process_blog/${id}`);
+                Toast.success(data && data.message ? data.message : `Uruchomiono generowanie treści dla „${name}”.`);
+            } catch (err) {
+                // Toast.error wywołany już w api.js
+            } finally {
+                Forms.setLoading(btn, false);
+            }
         });
     });
 });

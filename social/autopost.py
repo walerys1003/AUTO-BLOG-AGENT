@@ -54,7 +54,7 @@ def create_social_media_posts(content_log_id: int, preview_only: bool = False) -
     # Extract content data
     title = content_log.title
     excerpt = content_log.excerpt or ""
-    url = content_log.url
+    url = getattr(content_log, "url", None) or blog.url
     keywords = content_log.get_tags() if content_log.tags else []
     
     # Get featured image if available

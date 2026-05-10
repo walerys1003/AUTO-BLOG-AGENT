@@ -1,451 +1,471 @@
 {% extends 'base.html' %}
 
-{% block title %}Keyword Research{% endblock %}
+{% block title %}Badanie słów kluczowych — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body">
-                    <h1 class="card-title mb-4 d-flex align-items-center">
-                        <i class="fas fa-key text-primary me-3"></i> Keyword Research
-                    </h1>
-                    <p class="lead">
-                        Research keywords, analyze competition, and find the best terms to target for your content.
-                    </p>
-                </div>
+{# ============================================================
+   BADANIE SŁÓW KLUCZOWYCH
+   - Formularz: analiza konkurencji dla słowa kluczowego (AJAX)
+   - Formularz: sugestie słów dla tematu (AJAX)
+   - Wyniki: trudność, rekomendacje, konkurenci, sugestie
+   ============================================================ #}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">
+        <i class="fas fa-key" style="color:var(--brand-600);margin-right:.5rem;"></i>
+        Badanie słów kluczowych
+    </h1>
+    <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">
+        Analizuj konkurencję, znajduj sugestie i wybieraj najlepsze frazy do targetowania.
+    </p>
+</div>
+
+<div class="grid-2col">
+    <!-- Lewa kolumna: formularze -->
+    <div class="sidebar-stack">
+        <!-- Formularz: analiza słowa -->
+        <section class="card">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-search" style="color:var(--info-700);"></i>
+                    Analiza słowa kluczowego
+                </h2>
+            </header>
+            <div class="card-body">
+                <form id="keywordForm" data-validate>
+                    <div class="form-group">
+                        <label for="keyword" class="form-label">Słowo kluczowe <span style="color:var(--danger-700);">*</span></label>
+                        <input type="text" class="form-control" id="keyword" name="keyword"
+                               placeholder="np. content marketing AI" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="country" class="form-label">Kraj</label>
+                        <select class="form-control" id="country" name="country">
+                            <option value="pl" selected>Polska (PL)</option>
+                            <option value="us">Stany Zjednoczone (US)</option>
+                            <option value="uk">Wielka Brytania (UK)</option>
+                            <option value="de">Niemcy (DE)</option>
+                            <option value="fr">Francja (FR)</option>
+                            <option value="es">Hiszpania (ES)</option>
+                            <option value="it">Włochy (IT)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="analyzeKeywordBtn" style="width:100%;">
+                        <i class="fas fa-search"></i> Analizuj słowo
+                    </button>
+                </form>
             </div>
-        </div>
+        </section>
+
+        <!-- Formularz: sugestie słów -->
+        <section class="card">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-lightbulb" style="color:var(--warning-700);"></i>
+                    Sugestie słów kluczowych
+                </h2>
+            </header>
+            <div class="card-body">
+                <form id="suggestionsForm" data-validate>
+                    <div class="form-group">
+                        <label for="topic" class="form-label">Temat <span style="color:var(--danger-700);">*</span></label>
+                        <input type="text" class="form-control" id="topic" name="topic"
+                               placeholder="np. marketing internetowy" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="limit" class="form-label">Liczba sugestii</label>
+                        <select class="form-control" id="limit" name="limit">
+                            <option value="5" selected>5 sugestii</option>
+                            <option value="10">10 sugestii</option>
+                            <option value="15">15 sugestii</option>
+                            <option value="20">20 sugestii</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="getKeywordSuggestionsBtn" style="width:100%;">
+                        <i class="fas fa-lightbulb"></i> Pobierz sugestie
+                    </button>
+                </form>
+            </div>
+        </section>
     </div>
 
-    <div class="row">
-        <div class="col-md-5 mb-4">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-search text-info me-2"></i> Keyword Analysis
-                    </h5>
+    <!-- Prawa kolumna: wyniki -->
+    <div>
+        <!-- Wyniki analizy słowa kluczowego -->
+        <section class="card" id="analysisResultsCard" style="display:none;margin-bottom:1.25rem;">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-bar" style="color:var(--success-700);"></i>
+                    <span id="analysisKeywordTitle">Wyniki analizy</span>
+                </h2>
+            </header>
+            <div class="card-body">
+                <div class="kpi-mini-grid">
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value" id="difficultyScore">0</div>
+                        <div class="kpi-mini-label">Trudność (0-100)</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-mini-value" id="difficultyLevel" style="font-size:1.125rem;">—</div>
+                        <div class="kpi-mini-label">Poziom trudności</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form id="keywordForm">
-                        <div class="mb-3">
-                            <label for="keyword" class="form-label">Keyword <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Enter a keyword to analyze" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="country" class="form-label">Country</label>
-                            <select class="form-select" id="country" name="country">
-                                <option value="pl" selected>Poland (PL)</option>
-                                <option value="us">United States (US)</option>
-                                <option value="uk">United Kingdom (UK)</option>
-                                <option value="de">Germany (DE)</option>
-                                <option value="fr">France (FR)</option>
-                                <option value="es">Spain (ES)</option>
-                                <option value="it">Italy (IT)</option>
-                            </select>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary" id="analyzeKeywordBtn">
-                                <i class="fas fa-search me-2"></i> Analyze Keyword
-                            </button>
-                        </div>
-                    </form>
+
+                <h3 class="section-title"><i class="fas fa-file-alt" style="color:var(--brand-600);"></i> Rekomendacje treści</h3>
+                <ul class="check-status-list">
+                    <li>
+                        <span>Zalecana długość treści</span>
+                        <span class="pill pill-brand"><span id="recommendedContentLength">0</span> słów</span>
+                    </li>
+                    <li>
+                        <span>Zalecana liczba nagłówków</span>
+                        <span class="pill pill-brand"><span id="recommendedHeadings">0</span> nagłówków</span>
+                    </li>
+                </ul>
+
+                <h3 class="section-title"><i class="fas fa-trophy" style="color:var(--warning-700);"></i> Najlepsi konkurenci</h3>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Domena</th>
+                                <th>Tytuł</th>
+                            </tr>
+                        </thead>
+                        <tbody id="competitorsTableBody">
+                            <!-- Wypełniane dynamicznie -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="section-title"><i class="fas fa-tags" style="color:var(--info-700);"></i> Powiązane słowa kluczowe</h3>
+                <div id="suggestedKeywordsContainer" class="tag-cloud">
+                    <!-- Wypełniane dynamicznie -->
                 </div>
             </div>
+        </section>
 
-            <div class="card shadow border-0 rounded-3 mt-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb text-warning me-2"></i> Keyword Suggestions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form id="suggestionsForm">
-                        <div class="mb-3">
-                            <label for="topic" class="form-label">Topic <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="topic" name="topic" placeholder="Enter a topic for keyword suggestions" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="limit" class="form-label">Number of Suggestions</label>
-                            <select class="form-select" id="limit" name="limit">
-                                <option value="5" selected>5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                            </select>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary" id="getKeywordSuggestionsBtn">
-                                <i class="fas fa-lightbulb me-2"></i> Get Suggestions
-                            </button>
-                        </div>
-                    </form>
+        <!-- Wyniki sugestii -->
+        <section class="card" id="suggestionsResultsCard" style="display:none;margin-bottom:1.25rem;">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-lightbulb" style="color:var(--warning-700);"></i>
+                    <span id="suggestionsTopic">Sugestie słów kluczowych</span>
+                </h2>
+            </header>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Słowo kluczowe</th>
+                                <th>Wyszukiwania</th>
+                                <th>Konkurencja</th>
+                                <th style="text-align:right;">Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suggestionsTableBody">
+                            <!-- Wypełniane dynamicznie -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
+            <footer class="card-footer" style="display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;">
+                <button type="button" class="btn btn-ghost btn-sm" id="exportSuggestionsBtn">
+                    <i class="fas fa-file-export"></i> Eksportuj CSV
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" id="generateTitleVariationsBtn">
+                    <i class="fas fa-font"></i> Generuj warianty tytułów
+                </button>
+            </footer>
+        </section>
 
-        <div class="col-md-7 mb-4">
-            <!-- Keyword Analysis Results -->
-            <div class="card shadow border-0 rounded-3 mb-4" id="analysisResultsCard" style="display: none;">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar text-success me-2"></i> <span id="analysisKeywordTitle">Keyword Analysis</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="border rounded text-center p-3 mb-3">
-                                <h3 class="mb-0" id="difficultyScore">0</h3>
-                                <small class="text-muted">Difficulty Score</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="border rounded text-center p-3 mb-3">
-                                <h3 class="mb-0" id="difficultyLevel">Unknown</h3>
-                                <small class="text-muted">Difficulty Level</small>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Placeholder -->
+        <section class="card" id="placeholderCard" style="background:linear-gradient(180deg,var(--brand-50) 0%,var(--surface-1) 60%);border:1px solid var(--border-2);">
+            <div class="card-body" style="text-align:center;padding:2.5rem 1.5rem;">
+                <i class="fas fa-key" style="font-size:2.5rem;color:var(--brand-600);margin-bottom:1rem;display:block;"></i>
+                <h3 style="margin:0 0 .5rem;font-size:1.125rem;font-weight:600;color:var(--text-1);">Narzędzie badania słów kluczowych</h3>
+                <p style="margin:0 0 1.5rem;color:var(--text-2);font-size:.875rem;">
+                    Wprowadź słowo lub temat po lewej, aby rozpocząć badanie.
+                </p>
 
-                    <!-- Content Recommendations -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="fw-bold">Content Recommendations</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <tbody>
-                                        <tr>
-                                            <th>Recommended Content Length</th>
-                                            <td><span id="recommendedContentLength">0</span> words</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Recommended Headings</th>
-                                            <td><span id="recommendedHeadings">0</span> headings</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Top Competitors -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold">Top Competitors</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Domain</th>
-                                        <th>Title</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="competitorsTableBody">
-                                    <!-- Competitors will be added here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Suggested Keywords -->
-                    <div>
-                        <h6 class="fw-bold">Related Keywords</h6>
-                        <div id="suggestedKeywordsContainer">
-                            <!-- Suggested keywords will be added here -->
-                        </div>
-                    </div>
-                </div>
+                <h4 style="text-align:left;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin:0 0 .625rem;">
+                    Co otrzymasz:
+                </h4>
+                <ul class="check-list" style="text-align:left;">
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Analizę trudności słowa kluczowego</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Rekomendacje dotyczące treści</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Analizę konkurentów w wynikach Google</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Sugestie powiązanych słów</li>
+                </ul>
             </div>
-
-            <!-- Keyword Suggestions Results -->
-            <div class="card shadow border-0 rounded-3" id="suggestionsResultsCard" style="display: none;">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb text-warning me-2"></i> <span id="suggestionsTopic">Keyword Suggestions</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Keyword</th>
-                                    <th>Search Volume</th>
-                                    <th>Competition</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="suggestionsTableBody">
-                                <!-- Suggestions will be added here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-sm btn-outline-primary" id="exportSuggestionsBtn">
-                            <i class="fas fa-file-export me-1"></i> Export Suggestions
-                        </button>
-                        <button class="btn btn-sm btn-outline-success" id="generateTitleVariationsBtn">
-                            <i class="fas fa-font me-1"></i> Generate Title Variations
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Placeholder Card (shown when no results are available) -->
-            <div class="card shadow border-0 rounded-3" id="placeholderCard">
-                <div class="card-body text-center p-5">
-                    <div class="display-6 text-muted mb-4">
-                        <i class="fas fa-search fa-2x"></i>
-                    </div>
-                    <h3>Keyword Research Tool</h3>
-                    <p class="text-muted mb-4">Enter a keyword or topic to get started with your research.</p>
-                    <div class="text-start">
-                        <h6 class="fw-bold">What You'll Get:</h6>
-                        <ul class="list-unstyled ms-4">
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Keyword difficulty analysis</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Content recommendations</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Competitor insights</li>
-                            <li><i class="fas fa-check-circle text-success me-2"></i> Related keyword suggestions</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
 </div>
-{% endblock %}
+
+<!-- JSON data island z URL-ami API -->
+<script id="apiUrls" type="application/json">{{ {
+    'competition': url_for('seo.api_keyword_competition'),
+    'suggestions': url_for('seo.api_keyword_suggestions')
+}|tojson }}</script>
+
+<style>
+.grid-2col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:1.25rem;align-items:start;}
+@media (max-width:900px){.grid-2col{grid-template-columns:1fr;}}
+.sidebar-stack{display:flex;flex-direction:column;gap:1.25rem;}
+
+.card-header{display:flex;align-items:center;gap:.5rem;}
+
+/* KPI mini */
+.kpi-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:1rem;}
+.kpi-mini{padding:.875rem;background:var(--surface-2);border:1px solid var(--border-1);border-radius:.5rem;text-align:center;}
+.kpi-mini-value{font-size:1.625rem;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.15;}
+.kpi-mini-label{font-size:.6875rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:.25rem;}
+
+/* Section title */
+.section-title{margin:1.25rem 0 .5rem;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:.375rem;}
+
+/* Check status list */
+.check-status-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.25rem;}
+.check-status-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.375rem;font-size:.8125rem;color:var(--text-1);}
+
+/* Check list */
+.check-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.375rem;}
+.check-list li{padding:.5rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.375rem;color:var(--text-1);font-size:.8125rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.45;}
+.check-list li i{flex-shrink:0;margin-top:.125rem;}
+
+/* Tag cloud */
+.tag-cloud{display:flex;flex-wrap:wrap;gap:.375rem;}
+.tag-item{display:inline-block;padding:.25rem .625rem;background:var(--surface-2);color:var(--text-1);border:1px solid var(--border-1);border-radius:.375rem;font-size:.8125rem;}
+.tag-item:hover{background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-700);cursor:default;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:.875rem;}
+.data-table thead th{background:var(--surface-2);color:var(--text-2);font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;padding:.625rem .875rem;border-bottom:1px solid var(--border-1);text-align:left;}
+.data-table tbody td{padding:.625rem .875rem;border-bottom:1px solid var(--border-1);color:var(--text-1);}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.data-table tbody tr:hover{background:var(--surface-2);}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .5rem;border-radius:999px;font-size:.6875rem;font-weight:600;line-height:1.4;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger {background:var(--danger-50); color:var(--danger-700);}
+.pill-warning{background:var(--warning-50);color:var(--warning-700);}
+.pill-brand  {background:var(--brand-50);  color:var(--brand-700);}
+
+/* Difficulty level color states */
+.diff-easy    {color:var(--success-700) !important;}
+.diff-moderate{color:var(--warning-700) !important;}
+.diff-hard    {color:var(--danger-700) !important;}
+
+.card-footer{padding:.75rem 1.25rem;border-top:1px solid var(--border-1);background:var(--surface-1);border-radius:0 0 .75rem .75rem;}
+</style>
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle keyword analysis form submission
-    document.getElementById('keywordForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const keyword = document.getElementById('keyword').value.trim();
-        const country = document.getElementById('country').value;
-        
-        if (!keyword) {
-            alert('Please enter a keyword to analyze.');
-            return;
+    var API = JSON.parse(document.getElementById('apiUrls').textContent);
+
+    // ----- Pomocnicze: bezpieczne escapowanie HTML -----
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/[<>&"']/g, function(c){
+            return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c];
+        });
+    }
+
+    // ----- Difficulty PL labels -----
+    var DIFF_LABELS = { easy: 'Łatwe', moderate: 'Umiarkowane', hard: 'Trudne' };
+
+    // ----- Loader helper -----
+    function setLoading(btn, isLoading, originalText) {
+        if (isLoading) {
+            btn.dataset.originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Przetwarzanie…';
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = btn.dataset.originalText || originalText || btn.innerHTML;
+            btn.disabled = false;
         }
-        
-        // Show loading state
-        document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Analyzing...';
-        document.getElementById('analyzeKeywordBtn').disabled = true;
-        
-        // Make API request
-        fetch('{{ url_for("seo.api_keyword_competition") }}', {
+    }
+
+    // ----- Error notification -----
+    function notifyError(msg) {
+        if (window.Toast && Toast.error) Toast.error(msg);
+        else alert(msg);
+    }
+    function notifyWarn(msg) {
+        if (window.Toast && Toast.warning) Toast.warning(msg);
+        else alert(msg);
+    }
+
+    // ===================================================
+    // Analiza słowa kluczowego
+    // ===================================================
+    document.getElementById('keywordForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        var keyword = document.getElementById('keyword').value.trim();
+        var country = document.getElementById('country').value;
+        if (!keyword) { notifyWarn('Wprowadź słowo kluczowe do analizy.'); return; }
+
+        var btn = document.getElementById('analyzeKeywordBtn');
+        setLoading(btn, true);
+
+        fetch(API.competition, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                keyword: keyword,
-                country: country
-            })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ keyword: keyword, country: country })
         })
-        .then(response => response.json())
-        .then(data => {
-            // Reset button state
-            document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-search me-2"></i> Analyze Keyword';
-            document.getElementById('analyzeKeywordBtn').disabled = false;
-            
+        .then(function(r){ return r.json(); })
+        .then(function(data){
             if (data.status === 'success' && data.competition) {
                 displayKeywordAnalysis(data.competition, keyword);
             } else {
-                alert('Error analyzing keyword: ' + (data.message || 'Unknown error'));
+                notifyError('Błąd analizy słowa: ' + (data.message || 'nieznany błąd'));
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('analyzeKeywordBtn').innerHTML = '<i class="fas fa-search me-2"></i> Analyze Keyword';
-            document.getElementById('analyzeKeywordBtn').disabled = false;
-            alert('Error analyzing keyword. Please try again later.');
-        });
+        .catch(function(err){
+            console.error('Keyword analysis error:', err);
+            notifyError('Błąd podczas analizy słowa kluczowego. Spróbuj ponownie.');
+        })
+        .finally(function(){ setLoading(btn, false); });
     });
-    
-    // Handle keyword suggestions form submission
-    document.getElementById('suggestionsForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const topic = document.getElementById('topic').value.trim();
-        const limit = document.getElementById('limit').value;
-        
-        if (!topic) {
-            alert('Please enter a topic for keyword suggestions.');
-            return;
+
+    function displayKeywordAnalysis(competition, keyword) {
+        document.getElementById('analysisKeywordTitle').textContent = 'Analiza: „' + keyword + '"';
+        document.getElementById('difficultyScore').textContent = competition.difficulty_score || 0;
+
+        var diffEl = document.getElementById('difficultyLevel');
+        var diffKey = competition.difficulty || 'unknown';
+        diffEl.textContent = DIFF_LABELS[diffKey] || diffKey.toUpperCase();
+        diffEl.className = 'kpi-mini-value diff-' + diffKey;
+        diffEl.style.fontSize = '1.125rem';
+
+        document.getElementById('recommendedContentLength').textContent = competition.recommended_content_length || 0;
+        document.getElementById('recommendedHeadings').textContent = competition.recommended_headings || 0;
+
+        // Konkurenci
+        var compBody = document.getElementById('competitorsTableBody');
+        compBody.innerHTML = '';
+        if (competition.top_competitors && competition.top_competitors.length > 0) {
+            compBody.innerHTML = competition.top_competitors.map(function(c){
+                return '<tr>'+
+                    '<td style="font-weight:500;">'+escHtml(c.domain || 'Nieznana')+'</td>'+
+                    '<td><a href="'+escHtml(c.url || '#')+'" target="_blank" rel="noopener" style="color:var(--brand-700);">'+escHtml(c.title || 'Bez tytułu')+'</a></td>'+
+                '</tr>';
+            }).join('');
+        } else {
+            compBody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text-3);padding:1.25rem;">Brak danych o konkurentach</td></tr>';
         }
-        
-        // Show loading state
-        document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Getting Suggestions...';
-        document.getElementById('getKeywordSuggestionsBtn').disabled = true;
-        
-        // Make API request
-        fetch(`{{ url_for("seo.api_keyword_suggestions") }}?topic=${encodeURIComponent(topic)}&limit=${limit}`)
-        .then(response => response.json())
-        .then(data => {
-            // Reset button state
-            document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-lightbulb me-2"></i> Get Suggestions';
-            document.getElementById('getKeywordSuggestionsBtn').disabled = false;
-            
+
+        // Powiązane słowa
+        var sugContainer = document.getElementById('suggestedKeywordsContainer');
+        if (competition.suggested_keywords && competition.suggested_keywords.length > 0) {
+            sugContainer.innerHTML = competition.suggested_keywords.map(function(kw){
+                return '<span class="tag-item">'+escHtml(kw)+'</span>';
+            }).join('');
+        } else {
+            sugContainer.innerHTML = '<p style="margin:0;color:var(--text-3);font-size:.8125rem;">Brak powiązanych słów kluczowych.</p>';
+        }
+
+        document.getElementById('analysisResultsCard').style.display = '';
+        document.getElementById('placeholderCard').style.display = 'none';
+    }
+
+    // ===================================================
+    // Sugestie słów kluczowych
+    // ===================================================
+    document.getElementById('suggestionsForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        var topic = document.getElementById('topic').value.trim();
+        var limit = document.getElementById('limit').value;
+        if (!topic) { notifyWarn('Wprowadź temat dla sugestii słów.'); return; }
+
+        var btn = document.getElementById('getKeywordSuggestionsBtn');
+        setLoading(btn, true);
+
+        fetch(API.suggestions + '?topic=' + encodeURIComponent(topic) + '&limit=' + encodeURIComponent(limit))
+        .then(function(r){ return r.json(); })
+        .then(function(data){
             if (data.status === 'success' && data.suggestions) {
                 displayKeywordSuggestions(data.suggestions, topic);
             } else {
-                alert('Error getting keyword suggestions: ' + (data.message || 'Unknown error'));
+                notifyError('Błąd pobierania sugestii: ' + (data.message || 'nieznany błąd'));
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('getKeywordSuggestionsBtn').innerHTML = '<i class="fas fa-lightbulb me-2"></i> Get Suggestions';
-            document.getElementById('getKeywordSuggestionsBtn').disabled = false;
-            alert('Error getting keyword suggestions. Please try again later.');
-        });
+        .catch(function(err){
+            console.error('Suggestions error:', err);
+            notifyError('Błąd pobierania sugestii. Spróbuj ponownie.');
+        })
+        .finally(function(){ setLoading(btn, false); });
     });
-    
-    // Function to display keyword analysis results
-    function displayKeywordAnalysis(competition, keyword) {
-        // Update card title
-        document.getElementById('analysisKeywordTitle').textContent = `Analysis for "${keyword}"`;
-        
-        // Update difficulty metrics
-        document.getElementById('difficultyScore').textContent = competition.difficulty_score || 0;
-        document.getElementById('difficultyLevel').textContent = (competition.difficulty || 'unknown').toUpperCase();
-        
-        // Set difficulty level color
-        const difficultyElement = document.getElementById('difficultyLevel');
-        difficultyElement.className = '';
-        if (competition.difficulty === 'easy') {
-            difficultyElement.classList.add('text-success');
-        } else if (competition.difficulty === 'moderate') {
-            difficultyElement.classList.add('text-warning');
-        } else if (competition.difficulty === 'hard') {
-            difficultyElement.classList.add('text-danger');
-        }
-        
-        // Update content recommendations
-        document.getElementById('recommendedContentLength').textContent = competition.recommended_content_length || 0;
-        document.getElementById('recommendedHeadings').textContent = competition.recommended_headings || 0;
-        
-        // Update competitors table
-        const competitorsTableBody = document.getElementById('competitorsTableBody');
-        competitorsTableBody.innerHTML = '';
-        
-        if (competition.top_competitors && competition.top_competitors.length > 0) {
-            competition.top_competitors.forEach(competitor => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${competitor.domain || 'Unknown'}</td>
-                    <td><a href="${competitor.url || '#'}" target="_blank">${competitor.title || 'Unknown'}</a></td>
-                `;
-                competitorsTableBody.appendChild(row);
-            });
-        } else {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td colspan="2" class="text-center">No competitors data available</td>';
-            competitorsTableBody.appendChild(row);
-        }
-        
-        // Update suggested keywords
-        const suggestedKeywordsContainer = document.getElementById('suggestedKeywordsContainer');
-        suggestedKeywordsContainer.innerHTML = '';
-        
-        if (competition.suggested_keywords && competition.suggested_keywords.length > 0) {
-            competition.suggested_keywords.forEach(keyword => {
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-light text-dark border m-1 p-2';
-                badge.textContent = keyword;
-                suggestedKeywordsContainer.appendChild(badge);
-            });
-        } else {
-            suggestedKeywordsContainer.innerHTML = '<p class="text-center text-muted">No suggested keywords available</p>';
-        }
-        
-        // Show analysis results card and hide placeholder
-        document.getElementById('analysisResultsCard').style.display = 'block';
-        document.getElementById('placeholderCard').style.display = 'none';
-    }
-    
-    // Function to display keyword suggestions results
+
     function displayKeywordSuggestions(suggestions, topic) {
-        // Update card title
-        document.getElementById('suggestionsTopic').textContent = `Suggestions for "${topic}"`;
-        
-        // Update suggestions table
-        const suggestionsTableBody = document.getElementById('suggestionsTableBody');
-        suggestionsTableBody.innerHTML = '';
-        
+        document.getElementById('suggestionsTopic').textContent = 'Sugestie dla: „' + topic + '"';
+
+        var body = document.getElementById('suggestionsTableBody');
         if (suggestions && suggestions.length > 0) {
-            suggestions.forEach(suggestion => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${suggestion.keyword || 'Unknown'}</td>
-                    <td>${suggestion.search_volume || 'Unknown'}</td>
-                    <td>${suggestion.competition || 'Unknown'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary analyze-suggestion-btn" data-keyword="${suggestion.keyword}">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </td>
-                `;
-                suggestionsTableBody.appendChild(row);
-            });
-            
-            // Add event listeners to analyze buttons
-            document.querySelectorAll('.analyze-suggestion-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const keyword = this.getAttribute('data-keyword');
-                    document.getElementById('keyword').value = keyword;
+            body.innerHTML = suggestions.map(function(s){
+                return '<tr>'+
+                    '<td style="font-weight:500;">'+escHtml(s.keyword || '—')+'</td>'+
+                    '<td style="font-variant-numeric:tabular-nums;color:var(--text-2);">'+escHtml(s.search_volume || 'Brak danych')+'</td>'+
+                    '<td><span class="pill pill-brand">'+escHtml(s.competition || '—')+'</span></td>'+
+                    '<td style="text-align:right;">'+
+                        '<button type="button" class="btn btn-sm btn-ghost analyze-suggestion-btn" data-keyword="'+escHtml(s.keyword)+'" title="Analizuj to słowo" aria-label="Analizuj">'+
+                            '<i class="fas fa-search"></i>'+
+                        '</button>'+
+                    '</td>'+
+                '</tr>';
+            }).join('');
+
+            // Re-bind przyciski analizy
+            document.querySelectorAll('.analyze-suggestion-btn').forEach(function(b){
+                b.addEventListener('click', function(){
+                    document.getElementById('keyword').value = b.getAttribute('data-keyword');
                     document.getElementById('keywordForm').dispatchEvent(new Event('submit'));
                 });
             });
         } else {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td colspan="4" class="text-center">No suggestions available</td>';
-            suggestionsTableBody.appendChild(row);
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:1.25rem;">Brak sugestii dla tego tematu.</td></tr>';
         }
-        
-        // Show suggestions results card and hide placeholder
-        document.getElementById('suggestionsResultsCard').style.display = 'block';
+
+        document.getElementById('suggestionsResultsCard').style.display = '';
         document.getElementById('placeholderCard').style.display = 'none';
     }
-    
-    // Export suggestions button
+
+    // ===================================================
+    // Eksport sugestii do CSV
+    // ===================================================
     document.getElementById('exportSuggestionsBtn').addEventListener('click', function() {
-        const suggestions = [];
-        
-        document.querySelectorAll('#suggestionsTableBody tr').forEach(row => {
-            const keyword = row.cells[0] ? row.cells[0].textContent : null;
-            const volume = row.cells[1] ? row.cells[1].textContent : null;
-            const competition = row.cells[2] ? row.cells[2].textContent : null;
-            
-            if (keyword && keyword !== 'No suggestions available') {
-                suggestions.push(`${keyword},${volume},${competition}`);
-            }
-        });
-        
-        if (suggestions.length === 0) {
-            alert('No suggestions to export.');
+        var rows = Array.from(document.querySelectorAll('#suggestionsTableBody tr'));
+        var data = rows.map(function(r){
+            if (r.cells.length < 3) return null;
+            return [
+                (r.cells[0].textContent || '').trim(),
+                (r.cells[1].textContent || '').trim(),
+                (r.cells[2].textContent || '').trim()
+            ].join(',');
+        }).filter(Boolean);
+
+        if (data.length === 0) {
+            notifyWarn('Brak sugestii do eksportu.');
             return;
         }
-        
-        // Add header
-        suggestions.unshift('Keyword,Search Volume,Competition');
-        
-        // Create blob and download
-        const blob = new Blob([suggestions.join('\n')], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        data.unshift('Słowo kluczowe,Wyszukiwania,Konkurencja');
+
+        var blob = new Blob(['\ufeff' + data.join('\n')], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
         a.href = url;
-        a.download = 'keyword_suggestions_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.download = 'slowa_kluczowe_' + new Date().toISOString().slice(0, 10) + '.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        if (window.Toast && Toast.success) Toast.success('Wyeksportowano ' + (data.length - 1) + ' sugestii do CSV.');
     });
 });
 </script>
+{% endblock %}
+
 {% endblock %}

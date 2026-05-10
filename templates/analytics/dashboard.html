@@ -1,260 +1,291 @@
 {% extends 'base.html' %}
+{% block title %}Statystyki — MasterContentAI{% endblock %}
 
-{% block title %}Analytics - BLOG AUTOMATION MASTER{% endblock %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('dashboard') }}">Pulpit</a></li>
+    <li class="breadcrumb-separator"></li>
+    <li>Statystyki</li>
+</ol>
+{% endblock %}
+
+{% block page_title %}Statystyki wydajności treści{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Pełny obraz wyświetleń, użytkowników i zaangażowania we wszystkich blogach.</p>{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('analytics_config') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-gear"></i> Konfiguracja
+    </a>
+    <a href="{{ url_for('sync_analytics', blog_id='all') }}" class="btn btn-primary">
+        <i class="fas fa-arrows-rotate"></i> Synchronizuj teraz
+    </a>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Analityka Wydajności Treści</h1>
+
+{# ─────────────────── KARTY ZBIORCZE (30 dni) ─────────────────── #}
+{% if total_stats %}
+<div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--brand-50);color:var(--brand-600);">
+            <i class="fas fa-eye"></i>
+        </div>
         <div>
-            <a href="{{ url_for('analytics_config') }}" class="btn btn-outline-primary">
-                <i class="fas fa-cog me-1"></i> Konfiguracja
-            </a>
-            <a href="{{ url_for('sync_analytics', blog_id='all') }}" class="btn btn-primary ms-2">
-                <i class="fas fa-sync me-1"></i> Synchronizuj Teraz
-            </a>
+            <div class="stat-card-value">{{ total_stats.total_views|default(0) }}</div>
+            <div class="stat-card-label">Łączne wyświetlenia</div>
+            <div style="font-size:.6875rem;color:var(--text-tertiary);margin-top:.125rem;">Ostatnie 30 dni</div>
         </div>
     </div>
-    
-    <!-- Blog Analytics Summary -->
-    <div class="row mb-4">
-        {% for blog in blogs %}
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">{{ blog.name }}</h5>
-                    {% if blog.analytics_configured %}
-                    <span class="badge bg-success">Skonfigurowana</span>
-                    {% else %}
-                    <span class="badge bg-warning">Nieskonfigurowana</span>
-                    {% endif %}
-                </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--success-50);color:var(--success-700);">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ total_stats.total_visitors|default(0) }}</div>
+            <div class="stat-card-label">Łączni użytkownicy</div>
+            <div style="font-size:.6875rem;color:var(--text-tertiary);margin-top:.125rem;">Ostatnie 30 dni</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--color-cyan-50);color:var(--color-cyan-600);">
+            <i class="fas fa-stopwatch"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ total_stats.avg_time|default(0)|round(1) }}<span style="font-size:.875rem;font-weight:500;color:var(--text-tertiary);"> s</span></div>
+            <div class="stat-card-label">Średni czas na stronie</div>
+            <div style="font-size:.6875rem;color:var(--text-tertiary);margin-top:.125rem;">Ostatnie 30 dni</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--warning-50);color:var(--warning-700);">
+            <i class="fas fa-arrow-trend-down"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ total_stats.avg_bounce|default(0)|round(1) }}<span style="font-size:.875rem;font-weight:500;color:var(--text-tertiary);">%</span></div>
+            <div class="stat-card-label">Średni współczynnik odrzuceń</div>
+            <div style="font-size:.6875rem;color:var(--text-tertiary);margin-top:.125rem;">Ostatnie 30 dni</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# ─────────────────── KAFLE BLOGÓW ─────────────────── #}
+<div class="card mb-6">
+    <div class="card-header"><h3 class="card-title">Statystyki blogów</h3></div>
+    <div class="card-body">
+        {% if blogs %}
+        <div class="grid grid-cols-3 gap-4">
+            {% for blog in blogs %}
+            <div class="card" style="margin:0;">
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="card bg-light">
-                                <div class="card-body p-3 text-center">
-                                    <h3 class="mb-0">{{ blog.total_views|default(0) }}</h3>
-                                    <div class="text-muted small">Wyświetlenia</div>
-                                </div>
-                            </div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
+                        <div style="display:flex;align-items:center;gap:.625rem;">
+                            <span class="avatar avatar-md" style="background:linear-gradient(135deg,var(--brand-600),var(--info-700));color:#fff;">
+                                {{ (blog.name[:1] or 'B')|upper }}
+                            </span>
+                            <div style="font-weight:600;color:var(--text-primary);">{{ blog.name }}</div>
                         </div>
-                        <div class="col-6">
-                            <div class="card bg-light">
-                                <div class="card-body p-3 text-center">
-                                    <h3 class="mb-0">{{ blog.total_visitors|default(0) }}</h3>
-                                    <div class="text-muted small">Użytkownicy</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Aktywność</span>
-                            <span>{{ blog.engagement_rate|default('0%') }}</span>
-                        </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar" role="progressbar" style="width: {{ blog.engagement_percent|default(0) }}%;" aria-valuenow="{{ blog.engagement_percent|default(0) }}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <p class="mb-1"><strong>Ostatnie odświeżenie:</strong> {% if blog.last_sync %}{{ blog.last_sync.strftime('%Y-%m-%d %H:%M') }}{% else %}Nigdy{% endif %}</p>
                         {% if blog.analytics_configured %}
-                        <p class="mb-0"><strong>Posty z metrykami:</strong> {{ blog.posts_with_metrics|default(0) }}/{{ blog.total_posts|default(0) }}</p>
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Skonfigurowany</span>
                         {% else %}
-                        <div class="alert alert-warning mt-2 mb-0 py-2 small">
-                            Skonfiguruj Google Analytics dla tego bloga
-                        </div>
+                            <span class="badge badge-warning"><i class="fas fa-triangle-exclamation"></i> Brak konfiguracji</span>
                         {% endif %}
                     </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('blog_analytics', blog_id=blog.id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-chart-line me-1"></i> Szczegóły
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem;">
+                        <div style="padding:.625rem;border-radius:var(--radius-md);background:var(--surface-sunken);text-align:center;">
+                            <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">{{ blog.total_views|default(0) }}</div>
+                            <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Wyświetlenia</div>
+                        </div>
+                        <div style="padding:.625rem;border-radius:var(--radius-md);background:var(--surface-sunken);text-align:center;">
+                            <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">{{ blog.total_visitors|default(0) }}</div>
+                            <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Użytkownicy</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:.625rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-secondary);margin-bottom:.25rem;">
+                            <span>Zaangażowanie</span>
+                            <span style="font-weight:600;color:var(--text-primary);">{{ blog.engagement_rate|default('0%') }}</span>
+                        </div>
+                        <div class="progress" style="height:4px;">
+                            <div class="progress-bar" style="width:{{ blog.engagement_percent|default(0) }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:.75rem;color:var(--text-tertiary);margin-bottom:.75rem;">
+                        Ostatnia synchronizacja: <strong style="color:var(--text-secondary);">
+                            {% if blog.last_sync %}{{ blog.last_sync.strftime('%Y-%m-%d %H:%M') }}{% else %}Nigdy{% endif %}
+                        </strong>
+                    </div>
+
+                    {% if blog.analytics_configured %}
+                        <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.75rem;">
+                            Posty z metrykami:
+                            <strong style="color:var(--text-primary);">{{ blog.posts_with_metrics|default(0) }}/{{ blog.total_posts|default(0) }}</strong>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" style="padding:.5rem .75rem;margin-bottom:.75rem;font-size:.75rem;">
+                            <span class="alert-icon"><i class="fas fa-circle-info"></i></span>
+                            <div class="alert-body">Skonfiguruj Google Analytics dla tego bloga.</div>
+                        </div>
+                    {% endif %}
+
+                    <div style="display:flex;justify-content:space-between;gap:.5rem;">
+                        <a href="{{ url_for('blog_analytics', blog_id=blog.id) }}" class="btn btn-ghost btn-sm" style="flex:1;">
+                            <i class="fas fa-chart-line"></i> Szczegóły
                         </a>
-                        <a href="{{ url_for('analytics_reports', blog_id=blog.id) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-file-alt me-1"></i> Raporty
+                        <a href="{{ url_for('analytics_reports', blog_id=blog.id) }}" class="btn btn-ghost btn-sm" style="flex:1;">
+                            <i class="fas fa-file-lines"></i> Raporty
                         </a>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
         {% else %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i> Brak skonfigurowanych blogów. Dodaj blog, aby rozpocząć zbieranie analityki.
-            </div>
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-chart-pie"></i></div>
+            <h4 class="empty-state-title">Brak skonfigurowanych blogów</h4>
+            <p class="empty-state-description">Dodaj blog, aby rozpocząć zbieranie statystyk.</p>
+            <a href="{{ url_for('add_blog') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Dodaj blog</a>
         </div>
-        {% endfor %}
+        {% endif %}
     </div>
-    
-    <!-- Overall Statistics -->
-    {% if total_stats %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Statystyki zbiorcze (ostatnie 30 dni)</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="border-start border-4 border-primary px-3 py-2">
-                                <div class="text-muted small">Łączne wyświetlenia</div>
-                                <h3 class="mb-0">{{ total_stats.total_views|default(0) }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="border-start border-4 border-success px-3 py-2">
-                                <div class="text-muted small">Łączni użytkownicy</div>
-                                <h3 class="mb-0">{{ total_stats.total_visitors|default(0) }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="border-start border-4 border-info px-3 py-2">
-                                <div class="text-muted small">Średni czas (sek.)</div>
-                                <h3 class="mb-0">{{ total_stats.avg_time|default(0)|round(1) }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="border-start border-4 border-warning px-3 py-2">
-                                <div class="text-muted small">Śr. współczynnik odrzuceń</div>
-                                <h3 class="mb-0">{{ total_stats.avg_bounce|default(0)|round(1) }}%</h3>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <h5>Najlepsze treści</h5>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Tytuł</th>
-                                            <th>Blog</th>
-                                            <th class="text-end">Wyświetlenia</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for post in top_posts %}
-                                        <tr>
-                                            <td>
-                                                <a href="{{ post.url }}" target="_blank" class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ post.title }}">
-                                                    {{ post.title }}
-                                                </a>
-                                            </td>
-                                            <td>{{ post.blog_name }}</td>
-                                            <td class="text-end">{{ post.views }}</td>
-                                        </tr>
-                                        {% else %}
-                                        <tr>
-                                            <td colspan="3" class="text-center">Brak danych</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Najnowsze raporty</h5>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Blog</th>
-                                            <th>Typ</th>
-                                            <th>Data</th>
-                                            <th class="text-end">Akcje</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for report in recent_reports %}
-                                        <tr>
-                                            <td>{{ report.blog.name }}</td>
-                                            <td>
-                                                {% if report.report_type == 'daily' %}
-                                                    Dzienny
-                                                {% elif report.report_type == 'weekly' %}
-                                                    Tygodniowy
-                                                {% elif report.report_type == 'monthly' %}
-                                                    Miesięczny
-                                                {% else %}
-                                                    {{ report.report_type|capitalize }}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
-                                            <td class="text-end">
-                                                <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        {% else %}
-                                        <tr>
-                                            <td colspan="4" class="text-center">Brak raportów</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- AI Insight -->
-    {% if ai_insights %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-robot me-2"></i> Analityka AI
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Wnioski z analizy</h5>
-                            <ul class="list-group">
-                                {% for insight in ai_insights.insights %}
-                                <li class="list-group-item">{{ insight }}</li>
-                                {% else %}
-                                <li class="list-group-item">Brak dostępnych wniosków. Zbierz więcej danych analitycznych.</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Rekomendacje</h5>
-                            <ul class="list-group">
-                                {% for rec in ai_insights.recommendations %}
-                                <li class="list-group-item">{{ rec }}</li>
-                                {% else %}
-                                <li class="list-group-item">Brak dostępnych rekomendacji. Zbierz więcej danych analitycznych.</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <a href="{{ url_for('content_calendar') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-calendar-alt me-1"></i> Przejdź do kalendarza treści
-                        </a>
-                        <a href="{{ url_for('generate_content_plan') }}" class="btn btn-primary ms-2">
-                            <i class="fas fa-magic me-1"></i> Wygeneruj plan treści
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
+
+{# ─────────────────── DWIE KOLUMNY: TOP + RAPORTY ─────────────────── #}
+{% if total_stats %}
+<div class="grid grid-cols-2 gap-6 mb-6">
+
+    {# Najlepsze treści #}
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Najlepsze treści</h3></div>
+        {% if top_posts %}
+        <div class="table-wrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Tytuł</th>
+                        <th>Blog</th>
+                        <th class="text-right">Wyświetlenia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in top_posts %}
+                    <tr>
+                        <td>
+                            <a href="{{ post.url }}" target="_blank" rel="noopener"
+                               title="{{ post.title }}"
+                               style="color:var(--text-primary);font-weight:500;text-decoration:none;display:inline-block;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ post.title }}
+                            </a>
+                        </td>
+                        <td><span class="badge badge-neutral">{{ post.blog_name }}</span></td>
+                        <td class="text-right" style="font-weight:600;color:var(--text-primary);">{{ post.views }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem;">
+            <p style="color:var(--text-secondary);font-size:.875rem;">Brak danych — zbierz więcej statystyk.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Najnowsze raporty #}
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Najnowsze raporty</h3></div>
+        {% if recent_reports %}
+        <div class="table-wrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Blog</th>
+                        <th>Typ</th>
+                        <th>Data</th>
+                        <th class="text-right">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%- set report_pl = {'daily':'Dzienny','weekly':'Tygodniowy','monthly':'Miesięczny'} -%}
+                    {% for report in recent_reports %}
+                    <tr>
+                        <td>{{ report.blog.name }}</td>
+                        <td><span class="badge badge-info">{{ report_pl.get(report.report_type, report.report_type|capitalize) }}</span></td>
+                        <td><span style="color:var(--text-secondary);font-size:.8125rem;">{{ report.created_at.strftime('%Y-%m-%d') }}</span></td>
+                        <td class="text-right">
+                            <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-ghost btn-icon btn-sm" title="Zobacz raport" aria-label="Zobacz raport">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem;">
+            <p style="color:var(--text-secondary);font-size:.875rem;">Brak raportów do wyświetlenia.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# ─────────────────── AI INSIGHTS ─────────────────── #}
+{% if ai_insights %}
+<div class="card" style="border:1px solid var(--border-2);background:linear-gradient(180deg,var(--brand-50) 0%,var(--surface-1) 60%);">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-robot" style="color:var(--brand-600);margin-right:.375rem;"></i>
+            Analityka AI
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <h4 style="font-size:.875rem;font-weight:600;color:var(--text-primary);margin:0 0 .75rem 0;text-transform:uppercase;letter-spacing:.04em;">
+                    <i class="fas fa-lightbulb" style="color:var(--warning-700);"></i> Wnioski
+                </h4>
+                <ul class="stack" style="list-style:none;padding:0;margin:0;gap:.5rem;display:flex;flex-direction:column;">
+                    {% for insight in ai_insights.insights %}
+                    <li style="padding:.75rem;background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:.875rem;color:var(--text-secondary);">{{ insight }}</li>
+                    {% else %}
+                    <li style="padding:.75rem;background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:.875rem;color:var(--text-tertiary);">
+                        Brak dostępnych wniosków. Zbierz więcej danych statystycznych.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-size:.875rem;font-weight:600;color:var(--text-primary);margin:0 0 .75rem 0;text-transform:uppercase;letter-spacing:.04em;">
+                    <i class="fas fa-star" style="color:var(--brand-600);"></i> Rekomendacje
+                </h4>
+                <ul class="stack" style="list-style:none;padding:0;margin:0;gap:.5rem;display:flex;flex-direction:column;">
+                    {% for rec in ai_insights.recommendations %}
+                    <li style="padding:.75rem;background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:.875rem;color:var(--text-secondary);">{{ rec }}</li>
+                    {% else %}
+                    <li style="padding:.75rem;background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:.875rem;color:var(--text-tertiary);">
+                        Brak dostępnych rekomendacji. Zbierz więcej danych statystycznych.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:1.5rem;display:flex;justify-content:center;gap:.5rem;">
+            <a href="{{ url_for('content_calendar') }}" class="btn btn-ghost">
+                <i class="fas fa-calendar-days"></i> Kalendarz treści
+            </a>
+            <a href="{{ url_for('generate_content_plan') }}" class="btn btn-primary">
+                <i class="fas fa-wand-magic-sparkles"></i> Wygeneruj plan treści
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

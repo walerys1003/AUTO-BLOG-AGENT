@@ -11,6 +11,7 @@ from app import db
 from models import Blog, ContentLog, Category, Tag, PublishingSchedule, AutomationRule, SystemSettings, Notification
 from utils.wordpress.client import get_wordpress_post, update_wordpress_post
 from utils.notifications import send_notification
+from auth import login_required
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -167,6 +168,7 @@ def publishing_schedule():
     )
 
 @publishing_bp.route('/schedule/update', methods=['POST'])
+@login_required
 def update_schedule():
     """Update publishing schedule item"""
     try:
@@ -213,6 +215,7 @@ def update_schedule():
         }), 500
 
 @publishing_bp.route('/schedule/toggle-automation', methods=['POST'])
+@login_required
 def toggle_automation():
     """Toggle automation for a blog"""
     try:
@@ -280,6 +283,7 @@ def pending_articles():
     )
 
 @publishing_bp.route('/edit/<int:content_id>', methods=['GET', 'POST'])
+@login_required
 def edit_article(content_id):
     """Edit article before publication"""
     # Get content
@@ -478,6 +482,7 @@ def edit_article(content_id):
     )
 
 @publishing_bp.route('/publish-now/<int:content_id>', methods=['POST'])
+@login_required
 def publish_now(content_id):
     """Publish article immediately"""
     from utils.wordpress.client import publish_wordpress_post
@@ -537,6 +542,7 @@ def publish_now(content_id):
         return redirect(url_for('publishing.pending_articles'))
 
 @publishing_bp.route('/cancel/<int:content_id>', methods=['POST'])
+@login_required
 def cancel_publication(content_id):
     """Cancel scheduled publication"""
     # Get content
@@ -919,6 +925,7 @@ def publishing_settings():
     )
 
 @publishing_bp.route('/settings/update', methods=['POST'])
+@login_required
 def update_settings():
     """Update publication settings"""
     try:

@@ -1,355 +1,295 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if rule %}Edit{% else %}New{% endif %} Automation Rule - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}{% if rule %}Edytuj{% else %}Nowa{% endif %} reguła automatyzacji — MasterContentAI{% endblock %}
+
+{% block styles %}
+<style>
+  .ea-wrap { display: grid; gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+  .ea-breadcrumb { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: var(--text-3); margin-bottom: .25rem; }
+  .ea-breadcrumb a { color: var(--brand-600); text-decoration: none; }
+  .ea-breadcrumb a:hover { text-decoration: underline; }
+  .ea-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .ea-title { margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: .65rem; }
+  .ea-title-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .ea-sub { color: var(--text-3); margin: .35rem 0 0; font-size: .95rem; }
+  .ea-section { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 14px; padding: 1.5rem; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .ea-section-head { margin: 0 0 1.1rem; font-size: 1.05rem; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: .5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border-1); }
+  .ea-section-head .ea-num { width: 26px; height: 26px; border-radius: 8px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; }
+  .ea-grid { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  .ea-grid--1 { grid-template-columns: 1fr; }
+  @media (max-width: 720px) { .ea-grid { grid-template-columns: 1fr; } }
+  .ea-field { display: flex; flex-direction: column; gap: .35rem; }
+  .ea-field label { font-size: .85rem; font-weight: 600; color: var(--text-2); }
+  .ea-field .form-control, .ea-field .form-select { background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: .55rem .7rem; font-size: .95rem; color: var(--text-1); }
+  .ea-field .form-control:focus, .ea-field .form-select:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+  .ea-hint { font-size: .8rem; color: var(--text-3); }
+  .ea-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
+  @media (max-width: 560px) { .ea-days { grid-template-columns: repeat(4, 1fr); } }
+  .ea-day { position: relative; }
+  .ea-day input { position: absolute; opacity: 0; pointer-events: none; }
+  .ea-day label { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: .55rem .3rem; border: 1px solid var(--border-2); border-radius: 8px; cursor: pointer; font-size: .8rem; font-weight: 600; color: var(--text-2); background: var(--surface-2); transition: all .15s ease; }
+  .ea-day input:checked + label { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-700); }
+  .ea-day input:focus-visible + label { box-shadow: 0 0 0 3px rgba(79,70,229,.25); }
+  .ea-switch { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border: 1px solid var(--border-1); border-radius: 10px; background: var(--surface-2); }
+  .ea-switch input[type=checkbox] { width: 42px; height: 24px; accent-color: var(--brand-600); margin-top: .15rem; flex-shrink: 0; cursor: pointer; }
+  .ea-switch-body { display: flex; flex-direction: column; gap: .2rem; }
+  .ea-switch-body strong { color: var(--text-1); font-size: .9rem; }
+  .ea-switch-body span { font-size: .8rem; color: var(--text-3); }
+  .ea-range-wrap { display: flex; flex-direction: column; gap: .5rem; }
+  .ea-range-row { display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-3); }
+  .ea-range-value { font-weight: 700; color: var(--brand-700); font-size: 1rem; }
+  .ea-actions { display: flex; gap: .75rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--border-1); }
+  .ea-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: .9rem; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s ease; }
+  .ea-btn--primary { background: var(--brand-600); color: white; }
+  .ea-btn--primary:hover { background: var(--brand-700); }
+  .ea-btn--ghost { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+  .ea-btn--ghost:hover { background: var(--surface-3); }
+  .ea-multi { min-height: 130px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h1 class="h2 mb-0">
-            <i class="fas fa-robot text-secondary me-2"></i>
-            {% if rule %}Edit{% else %}New{% endif %} Automation Rule
+<div class="ea-wrap">
+  <div>
+    <nav class="ea-breadcrumb" aria-label="Ścieżka">
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <span aria-hidden="true">›</span>
+      <a href="{{ url_for('content_creator.automation_dashboard') }}">Automatyzacja</a>
+      <span aria-hidden="true">›</span>
+      <span>{% if rule %}Edytuj regułę{% else %}Nowa reguła{% endif %}</span>
+    </nav>
+    <div class="ea-header">
+      <div>
+        <h1 class="ea-title">
+          <span class="ea-title-icon"><i class="fas fa-robot"></i></span>
+          {% if rule %}Edytuj regułę automatyzacji{% else %}Nowa reguła automatyzacji{% endif %}
         </h1>
-        <p class="text-muted mt-2">
-            {% if rule %}Modify{% else %}Configure{% endif %} settings for automatic content creation and publishing.
-        </p>
+        <p class="ea-sub">{% if rule %}Zmień{% else %}Skonfiguruj{% endif %} ustawienia automatycznego tworzenia i publikowania treści.</p>
+      </div>
+      <a href="{{ url_for('content_creator.automation_dashboard') }}" class="ea-btn ea-btn--ghost">
+        <i class="fas fa-arrow-left"></i> Wróć do automatyzacji
+      </a>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i> Back to Automation
-        </a>
+  </div>
+
+  <form method="post" action="" data-validate>
+    <div class="ea-wrap" style="margin: 0;">
+
+      <section class="ea-section">
+        <h2 class="ea-section-head"><span class="ea-num">1</span> Ustawienia podstawowe</h2>
+        <div class="ea-grid">
+          <div class="ea-field">
+            <label for="name">Nazwa reguły *</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ rule.name if rule else '' }}" required>
+            <span class="ea-hint">Nadaj regule opisową nazwę, aby ją łatwo zidentyfikować.</span>
+          </div>
+          <div class="ea-field">
+            <label for="blog_id">Blog docelowy *</label>
+            <select class="form-select" id="blog_id" name="blog_id" required>
+              <option value="">— Wybierz blog —</option>
+              {% for blog in blogs %}
+              <option value="{{ blog.id }}" {% if rule and rule.blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
+              {% endfor %}
+            </select>
+            <span class="ea-hint">Blog, dla którego reguła będzie tworzyć treści.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ea-section">
+        <h2 class="ea-section-head"><span class="ea-num">2</span> Generowanie treści</h2>
+        <div class="ea-grid">
+          <div class="ea-field">
+            <label for="writing_style">Styl pisania</label>
+            <select class="form-select" id="writing_style" name="writing_style">
+              <option value="informative" {% if rule and rule.content_tone == 'informative' %}selected{% endif %}>Informacyjny i edukacyjny</option>
+              <option value="conversational" {% if rule and rule.content_tone == 'conversational' %}selected{% endif %}>Konwersacyjny i przyjazny</option>
+              <option value="professional" {% if rule and rule.content_tone == 'professional' %}selected{% endif %}>Profesjonalny i techniczny</option>
+              <option value="storytelling" {% if rule and rule.content_tone == 'storytelling' %}selected{% endif %}>Storytelling i narracyjny</option>
+              <option value="persuasive" {% if rule and rule.content_tone == 'persuasive' %}selected{% endif %}>Perswazyjny i przekonujący</option>
+            </select>
+          </div>
+          <div class="ea-field">
+            <label>Tryb długości</label>
+            <div class="ea-switch">
+              <input type="checkbox" id="use_paragraph_mode" name="use_paragraph_mode"
+                     {% if rule and rule.use_paragraph_mode %}checked{% endif %}>
+              <div class="ea-switch-body">
+                <strong>Tryb akapitowy</strong>
+                <span>Generuj artykuły z określoną liczbą akapitów zamiast liczby słów.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ea-field" id="word_count_options" {% if rule and rule.use_paragraph_mode %}hidden{% endif %}>
+            <label for="content_length">Długość treści (słowa)</label>
+            <select class="form-select" id="content_length" name="content_length">
+              <option value="short" {% if rule and rule.content_length == 'short' %}selected{% endif %}>Krótki (~800 słów)</option>
+              <option value="medium" {% if rule and rule.content_length == 'medium' %}selected{% endif %}>Średni (~1200 słów)</option>
+              <option value="long" {% if rule and rule.content_length == 'long' %}selected{% endif %}>Długi (~1600 słów)</option>
+            </select>
+            <span class="ea-hint">Wybierz przybliżoną długość generowanych artykułów.</span>
+          </div>
+
+          <div class="ea-field" id="paragraph_options" {% if not rule or not rule.use_paragraph_mode %}hidden{% endif %}>
+            <label for="paragraph_count">Liczba akapitów</label>
+            <select class="form-select" id="paragraph_count" name="paragraph_count">
+              <option value="3" {% if rule and rule.paragraph_count == 3 %}selected{% endif %}>3 akapity (krótki artykuł)</option>
+              <option value="4" {% if not rule or rule.paragraph_count == 4 %}selected{% endif %}>4 akapity (zalecane)</option>
+              <option value="5" {% if rule and rule.paragraph_count == 5 %}selected{% endif %}>5 akapitów (średni)</option>
+              <option value="6" {% if rule and rule.paragraph_count == 6 %}selected{% endif %}>6 akapitów (długi)</option>
+            </select>
+            <span class="ea-hint">Każdy akapit obejmie inny aspekt tematu (plus wstęp i zakończenie).</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ea-section">
+        <h2 class="ea-section-head"><span class="ea-num">3</span> Harmonogram publikacji</h2>
+        <div class="ea-grid ea-grid--1">
+          <div class="ea-field">
+            <label>Dni publikacji</label>
+            <span class="ea-hint" style="margin-bottom:.5rem">Wybierz dni tygodnia, w których będzie publikowana treść.</span>
+            {% set days = rule.get_publishing_days() if rule else [0, 1, 2, 3, 4, 5, 6] %}
+            {% set day_names = [('Pon', 0), ('Wt', 1), ('Śr', 2), ('Czw', 3), ('Pt', 4), ('Sob', 5), ('Nd', 6)] %}
+            <div class="ea-days" role="group" aria-label="Dni publikacji">
+              {% for name, idx in day_names %}
+              <div class="ea-day">
+                <input type="checkbox" id="day{{ idx }}" name="publishing_days" value="{{ idx }}" {% if idx in days %}checked{% endif %}>
+                <label for="day{{ idx }}">{{ name }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="ea-grid" style="margin-top:1rem">
+          <div class="ea-field">
+            <label for="publishing_time">Godzina publikacji</label>
+            <input type="time" class="form-control" id="publishing_time" name="publishing_time" value="{{ rule.publishing_time if rule else '12:00' }}">
+            <span class="ea-hint">Czas publikacji w formacie 24-godzinnym.</span>
+          </div>
+          <div class="ea-field">
+            <label for="posts_per_day">Postów dziennie</label>
+            <input type="number" class="form-control" id="posts_per_day" name="posts_per_day" min="1" max="10" value="{{ rule.posts_per_day if rule else 1 }}">
+            <span class="ea-hint">Liczba postów publikowanych każdego dnia.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ea-section">
+        <h2 class="ea-section-head"><span class="ea-num">4</span> Kryteria wyboru tematów</h2>
+        <div class="ea-grid">
+          <div class="ea-field">
+            <label for="topic_min_score">Minimalny wynik tematu</label>
+            <div class="ea-range-wrap">
+              <input type="range" id="topic_min_score" name="topic_min_score" min="0" max="1" step="0.1"
+                     value="{{ rule.topic_min_score if rule else 0.7 }}"
+                     oninput="document.getElementById('scoreValue').textContent = this.value">
+              <div class="ea-range-row">
+                <span>Niska jakość (0.0)</span>
+                <span class="ea-range-value" id="scoreValue">{{ rule.topic_min_score if rule else 0.7 }}</span>
+                <span>Wysoka jakość (1.0)</span>
+              </div>
+            </div>
+            <span class="ea-hint">Używaj tylko tematów z wynikiem powyżej tego progu.</span>
+          </div>
+          <div class="ea-field">
+            <label for="categories">Kategorie</label>
+            <select class="form-select ea-multi" id="categories" name="categories" multiple size="5">
+              {% if selected_blog %}
+                {% for category in selected_blog.get_categories() %}
+                <option value="{{ category }}" {% if rule and category in rule.get_categories() %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+              {% else %}
+              <option value="" disabled>Wybierz najpierw blog, aby zobaczyć kategorie</option>
+              {% endif %}
+            </select>
+            <span class="ea-hint">Pozostaw puste, aby użyć wszystkich kategorii.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ea-section">
+        <h2 class="ea-section-head"><span class="ea-num">5</span> Ustawienia automatyczne</h2>
+        <div class="ea-grid">
+          <div class="ea-switch">
+            <input type="checkbox" id="auto_enable_topics" name="auto_enable_topics" {% if rule and rule.auto_enable_topics %}checked{% endif %}>
+            <div class="ea-switch-body">
+              <strong>Auto-zatwierdzanie tematów</strong>
+              <span>Automatycznie zatwierdzaj tematy spełniające minimalny próg jakości, bez ręcznej recenzji.</span>
+            </div>
+          </div>
+          <div class="ea-switch">
+            <input type="checkbox" id="auto_promote_content" name="auto_promote_content" {% if not rule or rule.auto_promote_content %}checked{% endif %}>
+            <div class="ea-switch-body">
+              <strong>Auto-promocja w social media</strong>
+              <span>Automatycznie publikuj nowe treści na podłączonych kontach social media.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="ea-actions">
+        <a href="{{ url_for('content_creator.automation_dashboard') }}" class="ea-btn ea-btn--ghost">Anuluj</a>
+        <button type="submit" class="ea-btn ea-btn--primary">
+          <i class="fas fa-{% if rule %}save{% else %}plus{% endif %}"></i>
+          {% if rule %}Zapisz zmiany{% else %}Utwórz regułę{% endif %}
+        </button>
+      </div>
     </div>
-</div>
-
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <form method="post" action="">
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <h4 class="mb-3">Basic Settings</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Rule Name</label>
-                            <input type="text" class="form-control" id="name" name="name" 
-                                   value="{{ rule.name if rule else '' }}" required>
-                            <div class="form-text">Give your automation rule a descriptive name</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="blog_id" class="form-label">Blog</label>
-                            <select class="form-select" id="blog_id" name="blog_id" required>
-                                <option value="">Select a blog</option>
-                                {% for blog in blogs %}
-                                <option value="{{ blog.id }}" 
-                                        {% if rule and rule.blog_id == blog.id %}selected{% endif %}>
-                                    {{ blog.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <div class="form-text">Select which blog this rule will create content for</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <h4 class="mb-3">Content Generation Settings</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="writing_style" class="form-label">Writing Style</label>
-                            <select class="form-select" id="writing_style" name="writing_style">
-                                <option value="informative" 
-                                        {% if rule and rule.content_tone == 'informative' %}selected{% endif %}>
-                                    Informative & Educational
-                                </option>
-                                <option value="conversational" 
-                                        {% if rule and rule.content_tone == 'conversational' %}selected{% endif %}>
-                                    Conversational & Friendly
-                                </option>
-                                <option value="professional" 
-                                        {% if rule and rule.content_tone == 'professional' %}selected{% endif %}>
-                                    Professional & Technical
-                                </option>
-                                <option value="storytelling" 
-                                        {% if rule and rule.content_tone == 'storytelling' %}selected{% endif %}>
-                                    Storytelling & Narrative
-                                </option>
-                                <option value="persuasive" 
-                                        {% if rule and rule.content_tone == 'persuasive' %}selected{% endif %}>
-                                    Persuasive & Compelling
-                                </option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="use_paragraph_mode" 
-                                       name="use_paragraph_mode" 
-                                       {% if rule and rule.use_paragraph_mode %}checked{% endif %}
-                                       onchange="toggleContentMode(this.checked)">
-                                <label class="form-check-label" for="use_paragraph_mode">
-                                    <strong>Use Paragraph-Based Generation</strong>
-                                </label>
-                                <div class="form-text">
-                                    Generate articles based on a fixed number of paragraphs instead of word count
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row g-3 mt-2">
-                        <!-- Word count mode options -->
-                        <div class="col-md-6" id="word_count_options" style="{% if rule and rule.use_paragraph_mode %}display: none;{% endif %}">
-                            <label for="content_length" class="form-label">Content Length</label>
-                            <select class="form-select" id="content_length" name="content_length">
-                                <option value="short" 
-                                        {% if rule and rule.content_length == 'short' %}selected{% endif %}>
-                                    Short (~800 words)
-                                </option>
-                                <option value="medium" 
-                                        {% if rule and rule.content_length == 'medium' %}selected{% endif %}>
-                                    Medium (~1200 words)
-                                </option>
-                                <option value="long" 
-                                        {% if rule and rule.content_length == 'long' %}selected{% endif %}>
-                                    Long (~1600 words)
-                                </option>
-                            </select>
-                            <div class="form-text">Select the approximate length of generated articles</div>
-                        </div>
-                        
-                        <!-- Paragraph mode options -->
-                        <div class="col-md-6" id="paragraph_options" style="{% if not rule or not rule.use_paragraph_mode %}display: none;{% endif %}">
-                            <label for="paragraph_count" class="form-label">Number of Paragraphs</label>
-                            <select class="form-select" id="paragraph_count" name="paragraph_count">
-                                <option value="3" {% if rule and rule.paragraph_count == 3 %}selected{% endif %}>
-                                    3 paragraphs (short article)
-                                </option>
-                                <option value="4" {% if not rule or rule.paragraph_count == 4 %}selected{% endif %}>
-                                    4 paragraphs (recommended)
-                                </option>
-                                <option value="5" {% if rule and rule.paragraph_count == 5 %}selected{% endif %}>
-                                    5 paragraphs (medium article)
-                                </option>
-                                <option value="6" {% if rule and rule.paragraph_count == 6 %}selected{% endif %}>
-                                    6 paragraphs (long article)
-                                </option>
-                            </select>
-                            <div class="form-text">
-                                Each paragraph will focus on a distinct aspect of the topic, plus introduction and conclusion
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <h4 class="mb-3">Publishing Settings</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Publishing Days</label>
-                            <div class="form-text mb-2">Select which days of the week to publish content</div>
-                            
-                            {% set days = rule.get_publishing_days() if rule else [0, 1, 2, 3, 4, 5, 6] %}
-                            <div class="btn-group d-flex flex-wrap" role="group">
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day0" name="publishing_days" value="0"
-                                           {% if 0 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day0">Monday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day1" name="publishing_days" value="1"
-                                           {% if 1 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day1">Tuesday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day2" name="publishing_days" value="2"
-                                           {% if 2 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day2">Wednesday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day3" name="publishing_days" value="3"
-                                           {% if 3 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day3">Thursday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day4" name="publishing_days" value="4"
-                                           {% if 4 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day4">Friday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day5" name="publishing_days" value="5"
-                                           {% if 5 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day5">Saturday</label>
-                                </div>
-                                <div class="form-check form-switch ms-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="day6" name="publishing_days" value="6"
-                                           {% if 6 in days %}checked{% endif %}>
-                                    <label class="form-check-label" for="day6">Sunday</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="publishing_time" class="form-label">Publishing Time</label>
-                                    <input type="time" class="form-control" id="publishing_time" name="publishing_time"
-                                           value="{{ rule.publishing_time if rule else '12:00' }}">
-                                    <div class="form-text">Time of day to publish (24-hour format)</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="posts_per_day" class="form-label">Posts Per Day</label>
-                                    <input type="number" class="form-control" id="posts_per_day" name="posts_per_day" 
-                                           min="1" max="10" value="{{ rule.posts_per_day if rule else 1 }}">
-                                    <div class="form-text">Number of posts to publish each day</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <h4 class="mb-3">Topic Selection Criteria</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="topic_min_score" class="form-label">Minimum Topic Score</label>
-                            <input type="range" class="form-range" id="topic_min_score" name="topic_min_score" 
-                                   min="0" max="1" step="0.1" value="{{ rule.topic_min_score if rule else 0.7 }}"
-                                   oninput="updateScoreValue(this.value)">
-                            <div class="d-flex justify-content-between">
-                                <span>Low Quality (0.0)</span>
-                                <span id="scoreValue">{{ rule.topic_min_score if rule else 0.7 }}</span>
-                                <span>High Quality (1.0)</span>
-                            </div>
-                            <div class="form-text">Only use topics with a score at or above this threshold</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="categories" class="form-label">Categories</label>
-                            <select class="form-select" id="categories" name="categories" multiple size="5">
-                                {% if selected_blog %}
-                                {% for category in selected_blog.get_categories() %}
-                                <option value="{{ category }}" 
-                                        {% if rule and category in rule.get_categories() %}selected{% endif %}>
-                                    {{ category }}
-                                </option>
-                                {% endfor %}
-                                {% else %}
-                                <option value="" disabled>Select a blog first to see categories</option>
-                                {% endif %}
-                            </select>
-                            <div class="form-text">Leave empty to use all categories or select specific ones</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <h4 class="mb-3">Auto-scheduling Settings</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="auto_enable_topics" name="auto_enable_topics" 
-                                       {% if rule and rule.auto_enable_topics %}checked{% endif %}>
-                                <label class="form-check-label" for="auto_enable_topics">
-                                    Auto-approve topics that meet quality criteria
-                                </label>
-                            </div>
-                            <div class="form-text ms-4">
-                                Automatically approve topics that meet the minimum score without manual review
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="auto_promote_content" name="auto_promote_content" 
-                                       {% if not rule or rule.auto_promote_content %}checked{% endif %}>
-                                <label class="form-check-label" for="auto_promote_content">
-                                    Auto-promote content to social media
-                                </label>
-                            </div>
-                            <div class="form-text ms-4">
-                                Automatically post newly published content to connected social media accounts
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12 text-end">
-                    <a href="{{ url_for('content_creator.automation_dashboard') }}" class="btn btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">
-                        {% if rule %}Update{% else %}Create{% endif %} Automation Rule
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function updateScoreValue(value) {
-        document.getElementById('scoreValue').textContent = value;
+(function() {
+  'use strict';
+
+  // Toggle akapitowy <-> słowny
+  const useParagraphMode = document.getElementById('use_paragraph_mode');
+  const wordCountOptions = document.getElementById('word_count_options');
+  const paragraphOptions = document.getElementById('paragraph_options');
+  function syncMode() {
+    if (useParagraphMode.checked) {
+      wordCountOptions.hidden = true;
+      paragraphOptions.hidden = false;
+    } else {
+      wordCountOptions.hidden = false;
+      paragraphOptions.hidden = true;
     }
-    
-    // Toggle between word count and paragraph based modes
-    function toggleContentMode(useParagraphMode) {
-        const wordCountOptions = document.getElementById('word_count_options');
-        const paragraphOptions = document.getElementById('paragraph_options');
-        
-        if (useParagraphMode) {
-            wordCountOptions.style.display = 'none';
-            paragraphOptions.style.display = 'block';
+  }
+  useParagraphMode.addEventListener('change', syncMode);
+  syncMode();
+
+  // Załaduj kategorie po wyborze bloga
+  const blogSelect = document.getElementById('blog_id');
+  const categoriesSelect = document.getElementById('categories');
+  blogSelect.addEventListener('change', function() {
+    const blogId = this.value;
+    if (!blogId) return;
+    categoriesSelect.innerHTML = '<option value="">Ładowanie kategorii…</option>';
+    fetch(`/api/blogs/${blogId}/categories`)
+      .then(r => r.json())
+      .then(data => {
+        categoriesSelect.innerHTML = '';
+        if (data.success && data.categories && data.categories.length > 0) {
+          data.categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            categoriesSelect.appendChild(opt);
+          });
         } else {
-            wordCountOptions.style.display = 'block';
-            paragraphOptions.style.display = 'none';
+          categoriesSelect.innerHTML = '<option value="" disabled>Brak kategorii</option>';
         }
-    }
-    
-    // When blog selection changes, load categories for that blog
-    document.getElementById('blog_id').addEventListener('change', function() {
-        const blogId = this.value;
-        if (!blogId) return;
-        
-        console.log(`Loading categories for blog ID: ${blogId}`);
-        
-        // Show loading indicator
-        const categoriesSelect = document.getElementById('categories');
-        categoriesSelect.innerHTML = '<option value="">Loading categories...</option>';
-        
-        fetch(`/api/blogs/${blogId}/categories`)
-            .then(response => {
-                console.log('Categories API response:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Categories data:', data);
-                categoriesSelect.innerHTML = '';
-                
-                if (data.success && data.categories && data.categories.length > 0) {
-                    data.categories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.id;
-                        option.textContent = category.name;
-                        categoriesSelect.appendChild(option);
-                    });
-                } else {
-                    categoriesSelect.innerHTML = '<option value="">No categories found</option>';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading categories:', error);
-                categoriesSelect.innerHTML = '<option value="">Error loading categories</option>';
-            });
-    });
-    
-    // Initialize the content mode toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const useParagraphMode = document.getElementById('use_paragraph_mode').checked;
-        toggleContentMode(useParagraphMode);
-    });
+      })
+      .catch(err => {
+        console.error('Categories error:', err);
+        categoriesSelect.innerHTML = '<option value="" disabled>Błąd ładowania kategorii</option>';
+        if (window.Toast && Toast.error) Toast.error('Nie udało się załadować kategorii');
+      });
+  });
+})();
 </script>
 {% endblock %}

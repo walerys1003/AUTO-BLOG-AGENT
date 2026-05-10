@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Użytkownicy — MasterContentAI{% endblock %}
+
+{% block page_title %}Użytkownicy{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj kontami, rolami i dostępem do platformy.</p>{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-accent" type="button" onclick="document.getElementById('createUserModal').classList.add('is-open');document.getElementById('createUserBackdrop').classList.add('is-open');">
+    <i class="fas fa-user-plus"></i> Nowy użytkownik
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Lista kont ({{ users|length }})</h3>
+            <div class="card-subtitle">Role: admin (pełen dostęp), editor (treść), viewer (odczyt).</div>
+        </div>
+    </div>
+
+    {% if users %}
+    <div class="table-wrapper" style="border:0;border-radius:0;">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Użytkownik</th>
+                    <th>Rola</th>
+                    <th>Status</th>
+                    <th>Ostatnie logowanie</th>
+                    <th>Utworzone</th>
+                    <th style="text-align:right;">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <span class="avatar avatar-sm">{{ u.initials }}</span>
+                            <div>
+                                <div style="font-weight:600;color:var(--text-primary);">{{ u.full_name or u.username }}</div>
+                                <div class="text-muted text-xs">{{ u.email }} · @{{ u.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                            <span class="badge badge-pill" style="background:var(--brand-accent-soft);color:var(--brand-accent-hover);">Admin</span>
+                        {% elif u.role == 'editor' %}
+                            <span class="badge badge-pill badge-info">Editor</span>
+                        {% else %}
+                            <span class="badge badge-pill">Viewer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge badge-pill badge-success"><span class="badge-dot" style="background:var(--status-success-solid);"></span> Aktywny</span>
+                        {% else %}
+                            <span class="badge badge-pill badge-danger">Nieaktywny</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-sm text-muted">{{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '—' }}</td>
+                    <td class="text-sm text-muted">{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+                    <td style="text-align:right;">
+                        <button class="btn btn-ghost btn-xs" type="button"
+                                onclick="document.getElementById('editUser-{{ u.id }}').classList.add('is-open');document.getElementById('editUserBackdrop-{{ u.id }}').classList.add('is-open');">
+                            <i class="fas fa-pen"></i> Edytuj
+                        </button>
+                        {% if current_user and u.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('auth.delete_user', user_id=u.id) }}" style="display:inline;"
+                              data-confirm="Czy na pewno chcesz usunąć użytkownika {{ u.username }}? Tej operacji nie można cofnąć.">
+                            <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--status-danger-fg);">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-users"></i></div>
+            <div class="empty-state-title">Brak użytkowników</div>
+            <p class="text-muted">Dodaj pierwszego użytkownika, by zacząć współpracę.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{# ----------------------------------------------------------- Create user modal #}
+<div class="modal-backdrop" id="createUserBackdrop"
+     onclick="this.classList.remove('is-open');document.getElementById('createUserModal').classList.remove('is-open');"></div>
+<div class="modal" id="createUserModal" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('auth.create_user') }}" novalidate>
+            <div class="modal-header">
+                <h3 class="modal-title">Nowy użytkownik</h3>
+                <button type="button" class="modal-close" aria-label="Zamknij"
+                        onclick="document.getElementById('createUserModal').classList.remove('is-open');document.getElementById('createUserBackdrop').classList.remove('is-open');">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="new-username">Nazwa użytkownika <span class="required">*</span></label>
+                    <input id="new-username" name="username" type="text" class="form-control" required minlength="3" placeholder="np. anna">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="new-email">Email <span class="required">*</span></label>
+                    <input id="new-email" name="email" type="email" class="form-control" required placeholder="anna@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="new-fullname">Imię i nazwisko</label>
+                    <input id="new-fullname" name="full_name" type="text" class="form-control" placeholder="Anna Kowalska">
+                </div>
+                <div class="grid grid-cols-2" style="gap:var(--space-4);">
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label" for="new-role">Rola <span class="required">*</span></label>
+                        <select id="new-role" name="role" class="form-control form-select" required>
+                            {% for r in valid_roles %}
+                                <option value="{{ r }}" {% if r == 'editor' %}selected{% endif %}>{{ r|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label" for="new-password">Hasło <span class="required">*</span></label>
+                        <input id="new-password" name="password" type="password" class="form-control" required minlength="8" placeholder="Min. 8 znaków">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('createUserModal').classList.remove('is-open');document.getElementById('createUserBackdrop').classList.remove('is-open');">Anuluj</button>
+                <button type="submit" class="btn btn-accent">Utwórz</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ----------------------------------------------------------- Edit user modals (one per user) #}
+{% for u in users %}
+<div class="modal-backdrop" id="editUserBackdrop-{{ u.id }}"
+     onclick="this.classList.remove('is-open');document.getElementById('editUser-{{ u.id }}').classList.remove('is-open');"></div>
+<div class="modal" id="editUser-{{ u.id }}" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('auth.update_user', user_id=u.id) }}" novalidate>
+            <div class="modal-header">
+                <h3 class="modal-title">Edytuj: {{ u.username }}</h3>
+                <button type="button" class="modal-close" aria-label="Zamknij"
+                        onclick="document.getElementById('editUser-{{ u.id }}').classList.remove('is-open');document.getElementById('editUserBackdrop-{{ u.id }}').classList.remove('is-open');">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Imię i nazwisko</label>
+                    <input name="full_name" type="text" class="form-control" value="{{ u.full_name or '' }}">
+                </div>
+                <div class="grid grid-cols-2" style="gap:var(--space-4);">
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label">Rola</label>
+                        <select name="role" class="form-control form-select">
+                            {% for r in valid_roles %}
+                                <option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ r|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label">Status</label>
+                        <label class="form-switch" style="margin-top:.5rem;">
+                            <input type="checkbox" name="is_active" value="1" class="form-switch-input" {% if u.is_active %}checked{% endif %}>
+                            <span>Konto aktywne</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Nowe hasło</label>
+                    <input name="new_password" type="password" class="form-control" minlength="8" placeholder="Min. 8 znaków — pozostaw puste, by nie zmieniać">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('editUser-{{ u.id }}').classList.remove('is-open');document.getElementById('editUserBackdrop-{{ u.id }}').classList.remove('is-open');">Anuluj</button>
+                <button type="submit" class="btn btn-primary">Zapisz</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

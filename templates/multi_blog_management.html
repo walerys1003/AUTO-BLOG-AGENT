@@ -1,521 +1,532 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zarządzanie Wieloma Blogami - Blog Automation Master</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-robot me-2"></i>Blog Automation Master
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/multi-blog">Blogi</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/automation/dashboard">Automatyzacja</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="fas fa-globe me-2"></i>Zarządzanie Wieloma Blogami</h2>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBlogModal">
-                        <i class="fas fa-plus me-2"></i>Dodaj Nowy Blog
-                    </button>
-                </div>
-            </div>
-        </div>
+{% block title %}Zarządzanie wieloma blogami — MasterContentAI{% endblock %}
 
-        <!-- Status Overview -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-success">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Aktywne Blogi</h5>
-                        <h2 id="active-blogs-count">1</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Nieaktywne Blogi</h5>
-                        <h2 id="inactive-blogs-count">2</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Artykuły Dziennie</h5>
-                        <h2 id="daily-articles-count">4</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-primary">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Potencjał (Wszystkie)</h5>
-                        <h2 id="potential-articles-count">9</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
+{% block content %}
+<style>
+  .mb-page { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .mb-breadcrumb { font-size: .85rem; color: var(--text-3); margin-bottom: .75rem; }
+  .mb-breadcrumb a { color: var(--text-2); text-decoration: none; }
+  .mb-breadcrumb a:hover { color: var(--brand-700); }
 
-        <!-- Blog List -->
-        <div class="row" id="blogs-container">
-            <!-- Blogi będą ładowane dynamicznie -->
-        </div>
+  .mb-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .mb-header h1 { font-size: 1.65rem; font-weight: 700; margin: 0 0 .35rem; color: var(--text-1); }
+  .mb-header p { margin: 0; color: var(--text-2); font-size: .95rem; max-width: 720px; }
+
+  .mb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 900px) { .mb-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .mb-stats { grid-template-columns: 1fr; } }
+  .mb-stat {
+    background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 12px;
+    padding: 1rem 1.15rem; display: flex; flex-direction: column; gap: .25rem;
+    border-left: 4px solid var(--brand-600);
+  }
+  .mb-stat--success { border-left-color: var(--success-700); }
+  .mb-stat--warning { border-left-color: #d97706; }
+  .mb-stat--info { border-left-color: var(--brand-600); }
+  .mb-stat--brand { border-left-color: #4338ca; }
+  .mb-stat__label { font-size: .8rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+  .mb-stat__value { font-size: 1.85rem; font-weight: 700; color: var(--text-1); }
+
+  .mb-blogs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+
+  .mb-card {
+    background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column;
+    transition: box-shadow .15s, transform .05s;
+  }
+  .mb-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,.08); }
+  .mb-card__head { padding: .85rem 1rem; border-bottom: 1px solid var(--border-1); display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .mb-card__title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mb-card__body { padding: 1rem; flex: 1; }
+  .mb-card__foot { padding: .75rem 1rem; border-top: 1px solid var(--border-1); background: var(--surface-2); display: flex; gap: .35rem; }
+
+  .mb-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .mb-badge--success { background: var(--success-50); color: var(--success-700); }
+  .mb-badge--warning { background: var(--warning-50); color: #92400e; }
+  .mb-badge--neutral { background: var(--surface-3); color: var(--text-2); }
+
+  .mb-link { font-size: .82rem; color: var(--text-2); text-decoration: none; word-break: break-all; }
+  .mb-link:hover { color: var(--brand-700); text-decoration: underline; }
+
+  .mb-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: .85rem 0; border: 1px solid var(--border-1); border-radius: 8px; overflow: hidden; }
+  .mb-meta { padding: .55rem; text-align: center; border-right: 1px solid var(--border-1); }
+  .mb-meta:last-child { border-right: 0; }
+  .mb-meta__value { font-size: 1.1rem; font-weight: 700; color: var(--text-1); }
+  .mb-meta__label { font-size: .72rem; color: var(--text-3); text-transform: uppercase; }
+
+  .mb-rules-list { margin: .65rem 0 0; }
+  .mb-rules-list__hint { font-size: .78rem; color: var(--text-3); margin: 0 0 .35rem; }
+  .mb-rules-list__row { display: flex; justify-content: space-between; align-items: center; gap: .35rem; padding: .25rem 0; font-size: .82rem; }
+
+  .mb-btn {
+    border: 0; border-radius: 8px; padding: .5rem .85rem; cursor: pointer;
+    font-size: .85rem; font-weight: 500; font-family: inherit;
+    display: inline-flex; align-items: center; gap: .35rem;
+    transition: background .15s, transform .05s;
+  }
+  .mb-btn:active { transform: translateY(1px); }
+  .mb-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .mb-btn--primary { background: var(--brand-600); color: #fff; }
+  .mb-btn--primary:hover:not(:disabled) { background: var(--brand-700); }
+  .mb-btn--ghost { background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-2); }
+  .mb-btn--ghost:hover:not(:disabled) { background: var(--surface-3); }
+  .mb-btn--sm { padding: .35rem .55rem; font-size: .78rem; flex: 1; justify-content: center; }
+  .mb-btn--success { background: var(--success-700); color: #fff; }
+  .mb-btn--success:hover:not(:disabled) { background: #047857; }
+  .mb-btn--warning { background: #d97706; color: #fff; }
+  .mb-btn--warning:hover:not(:disabled) { background: #b45309; }
+  .mb-btn--info { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-600); }
+  .mb-btn--info:hover:not(:disabled) { background: var(--brand-600); color: #fff; }
+
+  .mb-empty { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-3); border: 2px dashed var(--border-2); border-radius: 12px; }
+
+  /* Native modal */
+  .mb-modal { position: fixed; inset: 0; z-index: 1100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+  .mb-modal[aria-hidden="false"] { display: flex; }
+  .mb-modal__backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.45); }
+  .mb-modal__dialog {
+    position: relative; background: var(--surface-1); border-radius: 14px; width: 100%; max-width: 760px;
+    max-height: calc(100vh - 2rem); display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(15,23,42,.25); overflow: hidden;
+  }
+  .mb-modal__head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); display: flex; justify-content: space-between; align-items: center; }
+  .mb-modal__head h2 { margin: 0; font-size: 1.1rem; color: var(--text-1); font-weight: 600; }
+  .mb-modal__close { background: transparent; border: 0; cursor: pointer; color: var(--text-3); font-size: 1.3rem; padding: .25rem .5rem; border-radius: 6px; }
+  .mb-modal__close:hover { background: var(--surface-2); color: var(--text-1); }
+  .mb-modal__body { padding: 1.25rem; overflow-y: auto; }
+  .mb-modal__foot { padding: .85rem 1.25rem; border-top: 1px solid var(--border-1); display: flex; justify-content: flex-end; gap: .5rem; background: var(--surface-2); }
+
+  .mb-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  @media (max-width: 600px) { .mb-form-grid { grid-template-columns: 1fr; } }
+  .mb-field { display: flex; flex-direction: column; gap: .35rem; }
+  .mb-field label { font-size: .85rem; font-weight: 500; color: var(--text-2); }
+  .mb-field input, .mb-field textarea {
+    padding: .55rem .75rem; border: 1px solid var(--border-2); border-radius: 8px;
+    background: var(--surface-1); color: var(--text-1); font-size: .92rem; font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .mb-field input:focus, .mb-field textarea:focus {
+    outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+  }
+  .mb-field__hint { font-size: .78rem; color: var(--text-3); }
+  .mb-check { display: flex; align-items: center; gap: .5rem; font-size: .9rem; color: var(--text-1); cursor: pointer; }
+  .mb-check input { width: 16px; height: 16px; accent-color: var(--brand-600); }
+</style>
+
+<div class="mb-page">
+  <div class="mb-breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Pulpit</a> &rsaquo; <span>Zarządzanie blogami</span>
+  </div>
+
+  <div class="mb-header">
+    <div>
+      <h1><i class="fas fa-globe" aria-hidden="true"></i> Zarządzanie wieloma blogami</h1>
+      <p>Centralny widok konfiguracji blogów WordPress podłączonych do platformy. Dodawaj, edytuj i monitoruj reguły automatyzacji w jednym miejscu.</p>
     </div>
+    <button class="mb-btn mb-btn--primary" type="button" data-open-modal="addBlogModal">
+      <i class="fas fa-plus" aria-hidden="true"></i> Dodaj nowy blog
+    </button>
+  </div>
 
-    <!-- Add Blog Modal -->
-    <div class="modal fade" id="addBlogModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Dodaj Nowy Blog WordPress</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addBlogForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="blogName" class="form-label">Nazwa Bloga</label>
-                                    <input type="text" class="form-control" id="blogName" required>
-                                    <div class="form-text">Np. "ZnaneKosmetyki.pl"</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="blogUrl" class="form-label">URL Bloga</label>
-                                    <input type="url" class="form-control" id="blogUrl" required>
-                                    <div class="form-text">https://example.com/</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="blogUsername" class="form-label">Username WordPress</label>
-                                    <input type="text" class="form-control" id="blogUsername" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="blogToken" class="form-label">Application Password</label>
-                                    <input type="password" class="form-control" id="blogToken" required>
-                                    <div class="form-text">Utwórz w WP Admin → Users → Application Passwords</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="blogApiUrl" class="form-label">API URL</label>
-                            <input type="url" class="form-control" id="blogApiUrl" required>
-                            <div class="form-text">https://example.com/wp-json/wp/v2/</div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="blogActive" checked>
-                                        <label class="form-check-label" for="blogActive">
-                                            Aktywuj po dodaniu
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="blogApprovalRequired">
-                                        <label class="form-check-label" for="blogApprovalRequired">
-                                            Wymagaj zatwierdzenia przed publikacją
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="button" class="btn btn-primary" onclick="addBlog()">
-                        <i class="fas fa-plus me-2"></i>Dodaj Blog
-                    </button>
-                </div>
-            </div>
-        </div>
+  <!-- Statystyki -->
+  <div class="mb-stats">
+    <div class="mb-stat mb-stat--success">
+      <span class="mb-stat__label">Aktywne blogi</span>
+      <span class="mb-stat__value" id="active-blogs-count">0</span>
     </div>
-
-    <!-- Edit Blog Modal -->
-    <div class="modal fade" id="editBlogModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edytuj Blog</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editBlogForm">
-                        <input type="hidden" id="editBlogId">
-                        <!-- Same form fields as add blog -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editBlogName" class="form-label">Nazwa Bloga</label>
-                                    <input type="text" class="form-control" id="editBlogName" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editBlogUrl" class="form-label">URL Bloga</label>
-                                    <input type="url" class="form-control" id="editBlogUrl" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editBlogUsername" class="form-label">Username WordPress</label>
-                                    <input type="text" class="form-control" id="editBlogUsername" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editBlogToken" class="form-label">Application Password</label>
-                                    <input type="password" class="form-control" id="editBlogToken">
-                                    <div class="form-text">Zostaw puste aby nie zmieniać</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="editBlogApiUrl" class="form-label">API URL</label>
-                            <input type="url" class="form-control" id="editBlogApiUrl" required>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="editBlogActive">
-                                        <label class="form-check-label" for="editBlogActive">
-                                            Blog aktywny
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="editBlogApprovalRequired">
-                                        <label class="form-check-label" for="editBlogApprovalRequired">
-                                            Wymagaj zatwierdzenia przed publikacją
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="button" class="btn btn-primary" onclick="updateBlog()">
-                        <i class="fas fa-save me-2"></i>Zapisz Zmiany
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="mb-stat mb-stat--warning">
+      <span class="mb-stat__label">Nieaktywne blogi</span>
+      <span class="mb-stat__value" id="inactive-blogs-count">0</span>
     </div>
+    <div class="mb-stat mb-stat--info">
+      <span class="mb-stat__label">Artykuły dziennie</span>
+      <span class="mb-stat__value" id="daily-articles-count">0</span>
+    </div>
+    <div class="mb-stat mb-stat--brand">
+      <span class="mb-stat__label">Potencjał (wszystkie)</span>
+      <span class="mb-stat__value" id="potential-articles-count">0</span>
+    </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Load blogs on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadBlogs();
-        });
+  <!-- Lista blogów -->
+  <div class="mb-blogs" id="blogs-container">
+    <div class="mb-empty">Wczytywanie blogów…</div>
+  </div>
+</div>
 
-        function loadBlogs() {
-            fetch('/api/blogs')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        displayBlogs(data.blogs);
-                        updateStats(data.blogs);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading blogs:', error);
-                });
-        }
+<!-- Modal: Dodaj blog -->
+<div class="mb-modal" id="addBlogModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="addBlogTitle">
+  <div class="mb-modal__backdrop" data-close></div>
+  <div class="mb-modal__dialog">
+    <div class="mb-modal__head">
+      <h2 id="addBlogTitle">Dodaj nowy blog WordPress</h2>
+      <button class="mb-modal__close" type="button" aria-label="Zamknij" data-close>&times;</button>
+    </div>
+    <div class="mb-modal__body">
+      <form id="addBlogForm">
+        <div class="mb-form-grid">
+          <div class="mb-field">
+            <label for="blogName">Nazwa bloga</label>
+            <input type="text" id="blogName" required placeholder="np. ZnaneKosmetyki.pl">
+          </div>
+          <div class="mb-field">
+            <label for="blogUrl">URL bloga</label>
+            <input type="url" id="blogUrl" required placeholder="https://example.com/">
+          </div>
+          <div class="mb-field">
+            <label for="blogUsername">Nazwa użytkownika WordPress</label>
+            <input type="text" id="blogUsername" required>
+          </div>
+          <div class="mb-field">
+            <label for="blogToken">Hasło aplikacji</label>
+            <input type="password" id="blogToken" required>
+            <span class="mb-field__hint">Wygeneruj w WP Admin → Użytkownicy → Hasła aplikacji.</span>
+          </div>
+        </div>
+        <div class="mb-field" style="margin-top:1rem;">
+          <label for="blogApiUrl">Adres API</label>
+          <input type="url" id="blogApiUrl" required placeholder="https://example.com/wp-json/wp/v2/">
+        </div>
+        <div class="mb-form-grid" style="margin-top:1rem;">
+          <label class="mb-check"><input type="checkbox" id="blogActive" checked> Aktywuj po dodaniu</label>
+          <label class="mb-check"><input type="checkbox" id="blogApprovalRequired"> Wymagaj zatwierdzenia przed publikacją</label>
+        </div>
+      </form>
+    </div>
+    <div class="mb-modal__foot">
+      <button type="button" class="mb-btn mb-btn--ghost" data-close>Anuluj</button>
+      <button type="button" class="mb-btn mb-btn--primary" id="addBlogSubmit">
+        <i class="fas fa-plus" aria-hidden="true"></i> Dodaj blog
+      </button>
+    </div>
+  </div>
+</div>
 
-        function displayBlogs(blogs) {
-            const container = document.getElementById('blogs-container');
-            container.innerHTML = '';
+<!-- Modal: Edytuj blog -->
+<div class="mb-modal" id="editBlogModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="editBlogTitle">
+  <div class="mb-modal__backdrop" data-close></div>
+  <div class="mb-modal__dialog">
+    <div class="mb-modal__head">
+      <h2 id="editBlogTitle">Edytuj blog</h2>
+      <button class="mb-modal__close" type="button" aria-label="Zamknij" data-close>&times;</button>
+    </div>
+    <div class="mb-modal__body">
+      <form id="editBlogForm">
+        <input type="hidden" id="editBlogId">
+        <div class="mb-form-grid">
+          <div class="mb-field">
+            <label for="editBlogName">Nazwa bloga</label>
+            <input type="text" id="editBlogName" required>
+          </div>
+          <div class="mb-field">
+            <label for="editBlogUrl">URL bloga</label>
+            <input type="url" id="editBlogUrl" required>
+          </div>
+          <div class="mb-field">
+            <label for="editBlogUsername">Nazwa użytkownika WordPress</label>
+            <input type="text" id="editBlogUsername" required>
+          </div>
+          <div class="mb-field">
+            <label for="editBlogToken">Hasło aplikacji</label>
+            <input type="password" id="editBlogToken">
+            <span class="mb-field__hint">Pozostaw puste, aby nie zmieniać.</span>
+          </div>
+        </div>
+        <div class="mb-field" style="margin-top:1rem;">
+          <label for="editBlogApiUrl">Adres API</label>
+          <input type="url" id="editBlogApiUrl" required>
+        </div>
+        <div class="mb-form-grid" style="margin-top:1rem;">
+          <label class="mb-check"><input type="checkbox" id="editBlogActive"> Blog aktywny</label>
+          <label class="mb-check"><input type="checkbox" id="editBlogApprovalRequired"> Wymagaj zatwierdzenia przed publikacją</label>
+        </div>
+      </form>
+    </div>
+    <div class="mb-modal__foot">
+      <button type="button" class="mb-btn mb-btn--ghost" data-close>Anuluj</button>
+      <button type="button" class="mb-btn mb-btn--primary" id="updateBlogSubmit">
+        <i class="fas fa-save" aria-hidden="true"></i> Zapisz zmiany
+      </button>
+    </div>
+  </div>
+</div>
 
-            blogs.forEach(blog => {
-                const blogCard = createBlogCard(blog);
-                container.appendChild(blogCard);
-            });
-        }
+<script>
+(function () {
+  'use strict';
 
-        function createBlogCard(blog) {
-            const col = document.createElement('div');
-            col.className = 'col-md-6 col-lg-4 mb-4';
+  // ---------- Helpers ----------
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function notifyError(msg) {
+    if (window.Toast && Toast.error) Toast.error(msg);
+    else alert(msg);
+  }
+  function notifySuccess(msg) {
+    if (window.Toast && Toast.success) Toast.success(msg);
+  }
+  function setLoading(btn, loading, loadingLabel) {
+    if (!btn) return;
+    if (loading) {
+      btn.dataset._origLabel = btn.innerHTML;
+      btn.innerHTML = loadingLabel || 'Przetwarzanie…';
+      btn.disabled = true;
+    } else {
+      if (btn.dataset._origLabel) btn.innerHTML = btn.dataset._origLabel;
+      btn.disabled = false;
+      delete btn.dataset._origLabel;
+    }
+  }
 
-            const statusClass = blog.active ? 'success' : 'warning';
-            const statusIcon = blog.active ? 'check-circle' : 'pause-circle';
-            const statusText = blog.active ? 'AKTYWNY' : 'NIEAKTYWNY';
+  // ---------- Native modal ----------
+  function openModal(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    const focusable = m.querySelector('input, textarea, button:not([data-close])');
+    if (focusable) focusable.focus();
+  }
+  function closeModal(m) {
+    if (!m) return;
+    m.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', function (e) {
+    const opener = e.target.closest('[data-open-modal]');
+    if (opener) { e.preventDefault(); openModal(opener.dataset.openModal); return; }
+    const closer = e.target.closest('[data-close]');
+    if (closer) { closeModal(closer.closest('.mb-modal')); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.mb-modal[aria-hidden="false"]').forEach(closeModal);
+    }
+  });
 
-            col.innerHTML = `
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">${blog.name}</h6>
-                        <span class="badge bg-${statusClass}">
-                            <i class="fas fa-${statusIcon} me-1"></i>${statusText}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            <small class="text-muted">
-                                <i class="fas fa-link me-1"></i>
-                                <a href="${blog.url}" target="_blank">${blog.url}</a>
-                            </small>
-                        </p>
-                        
-                        <div class="row text-center mb-3">
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <strong>${blog.categories_count || 0}</strong>
-                                    <br><small>Kategorie</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <strong>${blog.articles_count || 0}</strong>
-                                    <br><small>Artykuły</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <strong>${blog.rules_count || 0}</strong>
-                                <br><small>Reguły</small>
-                            </div>
-                        </div>
+  // ---------- Load blogs ----------
+  function loadBlogs() {
+    fetch('/api/blogs')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Błąd ładowania blogów');
+        displayBlogs(data.blogs || []);
+        updateStats(data.blogs || []);
+      })
+      .catch(err => {
+        document.getElementById('blogs-container').innerHTML =
+          '<div class="mb-empty">Nie udało się załadować blogów: ' + escHtml(err.message) + '</div>';
+        notifyError('Błąd ładowania: ' + err.message);
+      });
+  }
 
-                        ${blog.automation_rules && blog.automation_rules.length > 0 ? `
-                            <div class="mb-3">
-                                <small class="text-muted">Reguły automatyzacji:</small>
-                                ${blog.automation_rules.map(rule => `
-                                    <div class="d-flex justify-content-between align-items-center mt-1">
-                                        <span class="badge ${rule.is_active ? 'bg-success' : 'bg-secondary'}">${rule.name}</span>
-                                        <small>${rule.posts_per_day} art./dzień</small>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="card-footer">
-                        <div class="btn-group w-100" role="group">
-                            <button class="btn btn-outline-primary btn-sm" onclick="editBlog(${blog.id})">
-                                <i class="fas fa-edit me-1"></i>Edytuj
-                            </button>
-                            <button class="btn btn-outline-${blog.active ? 'warning' : 'success'} btn-sm" onclick="toggleBlogStatus(${blog.id}, ${!blog.active})">
-                                <i class="fas fa-${blog.active ? 'pause' : 'play'} me-1"></i>${blog.active ? 'Zatrzymaj' : 'Aktywuj'}
-                            </button>
-                            <button class="btn btn-outline-info btn-sm" onclick="syncCategories(${blog.id})">
-                                <i class="fas fa-sync me-1"></i>Sync
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+  function displayBlogs(blogs) {
+    const container = document.getElementById('blogs-container');
+    if (!blogs.length) {
+      container.innerHTML = '<div class="mb-empty"><i class="fas fa-inbox" aria-hidden="true" style="font-size:1.6rem;display:block;margin-bottom:.5rem;"></i>Brak blogów. Kliknij „Dodaj nowy blog”, aby zacząć.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    blogs.forEach(blog => container.appendChild(createBlogCard(blog)));
+  }
 
-            return col;
-        }
+  function createBlogCard(blog) {
+    const wrap = document.createElement('div');
+    const isActive = !!blog.active;
+    const badgeClass = isActive ? 'mb-badge--success' : 'mb-badge--warning';
+    const badgeIcon = isActive ? 'check-circle' : 'pause-circle';
+    const badgeText = isActive ? 'AKTYWNY' : 'NIEAKTYWNY';
 
-        function updateStats(blogs) {
-            const activeBlogs = blogs.filter(blog => blog.active).length;
-            const inactiveBlogs = blogs.filter(blog => !blog.active).length;
-            const currentDailyArticles = blogs
-                .filter(blog => blog.active)
-                .reduce((sum, blog) => sum + (blog.daily_articles || 0), 0);
-            const potentialDailyArticles = blogs
-                .reduce((sum, blog) => sum + (blog.daily_articles || 0), 0);
+    const rulesHtml = (blog.automation_rules && blog.automation_rules.length)
+      ? '<div class="mb-rules-list">' +
+          '<p class="mb-rules-list__hint">Reguły automatyzacji:</p>' +
+          blog.automation_rules.map(r =>
+            '<div class="mb-rules-list__row">' +
+              '<span class="mb-badge ' + (r.is_active ? 'mb-badge--success' : 'mb-badge--neutral') + '">' + escHtml(r.name) + '</span>' +
+              '<small style="color:var(--text-3);">' + escHtml(r.posts_per_day) + ' art./dzień</small>' +
+            '</div>'
+          ).join('') +
+        '</div>'
+      : '';
 
-            document.getElementById('active-blogs-count').textContent = activeBlogs;
-            document.getElementById('inactive-blogs-count').textContent = inactiveBlogs;
-            document.getElementById('daily-articles-count').textContent = currentDailyArticles;
-            document.getElementById('potential-articles-count').textContent = potentialDailyArticles;
-        }
+    wrap.innerHTML =
+      '<div class="mb-card">' +
+        '<div class="mb-card__head">' +
+          '<h3 class="mb-card__title" title="' + escHtml(blog.name) + '">' + escHtml(blog.name) + '</h3>' +
+          '<span class="mb-badge ' + badgeClass + '"><i class="fas fa-' + badgeIcon + '" aria-hidden="true"></i> ' + badgeText + '</span>' +
+        '</div>' +
+        '<div class="mb-card__body">' +
+          '<p style="margin:0 0 .5rem;font-size:.82rem;">' +
+            '<i class="fas fa-link" aria-hidden="true" style="color:var(--text-3);margin-right:.3rem;"></i>' +
+            '<a class="mb-link" href="' + escHtml(blog.url) + '" target="_blank" rel="noopener">' + escHtml(blog.url) + '</a>' +
+          '</p>' +
+          '<div class="mb-meta-grid">' +
+            '<div class="mb-meta"><div class="mb-meta__value">' + escHtml(blog.categories_count || 0) + '</div><div class="mb-meta__label">Kategorie</div></div>' +
+            '<div class="mb-meta"><div class="mb-meta__value">' + escHtml(blog.articles_count || 0) + '</div><div class="mb-meta__label">Artykuły</div></div>' +
+            '<div class="mb-meta"><div class="mb-meta__value">' + escHtml(blog.rules_count || 0) + '</div><div class="mb-meta__label">Reguły</div></div>' +
+          '</div>' +
+          rulesHtml +
+        '</div>' +
+        '<div class="mb-card__foot">' +
+          '<button class="mb-btn mb-btn--ghost mb-btn--sm" data-action="edit" data-blog-id="' + escHtml(blog.id) + '">' +
+            '<i class="fas fa-edit" aria-hidden="true"></i> Edytuj</button>' +
+          '<button class="mb-btn mb-btn--sm ' + (isActive ? 'mb-btn--warning' : 'mb-btn--success') + '" ' +
+            'data-action="toggle" data-blog-id="' + escHtml(blog.id) + '" data-new-status="' + (isActive ? 'false' : 'true') + '">' +
+            '<i class="fas fa-' + (isActive ? 'pause' : 'play') + '" aria-hidden="true"></i> ' + (isActive ? 'Zatrzymaj' : 'Aktywuj') + '</button>' +
+          '<button class="mb-btn mb-btn--info mb-btn--sm" data-action="sync" data-blog-id="' + escHtml(blog.id) + '">' +
+            '<i class="fas fa-sync" aria-hidden="true"></i> Synchr.</button>' +
+        '</div>' +
+      '</div>';
+    return wrap.firstChild;
+  }
 
-        function addBlog() {
-            const formData = {
-                name: document.getElementById('blogName').value,
-                url: document.getElementById('blogUrl').value,
-                api_url: document.getElementById('blogApiUrl').value,
-                username: document.getElementById('blogUsername').value,
-                api_token: document.getElementById('blogToken').value,
-                active: document.getElementById('blogActive').checked,
-                approval_required: document.getElementById('blogApprovalRequired').checked
-            };
+  function updateStats(blogs) {
+    const active = blogs.filter(b => b.active).length;
+    const inactive = blogs.filter(b => !b.active).length;
+    const current = blogs.filter(b => b.active).reduce((s, b) => s + (b.daily_articles || 0), 0);
+    const potential = blogs.reduce((s, b) => s + (b.daily_articles || 0), 0);
+    document.getElementById('active-blogs-count').textContent = active;
+    document.getElementById('inactive-blogs-count').textContent = inactive;
+    document.getElementById('daily-articles-count').textContent = current;
+    document.getElementById('potential-articles-count').textContent = potential;
+  }
 
-            fetch('/api/blogs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBlogModal'));
-                    modal.hide();
-                    document.getElementById('addBlogForm').reset();
-                    loadBlogs();
-                } else {
-                    alert('Błąd: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error adding blog:', error);
-                alert('Wystąpił błąd podczas dodawania bloga');
-            });
-        }
+  // ---------- Add blog ----------
+  document.getElementById('addBlogSubmit').addEventListener('click', function () {
+    const btn = this;
+    const payload = {
+      name: document.getElementById('blogName').value.trim(),
+      url: document.getElementById('blogUrl').value.trim(),
+      api_url: document.getElementById('blogApiUrl').value.trim(),
+      username: document.getElementById('blogUsername').value.trim(),
+      api_token: document.getElementById('blogToken').value,
+      active: document.getElementById('blogActive').checked,
+      approval_required: document.getElementById('blogApprovalRequired').checked
+    };
+    if (!payload.name || !payload.url || !payload.api_url || !payload.username || !payload.api_token) {
+      notifyError('Uzupełnij wszystkie wymagane pola.');
+      return;
+    }
+    setLoading(btn, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Dodawanie…');
+    fetch('/api/blogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Błąd dodawania');
+        closeModal(document.getElementById('addBlogModal'));
+        document.getElementById('addBlogForm').reset();
+        notifySuccess('Blog dodany pomyślnie');
+        loadBlogs();
+      })
+      .catch(err => notifyError('Błąd: ' + err.message))
+      .finally(() => setLoading(btn, false));
+  });
 
-        function editBlog(blogId) {
-            fetch(`/api/blogs/${blogId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const blog = data.blog;
-                        document.getElementById('editBlogId').value = blog.id;
-                        document.getElementById('editBlogName').value = blog.name;
-                        document.getElementById('editBlogUrl').value = blog.url;
-                        document.getElementById('editBlogApiUrl').value = blog.api_url;
-                        document.getElementById('editBlogUsername').value = blog.username;
-                        document.getElementById('editBlogActive').checked = blog.active;
-                        document.getElementById('editBlogApprovalRequired').checked = blog.approval_required;
-                        
-                        const modal = new bootstrap.Modal(document.getElementById('editBlogModal'));
-                        modal.show();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading blog:', error);
-                });
-        }
+  // ---------- Edit blog (open) ----------
+  document.getElementById('blogs-container').addEventListener('click', function (e) {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.dataset.action;
+    const blogId = target.dataset.blogId;
+    if (action === 'edit') openEditBlog(blogId);
+    else if (action === 'toggle') toggleBlogStatus(blogId, target.dataset.newStatus === 'true', target);
+    else if (action === 'sync') syncCategories(blogId, target);
+  });
 
-        function updateBlog() {
-            const blogId = document.getElementById('editBlogId').value;
-            const formData = {
-                name: document.getElementById('editBlogName').value,
-                url: document.getElementById('editBlogUrl').value,
-                api_url: document.getElementById('editBlogApiUrl').value,
-                username: document.getElementById('editBlogUsername').value,
-                active: document.getElementById('editBlogActive').checked,
-                approval_required: document.getElementById('editBlogApprovalRequired').checked
-            };
+  function openEditBlog(blogId) {
+    fetch('/api/blogs/' + encodeURIComponent(blogId))
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Nie znaleziono bloga');
+        const b = data.blog;
+        document.getElementById('editBlogId').value = b.id;
+        document.getElementById('editBlogName').value = b.name || '';
+        document.getElementById('editBlogUrl').value = b.url || '';
+        document.getElementById('editBlogApiUrl').value = b.api_url || '';
+        document.getElementById('editBlogUsername').value = b.username || '';
+        document.getElementById('editBlogToken').value = '';
+        document.getElementById('editBlogActive').checked = !!b.active;
+        document.getElementById('editBlogApprovalRequired').checked = !!b.approval_required;
+        openModal('editBlogModal');
+      })
+      .catch(err => notifyError('Błąd ładowania: ' + err.message));
+  }
 
-            // Only include token if it's provided
-            const token = document.getElementById('editBlogToken').value;
-            if (token) {
-                formData.api_token = token;
-            }
+  // ---------- Update blog ----------
+  document.getElementById('updateBlogSubmit').addEventListener('click', function () {
+    const btn = this;
+    const blogId = document.getElementById('editBlogId').value;
+    const payload = {
+      name: document.getElementById('editBlogName').value.trim(),
+      url: document.getElementById('editBlogUrl').value.trim(),
+      api_url: document.getElementById('editBlogApiUrl').value.trim(),
+      username: document.getElementById('editBlogUsername').value.trim(),
+      active: document.getElementById('editBlogActive').checked,
+      approval_required: document.getElementById('editBlogApprovalRequired').checked
+    };
+    const token = document.getElementById('editBlogToken').value;
+    if (token) payload.api_token = token;
 
-            fetch(`/api/blogs/${blogId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editBlogModal'));
-                    modal.hide();
-                    loadBlogs();
-                } else {
-                    alert('Błąd: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error updating blog:', error);
-                alert('Wystąpił błąd podczas aktualizacji bloga');
-            });
-        }
+    setLoading(btn, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Zapisywanie…');
+    fetch('/api/blogs/' + encodeURIComponent(blogId), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Błąd zapisu');
+        closeModal(document.getElementById('editBlogModal'));
+        notifySuccess('Zmiany zapisane');
+        loadBlogs();
+      })
+      .catch(err => notifyError('Błąd: ' + err.message))
+      .finally(() => setLoading(btn, false));
+  });
 
-        function toggleBlogStatus(blogId, newStatus) {
-            fetch(`/api/blogs/${blogId}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ active: newStatus })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadBlogs();
-                } else {
-                    alert('Błąd: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error toggling blog status:', error);
-            });
-        }
+  // ---------- Toggle blog status ----------
+  function toggleBlogStatus(blogId, newStatus, btn) {
+    setLoading(btn, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> …');
+    fetch('/api/blogs/' + encodeURIComponent(blogId) + '/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: newStatus })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Błąd');
+        notifySuccess(newStatus ? 'Blog aktywowany' : 'Blog zatrzymany');
+        loadBlogs();
+      })
+      .catch(err => notifyError('Błąd: ' + err.message))
+      .finally(() => setLoading(btn, false));
+  }
 
-        function syncCategories(blogId) {
-            const btn = event.target;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sync...';
-            btn.disabled = true;
+  // ---------- Sync categories ----------
+  function syncCategories(blogId, btn) {
+    setLoading(btn, true, '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Sync…');
+    fetch('/api/blogs/' + encodeURIComponent(blogId) + '/sync-categories', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) throw new Error(data.message || 'Błąd synchronizacji');
+        notifySuccess('Zsynchronizowano ' + (data.categories_count || 0) + ' kategorii');
+        loadBlogs();
+      })
+      .catch(err => notifyError('Błąd: ' + err.message))
+      .finally(() => setLoading(btn, false));
+  }
 
-            fetch(`/api/blogs/${blogId}/sync-categories`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadBlogs();
-                    alert(`Zsynchronizowano ${data.categories_count} kategorii`);
-                } else {
-                    alert('Błąd: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error syncing categories:', error);
-                alert('Wystąpił błąd podczas synchronizacji kategorii');
-            })
-            .finally(() => {
-                btn.innerHTML = '<i class="fas fa-sync me-1"></i>Sync';
-                btn.disabled = false;
-            });
-        }
-    </script>
-</body>
-</html>
+  // ---------- Init ----------
+  document.addEventListener('DOMContentLoaded', loadBlogs);
+  // Fallback if DOMContentLoaded already fired
+  if (document.readyState !== 'loading') loadBlogs();
+})();
+</script>
+{% endblock %}

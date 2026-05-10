@@ -11,6 +11,7 @@ from app import db
 from models import Blog, ArticleTopic
 from utils.seo import seo_analyzer
 from utils.writing import topic_generator
+from auth import login_required
 
 # Create Blueprint
 seo_inspiration_bp = Blueprint('seo_inspiration', __name__)
@@ -55,6 +56,7 @@ def seo_inspirations():
 
 
 @seo_inspiration_bp.route('/seo-inspirations/generate', methods=['POST'])
+@login_required
 def generate_inspirations():
     """Generate new SEO inspirations for blogs"""
     blog_id = request.form.get('blog_id')
@@ -108,6 +110,7 @@ def generate_inspirations():
 
 
 @seo_inspiration_bp.route('/seo-inspirations/update-status', methods=['POST'])
+@login_required
 def update_topic_status():
     """Update the status of a topic"""
     topic_id = request.form.get('topic_id')
@@ -140,6 +143,7 @@ def update_topic_status():
 
 
 @seo_inspiration_bp.route('/seo-inspirations/edit-topic', methods=['POST'])
+@login_required
 def edit_topic():
     """Edit a topic"""
     topic_id = request.form.get('topic_id')
@@ -184,6 +188,7 @@ def edit_topic():
 
 
 @seo_inspiration_bp.route('/seo-inspirations/add-manual-topic', methods=['POST'])
+@login_required
 def add_manual_topic():
     """Add a manual topic"""
     blog_id = request.form.get('blog_id')
@@ -227,6 +232,7 @@ def add_manual_topic():
 
 
 @seo_inspiration_bp.route('/seo-inspirations/delete-topic/<int:topic_id>', methods=['POST'])
+@login_required
 def delete_topic(topic_id):
     """Delete a topic"""
     try:
@@ -248,6 +254,7 @@ def delete_topic(topic_id):
 
 
 @seo_inspiration_bp.route('/seo-inspirations/analyze-keyword', methods=['POST'])
+@login_required
 def analyze_keyword():
     """Analyze a keyword for SEO potential"""
     keyword = request.form.get('keyword')

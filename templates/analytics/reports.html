@@ -1,222 +1,349 @@
 {% extends 'base.html' %}
 
-{% block title %}Performance Reports - BLOG AUTOMATION MASTER{% endblock %}
+{% block title %}Raporty wydajności — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Raporty wydajności treści</h1>
+{# ============================================================
+   RAPORTY WYDAJNOŚCI
+   - Filtry (blog, typ raportu, zakres dat)
+   - Tabela raportów + paginacja
+   - Native modal "Usuń raport"
+   ============================================================ #}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
         <div>
-            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Powrót do analityki
+            <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">Raporty wydajności</h1>
+            <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">Przeglądaj i generuj raporty analityczne dla swoich blogów.</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left"></i> Powrót do analityki
             </a>
-            <div class="btn-group ms-2">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-plus me-1"></i> Nowy raport
+            <div class="dropdown-wrap">
+                <button type="button" class="btn btn-primary" id="newReportBtn" aria-haspopup="menu" aria-expanded="false">
+                    <i class="fas fa-plus"></i> Nowy raport <i class="fas fa-caret-down" style="margin-left:.25rem;"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='daily') }}">Raport dzienny</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='weekly') }}">Raport tygodniowy</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id, report_type='monthly') }}">Raport miesięczny</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('custom_report') }}">Raport niestandardowy</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Filter Controls -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form action="{{ url_for('analytics_reports') }}" method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label for="blog_id" class="form-label">Blog</label>
-                    <select class="form-select" id="blog_id" name="blog_id">
-                        <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
-                        {% for blog in blogs %}
-                        <option value="{{ blog.id }}" {% if selected_blog_id == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="report_type" class="form-label">Typ raportu</label>
-                    <select class="form-select" id="report_type" name="report_type">
-                        <option value="all" {% if selected_type == 'all' %}selected{% endif %}>Wszystkie typy</option>
-                        <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>Dzienny</option>
-                        <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>Tygodniowy</option>
-                        <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>Miesięczny</option>
-                        <option value="custom" {% if selected_type == 'custom' %}selected{% endif %}>Niestandardowy</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="date_range" class="form-label">Zakres dat</label>
-                    <select class="form-select" id="date_range" name="date_range">
-                        <option value="7" {% if days == 7 %}selected{% endif %}>Ostatnie 7 dni</option>
-                        <option value="30" {% if days == 30 %}selected{% endif %}>Ostatnie 30 dni</option>
-                        <option value="90" {% if days == 90 %}selected{% endif %}>Ostatnie 90 dni</option>
-                        <option value="180" {% if days == 180 %}selected{% endif %}>Ostatnie 6 miesięcy</option>
-                        <option value="365" {% if days == 365 %}selected{% endif %}>Ostatni rok</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Filtruj</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Reports Table -->
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Blog</th>
-                            <th>Typ raportu</th>
-                            <th>Okres</th>
-                            <th class="text-end">Wyświetlenia</th>
-                            <th class="text-end">Użytkownicy</th>
-                            <th>Data utworzenia</th>
-                            <th>Akcje</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in reports.items %}
-                        <tr>
-                            <td>{{ report.blog.name }}</td>
-                            <td>
-                                {% if report.report_type == 'daily' %}
-                                    <span class="badge bg-info">Dzienny</span>
-                                {% elif report.report_type == 'weekly' %}
-                                    <span class="badge bg-primary">Tygodniowy</span>
-                                {% elif report.report_type == 'monthly' %}
-                                    <span class="badge bg-success">Miesięczny</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ report.report_type|capitalize }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ report.start_date.strftime('%Y-%m-%d') }} - {{ report.end_date.strftime('%Y-%m-%d') }}</td>
-                            <td class="text-end">{{ report.total_views }}</td>
-                            <td class="text-end">{{ report.total_visitors }}</td>
-                            <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ url_for('download_report', report_id=report.id, format='pdf') }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" 
-                                            data-bs-toggle="modal" data-bs-target="#deleteReportModal" 
-                                            data-report-id="{{ report.id }}" data-report-name="{{ report.blog.name }} ({{ report.start_date.strftime('%Y-%m-%d') }})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center">Brak raportów spełniających kryteria filtrowania</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            {% if reports.pages > 1 %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mt-4">
-                    {% if reports.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.prev_num) }}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
+                <div class="dropdown-menu" id="newReportMenu" role="menu" hidden>
+                    {% if selected_blog_id != 'all' %}
+                    <a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id|int, report_type='daily') }}" role="menuitem">
+                        <i class="fas fa-chart-line"></i> Raport dzienny
+                    </a>
+                    <a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id|int, report_type='weekly') }}" role="menuitem">
+                        <i class="fas fa-chart-bar"></i> Raport tygodniowy
+                    </a>
+                    <a class="dropdown-item" href="{{ url_for('generate_report', blog_id=selected_blog_id|int, report_type='monthly') }}" role="menuitem">
+                        <i class="fas fa-chart-pie"></i> Raport miesięczny
+                    </a>
+                    <div class="dropdown-divider"></div>
                     {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
-                    </li>
+                    <div class="dropdown-info">
+                        <i class="fas fa-info-circle"></i> Wybierz konkretny blog, aby wygenerować standardowy raport.
+                    </div>
+                    <div class="dropdown-divider"></div>
                     {% endif %}
-                    
-                    {% for page_num in reports.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
-                        {% if page_num %}
-                            {% if page_num == reports.page %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ page_num }}</span>
-                            </li>
-                            {% else %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=page_num) }}">
-                                    {{ page_num }}
-                                </a>
-                            </li>
-                            {% endif %}
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">…</span>
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if reports.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.next_num) }}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+                    <a class="dropdown-item" href="{{ url_for('custom_report') }}" role="menuitem">
+                        <i class="fas fa-sliders-h"></i> Raport niestandardowy
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteReportModalLabel">Potwierdzenie usunięcia</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Filtry -->
+<section class="card" style="margin-bottom:1.25rem;">
+    <div class="card-body">
+        <form action="{{ url_for('analytics_reports') }}" method="get" class="filter-form" data-validate>
+            <div class="form-group">
+                <label for="blog_id" class="form-label">Blog</label>
+                <select class="form-control" id="blog_id" name="blog_id">
+                    <option value="all" {% if selected_blog_id == 'all' %}selected{% endif %}>Wszystkie blogi</option>
+                    {% for blog in blogs %}
+                    <option value="{{ blog.id }}" {% if selected_blog_id == blog.id|string %}selected{% endif %}>{{ blog.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="modal-body">
-                Czy na pewno chcesz usunąć raport <strong id="reportNameToDelete"></strong>?
-                <p class="text-danger mt-2">Tej operacji nie można cofnąć.</p>
+            <div class="form-group">
+                <label for="report_type" class="form-label">Typ raportu</label>
+                <select class="form-control" id="report_type" name="report_type">
+                    <option value="all" {% if selected_type == 'all' %}selected{% endif %}>Wszystkie typy</option>
+                    <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>Dzienny</option>
+                    <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>Tygodniowy</option>
+                    <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>Miesięczny</option>
+                    <option value="custom" {% if selected_type == 'custom' %}selected{% endif %}>Niestandardowy</option>
+                </select>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <form action="{{ url_for('delete_report') }}" method="post" id="deleteReportForm">
-                    <input type="hidden" name="report_id" id="reportIdToDelete">
-                    <button type="submit" class="btn btn-danger">Usuń</button>
-                </form>
+            <div class="form-group">
+                <label for="date_range" class="form-label">Zakres dat</label>
+                <select class="form-control" id="date_range" name="date_range">
+                    <option value="7"   {% if days == 7 %}selected{% endif %}>Ostatnie 7 dni</option>
+                    <option value="30"  {% if days == 30 %}selected{% endif %}>Ostatnie 30 dni</option>
+                    <option value="90"  {% if days == 90 %}selected{% endif %}>Ostatnie 90 dni</option>
+                    <option value="180" {% if days == 180 %}selected{% endif %}>Ostatnie 6 miesięcy</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>Ostatni rok</option>
+                </select>
             </div>
+            <div class="form-group" style="align-self:end;">
+                <button type="submit" class="btn btn-primary" style="width:100%;">
+                    <i class="fas fa-filter"></i> Filtruj
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Tabela raportów -->
+{% set type_meta = {
+    'daily':   {'label': 'Dzienny',       'state': 'info'},
+    'weekly':  {'label': 'Tygodniowy',    'state': 'brand'},
+    'monthly': {'label': 'Miesięczny',    'state': 'success'},
+    'custom':  {'label': 'Niestandardowy','state': 'neutral'}
+} %}
+
+<section class="card">
+    <header class="card-header">
+        <h2 class="card-title"><i class="fas fa-file-alt" style="color:var(--brand-600);"></i> Lista raportów</h2>
+        <span class="pill pill-neutral" style="margin-left:auto;">{{ reports.total }} wyników</span>
+    </header>
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Blog</th>
+                        <th>Typ</th>
+                        <th>Okres</th>
+                        <th style="text-align:right;">Wyświetlenia</th>
+                        <th style="text-align:right;">Użytkownicy</th>
+                        <th>Utworzono</th>
+                        <th style="text-align:right;">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports.items %}
+                    {% set tmeta = type_meta.get(report.report_type, {'label': report.report_type|capitalize, 'state': 'neutral'}) %}
+                    <tr>
+                        <td style="font-weight:500;">{{ report.blog.name }}</td>
+                        <td><span class="pill pill-{{ tmeta.state }}">{{ tmeta.label }}</span></td>
+                        <td style="font-size:.8125rem;color:var(--text-2);white-space:nowrap;">
+                            {{ report.start_date.strftime('%Y-%m-%d') }} – {{ report.end_date.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ '{:,}'.format(report.total_views|int).replace(',', ' ') }}</td>
+                        <td style="text-align:right;font-variant-numeric:tabular-nums;">{{ '{:,}'.format(report.total_visitors|int).replace(',', ' ') }}</td>
+                        <td style="font-size:.8125rem;color:var(--text-3);white-space:nowrap;">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td style="text-align:right;white-space:nowrap;">
+                            <a href="{{ url_for('view_report', report_id=report.id) }}" class="btn btn-sm btn-ghost" title="Zobacz raport" aria-label="Zobacz">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('download_report', report_id=report.id, format='pdf') }}" class="btn btn-sm btn-ghost" title="Pobierz PDF" aria-label="Pobierz">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-ghost btn-danger-ghost"
+                                    data-action="delete-report"
+                                    data-report-id="{{ report.id }}"
+                                    data-report-name="{{ report.blog.name }} ({{ report.start_date.strftime('%Y-%m-%d') }})"
+                                    title="Usuń raport" aria-label="Usuń">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-folder-open" style="color:var(--text-3);font-size:2rem;display:block;margin-bottom:.5rem;"></i>
+                            <div style="font-weight:500;color:var(--text-2);">Brak raportów spełniających kryteria</div>
+                            <div style="font-size:.8125rem;color:var(--text-3);margin-top:.25rem;">Spróbuj zmienić filtry lub wygenerować nowy raport.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+
+        <!-- Paginacja -->
+        {% if reports.pages > 1 %}
+        <nav class="pagination" aria-label="Paginacja raportów">
+            {% if reports.has_prev %}
+            <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.prev_num) }}" aria-label="Poprzednia strona">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link is-disabled" aria-disabled="true"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
+
+            {% for page_num in reports.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num == reports.page %}
+                        <span class="page-link is-active" aria-current="page">{{ page_num }}</span>
+                    {% else %}
+                        <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=page_num) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="page-link is-disabled">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if reports.has_next %}
+            <a class="page-link" href="{{ url_for('analytics_reports', blog_id=selected_blog_id, report_type=selected_type, date_range=days, page=reports.next_num) }}" aria-label="Następna strona">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link is-disabled" aria-disabled="true"><i class="fas fa-chevron-right"></i></span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Native modal: potwierdzenie usunięcia -->
+<div class="modal" id="deleteReportModal" role="dialog" aria-modal="true" aria-labelledby="deleteReportModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog" role="document">
+        <header class="modal-header">
+            <h3 class="modal-title" id="deleteReportModalLabel">
+                <i class="fas fa-exclamation-triangle" style="color:var(--danger-700);"></i> Potwierdzenie usunięcia
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="modal-body">
+            <p style="margin:0 0 .5rem;">Czy na pewno chcesz usunąć raport <strong id="reportNameToDelete"></strong>?</p>
+            <p style="margin:0;color:var(--danger-700);font-size:.8125rem;"><i class="fas fa-info-circle"></i> Tej operacji nie można cofnąć.</p>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn btn-ghost" data-close>Anuluj</button>
+            <form action="{{ url_for('delete_report') }}" method="post" id="deleteReportForm" style="display:inline;">
+                <input type="hidden" name="report_id" id="reportIdToDelete">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Usuń raport
+                </button>
+            </form>
+        </footer>
     </div>
 </div>
+
+<style>
+.page-header h1{line-height:1.2;}
+
+/* Dropdown */
+.dropdown-wrap{position:relative;display:inline-block;}
+.dropdown-menu{position:absolute;top:calc(100% + .25rem);right:0;min-width:240px;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.5rem;box-shadow:0 8px 24px rgba(15,23,42,.12);padding:.375rem;z-index:1000;}
+.dropdown-item{display:flex;align-items:center;gap:.625rem;padding:.5rem .75rem;border-radius:.375rem;color:var(--text-1);text-decoration:none;font-size:.875rem;}
+.dropdown-item:hover{background:var(--brand-50);color:var(--brand-700);}
+.dropdown-item i{width:1rem;color:var(--text-3);}
+.dropdown-item:hover i{color:var(--brand-600);}
+.dropdown-divider{height:1px;background:var(--border-1);margin:.25rem 0;}
+.dropdown-info{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem .75rem;color:var(--text-3);font-size:.8125rem;line-height:1.4;}
+.dropdown-info i{margin-top:.125rem;flex-shrink:0;}
+
+/* Filtry */
+.filter-form{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:1rem;align-items:end;}
+@media (max-width:900px){.filter-form{grid-template-columns:1fr 1fr;}}
+@media (max-width:560px){.filter-form{grid-template-columns:1fr;}}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;padding:.25rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.4;white-space:nowrap;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger {background:var(--danger-50); color:var(--danger-700);}
+.pill-warning{background:var(--warning-50);color:var(--warning-700);}
+.pill-info   {background:var(--info-50);   color:var(--info-700);}
+.pill-brand  {background:var(--brand-50);  color:var(--brand-700);}
+.pill-neutral{background:var(--surface-2); color:var(--text-2);}
+
+/* Card header z pill */
+.card-header{display:flex;align-items:center;gap:.5rem;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:.875rem;}
+.data-table thead th{background:var(--surface-2);color:var(--text-2);font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;padding:.625rem .875rem;border-bottom:1px solid var(--border-1);text-align:left;}
+.data-table tbody td{padding:.75rem .875rem;border-bottom:1px solid var(--border-1);color:var(--text-1);}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.data-table tbody tr:hover{background:var(--surface-2);}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-3);font-size:.875rem;}
+
+.btn-danger-ghost:hover{background:var(--danger-50)!important;color:var(--danger-700)!important;}
+
+/* Paginacja */
+.pagination{display:flex;justify-content:center;gap:.25rem;padding:1rem;border-top:1px solid var(--border-1);}
+.page-link{display:inline-flex;align-items:center;justify-content:center;min-width:2.25rem;height:2.25rem;padding:0 .625rem;border:1px solid var(--border-1);border-radius:.375rem;background:var(--surface-1);color:var(--text-1);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .15s ease;}
+.page-link:hover{background:var(--brand-50);border-color:var(--brand-600);color:var(--brand-700);}
+.page-link.is-active{background:var(--brand-600);border-color:var(--brand-600);color:#fff;}
+.page-link.is-disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:1050;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal[hidden]{display:none;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);}
+.modal-dialog{position:relative;background:var(--surface-1);border-radius:.75rem;box-shadow:0 24px 48px rgba(15,23,42,.2);max-width:480px;width:100%;animation:modalIn .15s ease;}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.modal-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.modal-body{padding:1.25rem;color:var(--text-1);}
+.modal-footer{display:flex;justify-content:flex-end;gap:.5rem;padding:.875rem 1.25rem;border-top:1px solid var(--border-1);}
+.btn-icon{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:.375rem;color:var(--text-3);cursor:pointer;}
+.btn-icon:hover{background:var(--surface-2);color:var(--text-1);}
+</style>
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle delete confirmation modal
-    var deleteReportModal = document.getElementById('deleteReportModal');
-    if (deleteReportModal) {
-        deleteReportModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var reportId = button.getAttribute('data-report-id');
-            var reportName = button.getAttribute('data-report-name');
-            
-            document.getElementById('reportIdToDelete').value = reportId;
-            document.getElementById('reportNameToDelete').textContent = reportName;
+    // ----- Dropdown "Nowy raport" -----
+    var ddBtn  = document.getElementById('newReportBtn');
+    var ddMenu = document.getElementById('newReportMenu');
+    if (ddBtn && ddMenu) {
+        ddBtn.addEventListener('click', function(e){
+            e.stopPropagation();
+            var open = !ddMenu.hidden;
+            ddMenu.hidden = open;
+            ddBtn.setAttribute('aria-expanded', String(!open));
+        });
+        document.addEventListener('click', function(e){
+            if (!ddMenu.hidden && !ddMenu.contains(e.target) && e.target !== ddBtn) {
+                ddMenu.hidden = true;
+                ddBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && !ddMenu.hidden) {
+                ddMenu.hidden = true;
+                ddBtn.setAttribute('aria-expanded', 'false');
+                ddBtn.focus();
+            }
         });
     }
+
+    // ----- Native delete modal -----
+    var modal      = document.getElementById('deleteReportModal');
+    var idInput    = document.getElementById('reportIdToDelete');
+    var nameLabel  = document.getElementById('reportNameToDelete');
+
+    function openModal(reportId, reportName){
+        idInput.value = reportId;
+        nameLabel.textContent = reportName || '';
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var cancelBtn = modal.querySelector('[data-close]:not(.modal-backdrop)');
+        if (cancelBtn) cancelBtn.focus();
+    }
+    function closeModal(){
+        modal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('[data-action="delete-report"]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            openModal(btn.getAttribute('data-report-id'), btn.getAttribute('data-report-name'));
+        });
+    });
+    modal.querySelectorAll('[data-close]').forEach(function(el){
+        el.addEventListener('click', closeModal);
+    });
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
 });
 </script>
 {% endblock %}

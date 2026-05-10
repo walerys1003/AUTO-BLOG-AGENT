@@ -1,227 +1,357 @@
 {% extends 'base.html' %}
 
-{% block title %}Search Images{% endblock %}
+{# Wyszukiwanie obrazów — MasterContentAI #}
+
+{% block title %}Wyszukiwanie obrazów — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Search Images</h1>
-    
-    <div class="card mb-4">
+<div class="page-shell">
+
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-search" aria-hidden="true" style="color:var(--brand-700);"></i>
+                Wyszukiwanie obrazów
+            </h1>
+            <p class="page-subtitle">
+                Znajdź obrazy wysokiej jakości z Unsplash i innych źródeł.
+            </p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ url_for('images.image_library') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Powrót do biblioteki
+            </a>
+        </div>
+    </header>
+
+    {# ---------- Formularz wyszukiwania ---------- #}
+    <section class="card">
         <div class="card-body">
-            <form method="GET" action="{{ url_for('images.search_images') }}" class="mb-3">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group mb-3">
-                            <label for="query">Search Query</label>
-                            <input type="text" class="form-control" id="query" name="query" 
-                                   value="{{ query }}" required placeholder="Enter keywords...">
-                        </div>
+            <form method="GET" action="{{ url_for('images.search_images') }}" data-validate>
+                <div class="form-grid">
+                    <div class="form-group form-group--wide">
+                        <label for="query" class="form-label">Zapytanie <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="query" name="query"
+                               value="{{ query }}" required placeholder="np. krajobraz górski, biuro, technologia…">
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="source">Source</label>
-                            <select class="form-control" id="source" name="source">
-                                {% for source_option in sources %}
-                                <option value="{{ source_option }}"
+                    <div class="form-group">
+                        <label for="source" class="form-label">Źródło</label>
+                        <select class="form-select" id="source" name="source">
+                            {% for source_option in sources %}
+                            <option value="{{ source_option }}"
                                     {% if selected_source == source_option %}selected{% endif %}>
-                                    {{ source_option|capitalize }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% if selected_source == 'google' %}
-                            <div class="form-text text-warning mt-1">
-                                <i class="fas fa-exclamation-triangle"></i> 
-                                Always verify image licensing before use. Google Images may include copyrighted content.
-                            </div>
-                            {% endif %}
-                        </div>
+                                {{ source_option|capitalize }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if selected_source == 'google' %}
+                        <small class="form-hint" style="color:var(--warning-700);">
+                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                            Zawsze sprawdź licencję obrazu przed użyciem. Google może zwracać treści chronione prawem autorskim.
+                        </small>
+                        {% endif %}
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="orientation">Orientation</label>
-                            <select class="form-control" id="orientation" name="orientation">
-                                <option value="">Any</option>
-                                <option value="landscape">Landscape</option>
-                                <option value="portrait">Portrait</option>
-                                <option value="squarish">Square</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="orientation" class="form-label">Orientacja</label>
+                        <select class="form-select" id="orientation" name="orientation">
+                            <option value="">Dowolna</option>
+                            <option value="landscape">Pozioma</option>
+                            <option value="portrait">Pionowa</option>
+                            <option value="squarish">Kwadratowa</option>
+                        </select>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search" aria-hidden="true"></i> Szukaj
+                </button>
             </form>
         </div>
-    </div>
-    
+    </section>
+
     {% if error %}
     <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
         {{ error }}
     </div>
     {% endif %}
-    
+
+    {# ---------- Wyniki ---------- #}
     {% if images %}
-    <div class="row">
-        {% for image in images %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <img src="{{ image.thumb_url or image.url }}" class="card-img-top" alt="{{ image.description or 'Image' }}">
-                <div class="card-body">
-                    <h5 class="card-title text-truncate">{{ image.description or 'Unnamed Image' }}</h5>
-                    <p class="card-text small">
-                        Source: {{ image.source|capitalize }}<br>
-                        {% if image.user %}
-                        By: <a href="{{ image.user.profile_url }}" target="_blank">{{ image.user.name }}</a><br>
-                        {% endif %}
-                        {% if image.width and image.height %}
-                        Size: {{ image.width }}x{{ image.height }}
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ image.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-external-link-alt"></i> View
-                        </a>
-                        <button class="btn btn-sm btn-primary select-image" 
-                                data-image-data="{{ image|tojson }}">
-                            <i class="fas fa-check"></i> Select
-                        </button>
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">Wyniki wyszukiwania</h2>
+            <small class="text-muted">Znaleziono: <strong>{{ images|length }}</strong></small>
+        </header>
+        <div class="card-body">
+            <div class="image-grid">
+                {% for image in images %}
+                <article class="image-card">
+                    <div class="image-card__media">
+                        <img src="{{ image.thumb_url or image.url }}"
+                             alt="{{ image.description or 'Obraz' }}" loading="lazy">
                     </div>
-                </div>
+                    <div class="image-card__body">
+                        <h3 class="image-card__title">{{ image.description or 'Obraz bez tytułu' }}</h3>
+                        <div class="image-card__meta">
+                            <div><strong>Źródło:</strong> {{ image.source|capitalize }}</div>
+                            {% if image.user %}
+                            <div><strong>Autor:</strong>
+                                <a href="{{ image.user.profile_url }}" target="_blank" rel="noopener" style="color:var(--brand-700);">
+                                    {{ image.user.name }}
+                                </a>
+                            </div>
+                            {% endif %}
+                            {% if image.width and image.height %}
+                            <div><strong>Rozmiar:</strong> {{ image.width }}×{{ image.height }} px</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <footer class="image-card__footer">
+                        <a href="{{ image.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">
+                            <i class="fas fa-external-link-alt" aria-hidden="true"></i> Otwórz
+                        </a>
+                        <button type="button" class="btn btn-sm btn-primary select-image"
+                                data-image-data="{{ image|tojson|forceescape }}">
+                            <i class="fas fa-check" aria-hidden="true"></i> Wybierz
+                        </button>
+                    </footer>
+                </article>
+                {% endfor %}
             </div>
         </div>
-        {% endfor %}
-    </div>
+    </section>
     {% elif query %}
     <div class="alert alert-info">
-        No images found for "{{ query }}". Try a different search query.
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        Brak wyników dla zapytania „<strong>{{ query }}</strong>”. Spróbuj innych słów kluczowych.
     </div>
     {% endif %}
+
 </div>
 
-<!-- Modal for image selection -->
-<div class="modal fade" id="selectImageModal" tabindex="-1" aria-labelledby="selectImageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="selectImageModalLabel">Select Image</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+{# =================================================================== #}
+{# Natywny modal: Wybór obrazu                                          #}
+{# =================================================================== #}
+<div class="modal" id="selectImageModal" role="dialog" aria-modal="true"
+     aria-labelledby="selectImageModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog modal-dialog--lg" role="document">
+        <header class="modal-header">
+            <h3 class="modal-title" id="selectImageModalLabel">
+                <i class="fas fa-check-circle" aria-hidden="true"></i> Wybierz obraz
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <form id="image-selection-form" method="POST" action="" data-validate>
             <div class="modal-body">
-                <form id="image-selection-form" method="POST" action="">
-                    <input type="hidden" name="image_type" value="search">
-                    <input type="hidden" name="image_data" id="selected-image-data">
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <img id="preview-image" src="" class="img-fluid rounded" alt="Preview">
+                <input type="hidden" name="image_type" value="search">
+                <input type="hidden" name="image_data" id="selected-image-data">
+
+                <div class="select-grid">
+                    <figure class="select-grid__media">
+                        <img id="preview-image" src="" alt="Podgląd wybranego obrazu">
+                    </figure>
+                    <div class="select-grid__details">
+                        <div class="meta-row">
+                            <span class="meta-row__label">Źródło:</span>
+                            <span id="preview-source" class="pill pill-info">—</span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Source</label>
-                                <p id="preview-source" class="form-text"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Attribution</label>
-                                <p id="preview-attribution" class="form-text"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <p id="preview-description" class="form-text"></p>
-                            </div>
+                        <div class="meta-row">
+                            <span class="meta-row__label">Atrybucja:</span>
+                            <span id="preview-attribution">—</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-row__label">Opis:</span>
+                            <span id="preview-description">—</span>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="destination-select" class="form-label">What would you like to do with this image?</label>
-                        <select class="form-control" id="destination-select">
-                            <option value="article">Use for article</option>
-                            <option value="library">Add to image library</option>
-                            <option value="both">Both</option>
-                        </select>
+                </div>
+
+                <div class="form-group" style="margin-top:1.25rem;">
+                    <label for="destination-select" class="form-label">Co chcesz zrobić z tym obrazem?</label>
+                    <select class="form-select" id="destination-select">
+                        <option value="article">Użyj w artykule</option>
+                        <option value="library">Dodaj do biblioteki</option>
+                        <option value="both">Zrób oba</option>
+                    </select>
+                </div>
+
+                <div id="library-options" hidden>
+                    <div class="form-group">
+                        <label for="image-title" class="form-label">Tytuł obrazu (do biblioteki)</label>
+                        <input type="text" class="form-control" id="image-title" name="title" maxlength="255">
                     </div>
-                    
-                    <div id="library-options" class="d-none">
-                        <div class="mb-3">
-                            <label for="image-title" class="form-label">Image Title (for library)</label>
-                            <input type="text" class="form-control" id="image-title" name="title">
-                        </div>
-                        <div class="mb-3">
-                            <label for="image-tags" class="form-label">Tags (comma separated)</label>
-                            <input type="text" class="form-control" id="image-tags" name="tags">
-                        </div>
+                    <div class="form-group">
+                        <label for="image-tags" class="form-label">Tagi</label>
+                        <input type="text" class="form-control" id="image-tags" name="tags"
+                               placeholder="np. natura, krajobraz, góry">
+                        <small class="form-hint">Oddziel przecinkami.</small>
                     </div>
-                </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirm-image-selection">Confirm Selection</button>
-            </div>
-        </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close>Anuluj</button>
+                <button type="button" class="btn btn-primary" id="confirm-image-selection">
+                    <i class="fas fa-check" aria-hidden="true"></i> Potwierdź wybór
+                </button>
+            </footer>
+        </form>
     </div>
 </div>
 
+<style>
+.page-shell{display:flex;flex-direction:column;gap:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+.page-title{margin:0;font-size:1.625rem;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.page-subtitle{margin:.375rem 0 0;color:var(--text-3);font-size:.9375rem;max-width:60ch;}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+.card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;overflow:hidden;}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.card-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);}
+.card-body{padding:1.5rem;}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1rem;}
+.form-group{margin-bottom:1rem;}
+.form-group--wide{grid-column:span 2;}
+@media (max-width: 600px){.form-group--wide{grid-column:span 1;}}
+.form-label{display:block;margin-bottom:.375rem;font-size:.875rem;font-weight:500;color:var(--text-2);}
+.required{color:var(--danger-700);}
+.form-control,.form-select{width:100%;padding:.5rem .75rem;font-size:.9375rem;color:var(--text-1);background:var(--surface-1);border:1px solid var(--border-2);border-radius:.5rem;}
+.form-control:focus,.form-select:focus{outline:none;border-color:var(--brand-600);box-shadow:0 0 0 3px var(--brand-50);}
+.form-hint{display:block;margin-top:.25rem;font-size:.8125rem;color:var(--text-3);}
+
+/* Image grid */
+.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.image-card{display:flex;flex-direction:column;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.625rem;overflow:hidden;transition:box-shadow .15s ease,transform .15s ease;}
+.image-card:hover{box-shadow:0 8px 20px rgba(15,23,42,.08);transform:translateY(-2px);}
+.image-card__media{aspect-ratio:4/3;background:var(--surface-2);overflow:hidden;}
+.image-card__media img{width:100%;height:100%;object-fit:cover;display:block;}
+.image-card__body{padding:.75rem 1rem;flex:1;}
+.image-card__title{margin:0 0 .375rem;font-size:.9375rem;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.image-card__meta{font-size:.8125rem;color:var(--text-3);line-height:1.4;}
+.image-card__meta strong{color:var(--text-2);font-weight:500;}
+.image-card__footer{display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;border-top:1px solid var(--border-1);background:var(--surface-2);}
+
+/* Pills + alerts */
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.1875rem .625rem;font-size:.75rem;font-weight:600;border-radius:999px;}
+.pill-info{background:var(--info-50);color:var(--info-700);}
+.alert{display:flex;align-items:flex-start;gap:.5rem;padding:.75rem 1rem;border-radius:.5rem;font-size:.875rem;}
+.alert-info{background:var(--info-50);color:var(--info-700);}
+.alert-danger{background:var(--danger-50);color:var(--danger-700);}
+.text-muted{color:var(--text-3);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;font-size:.875rem;font-weight:500;border-radius:.5rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s ease;}
+.btn-sm{padding:.3125rem .625rem;font-size:.8125rem;}
+.btn-primary{background:var(--brand-600);color:#fff;border-color:var(--brand-600);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700);}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-3);color:var(--text-1);}
+.btn-icon{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:.375rem;color:var(--text-3);cursor:pointer;}
+.btn-icon:hover{background:var(--surface-2);color:var(--text-1);}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:1050;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal[hidden]{display:none;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);}
+.modal-dialog{position:relative;background:var(--surface-1);border-radius:.75rem;box-shadow:0 24px 48px rgba(15,23,42,.2);max-width:540px;width:100%;animation:modalIn .15s ease;max-height:90vh;display:flex;flex-direction:column;}
+.modal-dialog--lg{max-width:820px;}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal-dialog form{display:contents;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.modal-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.modal-body{padding:1.25rem;color:var(--text-1);overflow-y:auto;}
+.modal-footer{display:flex;justify-content:flex-end;gap:.5rem;padding:.875rem 1.25rem;border-top:1px solid var(--border-1);}
+
+/* Select grid (preview + meta) */
+.select-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;}
+@media (max-width: 600px){.select-grid{grid-template-columns:1fr;}}
+.select-grid__media{margin:0;background:var(--surface-2);border:1px solid var(--border-1);border-radius:.5rem;overflow:hidden;}
+.select-grid__media img{width:100%;height:auto;display:block;max-height:280px;object-fit:contain;}
+.select-grid__details{display:flex;flex-direction:column;gap:.625rem;}
+.meta-row{font-size:.875rem;color:var(--text-2);}
+.meta-row__label{display:inline-block;font-weight:600;color:var(--text-1);margin-right:.375rem;}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle image selection
-    const selectButtons = document.querySelectorAll('.select-image');
-    const selectModal = document.getElementById('selectImageModal');
-    const imageDataInput = document.getElementById('selected-image-data');
-    const previewImage = document.getElementById('preview-image');
-    const previewSource = document.getElementById('preview-source');
-    const previewAttribution = document.getElementById('preview-attribution');
-    const previewDescription = document.getElementById('preview-description');
-    const destinationSelect = document.getElementById('destination-select');
-    const libraryOptions = document.getElementById('library-options');
-    const confirmButton = document.getElementById('confirm-image-selection');
-    const selectionForm = document.getElementById('image-selection-form');
-    
-    // Show/hide library options based on destination selection
-    destinationSelect.addEventListener('change', function() {
-        if (this.value === 'library' || this.value === 'both') {
-            libraryOptions.classList.remove('d-none');
-        } else {
-            libraryOptions.classList.add('d-none');
-        }
+(function(){
+    'use strict';
+
+    // ----- Modal helpers -----
+    function openModal(modal){
+        if (!modal) return;
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(modal){
+        if (!modal) return;
+        modal.hidden = true;
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('click', function(e){
+        var t = e.target.closest('[data-close]');
+        if (t) closeModal(t.closest('.modal'));
     });
-    
-    // Handle select button clicks
-    selectButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const imageData = JSON.parse(this.getAttribute('data-image-data'));
-            
-            // Set form data
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(closeModal);
+    });
+
+    var selectModal = document.getElementById('selectImageModal');
+    var imageDataInput = document.getElementById('selected-image-data');
+    var previewImage = document.getElementById('preview-image');
+    var previewSource = document.getElementById('preview-source');
+    var previewAttribution = document.getElementById('preview-attribution');
+    var previewDescription = document.getElementById('preview-description');
+    var destinationSelect = document.getElementById('destination-select');
+    var libraryOptions = document.getElementById('library-options');
+    var confirmButton = document.getElementById('confirm-image-selection');
+    var selectionForm = document.getElementById('image-selection-form');
+
+    // Toggle library options
+    if (destinationSelect && libraryOptions) {
+        destinationSelect.addEventListener('change', function(){
+            libraryOptions.hidden = !(this.value === 'library' || this.value === 'both');
+        });
+    }
+
+    // Image select buttons
+    document.querySelectorAll('.select-image').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var imageData;
+            try {
+                imageData = JSON.parse(this.getAttribute('data-image-data'));
+            } catch(e) {
+                console.error('Invalid image data', e);
+                return;
+            }
+
             imageDataInput.value = JSON.stringify(imageData);
-            
-            // Update preview
-            previewImage.src = imageData.url || imageData.thumb_url;
-            previewSource.textContent = (imageData.source || 'Unknown').toUpperCase();
-            previewAttribution.textContent = imageData.attribution_text || '';
-            previewDescription.textContent = imageData.description || 'No description available';
-            
-            // Show the modal
-            const modal = new bootstrap.Modal(selectModal);
-            modal.show();
+            previewImage.src = imageData.url || imageData.thumb_url || '';
+            previewSource.textContent = (imageData.source || 'Nieznane').toUpperCase();
+            previewAttribution.textContent = imageData.attribution_text || 'Brak';
+            previewDescription.textContent = imageData.description || 'Brak opisu';
+
+            openModal(selectModal);
         });
     });
-    
-    // Handle confirmation
-    confirmButton.addEventListener('click', function() {
-        const destination = destinationSelect.value;
-        
-        if (destination === 'article' || destination === 'both') {
-            // Submit the form for article use
-            selectionForm.action = '{{ request.args.get("return_url", url_for("images.search_images")) }}';
+
+    // Confirm
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function(){
+            var dest = destinationSelect.value;
+            if (dest === 'article' || dest === 'both') {
+                selectionForm.action = '{{ request.args.get("return_url", url_for("images.search_images")) }}';
+            } else {
+                selectionForm.action = '{{ url_for("images.add_to_library") }}';
+            }
             selectionForm.submit();
-        } else if (destination === 'library') {
-            // Submit to add to library
-            selectionForm.action = '{{ url_for("images.add_to_library") }}';
-            selectionForm.submit();
-        }
-    });
-});
+        });
+    }
+})();
 </script>
 {% endblock %}

@@ -1,44 +1,112 @@
 from app import db
 from datetime import datetime, timedelta
 import json
+import secrets
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import List, Optional, Dict, Any
 import os
-from flask_login import UserMixin
-from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
-from sqlalchemy import UniqueConstraint
+from werkzeug.security import generate_password_hash, check_password_hash
 
-# Authentication Models (Required for Replit Auth)
-class User(UserMixin, db.Model):
-    """User model for Replit authentication"""
-    __tablename__ = 'users'
-    id = db.Column(db.String, primary_key=True)
-    email = db.Column(db.String, unique=True, nullable=True)
-    first_name = db.Column(db.String, nullable=True)
-    last_name = db.Column(db.String, nullable=True)
-    profile_image_url = db.Column(db.String, nullable=True)
 
+# =================================================================
+# Authentication / Authorisation
+# =================================================================
+
+# Available roles (string constants for clarity in templates / queries)
+ROLE_ADMIN = "admin"      # full access: users, blogs, settings, billing
+ROLE_EDITOR = "editor"    # content + publishing + social, no user management
+ROLE_VIEWER = "viewer"    # read-only
+
+VALID_ROLES = (ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER)
+
+
+class User(db.Model):
+    """Full user/role system (replaces the old Replit Auth model).
+
+    Passwords are stored as werkzeug-generated PBKDF2 hashes (bcrypt-grade).
+    """
+
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    full_name = db.Column(db.String(120), nullable=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    role = db.Column(db.String(20), nullable=False, default=ROLE_VIEWER)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    avatar_url = db.Column(db.String(500), nullable=True)
+    last_login_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
-    def __repr__(self):
-        return f"<User {self.email or 'Unknown'}>"
+    # ---- Helpers ----
+    def set_password(self, raw_password: str) -> None:
+        self.password_hash = generate_password_hash(raw_password, method="pbkdf2:sha256:600000")
 
-class OAuth(OAuthConsumerMixin, db.Model):
-    """OAuth model for Replit authentication"""
-    user_id = db.Column(db.String, db.ForeignKey(User.id))
-    browser_session_key = db.Column(db.String, nullable=False)
-    user = db.relationship(User)
+    def check_password(self, raw_password: str) -> bool:
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, raw_password)
 
-    __table_args__ = (UniqueConstraint(
-        'user_id',
-        'browser_session_key',
-        'provider',
-        name='uq_user_browser_session_key_provider',
-    ),)
+    @property
+    def is_admin(self) -> bool:
+        return self.role == ROLE_ADMIN
+
+    @property
+    def can_edit(self) -> bool:
+        return self.role in (ROLE_ADMIN, ROLE_EDITOR)
+
+    @property
+    def initials(self) -> str:
+        if self.full_name:
+            parts = [p[0] for p in self.full_name.split() if p][:2]
+            return "".join(parts).upper()
+        return (self.username or self.email or "?")[:2].upper()
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "email": self.email,
+            "username": self.username,
+            "full_name": self.full_name,
+            "role": self.role,
+            "is_active": self.is_active,
+            "avatar_url": self.avatar_url,
+            "last_login_at": self.last_login_at.isoformat() if self.last_login_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
 
     def __repr__(self) -> str:
-        return f"<OAuth {self.provider or 'unknown'} - {self.user_id or 'unknown'}>"
+        return f"<User {self.username} ({self.role})>"
+
+
+class UserSession(db.Model):
+    """Optional persistent session token storage (for 'remember me')."""
+
+    __tablename__ = "user_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    user_agent = db.Column(db.String(500), nullable=True)
+    ip_address = db.Column(db.String(64), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship("User", backref=db.backref("sessions", cascade="all, delete-orphan"))
+
+    @staticmethod
+    def new_token() -> str:
+        return secrets.token_urlsafe(48)
+
+    @property
+    def is_expired(self) -> bool:
+        return datetime.utcnow() > self.expires_at
 
 class Blog(db.Model):
     """Model for WordPress blog configuration"""
@@ -349,10 +417,23 @@ class ArticleTopic(db.Model):
         return f"<ArticleTopic {self.title}>"
     
     def get_keywords(self):
-        """Returns keywords as a Python list"""
-        if self.keywords:
-            return json.loads(self.keywords)
-        return []
+        """Returns keywords as a Python list. Tolerates JSON arrays, comma-separated strings, or empty."""
+        if not self.keywords:
+            return []
+        raw = self.keywords.strip()
+        if not raw:
+            return []
+        # Try JSON first
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(x).strip() for x in parsed if str(x).strip()]
+            if isinstance(parsed, str):
+                return [parsed.strip()] if parsed.strip() else []
+        except (ValueError, TypeError):
+            pass
+        # Fallback: comma-separated
+        return [k.strip() for k in raw.split(',') if k.strip()]
     
     def set_keywords(self, keywords_list):
         """Sets keywords from a Python list"""
@@ -477,7 +558,7 @@ class ScheduledSocialPost(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Define relationship with ContentLog (optional association)
-    content = db.relationship('ContentLog', backref=db.backref('scheduled_social_posts', lazy=True))
+    content_log = db.relationship('ContentLog', backref=db.backref('scheduled_social_posts', lazy=True))  # renamed from 'content' to avoid clobbering the content text column above
     
     def __repr__(self):
         return f"<ScheduledSocialPost {self.platform} - {self.scheduled_date}>"

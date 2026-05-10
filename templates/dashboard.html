@@ -1,333 +1,371 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% block title %}Dashboard — MasterContentAI{% endblock %}
 
-{% block title %}Dashboard - BlogAutomationAgent{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Przegląd workflow contentowego — wszystkie blogi, jeden widok.</p>{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-pen-nib"></i> Edytor
+    </a>
+    <a href="{{ url_for('blogs_list') }}" class="btn btn-accent btn-sm">
+        <i class="fas fa-plus"></i> Dodaj blog
+    </a>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h1 class="mb-4">Dashboard</h1>
+
+{# ───────────────────────────────────────────── Stat cards (4) #}
+<div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+    <div class="card card-stat card-hover">
+        <div class="d-flex items-center justify-between">
+            <span class="stat-label">Aktywne blogi</span>
+            <span class="feature-icon" style="width:36px;height:36px;border-radius:var(--radius-lg);font-size:14px;background:var(--brand-accent-soft);color:var(--brand-accent);">
+                <i class="fas fa-globe"></i>
+            </span>
+        </div>
+        <div class="stat-value">{{ stats.active_blogs or 0 }}<span class="text-tertiary text-md font-medium" style="color:var(--text-tertiary);"> / {{ stats.total_blogs or 0 }}</span></div>
+        <span class="stat-meta">Łącznie podpiętych blogów</span>
     </div>
-    <div class="col-md-4 text-end d-flex justify-content-end align-items-center">
-        <a href="{{ url_for('monitoring.show_metrics') }}" class="btn btn-outline-success me-2">
-            <i class="fas fa-chart-line me-2"></i> Content Monitoring
-        </a>
-        <a href="{{ url_for('simple_creator.simple_editor') }}" class="btn btn-primary me-2">
-            <i class="fas fa-edit me-2"></i> Simple Editor
-        </a>
-        <a href="{{ url_for('content_creator.content_dashboard') }}" class="btn btn-outline-primary">
-            <i class="fas fa-cogs me-2"></i> Advanced Creator
-        </a>
+
+    <div class="card card-stat card-hover">
+        <div class="d-flex items-center justify-between">
+            <span class="stat-label">Opublikowane</span>
+            <span class="feature-icon" style="width:36px;height:36px;border-radius:var(--radius-lg);font-size:14px;background:var(--status-success-bg);color:var(--status-success-fg);">
+                <i class="fas fa-paper-plane"></i>
+            </span>
+        </div>
+        <div class="stat-value">{{ stats.total_posts or 0 }}</div>
+        <span class="stat-meta">Wszystkie artykuły wysłane na WP</span>
+    </div>
+
+    <div class="card card-stat card-hover">
+        <div class="d-flex items-center justify-between">
+            <span class="stat-label">Tematy w kolejce</span>
+            <span class="feature-icon" style="width:36px;height:36px;border-radius:var(--radius-lg);font-size:14px;background:var(--status-warning-bg);color:var(--status-warning-fg);">
+                <i class="fas fa-lightbulb"></i>
+            </span>
+        </div>
+        <div class="stat-value">{{ stats.pending_topics or 0 }}</div>
+        <span class="stat-meta">Czekają na akceptację</span>
+    </div>
+
+    <div class="card card-stat card-hover">
+        <div class="d-flex items-center justify-between">
+            <span class="stat-label">Subskrybenci</span>
+            <span class="feature-icon" style="width:36px;height:36px;border-radius:var(--radius-lg);font-size:14px;background:var(--brand-highlight-soft);color:var(--brand-highlight-hover);">
+                <i class="fas fa-envelope"></i>
+            </span>
+        </div>
+        <div class="stat-value">{{ stats.subscribers or 0 }}</div>
+        <span class="stat-meta">{{ stats.newsletters or 0 }} newsletterów (30d)</span>
     </div>
 </div>
 
-<!-- Quick Access Cards -->
-<div class="row mb-5">
-    <div class="col-md-12">
-        <div class="card-group mb-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-newspaper fa-3x mb-3 text-primary"></i>
-                    <h5 class="card-title">WordPress Publishing</h5>
-                    <p class="card-text small">Manage your content publication schedule and monitor publishing status</p>
-                    <a href="{{ url_for('publishing.publishing_dashboard') }}" class="btn btn-primary">
-                        <i class="fas fa-newspaper me-1"></i> Publishing Dashboard
-                    </a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar-alt fa-3x mb-3 text-success"></i>
-                    <h5 class="card-title">Schedule Calendar</h5>
-                    <p class="card-text small">View and manage your publication schedule calendar</p>
-                    <a href="{{ url_for('publishing.publishing_schedule') }}" class="btn btn-success">
-                        <i class="fas fa-calendar-alt me-1"></i> Publication Calendar
-                    </a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-edit fa-3x mb-3 text-info"></i>
-                    <h5 class="card-title">Simple Content Creator</h5>
-                    <p class="card-text small">Create content quickly with our simplified editor</p>
-                    <a href="{{ url_for('simple_creator.simple_editor') }}" class="btn btn-info">
-                        <i class="fas fa-edit me-1"></i> Simple Editor
-                    </a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-clock fa-3x mb-3 text-warning"></i>
-                    <h5 class="card-title">Pending Articles</h5>
-                    <p class="card-text small">Review and manage articles waiting for publication</p>
-                    <a href="{{ url_for('publishing.pending_articles') }}" class="btn btn-warning">
-                        <i class="fas fa-clock me-1"></i> Pending Articles
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{# ───────────────────────────────────────────── Charts row #}
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6);">
 
-<!-- Statistics Cards -->
-<div class="row mb-5">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Blogs</h5>
-                <p class="card-text display-4">{{ stats.total_blogs }}</p>
-                <small class="text-white-50">{{ stats.active_blogs }} active</small>
+    {# Publications over time (line) #}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Publikacje w czasie</h3>
+                <div class="card-subtitle">Ostatnie 30 dni — łącznie z wszystkich blogów</div>
+            </div>
+            <div class="badge badge-soft" style="font-size:.6875rem;">30 dni</div>
+        </div>
+        <div class="card-body" style="padding-top:0;">
+            <div style="position:relative;height:280px;">
+                <canvas id="chartPublications"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Published Articles</h5>
-                <p class="card-text display-4">{{ stats.total_posts }}</p>
-                <small class="text-white-50">across all blogs</small>
+
+    {# Blogs distribution (doughnut) #}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Posty wg bloga</h3>
+                <div class="card-subtitle">Udział publikacji</div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Pending Topics</h5>
-                <p class="card-text display-4">{{ stats.pending_topics }}</p>
-                <small class="text-white-50">ready for publishing</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Today's Schedule</h5>
-                <p class="card-text display-4">{{ blog_stats|sum(attribute='posts_today') }}</p>
-                <small class="text-dark-50">posts published today</small>
+        <div class="card-body" style="padding-top:0;">
+            <div style="position:relative;height:280px;">
+                <canvas id="chartBlogShare"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Analytics Summary -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Analytics Overview</h5>
-                <a href="{{ url_for('analytics_dashboard') }}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-chart-line me-1"></i> Full Analytics
-                </a>
+{# ───────────────────────────────────────────── Blogs + Recent activity #}
+<div class="grid" style="grid-template-columns: 1.3fr 1fr; gap: var(--space-6);">
+
+    {# Blogs grid #}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Twoje blogi</h3>
+                <div class="card-subtitle">{{ blog_stats|length }} blogów · klik = szczegóły</div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 text-center mb-3 mb-md-0">
-                        <h6 class="text-muted">Page Views (30 days)</h6>
-                        <h3>{{ stats.page_views|default(0)|int }}</h3>
-                    </div>
-                    <div class="col-md-4 text-center mb-3 mb-md-0 border-start border-end">
-                        <h6 class="text-muted">Unique Visitors</h6>
-                        <h3>{{ stats.unique_visitors|default(0)|int }}</h3>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <h6 class="text-muted">Engagement Rate</h6>
-                        <h3>{{ stats.engagement_rate|default(0)|round(1) }}%</h3>
-                    </div>
+            <a href="{{ url_for('blogs_list') }}" class="btn btn-ghost btn-xs">Zobacz wszystkie →</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if blog_stats %}
+            <div class="table-wrapper" style="border:0;border-radius:0;">
+                <table class="table table-hover" style="margin:0;">
+                    <thead>
+                        <tr>
+                            <th>Blog</th>
+                            <th class="text-right" style="text-align:right;">Posty</th>
+                            <th class="text-right" style="text-align:right;">Dzisiaj</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for b in blog_stats %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.625rem;">
+                                    <span class="avatar avatar-sm" style="background: var(--gradient-brand);">{{ (b.name or '?')[0:2]|upper }}</span>
+                                    <div>
+                                        <div style="font-weight:600;">{{ b.name }}</div>
+                                        <div class="text-xs text-muted" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.url }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600;">{{ b.posts_count }}</td>
+                            <td style="text-align:right;font-variant-numeric:tabular-nums;">
+                                {% if b.posts_today > 0 %}
+                                    <span class="badge badge-success">+{{ b.posts_today }}</span>
+                                {% else %}
+                                    <span class="text-tertiary text-sm" style="color:var(--text-tertiary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if b.active %}
+                                    <span class="badge badge-pill badge-success"><span class="badge-dot" style="background:var(--status-success-solid);"></span> Aktywny</span>
+                                {% else %}
+                                    <span class="badge badge-pill">Wstrzymany</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:right;">
+                                <button class="btn btn-ghost btn-xs"
+                                        data-action="process-blog"
+                                        data-blog-id="{{ b.id }}"
+                                        title="Wygeneruj nowy artykuł">
+                                    <i class="fas fa-bolt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="fas fa-globe"></i></div>
+                    <div class="empty-state-title">Brak blogów</div>
+                    <p class="text-muted">Dodaj pierwszy blog WordPress, by zacząć generować content.</p>
+                    <a href="{{ url_for('blogs_list') }}" class="btn btn-accent mt-3">Dodaj blog</a>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
-    
-    <!-- Newsletter Summary -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Newsletter Management</h5>
-                <a href="{{ url_for('newsletter.dashboard') }}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-envelope me-1"></i> Manage Newsletters
-                </a>
+
+    {# Recent posts feed #}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Ostatnie publikacje</h3>
+                <div class="card-subtitle">Oś czasu</div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 text-center mb-3 mb-md-0">
-                        <h6 class="text-muted">Active Subscribers</h6>
-                        <h3>{{ stats.subscribers|default(0)|int }}</h3>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if recent_posts %}
+            <ul class="timeline" style="list-style:none;padding:0;margin:0;">
+                {% for p in recent_posts %}
+                <li style="display:flex;gap:.875rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border-subtle);">
+                    <div style="position:relative;flex-shrink:0;">
+                        <span class="avatar avatar-xs" style="background:var(--brand-accent-soft);color:var(--brand-accent);">
+                            <i class="fas fa-file-alt" style="font-size:11px;"></i>
+                        </span>
                     </div>
-                    <div class="col-md-6 text-center border-start">
-                        <h6 class="text-muted">Recent Campaigns</h6>
-                        <h3>{{ stats.newsletters|default(0)|int }}</h3>
+                    <div style="flex:1;min-width:0;">
+                        <a href="{{ url_for('content_creator.edit_content', content_id=p.id) }}"
+                           style="font-weight:600;color:var(--text-primary);font-size:.875rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.title }}</a>
+                        <div class="text-xs text-muted" style="margin-top:2px;">
+                            {{ p.blog.name if p.blog else 'Brak bloga' }}
+                            {% if p.published_at %}
+                                · {{ p.published_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% endif %}
+                        </div>
                     </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="empty-state-title">Brak publikacji</div>
+                    <p class="text-muted text-sm">Pierwsze opublikowane artykuły pojawią się tu.</p>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Blog Status -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Blog Status</h5>
-                <a href="{{ url_for('blogs_list') }}" class="btn btn-sm btn-outline-primary">Manage Blogs</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Blog Name</th>
-                                <th>URL</th>
-                                <th>Status</th>
-                                <th>Total Posts</th>
-                                <th>Today's Posts</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for blog in blog_stats %}
-                            <tr>
-                                <td>{{ blog.name }}</td>
-                                <td><a href="{{ blog.url }}" target="_blank">{{ blog.url }}</a></td>
-                                <td>
-                                    {% if blog.active %}
-                                    <span class="badge bg-success">Active</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Inactive</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ blog.posts_count }}</td>
-                                <td>{{ blog.posts_today }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary process-blog" data-blog-id="{{ blog.id }}">
-                                        <i class="fas fa-sync-alt"></i> Process
-                                    </button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="6" class="text-center py-4">
-                                    <p class="mb-0">No blogs configured yet.</p>
-                                    <a href="{{ url_for('add_blog') }}" class="btn btn-sm btn-primary mt-2">
-                                        <i class="fas fa-plus"></i> Add Your First Blog
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    @media (max-width: 1024px) {
+        .grid[style*="2fr 1fr"], .grid[style*="1.3fr 1fr"] { grid-template-columns: 1fr !important; }
+    }
+</style>
 
-<!-- Recent Posts -->
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Posts</h5>
-                <a href="{{ url_for('logs') }}" class="btn btn-sm btn-outline-primary">View All Logs</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Blog</th>
-                                <th>Status</th>
-                                <th>Published</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for post in recent_posts %}
-                            <tr>
-                                <td>{{ post.title }}</td>
-                                <td>{{ post.blog.name }}</td>
-                                <td>
-                                    {% if post.status == 'published' %}
-                                    <span class="badge bg-success">Published</span>
-                                    {% elif post.status == 'error' %}
-                                    <span class="badge bg-danger" data-bs-toggle="tooltip" title="{{ post.error_message }}">Error</span>
-                                    {% else %}
-                                    <span class="badge bg-warning">{{ post.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ post.published_at.strftime('%Y-%m-%d %H:%M') if post.published_at else 'N/A' }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center py-4">
-                                    <p class="mb-0">No posts published yet.</p>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
+(function () {
+    // ─── Build last 30 days labels & series ────────────────────────────
+    const recentDates = {{ recent_posts | map(attribute='published_at') | list | tojson | safe }};
+    const today = new Date();
+    const labels = [];
+    const series = [];
+    const counts = {};
+
+    // Bucket recent posts by day (last 30 days)
+    recentDates.forEach(iso => {
+        if (!iso) return;
+        const d = new Date(iso);
+        const k = d.toISOString().slice(0, 10);
+        counts[k] = (counts[k] || 0) + 1;
     });
 
-    // Process blog buttons
-    document.querySelectorAll('.process-blog').forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.getAttribute('data-blog-id');
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            this.disabled = true;
-            
-            fetch(`/api/process_blog/${blogId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        const k = d.toISOString().slice(0, 10);
+        labels.push(d.toLocaleDateString('pl-PL', { day: '2-digit', month: 'short' }));
+        series.push(counts[k] || 0);
+    }
+
+    // ─── Theme tokens (read from CSS) ─────────────────────────────────
+    const css = getComputedStyle(document.documentElement);
+    const colorIndigo = css.getPropertyValue('--color-indigo-500').trim() || '#4f57f0';
+    const colorCyan   = css.getPropertyValue('--color-cyan-400').trim()   || '#22d3ee';
+    const colorText   = css.getPropertyValue('--text-tertiary').trim()    || '#64748b';
+    const colorGrid   = css.getPropertyValue('--border-subtle').trim()    || '#e2e8f0';
+
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = colorText;
+    Chart.defaults.borderColor = colorGrid;
+
+    // ─── Line chart: publications over time ──────────────────────────
+    const lineCtx = document.getElementById('chartPublications');
+    if (lineCtx) {
+        const grad = lineCtx.getContext('2d').createLinearGradient(0, 0, 0, 280);
+        grad.addColorStop(0, 'rgba(79,87,240,0.28)');
+        grad.addColorStop(1, 'rgba(79,87,240,0)');
+
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Publikacje',
+                    data: series,
+                    borderColor: colorIndigo,
+                    backgroundColor: grad,
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: colorIndigo,
+                    pointBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0a1428',
+                        padding: 10,
+                        cornerRadius: 8,
+                        titleFont: { weight: 600, size: 12 },
+                        bodyFont: { size: 12 },
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
+                    y: { beginAtZero: true, grid: { color: colorGrid, drawBorder: false }, ticks: { precision: 0 } }
+                },
+                interaction: { intersect: false, mode: 'index' }
+            }
+        });
+    }
+
+    // ─── Doughnut chart: blog share ──────────────────────────────────
+    const donutCtx = document.getElementById('chartBlogShare');
+    const blogStats = {{ blog_stats | tojson | safe }};
+    if (donutCtx && blogStats.length) {
+        const palette = ['#4f57f0','#22d3ee','#6366f1','#0ea5e9','#8b5cf6','#14b8a6','#f59e0b','#ef4444'];
+        const labels = blogStats.map(b => b.name);
+        const data = blogStats.map(b => b.posts_count);
+
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, boxHeight: 10, padding: 12, usePointStyle: true, pointStyle: 'circle' }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0a1428',
+                        padding: 10,
+                        cornerRadius: 8,
+                    }
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.innerHTML = '<i class="fas fa-check"></i> Success';
-                    this.classList.remove('btn-primary');
-                    this.classList.add('btn-success');
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
-                        this.classList.remove('btn-success');
-                        this.classList.add('btn-primary');
-                        this.disabled = false;
-                    }, 3000);
-                } else {
-                    this.innerHTML = '<i class="fas fa-times"></i> Failed';
-                    this.classList.remove('btn-primary');
-                    this.classList.add('btn-danger');
-                    this.setAttribute('data-bs-toggle', 'tooltip');
-                    this.setAttribute('title', data.message);
-                    new bootstrap.Tooltip(this).show();
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Process';
-                        this.classList.remove('btn-danger');
-                        this.classList.add('btn-primary');
-                        this.disabled = false;
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                this.innerHTML = '<i class="fas fa-times"></i> Error';
-                this.classList.remove('btn-primary');
-                this.classList.add('btn-danger');
-                this.disabled = false;
-            });
+            }
+        });
+    }
+
+    // ─── Process blog button → POST /api/process_blog/<id> ────────────
+    document.querySelectorAll('[data-action="process-blog"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.blogId;
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner spinner-sm"></span>';
+            try {
+                const r = await fetch(`/api/process_blog/${id}`, { method: 'POST' });
+                const j = await r.json().catch(() => ({}));
+                btn.innerHTML = r.ok ? '<i class="fas fa-check" style="color:var(--status-success-fg);"></i>' : '<i class="fas fa-xmark" style="color:var(--status-danger-fg);"></i>';
+                setTimeout(() => { btn.disabled = false; btn.innerHTML = original; }, 1800);
+            } catch (e) {
+                btn.innerHTML = '<i class="fas fa-xmark" style="color:var(--status-danger-fg);"></i>';
+                setTimeout(() => { btn.disabled = false; btn.innerHTML = original; }, 1800);
+            }
         });
     });
+})();
 </script>
 {% endblock %}

@@ -1,200 +1,247 @@
 {% extends 'base.html' %}
 
-{% block title %}SEO Trends{% endblock %}
+{% block title %}Trendy SEO — MasterContentAI{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body">
-                    <h1 class="card-title mb-4 d-flex align-items-center">
-                        <i class="fas fa-chart-line text-primary me-3"></i> Google Trends Analysis
-                    </h1>
-                    <p class="lead">
-                        Explore trending searches and use them to generate content ideas for your blogs.
-                    </p>
-                </div>
-            </div>
+{# ============================================================
+   TRENDY SEO
+   - Lista trendujących fraz z Google Trends
+   - Narzędzia: odśwież, eksportuj
+   - Wskazówki użycia
+   ============================================================ #}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+        <div>
+            <h1 style="margin:0;font-size:1.5rem;font-weight:600;color:var(--text-1);">
+                <i class="fas fa-chart-line" style="color:var(--brand-600);margin-right:.5rem;"></i>
+                Trendy SEO — Google Trends
+            </h1>
+            <p style="margin:.25rem 0 0;color:var(--text-2);font-size:.875rem;">
+                Eksploruj popularne wyszukiwania i wykorzystaj je do generowania pomysłów na treści.
+            </p>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-8 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-fire text-danger me-2"></i> Trending Keywords
-                    </h5>
-                    <button class="btn btn-sm btn-outline-primary" id="refreshTrendsBtn">
-                        <i class="fas fa-sync-alt me-1"></i> Refresh
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="row row-cols-1 row-cols-md-2 g-4" id="trendsContainer">
-                        {% for trend in trends %}
-                        <div class="col">
-                            <div class="card h-100 border-0 shadow-sm trend-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ trend }}</h5>
-                                    <div class="d-flex justify-content-between mt-3">
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-globe me-1"></i> pl
-                                        </span>
-                                        <a href="https://www.google.com/search?q={{ trend|urlencode }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-search me-1"></i> View Results
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="col-12 text-center py-5">
-                            <div class="display-6 text-muted mb-3">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </div>
-                            <h4>No trends available at the moment</h4>
-                            <p class="text-muted">Try refreshing the page or check back later.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="card-footer bg-white text-muted">
-                    <i class="fas fa-info-circle me-1"></i> Data source: Google Trends API. Updated daily.
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card shadow border-0 rounded-3 mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-tools text-secondary me-2"></i> Trend Tools
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('seo.topics') }}" class="btn btn-primary">
-                            <i class="fas fa-magic me-2"></i> Generate Topics from Trends
-                        </a>
-                        <button class="btn btn-outline-primary" id="analyzeSelectedBtn" disabled>
-                            <i class="fas fa-search me-2"></i> Analyze Selected Trend
-                        </button>
-                        <button class="btn btn-outline-primary" id="exportTrendsBtn">
-                            <i class="fas fa-file-export me-2"></i> Export Trends Data
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb text-warning me-2"></i> Trend Insights
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i> <strong>Pro Tip:</strong> Trending topics are often timely but may quickly lose relevance. Consider creating evergreen content that incorporates trending elements.
-                    </div>
-
-                    <h6 class="fw-bold mt-4">How to Use Trends</h6>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item px-0">
-                            <i class="fas fa-check-circle text-success me-2"></i> Identify patterns in trending topics
-                        </li>
-                        <li class="list-group-item px-0">
-                            <i class="fas fa-check-circle text-success me-2"></i> Generate timely content ideas
-                        </li>
-                        <li class="list-group-item px-0">
-                            <i class="fas fa-check-circle text-success me-2"></i> Research related keywords
-                        </li>
-                        <li class="list-group-item px-0">
-                            <i class="fas fa-check-circle text-success me-2"></i> Create content that combines trends with evergreen topics
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <button type="button" class="btn btn-primary" id="refreshTrendsBtn">
+            <i class="fas fa-sync-alt"></i> Odśwież trendy
+        </button>
     </div>
 </div>
-{% endblock %}
+
+<div class="grid-2col">
+    <!-- Lista trendów -->
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-fire" style="color:var(--danger-700);"></i>
+                Trendujące frazy
+            </h2>
+            <span class="pill pill-brand" style="margin-left:auto;" id="trendsCount">{{ trends|length }} {{ 'fraza' if trends|length == 1 else 'frazy/fraz' }}</span>
+        </header>
+        <div class="card-body">
+            <div class="trends-grid" id="trendsContainer">
+                {% for trend in trends %}
+                <article class="trend-card">
+                    <h3 class="trend-title">{{ trend }}</h3>
+                    <div class="trend-actions">
+                        <span class="trend-locale"><i class="fas fa-globe"></i> pl</span>
+                        <a href="https://www.google.com/search?q={{ trend|urlencode }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">
+                            <i class="fas fa-search"></i> Zobacz wyniki
+                        </a>
+                    </div>
+                </article>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="color:var(--text-3);font-size:2rem;display:block;margin-bottom:.5rem;"></i>
+                    <div style="font-weight:500;color:var(--text-2);">Brak dostępnych trendów</div>
+                    <div style="font-size:.8125rem;color:var(--text-3);margin-top:.25rem;">Spróbuj odświeżyć stronę lub wróć później.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <footer class="card-footer">
+            <i class="fas fa-info-circle" style="color:var(--info-700);"></i>
+            Źródło danych: Google Trends API. Aktualizacja codziennie.
+        </footer>
+    </section>
+
+    <!-- Sidebar: narzędzia + wskazówki -->
+    <aside class="sidebar-stack">
+        <div class="card">
+            <header class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-tools" style="color:var(--info-700);"></i>
+                    Narzędzia trendów
+                </h2>
+            </header>
+            <div class="card-body">
+                <div class="tool-stack">
+                    <a href="{{ url_for('seo.topics') }}" class="btn btn-primary" style="justify-content:flex-start;">
+                        <i class="fas fa-magic"></i> Generuj tematy z trendów
+                    </a>
+                    <button type="button" class="btn btn-ghost" id="exportTrendsBtn" style="justify-content:flex-start;">
+                        <i class="fas fa-file-export"></i> Eksportuj listę trendów
+                    </button>
+                    <a href="{{ url_for('seo.keywords') }}" class="btn btn-ghost" style="justify-content:flex-start;">
+                        <i class="fas fa-key"></i> Badanie słów kluczowych
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="background:linear-gradient(180deg,var(--brand-50) 0%,var(--surface-1) 60%);border:1px solid var(--border-2);">
+            <header class="card-header" style="background:transparent;">
+                <h2 class="card-title">
+                    <i class="fas fa-lightbulb" style="color:var(--warning-700);"></i>
+                    Wskazówki dotyczące trendów
+                </h2>
+            </header>
+            <div class="card-body">
+                <div class="alert alert-info" style="margin-bottom:.875rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Wskazówka pro:</strong> Trendujące tematy są aktualne, ale szybko tracą znaczenie. Łącz je z evergreen content, aby uzyskać długoterminową wartość.
+                    </div>
+                </div>
+
+                <h3 style="font-size:.8125rem;font-weight:600;color:var(--text-2);margin:.5rem 0 .5rem;text-transform:uppercase;letter-spacing:.04em;">Jak wykorzystywać trendy</h3>
+                <ul class="check-list">
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Identyfikuj wzorce w trendujących tematach</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Generuj aktualne pomysły na treści</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Eksploruj powiązane słowa kluczowe</li>
+                    <li><i class="fas fa-check-circle" style="color:var(--success-700);"></i> Łącz trendy z treściami evergreen</li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- JSON data island (API endpoint) -->
+<script id="trendsApiData" type="application/json">{{ {'apiUrl': url_for('seo.api_trends')}|tojson }}</script>
+
+<style>
+.grid-2col{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:1.25rem;}
+@media (max-width:900px){.grid-2col{grid-template-columns:1fr;}}
+
+.sidebar-stack{display:flex;flex-direction:column;gap:1.25rem;}
+
+/* Trends grid */
+.trends-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;}
+.trend-card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.625rem;padding:.875rem;transition:all .15s ease;}
+.trend-card:hover{border-color:var(--brand-600);box-shadow:0 4px 12px rgba(15,23,42,.06);transform:translateY(-1px);}
+.trend-title{margin:0 0 .625rem;font-size:.9375rem;font-weight:600;color:var(--text-1);line-height:1.35;word-break:break-word;}
+.trend-actions{display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.trend-locale{display:inline-flex;align-items:center;gap:.25rem;font-size:.6875rem;padding:.125rem .5rem;background:var(--surface-2);color:var(--text-3);border-radius:999px;text-transform:uppercase;font-weight:600;}
+
+.card-footer{padding:.75rem 1.25rem;border-top:1px solid var(--border-1);background:var(--surface-1);color:var(--text-3);font-size:.8125rem;border-radius:0 0 .75rem .75rem;}
+
+/* Tool stack */
+.tool-stack{display:flex;flex-direction:column;gap:.5rem;}
+.tool-stack .btn{justify-content:flex-start !important;}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;padding:.25rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.4;}
+.pill-brand{background:var(--brand-50);color:var(--brand-700);}
+
+/* Check list */
+.check-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.375rem;}
+.check-list li{padding:.375rem .625rem;background:var(--surface-1);border:1px solid var(--border-1);border-radius:.375rem;color:var(--text-1);font-size:.8125rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.4;}
+
+/* Alert */
+.alert{padding:.625rem .75rem;border-radius:.5rem;font-size:.8125rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.5;}
+.alert i{flex-shrink:0;margin-top:.125rem;}
+.alert-info{background:var(--info-50);color:var(--info-700);border:1px solid var(--info-50);}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:2.5rem 1rem;color:var(--text-3);font-size:.875rem;}
+
+.card-header{display:flex;align-items:center;gap:.5rem;}
+</style>
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Refresh trends
-    document.getElementById('refreshTrendsBtn').addEventListener('click', function() {
-        fetch('{{ url_for("seo.api_trends") }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success' && data.trends.length > 0) {
-                    const trendsContainer = document.getElementById('trendsContainer');
-                    
-                    // Clear existing trends
-                    trendsContainer.innerHTML = '';
-                    
-                    // Add new trends
-                    data.trends.forEach(trend => {
-                        const trendCol = document.createElement('div');
-                        trendCol.className = 'col';
-                        
-                        trendCol.innerHTML = `
-                            <div class="card h-100 border-0 shadow-sm trend-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">${trend}</h5>
-                                    <div class="d-flex justify-content-between mt-3">
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-globe me-1"></i> pl
-                                        </span>
-                                        <a href="https://www.google.com/search?q=${encodeURIComponent(trend)}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-search me-1"></i> View Results
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        trendsContainer.appendChild(trendCol);
-                    });
-                    
-                    // Show success message
-                    alert('Trends refreshed successfully!');
-                } else {
-                    alert('Error refreshing trends: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error refreshing trends. Please try again later.');
-            });
-    });
-    
-    // Export trends
-    document.getElementById('exportTrendsBtn').addEventListener('click', function() {
-        const trends = [];
-        document.querySelectorAll('.trend-card .card-title').forEach(el => {
-            trends.push(el.textContent.trim());
-        });
-        
-        if (trends.length === 0) {
-            alert('No trends to export.');
+    var cfg = JSON.parse(document.getElementById('trendsApiData').textContent);
+
+    // ---------- Odświeżanie trendów ----------
+    var refreshBtn = document.getElementById('refreshTrendsBtn');
+    var container  = document.getElementById('trendsContainer');
+    var countPill  = document.getElementById('trendsCount');
+
+    function pluralPl(n) {
+        if (n === 1) return 'fraza';
+        var mod10 = n % 10, mod100 = n % 100;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'frazy';
+        return 'fraz';
+    }
+
+    function renderTrends(trends) {
+        if (!trends || trends.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle" style="color:var(--text-3);font-size:2rem;display:block;margin-bottom:.5rem;"></i><div style="font-weight:500;color:var(--text-2);">Brak dostępnych trendów</div><div style="font-size:.8125rem;color:var(--text-3);margin-top:.25rem;">Spróbuj odświeżyć stronę lub wróć później.</div></div>';
             return;
         }
-        
-        const trendsText = trends.join('\n');
-        
-        // Create blob and download
-        const blob = new Blob([trendsText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        container.innerHTML = trends.map(function(t){
+            var safe = String(t).replace(/[<>&"]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});
+            var enc = encodeURIComponent(t);
+            return '<article class="trend-card">'+
+                '<h3 class="trend-title">'+safe+'</h3>'+
+                '<div class="trend-actions">'+
+                    '<span class="trend-locale"><i class="fas fa-globe"></i> pl</span>'+
+                    '<a href="https://www.google.com/search?q='+enc+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">'+
+                        '<i class="fas fa-search"></i> Zobacz wyniki</a>'+
+                '</div></article>';
+        }).join('');
+    }
+
+    refreshBtn.addEventListener('click', function() {
+        var originalHtml = refreshBtn.innerHTML;
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Odświeżanie…';
+
+        fetch(cfg.apiUrl)
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                if (data.status === 'success' && data.trends && data.trends.length > 0) {
+                    renderTrends(data.trends);
+                    countPill.textContent = data.trends.length + ' ' + pluralPl(data.trends.length);
+                    if (window.Toast && Toast.success) Toast.success('Trendy odświeżone pomyślnie.');
+                } else {
+                    if (window.Toast && Toast.warning) Toast.warning('Brak nowych trendów: ' + (data.message || 'Nieznany błąd.'));
+                    else alert('Brak nowych trendów: ' + (data.message || 'Nieznany błąd.'));
+                }
+            })
+            .catch(function(err){
+                console.error('Trends refresh error:', err);
+                if (window.Toast && Toast.error) Toast.error('Błąd podczas odświeżania trendów. Spróbuj ponownie.');
+                else alert('Błąd podczas odświeżania trendów. Spróbuj ponownie.');
+            })
+            .finally(function(){
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalHtml;
+            });
+    });
+
+    // ---------- Eksport trendów ----------
+    document.getElementById('exportTrendsBtn').addEventListener('click', function() {
+        var trends = Array.from(document.querySelectorAll('.trend-card .trend-title'))
+                          .map(function(el){ return el.textContent.trim(); });
+        if (trends.length === 0) {
+            if (window.Toast && Toast.warning) Toast.warning('Brak trendów do eksportu.');
+            else alert('Brak trendów do eksportu.');
+            return;
+        }
+        var content = trends.join('\n');
+        var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
         a.href = url;
-        a.download = 'trends_export_' + new Date().toISOString().slice(0, 10) + '.txt';
+        a.download = 'trendy_seo_' + new Date().toISOString().slice(0, 10) + '.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        if (window.Toast && Toast.success) Toast.success('Wyeksportowano ' + trends.length + ' ' + pluralPl(trends.length) + '.');
     });
 });
 </script>
+{% endblock %}
+
 {% endblock %}

@@ -1,9 +1,7 @@
 import logging
 import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-# Remove Flask-Login dependency - using admin session instead
-# from flask_login import current_user
-from admin_auth import require_admin_login
+from auth import require_admin_login, login_required, admin_required, editor_required, current_user
 from models import (
     Blog, SocialAccount, ContentLog, ArticleTopic, Category, Tag,
     Notification, PublishingSchedule, ContentMetrics, ImageLibrary,
@@ -22,7 +20,6 @@ from utils.writing.assistant import writing_assistant
 from routes_analytics import register_analytics_routes
 from routes_seo_inspiration import seo_inspiration_bp
 from routes_content_creator import content_creator_bp
-from routes_simple_creator import simple_creator_bp
 from routes_simplified_content import simplified_content_bp
 from routes_images import register_image_routes
 from newsletter import newsletter_bp
@@ -30,8 +27,9 @@ from routes_publishing import publishing_bp
 from routes_social import social_bp
 from routes_monitoring import monitoring_bp
 from routes_seo import seo_bp
-from routes_ai_content import ai_content, register_routes as register_ai_content_routes
 from routes_automation import automation_bp
+from routes_scheduling import scheduling_bp
+from routes_multi_blog import multi_blog_bp
 import json
 from datetime import datetime, timedelta
 
@@ -41,30 +39,28 @@ logger = logging.getLogger(__name__)
 def register_routes(app: Flask):
     """Register all routes with the Flask app"""
     
-    # Add template context processor for datetime and user
+    # Template context: datetime + admin flags (kept for backwards compat with templates)
     @app.context_processor
     def inject_now():
-        from admin_auth import admin_auth
+        user = current_user()
         return {
-            'now': datetime.now(),
-            'admin_logged_in': admin_auth.is_authenticated(),
-            'admin_username': session.get('admin_username', '')
+            'now': datetime.utcnow(),
+            'admin_logged_in': user is not None,
+            'admin_username': user.username if user else '',
         }
-    
+
     @app.route('/')
     def index():
-        """Main route - redirects based on authentication status"""
-        from admin_auth import admin_auth
-        if admin_auth.is_authenticated():
+        """Main route - redirects based on authentication status."""
+        if current_user():
             return redirect(url_for('dashboard'))
-        else:
-            return redirect(url_for('admin_login'))
-    
-    @app.route('/public')
+        return redirect(url_for('public_landing'))
+
+    @app.route('/welcome')
     def public_landing():
-        """Public landing page for logged-out users"""
+        """Public landing page for logged-out users (MasterContentAI)"""
         return render_template('public_landing.html')
-    
+
     @app.route('/dashboard')
     @require_admin_login
     def dashboard():
@@ -252,111 +248,10 @@ def register_routes(app: Flask):
             flash(f'Error deleting blog: {str(e)}', 'danger')
             return redirect(url_for('blogs_list'))
     
-    @app.route('/social')
-    @require_admin_login
-    def social_accounts():
-        """List all social media accounts"""
-        accounts = SocialAccount.query.all()
-        blogs = Blog.query.all()
-        return render_template('social.html', accounts=accounts, blogs=blogs)
-    
-    @app.route('/social/add', methods=['GET', 'POST'])
-    def add_social_account():
-        """Add a new social media account"""
-        if request.method == 'POST':
-            try:
-                platform = request.form.get('platform')
-                name = request.form.get('name')
-                api_token = request.form.get('api_token')
-                api_secret = request.form.get('api_secret')
-                account_id = request.form.get('account_id')
-                blog_id = request.form.get('blog_id')
-                
-                if not all([platform, name, api_token, blog_id]):
-                    flash('Platform, name, API token, and blog are required', 'danger')
-                    return redirect(url_for('add_social_account'))
-                
-                # Create new social account
-                account = SocialAccount(
-                    platform=platform,
-                    name=name,
-                    api_token=api_token,
-                    api_secret=api_secret,
-                    account_id=account_id,
-                    blog_id=blog_id,
-                    active=True
-                )
-                
-                db.session.add(account)
-                db.session.commit()
-                
-                flash(f'Social account {name} added successfully', 'success')
-                return redirect(url_for('social_accounts'))
-                
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Error adding social account: {str(e)}")
-                flash(f'Error adding social account: {str(e)}', 'danger')
-                return redirect(url_for('add_social_account'))
-        
-        blogs = Blog.query.all()
-        return render_template('social_form.html', account=None, blogs=blogs, action='add')
-    
-    @app.route('/social/edit/<int:account_id>', methods=['GET', 'POST'])
-    def edit_social_account(account_id):
-        """Edit a social media account"""
-        account = SocialAccount.query.get_or_404(account_id)
-        
-        if request.method == 'POST':
-            try:
-                account.platform = request.form.get('platform')
-                account.name = request.form.get('name')
-                
-                # Only update tokens if provided
-                new_token = request.form.get('api_token')
-                if new_token:
-                    account.api_token = new_token
-                
-                new_secret = request.form.get('api_secret')
-                if new_secret:
-                    account.api_secret = new_secret
-                
-                account.account_id = request.form.get('account_id')
-                account.blog_id = request.form.get('blog_id')
-                account.active = 'active' in request.form
-                
-                db.session.commit()
-                
-                flash(f'Social account {account.name} updated successfully', 'success')
-                return redirect(url_for('social_accounts'))
-                
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Error updating social account: {str(e)}")
-                flash(f'Error updating social account: {str(e)}', 'danger')
-                return redirect(url_for('edit_social_account', account_id=account_id))
-        
-        blogs = Blog.query.all()
-        return render_template('social_form.html', account=account, blogs=blogs, action='edit')
-    
-    @app.route('/social/delete/<int:account_id>', methods=['POST'])
-    def delete_social_account(account_id):
-        """Delete a social media account"""
-        account = SocialAccount.query.get_or_404(account_id)
-        
-        try:
-            db.session.delete(account)
-            db.session.commit()
-            
-            flash(f'Social account {account.name} deleted successfully', 'success')
-            return redirect(url_for('social_accounts'))
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error deleting social account: {str(e)}")
-            flash(f'Error deleting social account: {str(e)}', 'danger')
-            return redirect(url_for('social_accounts'))
-    
+    # NOTE: All /social/* legacy routes were removed.
+    # The canonical implementation lives in routes_social.py (blueprint 'social').
+    # Use url_for('social.social_accounts') etc.
+
     @app.route('/logs')
     @require_admin_login
     def logs():
@@ -488,6 +383,7 @@ def register_routes(app: Flask):
             return redirect(url_for('topics'))
     
     @app.route('/topics/reject/<int:topic_id>', methods=['POST'])
+    @require_admin_login
     def reject_topic(topic_id):
         """Reject a pending topic"""
         topic = ArticleTopic.query.get_or_404(topic_id)
@@ -506,6 +402,7 @@ def register_routes(app: Flask):
             return redirect(url_for('topics'))
     
     @app.route('/topics/delete/<int:topic_id>', methods=['POST'])
+    @require_admin_login
     def delete_topic(topic_id):
         """Delete a topic"""
         topic = ArticleTopic.query.get_or_404(topic_id)
@@ -586,6 +483,7 @@ def register_routes(app: Flask):
         )
     
     @app.route('/openrouter/set_model/<purpose>/<path:model_id>')
+    @require_admin_login
     def set_model(purpose, model_id):
         """Set a model for a specific purpose"""
         # This would normally update environment variables or database settings
@@ -607,6 +505,7 @@ def register_routes(app: Flask):
         return redirect(url_for('openrouter_config'))
     
     @app.route('/api/test_openrouter', methods=['POST'])
+    @require_admin_login
     def test_openrouter():
         """Test OpenRouter with a model and prompt"""
         import time
@@ -645,6 +544,7 @@ def register_routes(app: Flask):
     
     # SEO API endpoints
     @app.route('/api/seo/analyze', methods=['POST'])
+    @require_admin_login
     def analyze_seo():
         """Analyze content for SEO optimization opportunities"""
         try:
@@ -680,6 +580,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/seo/optimize', methods=['POST'])
+    @require_admin_login
     def optimize_seo():
         """Optimize content for SEO based on analysis"""
         try:
@@ -715,6 +616,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/seo/title-variations', methods=['POST'])
+    @require_admin_login
     def generate_title_variations():
         """Generate SEO-optimized title variations"""
         try:
@@ -748,6 +650,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/seo/meta-description', methods=['POST'])
+    @require_admin_login
     def optimize_meta_description():
         """Generate an optimized meta description"""
         try:
@@ -779,6 +682,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
             
     @app.route('/api/seo/keyword-competition', methods=['POST'])
+    @require_admin_login
     def analyze_keyword_competition():
         """Analyze competition for a keyword"""
         try:
@@ -809,6 +713,7 @@ def register_routes(app: Flask):
     
     # Writing assistant API endpoints
     @app.route('/api/writing/improve', methods=['POST'])
+    @require_admin_login
     def improve_content():
         """Improve content using AI writing assistant"""
         try:
@@ -844,6 +749,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/writing/suggest', methods=['POST'])
+    @require_admin_login
     def suggest_improvements():
         """Suggest improvements for content without changing it"""
         try:
@@ -873,6 +779,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/writing/rewrite', methods=['POST'])
+    @require_admin_login
     def rewrite_section():
         """Rewrite a specific section of content"""
         try:
@@ -906,6 +813,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/writing/variations', methods=['POST'])
+    @require_admin_login
     def content_variations():
         """Generate variations of content"""
         try:
@@ -937,6 +845,7 @@ def register_routes(app: Flask):
             return jsonify({"error": str(e)}), 500
     
     @app.route('/api/writing/check-grammar', methods=['POST'])
+    @require_admin_login
     def check_grammar():
         """Check content for grammar and style issues"""
         try:
@@ -976,13 +885,10 @@ def register_routes(app: Flask):
     # Register SEO Inspirations blueprint
     app.register_blueprint(seo_inspiration_bp)
     
-    # Register Content Creator blueprint
+    # Register Content Creator blueprint (advanced editor)
     app.register_blueprint(content_creator_bp)
-    
-    # Register Simple Content Creator blueprint
-    app.register_blueprint(simple_creator_bp)
-    
-    # Register Simplified Content Creator blueprint
+
+    # Register Simplified Content Creator blueprint (long-form generator)
     app.register_blueprint(simplified_content_bp)
     
     # Register Images routes
@@ -1005,6 +911,9 @@ def register_routes(app: Flask):
     
     # Register Automation blueprint
     app.register_blueprint(automation_bp)
-    
-    # Register AI Content blueprint
-    register_ai_content_routes(app)
+
+    # Register Scheduling blueprint (was registered in main.py)
+    app.register_blueprint(scheduling_bp)
+
+    # Register Multi-Blog blueprint (was registered at module-level)
+    app.register_blueprint(multi_blog_bp)

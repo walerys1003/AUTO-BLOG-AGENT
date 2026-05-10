@@ -1,204 +1,235 @@
 {% extends 'base.html' %}
+{% block title %}SEO — MasterContentAI{% endblock %}
 
-{% block title %}SEO Dashboard{% endblock %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('dashboard') }}">Pulpit</a></li>
+    <li class="breadcrumb-separator"></li>
+    <li>SEO</li>
+</ol>
+{% endblock %}
+
+{% block page_title %}SEO — pulpit{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Zarządzaj strategią SEO swoich treści, analizuj trendy i generuj zoptymalizowane tematy.</p>{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('seo.analyze_content_page') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-magnifying-glass-chart"></i> Analizuj treść
+    </a>
+    <a href="{{ url_for('seo.topics') }}" class="btn btn-primary">
+        <i class="fas fa-lightbulb"></i> Zarządzaj tematami
+    </a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-body">
-                    <h1 class="card-title mb-4 d-flex align-items-center">
-                        <i class="fas fa-chart-line text-primary me-3"></i> SEO Dashboard
-                    </h1>
-                    <p class="lead">
-                        Manage your content SEO strategy, analyze trends, and generate optimized topics.
-                    </p>
-                </div>
-            </div>
+
+{# ─────────────────── KARTY STATYSTYK ─────────────────── #}
+<div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--warning-50);color:var(--warning-700);">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ stats.pending_count if stats else 0 }}</div>
+            <div class="stat-card-label">Tematy oczekujące</div>
         </div>
     </div>
-
-    <div class="row">
-        <!-- Quick Actions Card -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt text-warning me-2"></i> Quick Actions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('seo.topics') }}" class="btn btn-primary">
-                            <i class="fas fa-lightbulb me-2"></i> Manage Topics
-                        </a>
-                        <a href="{{ url_for('seo.analyze_content_page') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-search me-2"></i> Analyze Content
-                        </a>
-                        <a href="{{ url_for('seo.trends') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-chart-line me-2"></i> View Trends
-                        </a>
-                        <a href="{{ url_for('seo.keywords') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-key me-2"></i> Research Keywords
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--success-50);color:var(--success-700);">
+            <i class="fas fa-circle-check"></i>
         </div>
-
-        <!-- Latest Topics Card -->
-        <div class="col-md-8 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-list text-info me-2"></i> Latest Topics
-                    </h5>
-                    <a href="{{ url_for('seo.topics') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-external-link-alt me-1"></i> View All
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped border-bottom">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Blog</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for topic in topics[:5] if topics %}
-                                <tr>
-                                    <td>{{ topic.title }}</td>
-                                    <td>{{ topic.blog_name }}</td>
-                                    <td>
-                                        {% if topic.status == 'pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                        {% elif topic.status == 'approved' %}
-                                        <span class="badge bg-success">Approved</span>
-                                        {% elif topic.status == 'rejected' %}
-                                        <span class="badge bg-danger">Rejected</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">{{ topic.status }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ topic.created_at.strftime('%Y-%m-%d') }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-3">
-                                        <em>No topics found. <a href="{{ url_for('seo.topics') }}">Generate some topics</a> to get started.</em>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div>
+            <div class="stat-card-value">{{ stats.approved_count if stats else 0 }}</div>
+            <div class="stat-card-label">Zaakceptowane</div>
         </div>
     </div>
-
-    <div class="row">
-        <!-- Trending Keywords Card -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-fire text-danger me-2"></i> Trending Keywords
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="trend-keywords">
-                        {% for trend in trends[:10] if trends %}
-                        <span class="badge bg-light text-dark border m-1 p-2">{{ trend }}</span>
-                        {% else %}
-                        <p class="text-center py-3">
-                            <em>No trending keywords found. Check back later.</em>
-                        </p>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <small class="text-muted">Updated automatically daily at 5:00 AM</small>
-                </div>
-            </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--brand-50);color:var(--brand-600);">
+            <i class="fas fa-calendar-day"></i>
         </div>
-
-        <!-- Topic Generation Stats Card -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow border-0 rounded-3 h-100">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-robot text-primary me-2"></i> Topic Generation Stats
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-3">
-                            <h3 class="mb-0 fw-bold">{{ stats.pending_count if stats else 0 }}</h3>
-                            <small class="text-muted">Pending Topics</small>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <h3 class="mb-0 fw-bold">{{ stats.approved_count if stats else 0 }}</h3>
-                            <small class="text-muted">Approved Topics</small>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <h3 class="mb-0 fw-bold">{{ stats.rejected_count if stats else 0 }}</h3>
-                            <small class="text-muted">Rejected Topics</small>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-md-6 mb-3">
-                            <h3 class="mb-0 fw-bold">{{ stats.today_count if stats else 0 }}</h3>
-                            <small class="text-muted">Topics Today</small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h3 class="mb-0 fw-bold">{{ stats.week_count if stats else 0 }}</h3>
-                            <small class="text-muted">Topics This Week</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <a href="{{ url_for('seo.topics') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-sync-alt me-1"></i> Generate New Topics
-                    </a>
-                </div>
-            </div>
+        <div>
+            <div class="stat-card-value">{{ stats.today_count if stats else 0 }}</div>
+            <div class="stat-card-label">Tematy dzisiaj</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-card-icon" style="background:var(--color-cyan-50);color:var(--color-cyan-600);">
+            <i class="fas fa-calendar-week"></i>
+        </div>
+        <div>
+            <div class="stat-card-value">{{ stats.week_count if stats else 0 }}</div>
+            <div class="stat-card-label">W tym tygodniu</div>
         </div>
     </div>
 </div>
+
+{# ─────────────────── DWIE KOLUMNY: szybkie akcje + ostatnie tematy ─────────────────── #}
+<div class="grid grid-cols-3 gap-6 mb-6">
+
+    {# Szybkie akcje (1/3) #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-bolt" style="color:var(--warning-700);margin-right:.375rem;"></i>
+                Szybkie akcje
+            </h3>
+        </div>
+        <div class="card-body stack stack-2" style="display:flex;flex-direction:column;gap:.5rem;">
+            <a href="{{ url_for('seo.topics') }}" class="btn btn-primary btn-block">
+                <i class="fas fa-lightbulb"></i> Zarządzaj tematami
+            </a>
+            <a href="{{ url_for('seo.analyze_content_page') }}" class="btn btn-secondary btn-block">
+                <i class="fas fa-magnifying-glass"></i> Analizuj treść
+            </a>
+            <a href="{{ url_for('seo.trends') }}" class="btn btn-ghost btn-block">
+                <i class="fas fa-chart-line"></i> Trendy
+            </a>
+            <a href="{{ url_for('seo.keywords') }}" class="btn btn-ghost btn-block">
+                <i class="fas fa-key"></i> Słowa kluczowe
+            </a>
+        </div>
+    </div>
+
+    {# Ostatnie tematy (2/3) #}
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <h3 class="card-title">Ostatnie tematy</h3>
+            <a href="{{ url_for('seo.topics') }}" class="btn btn-ghost btn-sm">Zobacz wszystkie</a>
+        </div>
+        {% if topics %}
+        <div class="table-wrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:50%;">Tytuł</th>
+                        <th style="width:22%;">Blog</th>
+                        <th style="width:16%;">Status</th>
+                        <th style="width:12%;">Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%- set status_pl = {'pending':'Oczekujący','approved':'Zaakceptowany','rejected':'Odrzucony','used':'Wykorzystany','error':'Błąd'} -%}
+                    {%- set status_badge = {'pending':'warning','approved':'success','rejected':'danger','used':'info','error':'danger'} -%}
+                    {% for topic in topics[:5] %}
+                    <tr>
+                        <td style="font-weight:500;color:var(--text-primary);">{{ topic.title }}</td>
+                        <td><span class="badge badge-neutral">{{ topic.blog_name }}</span></td>
+                        <td>
+                            <span class="badge badge-{{ status_badge.get(topic.status, 'neutral') }}">
+                                {{ status_pl.get(topic.status, topic.status) }}
+                            </span>
+                        </td>
+                        <td><span style="color:var(--text-tertiary);font-size:.8125rem;">{{ topic.created_at.strftime('%Y-%m-%d') }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem;">
+            <div class="empty-state-icon" style="font-size:2rem;"><i class="fas fa-lightbulb"></i></div>
+            <h4 class="empty-state-title">Brak tematów</h4>
+            <p class="empty-state-description">
+                <a href="{{ url_for('seo.topics') }}" style="color:var(--brand-600);">Wygeneruj pierwsze tematy</a>, aby rozpocząć pracę.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ─────────────────── DOLNY RZĄD: trendy + opis ─────────────────── #}
+<div class="grid grid-cols-2 gap-6">
+
+    {# Trendy #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-fire" style="color:#E11D48;margin-right:.375rem;"></i>
+                Trendujące słowa kluczowe
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="trend-keywords" style="display:flex;flex-wrap:wrap;gap:.375rem;">
+                {% for trend in trends[:15] if trends %}
+                    <span class="badge badge-neutral" style="font-size:.8125rem;padding:.375rem .625rem;">{{ trend }}</span>
+                {% else %}
+                    <p style="color:var(--text-secondary);font-size:.875rem;margin:0;text-align:center;width:100%;padding:1rem 0;">
+                        Brak trendów do wyświetlenia. Zajrzyj później.
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card-body" style="border-top:1px solid var(--border-subtle);padding-top:.625rem;">
+            <small style="color:var(--text-tertiary);font-size:.75rem;">
+                <i class="fas fa-arrows-rotate"></i> Aktualizacja automatyczna codziennie o 05:00
+            </small>
+        </div>
+    </div>
+
+    {# Statystyki generowania tematów (rozszerzone) #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-robot" style="color:var(--brand-600);margin-right:.375rem;"></i>
+                Statystyki generowania
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem;">
+                <div style="padding:.75rem;border-radius:var(--radius-md);background:var(--surface-sunken);text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">{{ stats.pending_count if stats else 0 }}</div>
+                    <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Oczekujące</div>
+                </div>
+                <div style="padding:.75rem;border-radius:var(--radius-md);background:var(--surface-sunken);text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--success-700);">{{ stats.approved_count if stats else 0 }}</div>
+                    <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Zaakceptowane</div>
+                </div>
+                <div style="padding:.75rem;border-radius:var(--radius-md);background:var(--surface-sunken);text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--danger-700);">{{ stats.rejected_count if stats else 0 }}</div>
+                    <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Odrzucone</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+                <div style="padding:.75rem;border-radius:var(--radius-md);background:var(--brand-50);text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--brand-600);">{{ stats.today_count if stats else 0 }}</div>
+                    <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">Dzisiaj</div>
+                </div>
+                <div style="padding:.75rem;border-radius:var(--radius-md);background:var(--color-cyan-50);text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--color-cyan-600);">{{ stats.week_count if stats else 0 }}</div>
+                    <div style="font-size:.6875rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;">W tym tygodniu</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body" style="border-top:1px solid var(--border-subtle);padding-top:.625rem;">
+            <a href="{{ url_for('seo.topics') }}" class="btn btn-ghost btn-sm">
+                <i class="fas fa-wand-magic-sparkles"></i> Wygeneruj nowe tematy
+            </a>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Fetch trending keywords
-    fetch('{{ url_for("seo.api_trends") }}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && data.trends.length > 0) {
-                const trendKeywordsContainer = document.querySelector('.trend-keywords');
-                
-                if (trendKeywordsContainer) {
-                    trendKeywordsContainer.innerHTML = '';
-                    
-                    data.trends.forEach(trend => {
-                        const badge = document.createElement('span');
-                        badge.className = 'badge bg-light text-dark border m-1 p-2';
-                        badge.textContent = trend;
-                        trendKeywordsContainer.appendChild(badge);
-                    });
-                }
+document.addEventListener('DOMContentLoaded', async function () {
+    // Odśwież trendy z API
+    try {
+        const data = await API.get("{{ url_for('seo.api_trends') }}");
+        if (data && data.status === 'success' && Array.isArray(data.trends) && data.trends.length > 0) {
+            const container = document.querySelector('.trend-keywords');
+            if (container) {
+                container.innerHTML = '';
+                data.trends.slice(0, 15).forEach((t) => {
+                    const span = document.createElement('span');
+                    span.className = 'badge badge-neutral';
+                    span.style.cssText = 'font-size:.8125rem;padding:.375rem .625rem;';
+                    span.textContent = t;
+                    container.appendChild(span);
+                });
             }
-        })
-        .catch(error => {
-            console.error('Error fetching trends:', error);
-        });
+        }
+    } catch (_) { /* api.js zrobi toast jeśli krytyczne */ }
 });
 </script>
 {% endblock %}

@@ -1,612 +1,756 @@
 {% extends 'base.html' %}
 
-{% block title %}Social Media Templates{% endblock %}
+{% block title %}Szablony treści — MasterContentAI{% endblock %}
+
+{% block extra_css %}
+<style>
+  .platform-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+  }
+  .platform-tabs__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-2);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .platform-tabs__btn:hover {
+    background: var(--surface-2);
+    color: var(--text-1);
+  }
+  .platform-tabs__btn.is-active {
+    background: var(--brand-50);
+    color: var(--brand-700);
+    border-color: var(--brand-200);
+    font-weight: 600;
+  }
+  .platform-tabs__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .platform-tabs__btn.is-active .platform-tabs__count {
+    background: var(--brand-600);
+    color: white;
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .template-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .template-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .template-card[hidden] { display: none !important; }
+
+  .template-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-1);
+  }
+  .template-card__title {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--text-1);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .template-card__menu {
+    position: relative;
+  }
+  .template-card__menu-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-1);
+    background: var(--surface-1);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .template-card__menu-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-1);
+  }
+  .template-card__menu-list {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    min-width: 160px;
+    padding: var(--space-1);
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    list-style: none;
+    margin: 0;
+    z-index: 10;
+    display: none;
+  }
+  .template-card__menu.is-open .template-card__menu-list { display: block; }
+  .template-card__menu-list button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    background: transparent;
+    text-align: left;
+    color: var(--text-1);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--fs-sm);
+  }
+  .template-card__menu-list button:hover { background: var(--surface-2); }
+  .template-card__menu-list button.is-danger { color: var(--danger-600); }
+  .template-card__menu-list button.is-danger:hover { background: var(--danger-50); }
+
+  .template-card__body { padding: var(--space-4); flex: 1; }
+  .template-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .platform-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+  }
+  .platform-chip--facebook { background: #1877f2; }
+  .platform-chip--twitter { background: #1da1f2; }
+  .platform-chip--linkedin { background: #0a66c2; }
+  .platform-chip--instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+
+  .type-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .template-card__label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .template-card__content {
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-1);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 140px;
+    overflow-y: auto;
+    margin: 0;
+  }
+  .template-card__hashtags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: var(--space-3);
+  }
+  .hashtag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--brand-50);
+    color: var(--brand-700);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  .template-card__foot {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border-1);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: var(--space-8);
+    text-align: center;
+    background: var(--surface-1);
+    border: 1px dashed var(--border-2);
+    border-radius: var(--radius-lg);
+    color: var(--text-2);
+  }
+  .empty-state__icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--brand-50);
+    color: var(--brand-600);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .char-counter { font-size: var(--fs-xs); color: var(--text-2); margin-top: 4px; }
+  .char-counter.is-warn { color: var(--warning-600); }
+  .char-counter.is-error { color: var(--danger-600); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .templates-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-        </a>
+{# Metadane platform — DRY single source of truth #}
+{% set platform_meta = {
+  'facebook':  {'label': 'Facebook',  'icon': 'fa-facebook-f',  'class': 'platform-chip--facebook'},
+  'twitter':   {'label': 'Twitter / X','icon': 'fa-twitter',     'class': 'platform-chip--twitter'},
+  'linkedin':  {'label': 'LinkedIn',  'icon': 'fa-linkedin-in', 'class': 'platform-chip--linkedin'},
+  'instagram': {'label': 'Instagram', 'icon': 'fa-instagram',   'class': 'platform-chip--instagram'}
+} %}
+{% set type_labels = {
+  'article_promotion': 'Promocja artykułu',
+  'quote': 'Cytat',
+  'question': 'Pytanie',
+  'statistic': 'Statystyka',
+  'listicle': 'Lista'
+} %}
+
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('social.social_dashboard') }}" class="btn btn-ghost btn-sm">
+      <i class="fas fa-arrow-left"></i> Powrót do panelu
+    </a>
+    <h1 class="page-title">Szablony treści</h1>
+    <p class="page-subtitle">Twórz wielokrotnie używalne szablony postów dla różnych platform społecznościowych.</p>
+  </div>
+  <div class="page-header__actions">
+    <button type="button" class="btn btn-primary" data-modal-open="addTemplateModal">
+      <i class="fas fa-plus"></i> Dodaj szablon
+    </button>
+  </div>
+</div>
+
+<!-- Filtry platform (DRY: pojedyncza siatka filtrowana JS-em) -->
+<div class="platform-tabs" role="tablist" aria-label="Filtruj szablony według platformy">
+  <button type="button" class="platform-tabs__btn is-active" data-tab-filter="all" role="tab" aria-selected="true">
+    <i class="fas fa-layer-group"></i> Wszystkie platformy
+    <span class="platform-tabs__count">{{ templates|length }}</span>
+  </button>
+  {% for key, meta in platform_meta.items() %}
+    {% set count = templates|selectattr('platform', 'equalto', key)|list|length %}
+    <button type="button" class="platform-tabs__btn" data-tab-filter="{{ key }}" role="tab" aria-selected="false">
+      <i class="fab {{ meta.icon }}"></i> {{ meta.label }}
+      <span class="platform-tabs__count">{{ count }}</span>
+    </button>
+  {% endfor %}
+</div>
+
+<!-- Pojedyncza siatka — wszystkie szablony, filtrowane przez JS -->
+<div class="templates-grid" id="templatesGrid">
+  {% for template in templates %}
+    {% set p = platform_meta.get(template.platform, {'label': template.platform, 'icon': 'fa-share-alt', 'class': ''}) %}
+    <article class="template-card" data-platform="{{ template.platform }}" data-template-id="{{ template.id }}">
+      <header class="template-card__head">
+        <h3 class="template-card__title">{{ template.name }}</h3>
+        <div class="template-card__menu" data-menu>
+          <button type="button" class="template-card__menu-btn" aria-label="Menu szablonu" data-menu-toggle>
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="template-card__menu-list">
+            <li>
+              <button type="button" data-action="edit" data-template-id="{{ template.id }}">
+                <i class="fas fa-edit"></i> Edytuj
+              </button>
+            </li>
+            <li>
+              <button type="button" class="is-danger" data-action="delete"
+                      data-template-id="{{ template.id }}"
+                      data-template-name="{{ template.name }}">
+                <i class="fas fa-trash"></i> Usuń
+              </button>
+            </li>
+          </ul>
+        </div>
+      </header>
+
+      <div class="template-card__body">
+        <div class="template-card__badges">
+          <span class="platform-chip {{ p.class }}">
+            <i class="fab {{ p.icon }}"></i> {{ p.label }}
+          </span>
+          <span class="type-chip">{{ type_labels.get(template.type, template.type) }}</span>
+        </div>
+
+        <div class="template-card__label">Treść szablonu</div>
+        <pre class="template-card__content">{{ template.content }}</pre>
+
+        {% if template.hashtags %}
+          <div class="template-card__label" style="margin-top: var(--space-3);">Domyślne hashtagi</div>
+          <div class="template-card__hashtags">
+            {% for tag in template.hashtags %}
+              <span class="hashtag-chip">#{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if template.description %}
+        <div class="template-card__foot">
+          <i class="fas fa-info-circle"></i> {{ template.description }}
+        </div>
+      {% endif %}
+    </article>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state__icon"><i class="fas fa-file-alt"></i></div>
+      <h3 style="margin: 0 0 var(--space-2); color: var(--text-1);">Brak szablonów</h3>
+      <p style="margin: 0 0 var(--space-4);">Nie utworzono jeszcze żadnych szablonów. Dodaj pierwszy szablon, aby zacząć szybciej tworzyć posty.</p>
+      <button type="button" class="btn btn-primary" data-modal-open="addTemplateModal">
+        <i class="fas fa-plus"></i> Dodaj pierwszy szablon
+      </button>
     </div>
-    <h1 class="h3 mb-0">Content Templates</h1>
-    <div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
-            <i class="fas fa-plus me-1"></i> Add Template
+  {% endfor %}
+
+  <!-- Pusty stan dla filtra (pokazywany przez JS gdy 0 wyników) -->
+  <div class="empty-state" id="emptyFilterState" hidden>
+    <div class="empty-state__icon"><i class="fas fa-filter"></i></div>
+    <h3 style="margin: 0 0 var(--space-2); color: var(--text-1);">Brak szablonów dla wybranej platformy</h3>
+    <p style="margin: 0;">Wybierz inną platformę lub dodaj nowy szablon.</p>
+  </div>
+</div>
+
+<!-- ===== Modal: Dodaj szablon ===== -->
+<div class="modal" id="addTemplateModal" data-modal aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog modal-dialog--lg" role="dialog" aria-modal="true" aria-labelledby="addTemplateTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 class="modal-title" id="addTemplateTitle">
+          <i class="fas fa-plus"></i> Dodaj szablon treści
+        </h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">
+          <i class="fas fa-times"></i>
         </button>
+      </header>
+      <form action="{{ url_for('social.add_template') }}" method="post" data-validate id="addTemplateForm">
+        <div class="modal-body">
+          <div class="form-grid form-grid--2">
+            <div class="form-group">
+              <label for="add_name" class="form-label">Nazwa szablonu <span class="required">*</span></label>
+              <input type="text" class="form-control" id="add_name" name="name" required maxlength="100"
+                     placeholder="np. Promocja artykułu blogowego">
+            </div>
+            <div class="form-group">
+              <label for="add_platform" class="form-label">Platforma <span class="required">*</span></label>
+              <select class="form-control" id="add_platform" name="platform" required>
+                <option value="">Wybierz platformę...</option>
+                <option value="facebook">Facebook</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">Instagram</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid form-grid--2">
+            <div class="form-group">
+              <label for="add_type" class="form-label">Rodzaj treści <span class="required">*</span></label>
+              <select class="form-control" id="add_type" name="type" required>
+                <option value="">Wybierz rodzaj...</option>
+                <option value="article_promotion">Promocja artykułu</option>
+                <option value="quote">Cytat</option>
+                <option value="question">Pytanie</option>
+                <option value="statistic">Statystyka</option>
+                <option value="listicle">Lista</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="add_description" class="form-label">Krótki opis</label>
+              <input type="text" class="form-control" id="add_description" name="description" maxlength="200"
+                     placeholder="Opcjonalny opis zastosowania">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="add_content" class="form-label">Treść szablonu <span class="required">*</span></label>
+            <textarea class="form-control" id="add_content" name="content" rows="6" required
+                      placeholder="Treść posta. Możesz używać zmiennych: {title}, {excerpt}, {url}, {keyword}"></textarea>
+            <div class="form-help">
+              <i class="fas fa-lightbulb"></i>
+              Użyj zmiennych: <code>{title}</code>, <code>{excerpt}</code>, <code>{url}</code>, <code>{keyword}</code>
+            </div>
+            <div class="char-counter" id="add_content_counter" hidden>0 / 280 znaków</div>
+          </div>
+
+          <div class="form-group">
+            <label for="add_hashtags" class="form-label">Domyślne hashtagi</label>
+            <input type="text" class="form-control" id="add_hashtags" name="hashtags"
+                   placeholder="np. marketing, blog, treści (rozdzielone przecinkami)">
+            <div class="form-help">Wpisz hashtagi rozdzielone przecinkami — bez znaku #.</div>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Zapisz szablon
+          </button>
+        </footer>
+      </form>
     </div>
+  </div>
 </div>
 
-<!-- Platform Tabs -->
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all" role="tab">All Platforms</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="facebook-tab" data-bs-toggle="tab" href="#facebook" role="tab">
-            <i class="fab fa-facebook-f text-primary me-1"></i> Facebook
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="twitter-tab" data-bs-toggle="tab" href="#twitter" role="tab">
-            <i class="fab fa-twitter text-info me-1"></i> Twitter
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="linkedin-tab" data-bs-toggle="tab" href="#linkedin" role="tab">
-            <i class="fab fa-linkedin-in text-success me-1"></i> LinkedIn
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="instagram-tab" data-bs-toggle="tab" href="#instagram" role="tab">
-            <i class="fab fa-instagram text-danger me-1"></i> Instagram
-        </a>
-    </li>
-</ul>
+<!-- ===== Modal: Edytuj szablon ===== -->
+<div class="modal" id="editTemplateModal" data-modal aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog modal-dialog--lg" role="dialog" aria-modal="true" aria-labelledby="editTemplateTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 class="modal-title" id="editTemplateTitle">
+          <i class="fas fa-edit"></i> Edytuj szablon treści
+        </h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+      <form action="" method="post" data-validate id="editTemplateForm">
+        <div class="modal-body">
+          <div class="form-grid form-grid--2">
+            <div class="form-group">
+              <label for="edit_name" class="form-label">Nazwa szablonu <span class="required">*</span></label>
+              <input type="text" class="form-control" id="edit_name" name="name" required maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="edit_platform" class="form-label">Platforma <span class="required">*</span></label>
+              <select class="form-control" id="edit_platform" name="platform" required>
+                <option value="facebook">Facebook</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">Instagram</option>
+              </select>
+            </div>
+          </div>
 
-<div class="tab-content">
-    <!-- All Templates Tab -->
-    <div class="tab-pane fade show active" id="all" role="tabpanel">
-        <div class="row">
-            {% for template in templates %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ template.name }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ template.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-{{ template.id }}">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal" data-template-id="{{ template.id }}"><i class="fas fa-edit me-1"></i> Edit</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}"><i class="fas fa-trash me-1"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge {% if template.platform == 'facebook' %}bg-primary{% elif template.platform == 'twitter' %}bg-info{% elif template.platform == 'linkedin' %}bg-success{% elif template.platform == 'instagram' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                <i class="fab fa-{{ template.platform }} me-1"></i> {{ template.platform|capitalize }}
-                            </span>
-                            <span class="badge bg-secondary ms-1">{{ template.type }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Template Content:</strong>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <pre class="mb-0" style="white-space: pre-wrap;">{{ template.content }}</pre>
-                            </div>
-                        </div>
-                        {% if template.hashtags %}
-                        <div>
-                            <strong>Default Hashtags:</strong>
-                            <div class="mt-1">
-                                {% for tag in template.hashtags %}
-                                <span class="badge bg-secondary me-1">#{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> {{ template.description }}
-                        </small>
-                    </div>
-                </div>
+          <div class="form-grid form-grid--2">
+            <div class="form-group">
+              <label for="edit_type" class="form-label">Rodzaj treści <span class="required">*</span></label>
+              <select class="form-control" id="edit_type" name="type" required>
+                <option value="article_promotion">Promocja artykułu</option>
+                <option value="quote">Cytat</option>
+                <option value="question">Pytanie</option>
+                <option value="statistic">Statystyka</option>
+                <option value="listicle">Lista</option>
+              </select>
             </div>
-            {% endfor %}
-            
-            {% if not templates %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No templates found. Start by creating your first template.
-                </div>
+            <div class="form-group">
+              <label for="edit_description" class="form-label">Krótki opis</label>
+              <input type="text" class="form-control" id="edit_description" name="description" maxlength="200">
             </div>
-            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="edit_content" class="form-label">Treść szablonu <span class="required">*</span></label>
+            <textarea class="form-control" id="edit_content" name="content" rows="6" required></textarea>
+            <div class="form-help">
+              <i class="fas fa-lightbulb"></i>
+              Użyj zmiennych: <code>{title}</code>, <code>{excerpt}</code>, <code>{url}</code>, <code>{keyword}</code>
+            </div>
+            <div class="char-counter" id="edit_content_counter" hidden>0 / 280 znaków</div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_hashtags" class="form-label">Domyślne hashtagi</label>
+            <input type="text" class="form-control" id="edit_hashtags" name="hashtags"
+                   placeholder="rozdzielone przecinkami, bez #">
+          </div>
         </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Zapisz zmiany
+          </button>
+        </footer>
+      </form>
     </div>
-    
-    <!-- Facebook Templates Tab -->
-    <div class="tab-pane fade" id="facebook" role="tabpanel">
-        <div class="row">
-            {% for template in templates if template.platform == 'facebook' %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ template.name }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ template.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-{{ template.id }}">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal" data-template-id="{{ template.id }}"><i class="fas fa-edit me-1"></i> Edit</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}"><i class="fas fa-trash me-1"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge bg-primary">
-                                <i class="fab fa-facebook me-1"></i> Facebook
-                            </span>
-                            <span class="badge bg-secondary ms-1">{{ template.type }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Template Content:</strong>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <pre class="mb-0" style="white-space: pre-wrap;">{{ template.content }}</pre>
-                            </div>
-                        </div>
-                        {% if template.hashtags %}
-                        <div>
-                            <strong>Default Hashtags:</strong>
-                            <div class="mt-1">
-                                {% for tag in template.hashtags %}
-                                <span class="badge bg-secondary me-1">#{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> {{ template.description }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No Facebook templates found. Create a Facebook template to see it here.
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    
-    <!-- Twitter Templates Tab -->
-    <div class="tab-pane fade" id="twitter" role="tabpanel">
-        <div class="row">
-            {% for template in templates if template.platform == 'twitter' %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ template.name }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ template.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-{{ template.id }}">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal" data-template-id="{{ template.id }}"><i class="fas fa-edit me-1"></i> Edit</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}"><i class="fas fa-trash me-1"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge bg-info">
-                                <i class="fab fa-twitter me-1"></i> Twitter
-                            </span>
-                            <span class="badge bg-secondary ms-1">{{ template.type }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Template Content:</strong>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <pre class="mb-0" style="white-space: pre-wrap;">{{ template.content }}</pre>
-                            </div>
-                        </div>
-                        {% if template.hashtags %}
-                        <div>
-                            <strong>Default Hashtags:</strong>
-                            <div class="mt-1">
-                                {% for tag in template.hashtags %}
-                                <span class="badge bg-secondary me-1">#{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> {{ template.description }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No Twitter templates found. Create a Twitter template to see it here.
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    
-    <!-- LinkedIn Templates Tab -->
-    <div class="tab-pane fade" id="linkedin" role="tabpanel">
-        <div class="row">
-            {% for template in templates if template.platform == 'linkedin' %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ template.name }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ template.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-{{ template.id }}">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal" data-template-id="{{ template.id }}"><i class="fas fa-edit me-1"></i> Edit</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}"><i class="fas fa-trash me-1"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge bg-success">
-                                <i class="fab fa-linkedin-in me-1"></i> LinkedIn
-                            </span>
-                            <span class="badge bg-secondary ms-1">{{ template.type }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Template Content:</strong>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <pre class="mb-0" style="white-space: pre-wrap;">{{ template.content }}</pre>
-                            </div>
-                        </div>
-                        {% if template.hashtags %}
-                        <div>
-                            <strong>Default Hashtags:</strong>
-                            <div class="mt-1">
-                                {% for tag in template.hashtags %}
-                                <span class="badge bg-secondary me-1">#{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> {{ template.description }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No LinkedIn templates found. Create a LinkedIn template to see it here.
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    
-    <!-- Instagram Templates Tab -->
-    <div class="tab-pane fade" id="instagram" role="tabpanel">
-        <div class="row">
-            {% for template in templates if template.platform == 'instagram' %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ template.name }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ template.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-{{ template.id }}">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal" data-template-id="{{ template.id }}"><i class="fas fa-edit me-1"></i> Edit</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}"><i class="fas fa-trash me-1"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <span class="badge bg-danger">
-                                <i class="fab fa-instagram me-1"></i> Instagram
-                            </span>
-                            <span class="badge bg-secondary ms-1">{{ template.type }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Template Content:</strong>
-                            <div class="p-2 bg-light rounded mt-1">
-                                <pre class="mb-0" style="white-space: pre-wrap;">{{ template.content }}</pre>
-                            </div>
-                        </div>
-                        {% if template.hashtags %}
-                        <div>
-                            <strong>Default Hashtags:</strong>
-                            <div class="mt-1">
-                                {% for tag in template.hashtags %}
-                                <span class="badge bg-secondary me-1">#{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer bg-white">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i> {{ template.description }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No Instagram templates found. Create an Instagram template to see it here.
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+  </div>
 </div>
 
-<!-- Add Template Modal -->
-<div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addTemplateModalLabel">Add Content Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('social.add_template') }}" method="post">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Template Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="platform" class="form-label">Platform</label>
-                            <select class="form-select" id="platform" name="platform" required>
-                                <option value="">Select Platform</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="twitter">Twitter</option>
-                                <option value="linkedin">LinkedIn</option>
-                                <option value="instagram">Instagram</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="type" class="form-label">Content Type</label>
-                            <select class="form-select" id="type" name="type" required>
-                                <option value="">Select Type</option>
-                                <option value="article_promotion">Article Promotion</option>
-                                <option value="quote">Quote</option>
-                                <option value="question">Question</option>
-                                <option value="statistic">Statistic</option>
-                                <option value="listicle">Listicle</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="description" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="description" name="description">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Template Content</label>
-                        <div class="form-text mb-2">
-                            Use placeholders like {title}, {excerpt}, {url}, {keyword} that will be replaced with actual content.
-                        </div>
-                        <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hashtags" class="form-label">Default Hashtags</label>
-                        <input type="text" class="form-control" id="hashtags" name="hashtags">
-                        <div class="form-text">Comma-separated list of hashtags (without # symbol)</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Template</button>
-                </div>
-            </form>
+<!-- ===== Modal: Usuń szablon ===== -->
+<div class="modal" id="deleteTemplateModal" data-modal aria-hidden="true">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteTemplateTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 class="modal-title" id="deleteTemplateTitle">
+          <i class="fas fa-exclamation-triangle text-danger"></i> Usuń szablon
+        </h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Zamknij">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+      <form action="" method="post" id="deleteTemplateForm">
+        <div class="modal-body">
+          <p style="margin: 0 0 var(--space-3);">
+            Czy na pewno chcesz usunąć szablon <strong id="deleteTemplateName">—</strong>?
+          </p>
+          <div class="alert alert-warning" style="margin: 0;">
+            <i class="fas fa-exclamation-circle"></i>
+            Tej operacji nie można cofnąć. Szablon zostanie trwale usunięty.
+          </div>
         </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-modal-close>Anuluj</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Usuń szablon
+          </button>
+        </footer>
+      </form>
     </div>
-</div>
-
-<!-- Edit Template Modal -->
-<div class="modal fade" id="editTemplateModal" tabindex="-1" aria-labelledby="editTemplateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editTemplateModalLabel">Edit Content Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editTemplateForm" action="" method="post">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_name" class="form-label">Template Name</label>
-                            <input type="text" class="form-control" id="edit_name" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_platform" class="form-label">Platform</label>
-                            <select class="form-select" id="edit_platform" name="platform" required>
-                                <option value="">Select Platform</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="twitter">Twitter</option>
-                                <option value="linkedin">LinkedIn</option>
-                                <option value="instagram">Instagram</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_type" class="form-label">Content Type</label>
-                            <select class="form-select" id="edit_type" name="type" required>
-                                <option value="">Select Type</option>
-                                <option value="article_promotion">Article Promotion</option>
-                                <option value="quote">Quote</option>
-                                <option value="question">Question</option>
-                                <option value="statistic">Statistic</option>
-                                <option value="listicle">Listicle</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit_description" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="edit_description" name="description">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_content" class="form-label">Template Content</label>
-                        <div class="form-text mb-2">
-                            Use placeholders like {title}, {excerpt}, {url}, {keyword} that will be replaced with actual content.
-                        </div>
-                        <textarea class="form-control" id="edit_content" name="content" rows="6" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_hashtags" class="form-label">Default Hashtags</label>
-                        <input type="text" class="form-control" id="edit_hashtags" name="hashtags">
-                        <div class="form-text">Comma-separated list of hashtags (without # symbol)</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Template Modal -->
-<div class="modal fade" id="deleteTemplateModal" tabindex="-1" aria-labelledby="deleteTemplateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteTemplateModalLabel">Delete Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the template "<span id="templateName"></span>"?</p>
-                <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteTemplateForm" action="" method="post">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle edit template modal
-        const editTemplateModal = document.getElementById('editTemplateModal');
-        if (editTemplateModal) {
-            editTemplateModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const templateId = button.getAttribute('data-template-id');
-                const form = document.getElementById('editTemplateForm');
-                form.action = `/social/templates/${templateId}/edit`;
-                
-                // Fetch template data via AJAX
-                fetch(`/api/social/templates/${templateId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Populate form fields
-                        document.getElementById('edit_name').value = data.name;
-                        document.getElementById('edit_platform').value = data.platform;
-                        document.getElementById('edit_type').value = data.type;
-                        document.getElementById('edit_description').value = data.description;
-                        document.getElementById('edit_content').value = data.content;
-                        document.getElementById('edit_hashtags').value = data.hashtags.join(', ');
-                    });
-            });
-        }
-        
-        // Handle delete template modal
-        const deleteTemplateModal = document.getElementById('deleteTemplateModal');
-        if (deleteTemplateModal) {
-            deleteTemplateModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const templateId = button.getAttribute('data-template-id');
-                const templateName = button.getAttribute('data-template-name');
-                
-                document.getElementById('templateName').textContent = templateName;
-                document.getElementById('deleteTemplateForm').action = `/social/templates/${templateId}/delete`;
-            });
-        }
-        
-        // Show character count for Twitter content
-        const platformSelect = document.getElementById('platform');
-        const contentTextarea = document.getElementById('content');
-        const charCountContainer = document.createElement('div');
-        charCountContainer.className = 'form-text mt-1 d-none';
-        charCountContainer.innerHTML = '<span id="content-char-count">0</span>/280 characters';
-        
-        if (contentTextarea && platformSelect) {
-            contentTextarea.after(charCountContainer);
-            
-            // Character counter for content
-            contentTextarea.addEventListener('input', function() {
-                const charCount = document.getElementById('content-char-count');
-                if (charCount) {
-                    charCount.textContent = this.value.length;
-                    
-                    if (this.value.length > 280 && platformSelect.value === 'twitter') {
-                        charCount.classList.add('text-danger');
-                    } else {
-                        charCount.classList.remove('text-danger');
-                    }
-                }
-            });
-            
-            // Show/hide character count based on platform
-            platformSelect.addEventListener('change', function() {
-                if (this.value === 'twitter') {
-                    charCountContainer.classList.remove('d-none');
-                    // Trigger input event to update character count
-                    contentTextarea.dispatchEvent(new Event('input'));
-                } else {
-                    charCountContainer.classList.add('d-none');
-                }
-            });
-        }
-        
-        // Similar logic for edit modal
-        const editPlatformSelect = document.getElementById('edit_platform');
-        const editContentTextarea = document.getElementById('edit_content');
-        const editCharCountContainer = document.createElement('div');
-        editCharCountContainer.className = 'form-text mt-1 d-none';
-        editCharCountContainer.innerHTML = '<span id="edit-content-char-count">0</span>/280 characters';
-        
-        if (editContentTextarea && editPlatformSelect) {
-            editContentTextarea.after(editCharCountContainer);
-            
-            // Character counter for edit content
-            editContentTextarea.addEventListener('input', function() {
-                const charCount = document.getElementById('edit-content-char-count');
-                if (charCount) {
-                    charCount.textContent = this.value.length;
-                    
-                    if (this.value.length > 280 && editPlatformSelect.value === 'twitter') {
-                        charCount.classList.add('text-danger');
-                    } else {
-                        charCount.classList.remove('text-danger');
-                    }
-                }
-            });
-            
-            // Show/hide character count based on platform
-            editPlatformSelect.addEventListener('change', function() {
-                if (this.value === 'twitter') {
-                    editCharCountContainer.classList.remove('d-none');
-                    // Trigger input event to update character count
-                    editContentTextarea.dispatchEvent(new Event('input'));
-                } else {
-                    editCharCountContainer.classList.add('d-none');
-                }
-            });
-        }
+(function() {
+  'use strict';
+
+  // ===== Filtry platform =====
+  const tabs = document.querySelectorAll('[data-tab-filter]');
+  const cards = document.querySelectorAll('.template-card');
+  const emptyFilterState = document.getElementById('emptyFilterState');
+
+  function applyFilter(filter) {
+    let visible = 0;
+    cards.forEach(card => {
+      const matches = filter === 'all' || card.dataset.platform === filter;
+      card.hidden = !matches;
+      if (matches) visible++;
     });
+    if (emptyFilterState) {
+      emptyFilterState.hidden = visible !== 0 || cards.length === 0;
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('is-active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('is-active');
+      tab.setAttribute('aria-selected', 'true');
+      applyFilter(tab.dataset.tabFilter);
+    });
+  });
+
+  // ===== Menu kontekstowe na karcie =====
+  document.addEventListener('click', (e) => {
+    // Zamknij wszystkie menu
+    document.querySelectorAll('[data-menu].is-open').forEach(m => {
+      if (!m.contains(e.target)) m.classList.remove('is-open');
+    });
+
+    const toggle = e.target.closest('[data-menu-toggle]');
+    if (toggle) {
+      e.stopPropagation();
+      const menu = toggle.closest('[data-menu]');
+      const wasOpen = menu.classList.contains('is-open');
+      document.querySelectorAll('[data-menu].is-open').forEach(m => m.classList.remove('is-open'));
+      if (!wasOpen) menu.classList.add('is-open');
+    }
+  });
+
+  // ===== Akcje: Edycja / Usuwanie =====
+  document.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-action="edit"]');
+    if (editBtn) {
+      const id = editBtn.dataset.templateId;
+      await openEditModal(id);
+      return;
+    }
+    const delBtn = e.target.closest('[data-action="delete"]');
+    if (delBtn) {
+      openDeleteModal(delBtn.dataset.templateId, delBtn.dataset.templateName);
+      return;
+    }
+  });
+
+  async function openEditModal(id) {
+    const form = document.getElementById('editTemplateForm');
+    form.action = `/social/templates/${id}/edit`;
+
+    // Reset pól
+    ['edit_name', 'edit_description', 'edit_content', 'edit_hashtags'].forEach(f => {
+      const el = document.getElementById(f);
+      if (el) el.value = '';
+    });
+
+    try {
+      const api = window.API;
+      let data;
+      if (api && typeof api.json === 'function') {
+        data = await api.json(`/api/social/templates/${id}`);
+      } else {
+        const r = await fetch(`/api/social/templates/${id}`, { credentials: 'same-origin' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        data = await r.json();
+      }
+      document.getElementById('edit_name').value = data.name || '';
+      document.getElementById('edit_platform').value = data.platform || '';
+      document.getElementById('edit_type').value = data.type || '';
+      document.getElementById('edit_description').value = data.description || '';
+      document.getElementById('edit_content').value = data.content || '';
+      document.getElementById('edit_hashtags').value = Array.isArray(data.hashtags)
+        ? data.hashtags.join(', ')
+        : (data.hashtags || '');
+
+      updateCharCounter('edit_content', 'edit_platform', 'edit_content_counter');
+      window.Modal && window.Modal.open
+        ? window.Modal.open('editTemplateModal')
+        : openModalFallback('editTemplateModal');
+    } catch (err) {
+      console.error(err);
+      window.Toast && window.Toast.error
+        ? window.Toast.error('Nie udało się załadować szablonu.')
+        : alert('Nie udało się załadować szablonu.');
+    }
+  }
+
+  function openDeleteModal(id, name) {
+    document.getElementById('deleteTemplateForm').action = `/social/templates/${id}/delete`;
+    document.getElementById('deleteTemplateName').textContent = name || '—';
+    window.Modal && window.Modal.open
+      ? window.Modal.open('deleteTemplateModal')
+      : openModalFallback('deleteTemplateModal');
+  }
+
+  // ===== Fallback otwierania modali (gdy globalny Modal nie istnieje) =====
+  function openModalFallback(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.classList.add('is-open');
+    m.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModalFallback(modal) {
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', (e) => {
+    const opener = e.target.closest('[data-modal-open]');
+    if (opener) {
+      const id = opener.dataset.modalOpen;
+      window.Modal && window.Modal.open
+        ? window.Modal.open(id)
+        : openModalFallback(id);
+    }
+    const closer = e.target.closest('[data-modal-close]');
+    if (closer) {
+      const m = closer.closest('[data-modal]');
+      window.Modal && window.Modal.close
+        ? window.Modal.close(m && m.id)
+        : closeModalFallback(m);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('[data-modal].is-open').forEach(m => {
+        window.Modal && window.Modal.close
+          ? window.Modal.close(m.id)
+          : closeModalFallback(m);
+      });
+    }
+  });
+
+  // ===== Licznik znaków dla Twittera =====
+  const TWITTER_LIMIT = 280;
+  function updateCharCounter(textareaId, platformSelectId, counterId) {
+    const ta = document.getElementById(textareaId);
+    const sel = document.getElementById(platformSelectId);
+    const counter = document.getElementById(counterId);
+    if (!ta || !sel || !counter) return;
+    const isTwitter = sel.value === 'twitter';
+    counter.hidden = !isTwitter;
+    if (!isTwitter) return;
+    const len = ta.value.length;
+    counter.textContent = `${len} / ${TWITTER_LIMIT} znaków`;
+    counter.classList.toggle('is-warn', len > TWITTER_LIMIT * 0.8 && len <= TWITTER_LIMIT);
+    counter.classList.toggle('is-error', len > TWITTER_LIMIT);
+  }
+
+  ['add', 'edit'].forEach(prefix => {
+    const ta = document.getElementById(`${prefix}_content`);
+    const sel = document.getElementById(`${prefix}_platform`);
+    if (!ta || !sel) return;
+    const tick = () => updateCharCounter(`${prefix}_content`, `${prefix}_platform`, `${prefix}_content_counter`);
+    ta.addEventListener('input', tick);
+    sel.addEventListener('change', tick);
+    tick();
+  });
+})();
 </script>
 {% endblock %}

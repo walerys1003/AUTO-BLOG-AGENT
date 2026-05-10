@@ -1,204 +1,401 @@
 {% extends 'base.html' %}
 
-{% block title %}Newsletter Subscribers - BLOG AUTOMATION MASTER{% endblock %}
+{# Subskrybenci newslettera — MasterContentAI #}
+
+{% block title %}Subskrybenci — MasterContentAI{% endblock %}
+
+{# DRY: meta dla statusu subskrybenta #}
+{% set sub_status_meta = {
+    'active':       {'label': 'Aktywny',      'pill': 'pill-success'},
+    'unsubscribed': {'label': 'Wypisany',     'pill': 'pill-warning'},
+    'bounced':      {'label': 'Zwrócony',     'pill': 'pill-danger'}
+} %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h1 class="mb-0">Newsletter Subscribers</h1>
-        <p class="text-muted">Manage your newsletter subscribers</p>
-    </div>
-    <div class="col-md-4 text-end">
-        <a href="{{ url_for('newsletter.dashboard') }}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-        </a>
-        <button class="btn btn-outline-success ms-2" data-bs-toggle="modal" data-bs-target="#addSubscriberModal">
-            <i class="fas fa-plus me-1"></i> Add New
-        </button>
-    </div>
-</div>
+<div class="page-shell">
 
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">Active Subscribers</h5>
-                <p class="card-text display-4">{{ active_count }}</p>
-            </div>
+    {# ---------- Header ---------- #}
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-users" aria-hidden="true" style="color:var(--brand-700);"></i>
+                Subskrybenci newslettera
+            </h1>
+            <p class="page-subtitle">
+                Zarządzaj listą odbiorców newsletterów ze wszystkich blogów.
+            </p>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <h5 class="card-title">Unsubscribed</h5>
-                <p class="card-text display-4">{{ unsubscribed_count }}</p>
-            </div>
+        <div class="page-actions">
+            <a href="{{ url_for('newsletter.dashboard') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Powrót
+            </a>
+            <button type="button" class="btn btn-primary" data-open-modal="addSubscriberModal">
+                <i class="fas fa-plus" aria-hidden="true"></i> Dodaj subskrybenta
+            </button>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <h5 class="card-title">Bounced</h5>
-                <p class="card-text display-4">{{ bounced_count }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+    </header>
 
-<!-- Subscribers Table -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">All Subscribers</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Blog</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for subscriber in subscribers %}
-                    <tr>
-                        <td>{{ subscriber.email }}</td>
-                        <td>{{ subscriber.first_name }} {{ subscriber.last_name }}</td>
-                        <td>
-                            {% if subscriber.status == 'active' %}
-                            <span class="badge bg-success">Active</span>
-                            {% elif subscriber.status == 'unsubscribed' %}
-                            <span class="badge bg-warning">Unsubscribed</span>
-                            {% elif subscriber.status == 'bounced' %}
-                            <span class="badge bg-danger">Bounced</span>
-                            {% else %}
-                            <span class="badge bg-secondary">{{ subscriber.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if subscriber.blog %}
-                            {{ subscriber.blog.name }}
-                            {% else %}
-                            <span class="text-muted">All blogs</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ subscriber.created_at.strftime('%Y-%m-%d') }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editSubscriberModal{{ subscriber.id }}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form method="post" action="{{ url_for('newsletter.delete_subscriber', subscriber_id=subscriber.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this subscriber?')">
-                                    <i class="fas fa-trash"></i>
+    {# ---------- KPI ---------- #}
+    <section class="kpi-grid" aria-label="Statystyki subskrybentów">
+        <article class="kpi kpi--success">
+            <div class="kpi__icon"><i class="fas fa-user-check" aria-hidden="true"></i></div>
+            <div class="kpi__body">
+                <div class="kpi__value">{{ active_count }}</div>
+                <div class="kpi__label">Aktywni</div>
+            </div>
+        </article>
+        <article class="kpi kpi--warning">
+            <div class="kpi__icon"><i class="fas fa-user-times" aria-hidden="true"></i></div>
+            <div class="kpi__body">
+                <div class="kpi__value">{{ unsubscribed_count }}</div>
+                <div class="kpi__label">Wypisani</div>
+            </div>
+        </article>
+        <article class="kpi kpi--danger">
+            <div class="kpi__icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
+            <div class="kpi__body">
+                <div class="kpi__value">{{ bounced_count }}</div>
+                <div class="kpi__label">Zwrócone</div>
+            </div>
+        </article>
+    </section>
+
+    {# ---------- Tabela subskrybentów ---------- #}
+    <section class="card">
+        <header class="card-header">
+            <h2 class="card-title">Wszyscy subskrybenci</h2>
+            <small class="text-muted">Łącznie: <strong>{{ subscribers|length }}</strong></small>
+        </header>
+        <div class="card-body card-body--flush">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>E-mail</th>
+                            <th>Imię i nazwisko</th>
+                            <th>Status</th>
+                            <th>Blog</th>
+                            <th>Dołączył(a)</th>
+                            <th class="text-end">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscriber in subscribers %}
+                        {% set sm = sub_status_meta.get(subscriber.status, {'label': subscriber.status, 'pill': 'pill-neutral'}) %}
+                        <tr>
+                            <td><strong>{{ subscriber.email }}</strong></td>
+                            <td>{{ subscriber.first_name }} {{ subscriber.last_name }}</td>
+                            <td><span class="pill {{ sm.pill }}">{{ sm.label }}</span></td>
+                            <td>
+                                {% if subscriber.blog %}
+                                    {{ subscriber.blog.name }}
+                                {% else %}
+                                    <span class="text-muted text-italic">Wszystkie</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ subscriber.created_at.strftime('%Y-%m-%d') }}</small></td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-ghost"
+                                        data-action="edit-subscriber"
+                                        data-id="{{ subscriber.id }}"
+                                        data-email="{{ subscriber.email|e }}"
+                                        data-first="{{ subscriber.first_name|default('', true)|e }}"
+                                        data-last="{{ subscriber.last_name|default('', true)|e }}"
+                                        data-status="{{ subscriber.status }}"
+                                        data-blog-id="{{ subscriber.blog_id|default('', true) }}"
+                                        title="Edytuj" aria-label="Edytuj subskrybenta">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
                                 </button>
-                            </form>
-                        </td>
-                    </tr>
-                    
-                    <!-- Edit Subscriber Modal -->
-                    <div class="modal fade" id="editSubscriberModal{{ subscriber.id }}" tabindex="-1" aria-labelledby="editSubscriberModalLabel{{ subscriber.id }}" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editSubscriberModalLabel{{ subscriber.id }}">Edit Subscriber</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form method="post" action="{{ url_for('newsletter.edit_subscriber', subscriber_id=subscriber.id) }}">
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label for="email{{ subscriber.id }}" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email{{ subscriber.id }}" name="email" value="{{ subscriber.email }}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="first_name{{ subscriber.id }}" class="form-label">First Name</label>
-                                            <input type="text" class="form-control" id="first_name{{ subscriber.id }}" name="first_name" value="{{ subscriber.first_name }}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="last_name{{ subscriber.id }}" class="form-label">Last Name</label>
-                                            <input type="text" class="form-control" id="last_name{{ subscriber.id }}" name="last_name" value="{{ subscriber.last_name }}">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="status{{ subscriber.id }}" class="form-label">Status</label>
-                                            <select class="form-select" id="status{{ subscriber.id }}" name="status">
-                                                <option value="active" {% if subscriber.status == 'active' %}selected{% endif %}>Active</option>
-                                                <option value="unsubscribed" {% if subscriber.status == 'unsubscribed' %}selected{% endif %}>Unsubscribed</option>
-                                                <option value="bounced" {% if subscriber.status == 'bounced' %}selected{% endif %}>Bounced</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="blog_id{{ subscriber.id }}" class="form-label">Blog</label>
-                                            <select class="form-select" id="blog_id{{ subscriber.id }}" name="blog_id">
-                                                <option value="">All blogs</option>
-                                                {% for blog in blogs %}
-                                                <option value="{{ blog.id }}" {% if subscriber.blog_id == blog.id %}selected{% endif %}>{{ blog.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                    </div>
+                                <form method="post"
+                                      action="{{ url_for('newsletter.delete_subscriber', subscriber_id=subscriber.id) }}"
+                                      data-confirm="Czy na pewno chcesz usunąć tego subskrybenta?"
+                                      style="display:inline;margin:0;">
+                                    <button type="submit" class="btn btn-sm btn-danger-ghost"
+                                            title="Usuń" aria-label="Usuń subskrybenta">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                    </button>
                                 </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <p class="mb-0">No subscribers yet.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-friends empty-state__icon" aria-hidden="true"></i>
+                                    <h3 class="empty-state__title">Brak subskrybentów</h3>
+                                    <p class="empty-state__text">Dodaj pierwszego subskrybenta, aby rozpocząć budowanie listy.</p>
+                                    <button type="button" class="btn btn-primary" data-open-modal="addSubscriberModal">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Dodaj subskrybenta
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </section>
+
+</div>
+
+{# Dane subskrybentów dostępne dla JS przy edycji — JSON islands per row już są w data-* #}
+
+{# =================================================================== #}
+{# Natywny modal: Dodaj subskrybenta                                    #}
+{# =================================================================== #}
+<div class="modal" id="addSubscriberModal" role="dialog" aria-modal="true"
+     aria-labelledby="addSubscriberModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog" role="document">
+        <header class="modal-header">
+            <h3 class="modal-title" id="addSubscriberModalLabel">
+                <i class="fas fa-plus" aria-hidden="true"></i> Dodaj subskrybenta
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <form method="post" action="{{ url_for('newsletter.add_subscriber') }}" data-validate>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="add_email" class="form-label">E-mail <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="add_email" name="email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="add_first_name" class="form-label">Imię</label>
+                        <input type="text" class="form-control" id="add_first_name" name="first_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="add_last_name" class="form-label">Nazwisko</label>
+                        <input type="text" class="form-control" id="add_last_name" name="last_name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="add_blog_id" class="form-label">Blog</label>
+                    <select class="form-select" id="add_blog_id" name="blog_id">
+                        <option value="">Wszystkie blogi</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}">{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close>Anuluj</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Dodaj
+                </button>
+            </footer>
+        </form>
     </div>
 </div>
 
-<!-- Add Subscriber Modal -->
-<div class="modal fade" id="addSubscriberModal" tabindex="-1" aria-labelledby="addSubscriberModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSubscriberModalLabel">Add New Subscriber</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+{# =================================================================== #}
+{# Natywny modal: Edycja subskrybenta (jeden modal, wypełniany z JS)    #}
+{# =================================================================== #}
+<div class="modal" id="editSubscriberModal" role="dialog" aria-modal="true"
+     aria-labelledby="editSubscriberModalLabel" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-dialog" role="document">
+        <header class="modal-header">
+            <h3 class="modal-title" id="editSubscriberModalLabel">
+                <i class="fas fa-edit" aria-hidden="true"></i> Edytuj subskrybenta
+            </h3>
+            <button type="button" class="btn-icon" data-close aria-label="Zamknij">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <form id="edit-subscriber-form" method="post" action="" data-validate>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_email" class="form-label">E-mail <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="edit_email" name="email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_first_name" class="form-label">Imię</label>
+                        <input type="text" class="form-control" id="edit_first_name" name="first_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_last_name" class="form-label">Nazwisko</label>
+                        <input type="text" class="form-control" id="edit_last_name" name="last_name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit_status" class="form-label">Status</label>
+                    <select class="form-select" id="edit_status" name="status">
+                        <option value="active">Aktywny</option>
+                        <option value="unsubscribed">Wypisany</option>
+                        <option value="bounced">Zwrócony</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_blog_id" class="form-label">Blog</label>
+                    <select class="form-select" id="edit_blog_id" name="blog_id">
+                        <option value="">Wszystkie blogi</option>
+                        {% for blog in blogs %}
+                        <option value="{{ blog.id }}">{{ blog.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <form method="post" action="{{ url_for('newsletter.add_subscriber') }}">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="blog_id" class="form-label">Blog</label>
-                        <select class="form-select" id="blog_id" name="blog_id">
-                            <option value="">All blogs</option>
-                            {% for blog in blogs %}
-                            <option value="{{ blog.id }}">{{ blog.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Add Subscriber</button>
-                </div>
-            </form>
-        </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close>Anuluj</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save" aria-hidden="true"></i> Zapisz zmiany
+                </button>
+            </footer>
+        </form>
     </div>
 </div>
+
+{# Szablon URL do edycji: JS podstawia ID #}
+<script id="edit-subscriber-url-template" type="application/json">{{ url_for('newsletter.edit_subscriber', subscriber_id=0)|tojson }}</script>
+
+<style>
+.page-shell{display:flex;flex-direction:column;gap:1.5rem;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+.page-title{margin:0;font-size:1.625rem;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.page-subtitle{margin:.375rem 0 0;color:var(--text-3);font-size:.9375rem;max-width:60ch;}
+.page-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;}
+.kpi{display:flex;gap:1rem;padding:1.25rem;border-radius:.75rem;background:var(--surface-1);border:1px solid var(--border-1);}
+.kpi--success{border-left:4px solid var(--success-700);}
+.kpi--warning{border-left:4px solid var(--warning-700);}
+.kpi--danger{border-left:4px solid var(--danger-700);}
+.kpi__icon{width:2.5rem;height:2.5rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0;}
+.kpi--success .kpi__icon{background:var(--success-50);color:var(--success-700);}
+.kpi--warning .kpi__icon{background:var(--warning-50);color:var(--warning-700);}
+.kpi--danger .kpi__icon{background:var(--danger-50);color:var(--danger-700);}
+.kpi__value{font-size:1.875rem;font-weight:700;color:var(--text-1);line-height:1.1;font-variant-numeric:tabular-nums;}
+.kpi__label{font-size:.875rem;font-weight:600;color:var(--text-2);margin-top:.125rem;}
+
+/* Card + table (same as dashboard.html) */
+.card{background:var(--surface-1);border:1px solid var(--border-1);border-radius:.75rem;overflow:hidden;}
+.card-header{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);flex-wrap:wrap;}
+.card-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);}
+.card-body{padding:1.25rem;}
+.card-body--flush{padding:0;}
+
+.data-table{width:100%;border-collapse:collapse;font-size:.9375rem;}
+.data-table thead{background:var(--surface-2);}
+.data-table th{padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);border-bottom:1px solid var(--border-1);}
+.data-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border-1);vertical-align:middle;color:var(--text-2);}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.data-table tbody tr:hover{background:var(--surface-2);}
+.data-table strong{color:var(--text-1);}
+.text-end{text-align:right;}
+.text-italic{font-style:italic;}
+.text-muted{color:var(--text-3);}
+.table-responsive{overflow-x:auto;}
+
+.pill{display:inline-flex;align-items:center;gap:.25rem;padding:.1875rem .625rem;font-size:.75rem;font-weight:600;border-radius:999px;}
+.pill-success{background:var(--success-50);color:var(--success-700);}
+.pill-danger{background:var(--danger-50);color:var(--danger-700);}
+.pill-warning{background:var(--warning-50);color:var(--warning-700);}
+.pill-neutral{background:var(--surface-3);color:var(--text-2);}
+
+.empty-state{padding:2.5rem 1rem;text-align:center;}
+.empty-state__icon{font-size:2.5rem;color:var(--text-3);margin-bottom:1rem;}
+.empty-state__title{margin:0 0 .375rem;font-size:1.125rem;font-weight:600;color:var(--text-1);}
+.empty-state__text{margin:0 0 1.25rem;color:var(--text-3);}
+
+/* Forms */
+.form-group{margin-bottom:1rem;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+@media (max-width: 480px){.form-row{grid-template-columns:1fr;}}
+.form-label{display:block;margin-bottom:.375rem;font-size:.875rem;font-weight:500;color:var(--text-2);}
+.required{color:var(--danger-700);}
+.form-control,.form-select{width:100%;padding:.5rem .75rem;font-size:.9375rem;color:var(--text-1);background:var(--surface-1);border:1px solid var(--border-2);border-radius:.5rem;}
+.form-control:focus,.form-select:focus{outline:none;border-color:var(--brand-600);box-shadow:0 0 0 3px var(--brand-50);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;font-size:.875rem;font-weight:500;border-radius:.5rem;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s ease;}
+.btn-sm{padding:.3125rem .625rem;font-size:.8125rem;}
+.btn-primary{background:var(--brand-600);color:#fff;border-color:var(--brand-600);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700);}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent;}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text-1);}
+.btn-danger-ghost{background:transparent;color:var(--danger-700);border-color:transparent;}
+.btn-danger-ghost:hover{background:var(--danger-50);}
+.btn-icon{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:.375rem;color:var(--text-3);cursor:pointer;}
+.btn-icon:hover{background:var(--surface-2);color:var(--text-1);}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:1050;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal[hidden]{display:none;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);}
+.modal-dialog{position:relative;background:var(--surface-1);border-radius:.75rem;box-shadow:0 24px 48px rgba(15,23,42,.2);max-width:540px;width:100%;animation:modalIn .15s ease;max-height:90vh;display:flex;flex-direction:column;}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.modal-dialog form{display:contents;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border-1);}
+.modal-title{margin:0;font-size:1rem;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:.5rem;}
+.modal-body{padding:1.25rem;color:var(--text-1);overflow-y:auto;}
+.modal-footer{display:flex;justify-content:flex-end;gap:.5rem;padding:.875rem 1.25rem;border-top:1px solid var(--border-1);}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    'use strict';
+
+    // ----- Modal helpers -----
+    function openModal(modal){
+        if (!modal) return;
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var first = modal.querySelector('input:not([type=hidden]), select');
+        if (first) try { first.focus(); } catch(e) {}
+    }
+    function closeModal(modal){
+        if (!modal) return;
+        modal.hidden = true;
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('[data-open-modal]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            openModal(document.getElementById(btn.dataset.openModal));
+        });
+    });
+    document.addEventListener('click', function(e){
+        var t = e.target.closest('[data-close]');
+        if (t) closeModal(t.closest('.modal'));
+    });
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(closeModal);
+    });
+
+    // ----- Confirm pattern -----
+    document.querySelectorAll('form[data-confirm]').forEach(function(form){
+        form.addEventListener('submit', function(e){
+            if (!window.confirm(form.dataset.confirm)) e.preventDefault();
+        });
+    });
+
+    // ----- Edit subscriber -----
+    var urlTplNode = document.getElementById('edit-subscriber-url-template');
+    var urlTpl = urlTplNode ? JSON.parse(urlTplNode.textContent) : '';
+    var editForm = document.getElementById('edit-subscriber-form');
+    var editModal = document.getElementById('editSubscriberModal');
+
+    document.querySelectorAll('[data-action="edit-subscriber"]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var d = btn.dataset;
+            // Replace trailing /0 with /<id> to build correct edit URL
+            editForm.action = urlTpl.replace(/\/0(?:$|\?)/, '/' + d.id);
+            document.getElementById('edit_email').value      = d.email || '';
+            document.getElementById('edit_first_name').value = d.first || '';
+            document.getElementById('edit_last_name').value  = d.last  || '';
+            document.getElementById('edit_status').value     = d.status || 'active';
+            document.getElementById('edit_blog_id').value    = d.blogId || '';
+            openModal(editModal);
+        });
+    });
+})();
+</script>
 {% endblock %}

@@ -13,6 +13,7 @@ from utils.content.long_paragraph_generator import generate_long_paragraph_conte
 from utils.images.google import search_google_images
 from utils.images.unsplash import search_unsplash_images
 from utils.images.auto_image_finder import prepare_image_metadata, find_and_associate_images
+from auth import login_required
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ def simplified_content_page():
     )
 
 @simplified_content_bp.route("/api/generate_simplified_content", methods=["POST"])
+@login_required
 def generate_simplified_content():
     """Generate content with long paragraphs"""
     try:
@@ -79,6 +81,7 @@ def generate_simplified_content():
 from utils.images.auto_image_finder import find_and_associate_images
 
 @simplified_content_bp.route("/api/save_simplified_content", methods=["POST"])
+@login_required
 def save_simplified_content():
     """Save generated content to the database"""
     try:
@@ -148,6 +151,7 @@ def save_simplified_content():
         }), 500
         
 @simplified_content_bp.route("/api/find_images", methods=["POST"])
+@login_required
 def find_images_api():
     """Find images for a given query using Google Images API"""
     try:

@@ -10,6 +10,7 @@ from sqlalchemy import desc
 from app import db
 from models import Blog, ContentLog, SocialAccount, SocialMediaTemplate, ScheduledSocialPost, SocialMediaScheduleSettings, SocialMediaPostMetrics
 from social.autopost import create_social_media_posts, post_article_to_social_media, update_social_post_content, SocialMediaPostError
+from auth import login_required
 
 # Create Blueprint
 social_bp = Blueprint('social', __name__)
@@ -95,6 +96,7 @@ def social_accounts():
     return render_template('social/accounts.html', accounts=accounts, blogs=blogs)
 
 @social_bp.route('/social/accounts/add', methods=['GET', 'POST'])
+@login_required
 def add_social_account():
     """Add a new social media account"""
     # Get blogs for dropdown
@@ -144,6 +146,7 @@ def add_social_account():
     return render_template('social/account_form.html', account=None, blogs=blogs, action='add')
 
 @social_bp.route('/social/accounts/<int:account_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_social_account(account_id):
     """Edit a social media account"""
     # Get account
@@ -193,6 +196,7 @@ def edit_social_account(account_id):
     return render_template('social/account_form.html', account=account, blogs=blogs, action='edit')
 
 @social_bp.route('/social/accounts/<int:account_id>/delete', methods=['POST'])
+@login_required
 def delete_social_account(account_id):
     """Delete a social media account"""
     # Get account
@@ -213,6 +217,7 @@ def delete_social_account(account_id):
         return redirect(url_for('social.social_accounts'))
 
 @social_bp.route('/social/posts/<int:content_id>/create', methods=['POST'])
+@login_required
 def create_posts(content_id):
     """Create social media posts for content"""
     try:
@@ -232,6 +237,7 @@ def create_posts(content_id):
         return redirect(url_for('social.social_dashboard'))
 
 @social_bp.route('/social/posts/<int:content_id>/edit/<platform>', methods=['GET', 'POST'])
+@login_required
 def edit_post(content_id, platform):
     """Edit social media post content"""
     # Get content
@@ -284,6 +290,7 @@ def edit_post(content_id, platform):
     )
 
 @social_bp.route('/social/posts/<int:content_id>/publish', methods=['POST'])
+@login_required
 def publish_posts(content_id):
     """Publish social media posts"""
     # Get selected platforms
@@ -355,6 +362,7 @@ def preview_posts(content_id):
     )
 
 @social_bp.route('/social/posts/<int:content_id>/regenerate/<platform>', methods=['POST'])
+@login_required
 def regenerate_post(content_id, platform):
     """Regenerate social media post content for a specific platform"""
     try:
@@ -406,6 +414,7 @@ def regenerate_post(content_id, platform):
 
 # API routes for AJAX calls
 @social_bp.route('/api/social/posts/<int:content_id>/status', methods=['GET'])
+@login_required
 def get_post_status(content_id):
     """Get status of social media posts"""
     # Get content
@@ -585,6 +594,7 @@ def social_templates():
     )
 
 @social_bp.route('/social/templates/add', methods=['POST'])
+@login_required
 def add_template():
     """Add a new social media template"""
     try:
@@ -626,6 +636,7 @@ def add_template():
     return redirect(url_for('social.social_templates'))
 
 @social_bp.route('/social/templates/<int:template_id>/edit', methods=['POST'])
+@login_required
 def edit_template(template_id):
     """Edit a social media template"""
     try:
@@ -667,6 +678,7 @@ def edit_template(template_id):
     return redirect(url_for('social.social_templates'))
 
 @social_bp.route('/social/templates/<int:template_id>/delete', methods=['POST'])
+@login_required
 def delete_template(template_id):
     """Delete a social media template"""
     try:
@@ -699,34 +711,48 @@ def social_schedule():
         settings = SocialMediaScheduleSettings()
         db.session.add(settings)
         db.session.commit()
-    
+
+    # Build a normalized context object (handles missing JSON fields safely)
+    platform_settings = settings.get_platform_settings()
+    schedule_ctx = {
+        'optimal_times': settings.get_optimal_times(),
+        'facebook': platform_settings.get('facebook', {'frequency': 0, 'days': []}),
+        'twitter': platform_settings.get('twitter', {'frequency': 0, 'days': []}),
+        'linkedin': platform_settings.get('linkedin', {'frequency': 0, 'days': []}),
+        'instagram': platform_settings.get('instagram', {'frequency': 0, 'days': []}),
+        'auto_distribute': settings.auto_distribute,
+        'platform_rotation': settings.platform_rotation,
+        'content_variety': settings.content_variety,
+    }
+
     # Get articles for dropdown
     articles = ContentLog.query.filter(
         ContentLog.status == 'published'
     ).order_by(ContentLog.created_at.desc()).limit(20).all()
-    
+
     # Get templates for dropdown
     templates = SocialMediaTemplate.query.all()
-    
+
     # Convert scheduled posts to JSON for calendar
     scheduled_posts_json = json.dumps([{
         'id': post.id,
-        'content': post.content[:50] + '...' if len(post.content) > 50 else post.content,
+        'content': (post.content[:50] + '...') if post.content and len(post.content) > 50 else (post.content or ''),
         'platform': post.platform,
-        'scheduled_date': post.scheduled_date.isoformat(),
+        'scheduled_date': post.scheduled_date.isoformat() if post.scheduled_date else None,
         'status': post.status
     } for post in scheduled_posts])
-    
+
     return render_template(
         'social/schedule.html',
         scheduled_posts=scheduled_posts,
-        schedule_settings=settings,
+        schedule_settings=schedule_ctx,
         articles=articles,
         templates=templates,
         scheduled_posts_json=scheduled_posts_json
     )
 
 @social_bp.route('/social/schedule/settings', methods=['POST'])
+@login_required
 def update_schedule_settings():
     """Update social media schedule settings"""
     try:
@@ -776,6 +802,7 @@ def update_schedule_settings():
     return redirect(url_for('social.social_schedule'))
 
 @social_bp.route('/social/schedule/post', methods=['POST'])
+@login_required
 def schedule_post():
     """Schedule a new social media post"""
     try:
@@ -861,6 +888,7 @@ def schedule_post():
     return redirect(url_for('social.social_schedule'))
 
 @social_bp.route('/social/schedule/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_scheduled_post(post_id):
     """Edit a scheduled social media post"""
     # Get scheduled post
@@ -906,6 +934,7 @@ def edit_scheduled_post(post_id):
     )
 
 @social_bp.route('/social/schedule/<int:post_id>/delete', methods=['POST'])
+@login_required
 def delete_scheduled_post(post_id):
     """Delete a scheduled social media post"""
     try:
@@ -926,6 +955,7 @@ def delete_scheduled_post(post_id):
 
 # API endpoints for AJAX calls
 @social_bp.route('/api/social/templates/<int:template_id>', methods=['GET'])
+@login_required
 def get_template(template_id):
     """Get template data by ID"""
     template = SocialMediaTemplate.query.get_or_404(template_id)

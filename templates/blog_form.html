@@ -1,176 +1,227 @@
 {% extends 'base.html' %}
 
-{% block title %}
-{% if action == 'add' %}
-Add New Blog - BlogAutomationAgent
-{% else %}
-Edit Blog - BlogAutomationAgent
-{% endif %}
+{% block title %}{% if action == 'add' %}Nowy blog{% else %}Edycja blogu{% endif %} — MasterContentAI{% endblock %}
+
+{% block styles %}
+<style>
+  .bf-wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .bf-breadcrumb { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: var(--text-3); }
+  .bf-breadcrumb a { color: var(--brand-600); text-decoration: none; }
+  .bf-breadcrumb a:hover { text-decoration: underline; }
+  .bf-header h1 { margin: .25rem 0; font-size: 1.6rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: .65rem; }
+  .bf-header-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-50); color: var(--brand-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .bf-header p { margin: 0; color: var(--text-3); font-size: .95rem; }
+
+  .bf-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; align-items: start; }
+  @media (max-width: 900px) { .bf-grid { grid-template-columns: 1fr; } }
+
+  .bf-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); overflow: hidden; }
+  .bf-card-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); background: var(--surface-2); }
+  .bf-card-head h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: .5rem; }
+  .bf-card-body { padding: 1.5rem; }
+
+  .bf-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1.1rem; }
+  .bf-field label { font-size: .85rem; font-weight: 600; color: var(--text-2); }
+  .bf-field .form-control { background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: .55rem .7rem; font-size: .95rem; color: var(--text-1); width: 100%; }
+  .bf-field .form-control:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+  .bf-hint { font-size: .8rem; color: var(--text-3); }
+  .bf-hint-link { background: none; border: 0; padding: 0; color: var(--brand-600); cursor: pointer; text-decoration: underline; font: inherit; }
+  .bf-hint-link:hover { color: var(--brand-700); }
+
+  .bf-check { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border: 1px solid var(--border-1); border-radius: 10px; background: var(--surface-2); }
+  .bf-check input[type=checkbox] { width: 18px; height: 18px; margin-top: .1rem; accent-color: var(--brand-600); cursor: pointer; }
+  .bf-check-body strong { display: block; font-size: .9rem; color: var(--text-1); margin-bottom: .1rem; }
+  .bf-check-body span { font-size: .8rem; color: var(--text-3); }
+
+  .bf-actions { display: flex; gap: .75rem; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-1); margin-top: .5rem; }
+  .bf-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: .9rem; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s ease; }
+  .bf-btn--primary { background: var(--brand-600); color: white; }
+  .bf-btn--primary:hover { background: var(--brand-700); }
+  .bf-btn--ghost { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+  .bf-btn--ghost:hover { background: var(--surface-3); }
+
+  .bf-guide { color: var(--text-2); font-size: .9rem; }
+  .bf-guide ol { padding-left: 1.2rem; margin: .75rem 0; }
+  .bf-guide li { margin-bottom: .5rem; }
+  .bf-guide strong { color: var(--text-1); }
+  .bf-alert { background: var(--warning-50, #fef3c7); border-left: 4px solid #d97706; color: var(--warning-700, #92400e); padding: .75rem .9rem; border-radius: 8px; font-size: .85rem; display: flex; align-items: flex-start; gap: .5rem; margin-top: 1rem; }
+
+  /* Native modal */
+  .bf-modal-pre { background: var(--surface-2); border: 1px solid var(--border-1); border-radius: 8px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--text-1); overflow-x: auto; margin: .75rem 0; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="mb-4">
-            {% if action == 'add' %}
-            Add New Blog
-            {% else %}
-            Edit Blog
-            {% endif %}
-        </h1>
+<div class="bf-wrap">
+  <div>
+    <nav class="bf-breadcrumb" aria-label="Ścieżka">
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <span aria-hidden="true">›</span>
+      <a href="{{ url_for('blogs_list') }}">Blogi</a>
+      <span aria-hidden="true">›</span>
+      <span>{% if action == 'add' %}Nowy blog{% else %}{{ blog.name if blog else 'Edycja' }}{% endif %}</span>
+    </nav>
+    <div class="bf-header">
+      <h1>
+        <span class="bf-header-icon"><i class="fas fa-{% if action == 'add' %}plus{% else %}edit{% endif %}"></i></span>
+        {% if action == 'add' %}Dodaj nowy blog{% else %}Edytuj blog{% endif %}
+      </h1>
+      <p>{% if action == 'add' %}Podłącz nowy blog WordPress do MasterContentAI.{% else %}Zmień konfigurację swojego bloga.{% endif %}</p>
     </div>
+  </div>
+
+  <div class="bf-grid">
+    <div class="bf-card">
+      <div class="bf-card-head">
+        <h2><i class="fas fa-cog"></i> {% if action == 'add' %}Dane bloga{% else %}Edytuj {{ blog.name }}{% endif %}</h2>
+      </div>
+      <div class="bf-card-body">
+        <form method="post" data-validate>
+          <div class="bf-field">
+            <label for="name">Nazwa bloga *</label>
+            <input type="text" class="form-control" id="name" name="name" required value="{{ blog.name if blog else '' }}">
+            <span class="bf-hint">Rozpoznawalna nazwa Twojego bloga.</span>
+          </div>
+
+          <div class="bf-field">
+            <label for="url">URL bloga *</label>
+            <input type="url" class="form-control" id="url" name="url" required value="{{ blog.url if blog else '' }}" placeholder="https://twojblog.pl">
+            <span class="bf-hint">Główny adres URL Twojego bloga WordPress.</span>
+          </div>
+
+          <div class="bf-field">
+            <label for="api_url">URL API WordPress *</label>
+            <input type="url" class="form-control" id="api_url" name="api_url" required value="{{ blog.api_url if blog else '' }}" placeholder="https://twojblog.pl">
+            <span class="bf-hint">Zazwyczaj taki sam jak URL bloga, chyba że masz niestandardowy endpoint API.</span>
+          </div>
+
+          <div class="bf-field">
+            <label for="username">Nazwa użytkownika WordPress *</label>
+            <input type="text" class="form-control" id="username" name="username" required value="{{ blog.username if blog else '' }}">
+            <span class="bf-hint">Użytkownik z uprawnieniami do tworzenia postów (Redaktor lub Administrator).</span>
+          </div>
+
+          <div class="bf-field">
+            <label for="api_token">Token API / Hasło aplikacji {% if not blog %}*{% endif %}</label>
+            <input type="password" class="form-control" id="api_token" name="api_token" {% if not blog %}required{% endif %} autocomplete="new-password">
+            <span class="bf-hint">
+              {% if blog %}Pozostaw puste, aby zachować obecny token, lub wprowadź nowy, aby go zaktualizować.
+              {% else %}Hasło aplikacji WordPress (tworzone w sekcji Użytkownicy → Twój profil).{% endif %}
+            </span>
+          </div>
+
+          <div class="bf-field">
+            <label for="categories">Kategorie</label>
+            <textarea class="form-control" id="categories" name="categories" rows="4" style="font-family:'JetBrains Mono',monospace;font-size:.85rem">{{ blog.categories if blog else '[]' }}</textarea>
+            <span class="bf-hint">
+              Tablica JSON obiektów z polami "id" i "name".
+              <button type="button" class="bf-hint-link" data-open-modal="categoriesHelp">Zobacz przykład</button>
+            </span>
+          </div>
+
+          {% if blog %}
+          <div class="bf-field">
+            <label class="bf-check">
+              <input type="checkbox" id="active" name="active" {% if blog.active %}checked{% endif %}>
+              <div class="bf-check-body">
+                <strong>Aktywny</strong>
+                <span>Gdy nieaktywny, treści nie będą generowane dla tego bloga.</span>
+              </div>
+            </label>
+          </div>
+          {% endif %}
+
+          <div class="bf-actions">
+            <a href="{{ url_for('blogs_list') }}" class="bf-btn bf-btn--ghost">
+              <i class="fas fa-arrow-left"></i> Anuluj
+            </a>
+            <button type="submit" class="bf-btn bf-btn--primary">
+              <i class="fas fa-{% if action == 'add' %}plus{% else %}save{% endif %}"></i>
+              {% if action == 'add' %}Dodaj blog{% else %}Zapisz zmiany{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <aside class="bf-card">
+      <div class="bf-card-head"><h2><i class="fas fa-book"></i> Poradnik API WordPress</h2></div>
+      <div class="bf-card-body bf-guide">
+        <p style="margin:0">Aby połączyć blog WordPress, potrzebujesz:</p>
+        <ol>
+          <li><strong>Dostęp do REST API</strong>: REST API musi być włączone (domyślnie w WordPress 4.7+).</li>
+          <li><strong>Hasło aplikacji</strong>: Wygeneruj je w panelu admina → Użytkownicy → Twój profil.</li>
+          <li><strong>Odpowiednie uprawnienia</strong>: Użytkownik musi mieć prawo tworzenia i edycji postów.</li>
+        </ol>
+        <div class="bf-alert">
+          <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+          <span>Nigdy nie udostępniaj swojego tokenu API ani hasła aplikacji innym osobom.</span>
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    {% if action == 'add' %}
-                    Blog Details
-                    {% else %}
-                    Edit {{ blog.name }}
-                    {% endif %}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Blog Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required 
-                               value="{{ blog.name if blog else '' }}">
-                        <div class="form-text">A recognizable name for your blog</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="url" class="form-label">Blog URL</label>
-                        <input type="url" class="form-control" id="url" name="url" required
-                               value="{{ blog.url if blog else '' }}"
-                               placeholder="https://yourblog.com">
-                        <div class="form-text">The main URL of your WordPress blog</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="api_url" class="form-label">WordPress API URL</label>
-                        <input type="url" class="form-control" id="api_url" name="api_url" required
-                               value="{{ blog.api_url if blog else '' }}"
-                               placeholder="https://yourblog.com">
-                        <div class="form-text">Typically the same as your blog URL, unless you have a custom API endpoint</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="username" class="form-label">WordPress Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required
-                               value="{{ blog.username if blog else '' }}">
-                        <div class="form-text">Username with permissions to create posts (Editor or Administrator)</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="api_token" class="form-label">API Token / Application Password</label>
-                        <input type="password" class="form-control" id="api_token" name="api_token"
-                               {% if not blog %}required{% endif %}>
-                        <div class="form-text">
-                            {% if blog %}
-                            Leave blank to keep the current API token, or enter a new one to update
-                            {% else %}
-                            Your WordPress application password (created in Users → Your Profile)
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="categories" class="form-label">Categories</label>
-                        <textarea class="form-control" id="categories" name="categories" rows="4">{{ blog.categories if blog else '[]' }}</textarea>
-                        <div class="form-text">JSON array of category objects with "id" and "name" fields
-                            <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#categoriesHelp">
-                                See Example
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {% if blog %}
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="active" name="active"
-                               {% if blog.active %}checked{% endif %}>
-                        <label class="form-check-label" for="active">Active</label>
-                        <div class="form-text">When inactive, content won't be generated for this blog</div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('blogs_list') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">
-                            {% if action == 'add' %}
-                            Add Blog
-                            {% else %}
-                            Save Changes
-                            {% endif %}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+{# Native modal: pomoc kategorii (zamiast Bootstrap modal) #}
+<div class="modal-backdrop" id="categoriesHelp" hidden role="dialog" aria-modal="true" aria-labelledby="categoriesHelpTitle">
+  <div class="modal-dialog">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="categoriesHelpTitle" class="modal-title">Format kategorii — przykład</h3>
+        <button type="button" class="modal-close" data-close="categoriesHelp" aria-label="Zamknij">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 .5rem">Wprowadź kategorie jako tablicę JSON obiektów z polami <code>id</code> i <code>name</code>.</p>
+<pre class="bf-modal-pre">[
+  { "id": 1, "name": "Technologia" },
+  { "id": 5, "name": "Zdrowie" },
+  { "id": 8, "name": "Podróże" }
+]</pre>
+        <p style="margin:.5rem 0 0;font-size:.85rem;color:var(--text-3);">
+          ID kategorii znajdziesz w panelu administracyjnym WordPress: <strong>Wpisy → Kategorie</strong>.
+          ID jest zwykle widoczne w adresie URL podczas edycji kategorii.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="bf-btn bf-btn--primary" data-close="categoriesHelp">Rozumiem</button>
+      </div>
     </div>
-    
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">WordPress API Guide</h5>
-            </div>
-            <div class="card-body">
-                <p>To connect your WordPress blog, you need:</p>
-                
-                <ol>
-                    <li class="mb-2">
-                        <strong>REST API Access</strong>: Ensure REST API is enabled (default in WordPress 4.7+)
-                    </li>
-                    <li class="mb-2">
-                        <strong>Application Password</strong>: Generate one in WordPress admin → Users → Your Profile
-                    </li>
-                    <li class="mb-2">
-                        <strong>Correct Permissions</strong>: The user needs permission to create and edit posts
-                    </li>
-                </ol>
-                
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Never share your API token or application password with others.
-                </div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
+{% endblock %}
 
-<!-- Categories Help Modal -->
-<div class="modal fade" id="categoriesHelp" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Categories Format Example</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Enter categories as a JSON array of objects with "id" and "name" fields.</p>
-                <pre><code>[
-    {
-        "id": 1,
-        "name": "Technology"
-    },
-    {
-        "id": 5,
-        "name": "Health"
-    },
-    {
-        "id": 8,
-        "name": "Travel"
-    }
-]</code></pre>
-                <p class="mt-3">You can find category IDs in your WordPress admin panel under Posts → Categories. The ID is typically shown in the URL when you edit a category.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got It</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% block scripts %}
+<script>
+(function() {
+  'use strict';
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = true;
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('[data-open-modal]').forEach(b => {
+    b.addEventListener('click', () => openModal(b.dataset.openModal));
+  });
+  document.querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', () => closeModal(b.dataset.close));
+  });
+  // Backdrop click + ESC
+  const modal = document.getElementById('categoriesHelp');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target.id === 'categoriesHelp') closeModal('categoriesHelp');
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal('categoriesHelp');
+  });
+})();
+</script>
 {% endblock %}

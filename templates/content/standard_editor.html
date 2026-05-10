@@ -1,357 +1,331 @@
 {% extends 'base.html' %}
 
-{% block title %}Standard Editor{% endblock %}
+{% block title %}Edytor standardowy — MasterContentAI{% endblock %}
 
 {% block styles %}
 <style>
-    .editor-container {
-        min-height: 500px;
-        margin-bottom: 20px;
-    }
-    
-    .ck-editor__editable {
-        min-height: 400px;
-        color: #212529 !important;
-    }
-    
-    .metadata-panel {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .seo-panel {
-        background-color: rgba(40, 127, 113, 0.05);
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .history-panel {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .autosave-info {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-top: 5px;
-    }
-    
-    .word-count {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-top: 10px;
-        text-align: right;
-    }
+  .se-wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .se-breadcrumb { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: var(--text-3); }
+  .se-breadcrumb a { color: var(--brand-600); text-decoration: none; }
+  .se-breadcrumb a:hover { text-decoration: underline; }
+  .se-header h1 { margin: .25rem 0 .25rem; font-size: 1.6rem; font-weight: 700; color: var(--text-1); }
+  .se-header p { margin: 0; color: var(--text-3); font-size: .95rem; }
+
+  .se-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 1.25rem; align-items: start; }
+  @media (max-width: 1024px) { .se-grid { grid-template-columns: 1fr; } }
+
+  .se-card { background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); overflow: hidden; }
+  .se-card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-1); background: var(--surface-2); }
+  .se-card-head h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-1); }
+  .se-card-body { padding: 1.25rem; }
+
+  .se-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+  .se-field label { font-size: .85rem; font-weight: 600; color: var(--text-2); }
+  .se-field .form-control { background: var(--surface-1); border: 1px solid var(--border-2); border-radius: 8px; padding: .55rem .7rem; font-size: .95rem; color: var(--text-1); width: 100%; }
+  .se-field .form-control:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+  .se-hint { font-size: .78rem; color: var(--text-3); }
+
+  .se-editor-host { min-height: 420px; }
+  .ck-editor__editable { min-height: 380px !important; color: var(--text-1) !important; }
+  .se-word-count { text-align: right; font-size: .8rem; color: var(--text-3); margin-top: .5rem; }
+  .se-autosave { font-size: .8rem; color: var(--text-3); display: inline-flex; align-items: center; gap: .35rem; }
+  .se-autosave.is-saving { color: var(--brand-700); }
+  .se-autosave.is-saved { color: var(--success-700); }
+
+  .se-actions { display: grid; gap: .5rem; }
+  .se-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border-radius: 8px; font-weight: 600; font-size: .9rem; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s ease; }
+  .se-btn--primary { background: var(--brand-600); color: white; }
+  .se-btn--primary:hover { background: var(--brand-700); }
+  .se-btn--success { background: var(--success-700); color: white; }
+  .se-btn--success:hover { filter: brightness(1.08); }
+  .se-btn--ghost { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+  .se-btn--ghost:hover { background: var(--surface-3); }
+
+  .se-seo-item { display: flex; align-items: center; gap: .5rem; padding: .4rem 0; font-size: .85rem; color: var(--text-2); }
+  .se-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .15rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+  .se-badge.is-success { background: var(--success-50); color: var(--success-700); }
+  .se-badge.is-warning { background: var(--warning-50); color: var(--warning-700, #92400e); }
+  .se-badge.is-danger { background: var(--danger-50); color: var(--danger-700); }
+  .se-keywords-list { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+  .se-keywords-list li { background: var(--brand-50); color: var(--brand-700); padding: .2rem .6rem; border-radius: 999px; font-size: .75rem; font-weight: 500; }
+
+  .se-htmlview { background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; padding: .65rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--text-2); width: 100%; min-height: 180px; }
+
+  /* Modal preview */
+  .se-preview-container { background: var(--surface-1); border-radius: 8px; padding: 1.5rem; max-height: 70vh; overflow: auto; }
+  .se-preview-container h1 { font-size: 1.6rem; margin: 0 0 1rem; color: var(--text-1); }
+  .se-preview-container p { line-height: 1.7; color: var(--text-2); }
+  .se-preview-container h2 { font-size: 1.3rem; margin: 1.4rem 0 .5rem; }
+  .se-preview-container h3 { font-size: 1.1rem; margin: 1.2rem 0 .4rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('content_creator.content_dashboard') }}">Content Creator</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Standard Editor</li>
-                </ol>
-            </nav>
-            <h1 class="h2 mb-3">Standard Editor (WYSIWYG)</h1>
-            <p class="text-muted">Create your content with a full-featured editor. Use the toolbar for formatting and structuring your content.</p>
-        </div>
+<div class="se-wrap">
+  <div>
+    <nav class="se-breadcrumb" aria-label="Ścieżka">
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <span aria-hidden="true">›</span>
+      <a href="{{ url_for('content_creator.content_dashboard') }}">Kreator treści</a>
+      <span aria-hidden="true">›</span>
+      <span>Edytor standardowy</span>
+    </nav>
+    <div class="se-header">
+      <h1>Edytor standardowy (WYSIWYG)</h1>
+      <p>Twórz treść w pełnoprawnym edytorze. Użyj paska narzędzi do formatowania i strukturowania.</p>
     </div>
-    
-    <form id="editor-form" method="post" action="{{ url_for('content_creator.edit_content', content_id=content_log.id if content_log else 0) }}">
-        <div class="row">
-            <div class="col-md-8">
-                <!-- Editor Card -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Content Editor</h5>
-                            <div class="autosave-info" id="autosave-status">
-                                <small><i class="fas fa-save me-1"></i> Autosaving enabled</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" value="{{ content_log.title if content_log else '' }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="editor" class="form-label">Content</label>
-                            <div class="editor-container">
-                                <textarea id="editor" name="content">{{ content_html|safe if content_html else '' }}</textarea>
-                            </div>
-                            <div class="word-count" id="word-count">
-                                Words: 0
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- HTML/Markdown View -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">HTML View</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <textarea class="form-control" id="html-view" rows="10" readonly></textarea>
-                        </div>
-                    </div>
-                </div>
+  </div>
+
+  <form id="editor-form" method="post" action="{{ url_for('content_creator.edit_content', content_id=content_log.id if content_log else 0) }}" data-validate>
+    <div class="se-grid">
+      <div style="display: grid; gap: 1.25rem;">
+        <div class="se-card">
+          <div class="se-card-head">
+            <h2>Edytor treści</h2>
+            <span class="se-autosave" id="autosave-status"><i class="fas fa-save"></i> Autozapis włączony</span>
+          </div>
+          <div class="se-card-body">
+            <div class="se-field">
+              <label for="title">Tytuł *</label>
+              <input type="text" class="form-control" id="title" name="title" value="{{ content_log.title if content_log else '' }}" required>
             </div>
-            
-            <div class="col-md-4">
-                <!-- Action Buttons -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button type="submit" name="action" value="save" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i> Save Draft
-                            </button>
-                            <button type="submit" name="action" value="publish" class="btn btn-success">
-                                <i class="fas fa-paper-plane me-2"></i> Publish
-                            </button>
-                            <button type="button" id="preview-button" class="btn btn-secondary">
-                                <i class="fas fa-eye me-2"></i> Preview
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Metadata Panel -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">Metadata</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="meta-description" class="form-label">Meta Description</label>
-                            <textarea class="form-control" id="meta-description" name="meta_description" rows="3">{{ meta_description if meta_description else '' }}</textarea>
-                            <small class="form-text text-muted">Brief description for search engines (150-160 characters)</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="excerpt" class="form-label">Excerpt</label>
-                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3">{{ excerpt if excerpt else '' }}</textarea>
-                            <small class="form-text text-muted">Short summary shown in article listings</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="tags" class="form-label">Tags</label>
-                            <input type="text" class="form-control" id="tags" name="tags" value="{{ tags|join(', ') if tags else '' }}" placeholder="tag1, tag2, tag3">
-                            <small class="form-text text-muted">Comma separated tags</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="featured-image" class="form-label">Featured Image URL</label>
-                            <input type="text" class="form-control" id="featured-image" name="featured_image_url" value="{{ featured_image_url if featured_image_url else '' }}" placeholder="https://example.com/image.jpg">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- SEO Panel -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">SEO Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="seo-results">
-                            <p class="text-muted">SEO analysis will appear here as you type...</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Version History -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">Version History</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="version-history">
-                            <p class="text-muted">Content versions will be listed here...</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="se-field">
+              <label for="editor">Treść</label>
+              <div class="se-editor-host">
+                <textarea id="editor" name="content">{{ content_html|safe if content_html else '' }}</textarea>
+              </div>
+              <div class="se-word-count" id="word-count">Słowa: 0</div>
             </div>
+          </div>
         </div>
-        
-        <!-- Hidden fields for topic ID and other parameters -->
-        <input type="hidden" name="topic_id" value="{{ topic.id if topic else '' }}">
-    </form>
+
+        <div class="se-card">
+          <div class="se-card-head"><h2>Podgląd HTML</h2></div>
+          <div class="se-card-body">
+            <textarea class="se-htmlview" id="html-view" rows="10" readonly aria-label="Wygenerowany HTML"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <aside style="display: grid; gap: 1.25rem;">
+        <div class="se-card">
+          <div class="se-card-head"><h2>Akcje</h2></div>
+          <div class="se-card-body">
+            <div class="se-actions">
+              <button type="submit" name="action" value="save" class="se-btn se-btn--primary">
+                <i class="fas fa-save"></i> Zapisz szkic
+              </button>
+              <button type="submit" name="action" value="publish" class="se-btn se-btn--success" data-confirm="Czy na pewno chcesz opublikować tę treść?">
+                <i class="fas fa-paper-plane"></i> Opublikuj
+              </button>
+              <button type="button" id="preview-button" class="se-btn se-btn--ghost">
+                <i class="fas fa-eye"></i> Podgląd
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="se-card">
+          <div class="se-card-head"><h2>Metadane</h2></div>
+          <div class="se-card-body">
+            <div class="se-field">
+              <label for="meta-description">Meta opis</label>
+              <textarea class="form-control" id="meta-description" name="meta_description" rows="3">{{ meta_description if meta_description else '' }}</textarea>
+              <span class="se-hint">Krótki opis dla wyszukiwarek (150–160 znaków).</span>
+            </div>
+            <div class="se-field">
+              <label for="excerpt">Zajawka</label>
+              <textarea class="form-control" id="excerpt" name="excerpt" rows="3">{{ excerpt if excerpt else '' }}</textarea>
+              <span class="se-hint">Krótkie streszczenie pokazywane na listach artykułów.</span>
+            </div>
+            <div class="se-field">
+              <label for="tags">Tagi</label>
+              <input type="text" class="form-control" id="tags" name="tags" value="{{ tags|join(', ') if tags else '' }}" placeholder="tag1, tag2, tag3">
+              <span class="se-hint">Tagi rozdzielone przecinkami.</span>
+            </div>
+            <div class="se-field">
+              <label for="featured-image">Adres URL obrazu wyróżniającego</label>
+              <input type="url" class="form-control" id="featured-image" name="featured_image_url" value="{{ featured_image_url if featured_image_url else '' }}" placeholder="https://example.com/image.jpg">
+            </div>
+          </div>
+        </div>
+
+        <div class="se-card">
+          <div class="se-card-head"><h2>Analiza SEO</h2></div>
+          <div class="se-card-body">
+            <div id="seo-results">
+              <p class="se-hint" style="margin:0">Analiza SEO pojawi się tutaj podczas pisania…</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="se-card">
+          <div class="se-card-head"><h2>Historia wersji</h2></div>
+          <div class="se-card-body">
+            <p class="se-hint" style="margin:0">Wersje treści pojawią się tutaj…</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <input type="hidden" name="topic_id" value="{{ topic.id if topic else '' }}">
+  </form>
 </div>
 
-<!-- Preview Modal -->
-<div class="modal fade" id="preview-modal" tabindex="-1" aria-labelledby="preview-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="preview-modal-label">Content Preview</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="preview-container">
-                    <h1 id="preview-title"></h1>
-                    <div id="preview-content"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+<!-- Native preview modal -->
+<div class="modal-backdrop" id="previewModal" hidden role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
+  <div class="modal-dialog modal-dialog--lg">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="previewModalTitle" class="modal-title">Podgląd treści</h3>
+        <button type="button" class="modal-close" data-close="previewModal" aria-label="Zamknij">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="se-preview-container">
+          <h1 id="preview-title"></h1>
+          <div id="preview-content"></div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="se-btn se-btn--ghost" data-close="previewModal">Zamknij</button>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize CKEditor
-        let editor;
-        ClassicEditor
-            .create(document.querySelector('#editor'), {
-                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', 'undo', 'redo'],
-                heading: {
-                    options: [
-                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-                        { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
-                    ]
-                }
-            })
-            .then(newEditor => {
-                editor = newEditor;
-                
-                // Update HTML view when editor content changes
-                editor.model.document.on('change:data', () => {
-                    document.getElementById('html-view').value = editor.getData();
-                    updateWordCount(editor.getData());
-                });
-                
-                // Initial HTML update
-                document.getElementById('html-view').value = editor.getData();
-                updateWordCount(editor.getData());
-                
-                // Setup autosave
-                setupAutosave(editor);
-            })
-            .catch(error => {
-                console.error(error);
-            });
-        
-        // Preview Button
-        document.getElementById('preview-button').addEventListener('click', function() {
-            if (editor) {
-                const title = document.getElementById('title').value;
-                const content = editor.getData();
-                
-                document.getElementById('preview-title').textContent = title;
-                document.getElementById('preview-content').innerHTML = content;
-                
-                const previewModal = new bootstrap.Modal(document.getElementById('preview-modal'));
-                previewModal.show();
-            }
-        });
-        
-        // Update word count
-        function updateWordCount(text) {
-            // Remove HTML tags
-            const plainText = text.replace(/<[^>]*>/g, ' ');
-            // Count words
-            const words = plainText.split(/\s+/).filter(word => word.length > 0);
-            document.getElementById('word-count').textContent = `Words: ${words.length}`;
-            
-            // Basic SEO Analysis
-            updateSeoAnalysis(plainText, words.length);
-        }
-        
-        // Simple SEO Analysis
-        function updateSeoAnalysis(text, wordCount) {
-            const seoResults = document.getElementById('seo-results');
-            const metaDescription = document.getElementById('meta-description').value;
-            
-            let seoHtml = '<h6 class="mb-3">Content Analysis</h6>';
-            
-            // Word count check
-            if (wordCount < 300) {
-                seoHtml += `<div class="mb-2"><span class="badge bg-danger me-2">Too Short</span> Word count: ${wordCount} (aim for 600+)</div>`;
-            } else if (wordCount < 600) {
-                seoHtml += `<div class="mb-2"><span class="badge bg-warning me-2">Short</span> Word count: ${wordCount} (aim for 600+)</div>`;
-            } else {
-                seoHtml += `<div class="mb-2"><span class="badge bg-success me-2">Good</span> Word count: ${wordCount}</div>`;
-            }
-            
-            // Meta description check
-            if (!metaDescription) {
-                seoHtml += '<div class="mb-2"><span class="badge bg-danger me-2">Missing</span> Meta description</div>';
-            } else if (metaDescription.length < 120) {
-                seoHtml += `<div class="mb-2"><span class="badge bg-warning me-2">Short</span> Meta description: ${metaDescription.length} chars (aim for 150-160)</div>`;
-            } else if (metaDescription.length > 160) {
-                seoHtml += `<div class="mb-2"><span class="badge bg-warning me-2">Long</span> Meta description: ${metaDescription.length} chars (aim for 150-160)</div>`;
-            } else {
-                seoHtml += `<div class="mb-2"><span class="badge bg-success me-2">Good</span> Meta description: ${metaDescription.length} chars</div>`;
-            }
-            
-            // Keyword analysis (simple)
-            if (text.length > 0) {
-                const words = text.toLowerCase().split(/\W+/).filter(word => word.length > 3);
-                const wordFreq = {};
-                
-                words.forEach(word => {
-                    wordFreq[word] = (wordFreq[word] || 0) + 1;
-                });
-                
-                // Sort by frequency
-                const sortedWords = Object.entries(wordFreq)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5);
-                
-                seoHtml += '<div class="mt-3"><h6>Top Keywords</h6><ul class="list-unstyled">';
-                sortedWords.forEach(([word, count]) => {
-                    seoHtml += `<li><small>${word}: ${count} times</small></li>`;
-                });
-                seoHtml += '</ul></div>';
-            }
-            
-            seoResults.innerHTML = seoHtml;
-        }
-        
-        // Autosave functionality
-        function setupAutosave(editor) {
-            let lastAutoSave = new Date();
-            const autoSaveInterval = 2 * 60 * 1000; // 2 minutes
-            const autoSaveStatus = document.getElementById('autosave-status');
-            
-            setInterval(() => {
-                const now = new Date();
-                if (now - lastAutoSave > autoSaveInterval) {
-                    // Perform autosave
-                    autoSaveStatus.innerHTML = '<small><i class="fas fa-sync fa-spin me-1"></i> Autosaving...</small>';
-                    
-                    // Here we would normally save to the server
-                    // For now, just simulate the save
-                    setTimeout(() => {
-                        lastAutoSave = new Date();
-                        const timeString = lastAutoSave.toLocaleTimeString();
-                        autoSaveStatus.innerHTML = `<small><i class="fas fa-check-circle me-1 text-success"></i> Last autosaved at ${timeString}</small>`;
-                    }, 1000);
-                }
-            }, 10000); // Check every 10 seconds
-        }
+(function() {
+  'use strict';
+
+  let editor = null;
+
+  // ---------- CKEditor ----------
+  ClassicEditor
+    .create(document.querySelector('#editor'), {
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'insertTable', 'undo', 'redo'],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Akapit', class: 'ck-heading_paragraph' },
+          { model: 'heading2', view: 'h2', title: 'Nagłówek 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Nagłówek 3', class: 'ck-heading_heading3' },
+          { model: 'heading4', view: 'h4', title: 'Nagłówek 4', class: 'ck-heading_heading4' }
+        ]
+      }
+    })
+    .then(newEditor => {
+      editor = newEditor;
+      const htmlView = document.getElementById('html-view');
+      editor.model.document.on('change:data', () => {
+        htmlView.value = editor.getData();
+        updateWordCount(editor.getData());
+      });
+      htmlView.value = editor.getData();
+      updateWordCount(editor.getData());
+      setupAutosave();
+    })
+    .catch(err => {
+      console.error('CKEditor error:', err);
+      if (window.Toast && Toast.error) Toast.error('Nie udało się załadować edytora');
     });
+
+  // ---------- Word count + SEO ----------
+  function updateWordCount(html) {
+    const plain = html.replace(/<[^>]*>/g, ' ');
+    const words = plain.split(/\s+/).filter(w => w.length > 0);
+    document.getElementById('word-count').textContent = `Słowa: ${words.length}`;
+    updateSeo(plain, words.length);
+  }
+
+  function badge(kind, label) {
+    return `<span class="se-badge is-${kind}">${label}</span>`;
+  }
+
+  function updateSeo(text, wordCount) {
+    const seoResults = document.getElementById('seo-results');
+    const metaDescription = document.getElementById('meta-description').value;
+    let html = '';
+
+    // Słowa
+    if (wordCount < 300) html += `<div class="se-seo-item">${badge('danger','Za krótkie')} Liczba słów: ${wordCount} (cel: 600+)</div>`;
+    else if (wordCount < 600) html += `<div class="se-seo-item">${badge('warning','Krótkie')} Liczba słów: ${wordCount} (cel: 600+)</div>`;
+    else html += `<div class="se-seo-item">${badge('success','Dobre')} Liczba słów: ${wordCount}</div>`;
+
+    // Meta
+    if (!metaDescription) html += `<div class="se-seo-item">${badge('danger','Brak')} Meta opis</div>`;
+    else if (metaDescription.length < 120) html += `<div class="se-seo-item">${badge('warning','Krótki')} Meta opis: ${metaDescription.length} znaków (cel: 150–160)</div>`;
+    else if (metaDescription.length > 160) html += `<div class="se-seo-item">${badge('warning','Długi')} Meta opis: ${metaDescription.length} znaków (cel: 150–160)</div>`;
+    else html += `<div class="se-seo-item">${badge('success','Dobry')} Meta opis: ${metaDescription.length} znaków</div>`;
+
+    // Top słowa kluczowe
+    if (text.length > 0) {
+      const tokens = text.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+      const freq = {};
+      tokens.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      if (sorted.length) {
+        html += `<div style="margin-top:.75rem"><strong style="font-size:.85rem;color:var(--text-2)">Najczęstsze słowa</strong><ul class="se-keywords-list">`;
+        sorted.forEach(([w, c]) => { html += `<li>${w} · ${c}</li>`; });
+        html += `</ul></div>`;
+      }
+    }
+    seoResults.innerHTML = html;
+  }
+
+  document.getElementById('meta-description').addEventListener('input', () => {
+    if (editor) updateWordCount(editor.getData());
+  });
+
+  // ---------- Autosave (UI only) ----------
+  function setupAutosave() {
+    const status = document.getElementById('autosave-status');
+    let lastSave = Date.now();
+    const interval = 2 * 60 * 1000;
+    setInterval(() => {
+      if (Date.now() - lastSave < interval) return;
+      status.className = 'se-autosave is-saving';
+      status.innerHTML = '<i class="fas fa-sync fa-spin"></i> Zapisywanie…';
+      setTimeout(() => {
+        lastSave = Date.now();
+        const t = new Date(lastSave).toLocaleTimeString('pl-PL');
+        status.className = 'se-autosave is-saved';
+        status.innerHTML = `<i class="fas fa-check-circle"></i> Zapisano o ${t}`;
+      }, 800);
+    }, 10000);
+  }
+
+  // ---------- Native modal ----------
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = true;
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', () => closeModal(b.dataset.close));
+  });
+  document.getElementById('previewModal').addEventListener('click', (e) => {
+    if (e.target.id === 'previewModal') closeModal('previewModal');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal('previewModal');
+  });
+
+  // ---------- Preview ----------
+  document.getElementById('preview-button').addEventListener('click', () => {
+    if (!editor) return;
+    document.getElementById('preview-title').textContent = document.getElementById('title').value || '(bez tytułu)';
+    document.getElementById('preview-content').innerHTML = editor.getData();
+    openModal('previewModal');
+  });
+})();
 </script>
 {% endblock %}
